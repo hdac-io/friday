@@ -1,4 +1,4 @@
-module github.com/cosmos/cosmos-sdk
+module github.com/hdac-io/friday
 
 go 1.13
 
@@ -12,9 +12,11 @@ require (
 	github.com/golang/mock v1.3.1-0.20190508161146-9fa652df1129
 	github.com/gorilla/mux v1.7.0
 	github.com/mattn/go-isatty v0.0.6
+	github.com/otiai10/copy v1.0.2
 	github.com/pelletier/go-toml v1.2.0
 	github.com/pkg/errors v0.8.1
 	github.com/rakyll/statik v0.1.5
+	github.com/snikch/goodman v0.0.0-20171125024755-10e37e294daa
 	github.com/spf13/afero v1.2.1 // indirect
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect

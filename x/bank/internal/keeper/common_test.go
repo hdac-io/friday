@@ -7,12 +7,12 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/hdac-io/friday/codec"
+	"github.com/hdac-io/friday/store"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/auth"
+	"github.com/hdac-io/friday/x/bank/internal/types"
+	"github.com/hdac-io/friday/x/params"
 )
 
 type testInput struct {

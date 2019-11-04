@@ -10,10 +10,10 @@ import (
 
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/tests"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/hdac-io/friday/client/flags"
+	"github.com/hdac-io/friday/crypto/keys"
+	"github.com/hdac-io/friday/tests"
+	sdk "github.com/hdac-io/friday/types"
 )
 
 func Test_runAddCmdLedger(t *testing.T) {

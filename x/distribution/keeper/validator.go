@@ -3,10 +3,10 @@ package keeper
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/hdac-io/friday/types"
 
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/exported"
+	"github.com/hdac-io/friday/x/distribution/types"
+	"github.com/hdac-io/friday/x/staking/exported"
 )
 
 // initialize rewards for a new validator

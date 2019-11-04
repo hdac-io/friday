@@ -6,12 +6,12 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
-	"github.com/cosmos/cosmos-sdk/x/mock"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/hdac-io/friday/baseapp"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/bank/internal/keeper"
+	"github.com/hdac-io/friday/x/bank/internal/types"
+	"github.com/hdac-io/friday/x/mock"
+	"github.com/hdac-io/friday/x/simulation"
 )
 
 // SendTx tests and runs a single msg send where both

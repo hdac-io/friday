@@ -5,10 +5,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	"github.com/hdac-io/friday/client/context"
+	"github.com/hdac-io/friday/client/flags"
+	"github.com/hdac-io/friday/codec"
+	"github.com/hdac-io/friday/x/auth/client/utils"
 )
 
 // txEncodeRespStr implements a simple Stringer wrapper for a encoded tx.

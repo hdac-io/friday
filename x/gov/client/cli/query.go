@@ -8,13 +8,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
-	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/hdac-io/friday/client"
+	"github.com/hdac-io/friday/client/context"
+	"github.com/hdac-io/friday/codec"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/version"
+	gcutils "github.com/hdac-io/friday/x/gov/client/utils"
+	"github.com/hdac-io/friday/x/gov/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module

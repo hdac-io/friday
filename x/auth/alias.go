@@ -5,8 +5,8 @@
 package auth
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/hdac-io/friday/x/auth/exported"
+	"github.com/hdac-io/friday/x/auth/types"
 )
 
 const (

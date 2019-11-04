@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/slashing/types"
+	"github.com/hdac-io/friday/x/staking"
 )
 
 // Have to change these parameters for tests

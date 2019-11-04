@@ -8,9 +8,9 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
+	sdk "github.com/hdac-io/friday/types"
+	authtypes "github.com/hdac-io/friday/x/auth/types"
+	"github.com/hdac-io/friday/x/bank/internal/types"
 )
 
 func TestBalances(t *testing.T) {

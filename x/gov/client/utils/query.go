@@ -3,10 +3,10 @@ package utils
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/hdac-io/friday/client/context"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/auth/client/utils"
+	"github.com/hdac-io/friday/x/gov/types"
 )
 
 const (

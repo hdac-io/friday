@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/hdac-io/friday/codec"
 )
 
 // Register concrete types on codec codec

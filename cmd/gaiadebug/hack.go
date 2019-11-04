@@ -7,9 +7,9 @@ import (
 	"os"
 	"path"
 
-	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/hdac-io/friday/store"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/hdac-io/friday/baseapp"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -18,9 +18,9 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/hdac-io/friday/types"
 
-	gaia "github.com/cosmos/gaia/app"
+	gaia "github.com/hdac-io/friday/app"
 )
 
 func runHackCmd(cmd *cobra.Command, args []string) error {

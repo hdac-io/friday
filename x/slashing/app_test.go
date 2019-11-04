@@ -7,14 +7,14 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/mock"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/cosmos-sdk/x/supply"
-	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/auth"
+	"github.com/hdac-io/friday/x/bank"
+	"github.com/hdac-io/friday/x/mock"
+	"github.com/hdac-io/friday/x/staking"
+	"github.com/hdac-io/friday/x/staking/types"
+	"github.com/hdac-io/friday/x/supply"
+	supplyexported "github.com/hdac-io/friday/x/supply/exported"
 )
 
 var (

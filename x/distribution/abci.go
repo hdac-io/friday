@@ -3,8 +3,8 @@ package distribution
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/distribution/keeper"
 )
 
 // set the proposer for determining distribution during endblock

@@ -5,8 +5,8 @@
 package crisis
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/crisis/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/crisis/internal/types"
+	"github.com/hdac-io/friday/x/crisis/internal/keeper"
+	"github.com/hdac-io/friday/x/crisis/internal/types"
 )
 
 const (

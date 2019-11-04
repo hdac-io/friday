@@ -17,11 +17,11 @@ import (
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/codec"
-	cryptokeys "github.com/cosmos/cosmos-sdk/crypto/keys"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/hdac-io/friday/client/flags"
+	"github.com/hdac-io/friday/client/keys"
+	"github.com/hdac-io/friday/codec"
+	cryptokeys "github.com/hdac-io/friday/crypto/keys"
+	sdk "github.com/hdac-io/friday/types"
 )
 
 var (

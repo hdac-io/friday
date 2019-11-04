@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/hdac-io/friday/codec"
 )
 
 func TestInsertKeyJSON(t *testing.T) {

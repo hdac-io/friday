@@ -8,10 +8,10 @@ import (
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/hdac-io/friday/client/context"
+	"github.com/hdac-io/friday/codec"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/auth/types"
 )
 
 // QueryTxsByEvents performs a search for transactions for a given set of events

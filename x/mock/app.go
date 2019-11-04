@@ -14,11 +14,11 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	bam "github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/params"
+	bam "github.com/hdac-io/friday/baseapp"
+	"github.com/hdac-io/friday/codec"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/auth"
+	"github.com/hdac-io/friday/x/params"
 )
 
 const chainID = ""

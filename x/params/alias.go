@@ -6,8 +6,8 @@
 package params
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/params/subspace"
-	"github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/hdac-io/friday/x/params/subspace"
+	"github.com/hdac-io/friday/x/params/types"
 )
 
 const (

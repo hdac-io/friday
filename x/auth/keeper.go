@@ -6,11 +6,11 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/params/subspace"
+	"github.com/hdac-io/friday/codec"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/auth/exported"
+	"github.com/hdac-io/friday/x/auth/types"
+	"github.com/hdac-io/friday/x/params/subspace"
 )
 
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)

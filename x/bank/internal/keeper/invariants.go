@@ -3,8 +3,8 @@ package keeper
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/bank/internal/types"
 )
 
 // RegisterInvariants registers the bank module invariants

@@ -3,9 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/exported"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/staking/exported"
+	"github.com/hdac-io/friday/x/staking/types"
 )
 
 //_______________________________________________________________________

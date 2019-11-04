@@ -1,7 +1,7 @@
 package keys
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/hdac-io/friday/codec"
 )
 
 var cdc *codec.Codec

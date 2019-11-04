@@ -6,10 +6,10 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
-	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/auth/exported"
+	"github.com/hdac-io/friday/x/bank/internal/types"
+	"github.com/hdac-io/friday/x/params"
 )
 
 var _ Keeper = (*BaseKeeper)(nil)

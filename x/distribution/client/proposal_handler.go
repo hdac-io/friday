@@ -1,9 +1,9 @@
 package client
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
-	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
+	"github.com/hdac-io/friday/x/distribution/client/cli"
+	"github.com/hdac-io/friday/x/distribution/client/rest"
+	govclient "github.com/hdac-io/friday/x/gov/client"
 )
 
 // param change proposal handler

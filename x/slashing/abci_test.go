@@ -8,8 +8,8 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/staking"
 )
 
 func TestBeginBlocker(t *testing.T) {

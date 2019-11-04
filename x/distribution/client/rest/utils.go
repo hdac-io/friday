@@ -1,8 +1,8 @@
 package rest
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/rest"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/types/rest"
 )
 
 type (

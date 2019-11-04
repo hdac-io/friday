@@ -1,7 +1,7 @@
 package mint
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/hdac-io/friday/types"
 )
 
 // GenesisState - minter state

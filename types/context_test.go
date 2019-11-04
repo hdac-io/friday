@@ -13,8 +13,8 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/hdac-io/friday/store"
+	"github.com/hdac-io/friday/types"
 )
 
 type MockLogger struct {

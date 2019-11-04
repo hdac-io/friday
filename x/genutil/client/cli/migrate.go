@@ -7,12 +7,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/server"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
-	extypes "github.com/cosmos/cosmos-sdk/x/genutil"
-	v036 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v036"
+	"github.com/hdac-io/friday/codec"
+	"github.com/hdac-io/friday/server"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/version"
+	extypes "github.com/hdac-io/friday/x/genutil"
+	v036 "github.com/hdac-io/friday/x/genutil/legacy/v036"
 )
 
 var migrationMap = extypes.MigrationMap{

@@ -1,19 +1,19 @@
 package v036
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"
-	v036auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_36"
-	v034distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_34"
-	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_36"
-	v034genAccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_34"
-	v036genAccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_36"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-	v034gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v0_34"
-	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v0_36"
-	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_34"
-	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_36"
-	v036supply "github.com/cosmos/cosmos-sdk/x/supply/legacy/v0_36"
+	"github.com/hdac-io/friday/codec"
+	v034auth "github.com/hdac-io/friday/x/auth/legacy/v0_34"
+	v036auth "github.com/hdac-io/friday/x/auth/legacy/v0_36"
+	v034distr "github.com/hdac-io/friday/x/distribution/legacy/v0_34"
+	v036distr "github.com/hdac-io/friday/x/distribution/legacy/v0_36"
+	v034genAccounts "github.com/hdac-io/friday/x/genaccounts/legacy/v0_34"
+	v036genAccounts "github.com/hdac-io/friday/x/genaccounts/legacy/v0_36"
+	"github.com/hdac-io/friday/x/genutil"
+	v034gov "github.com/hdac-io/friday/x/gov/legacy/v0_34"
+	v036gov "github.com/hdac-io/friday/x/gov/legacy/v0_36"
+	v034staking "github.com/hdac-io/friday/x/staking/legacy/v0_34"
+	v036staking "github.com/hdac-io/friday/x/staking/legacy/v0_36"
+	v036supply "github.com/hdac-io/friday/x/supply/legacy/v0_36"
 )
 
 // Migrate migrates exported state from v0.34 to a v0.36 genesis state.

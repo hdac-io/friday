@@ -14,10 +14,10 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	gaia "github.com/cosmos/gaia/app"
+	gaia "github.com/hdac-io/friday/app"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/auth"
 )
 
 func init() {

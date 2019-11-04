@@ -4,10 +4,10 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/hdac-io/friday/codec"
+	sdk "github.com/hdac-io/friday/types"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/hdac-io/friday/store/prefix"
 )
 
 const (

@@ -5,8 +5,8 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/supply/exported"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/supply/exported"
 )
 
 // Implements Delegation interface

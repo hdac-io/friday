@@ -17,12 +17,12 @@ import (
 	tmstore "github.com/tendermint/tendermint/store"
 	tm "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/gaia/app"
+	"github.com/hdac-io/friday/app"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/store"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/hdac-io/friday/baseapp"
+	"github.com/hdac-io/friday/server"
+	"github.com/hdac-io/friday/store"
+	sdk "github.com/hdac-io/friday/types"
 )
 
 func replayCmd() *cobra.Command {

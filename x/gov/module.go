@@ -8,14 +8,14 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/gov/client"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/rest"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/hdac-io/friday/client/context"
+	"github.com/hdac-io/friday/codec"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/types/module"
+	"github.com/hdac-io/friday/x/gov/client"
+	"github.com/hdac-io/friday/x/gov/client/cli"
+	"github.com/hdac-io/friday/x/gov/client/rest"
+	"github.com/hdac-io/friday/x/gov/types"
 )
 
 var (

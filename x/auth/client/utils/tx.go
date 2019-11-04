@@ -10,13 +10,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/hdac-io/friday/client/context"
+	"github.com/hdac-io/friday/client/flags"
+	"github.com/hdac-io/friday/client/input"
+	"github.com/hdac-io/friday/client/keys"
+	"github.com/hdac-io/friday/codec"
+	sdk "github.com/hdac-io/friday/types"
+	authtypes "github.com/hdac-io/friday/x/auth/types"
 )
 
 // GasEstimateResponse defines a response definition for tx gas estimation.

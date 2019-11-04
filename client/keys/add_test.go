@@ -8,8 +8,8 @@ import (
 
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/hdac-io/friday/client/flags"
+	"github.com/hdac-io/friday/tests"
 )
 
 func Test_runAddCmdBasic(t *testing.T) {

@@ -9,20 +9,20 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/hdac-io/friday/codec"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	cmn "github.com/tendermint/tendermint/libs/common"
 
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/supply"
+	"github.com/hdac-io/friday/x/auth"
+	"github.com/hdac-io/friday/x/distribution"
+	distr "github.com/hdac-io/friday/x/distribution"
+	"github.com/hdac-io/friday/x/gov"
+	"github.com/hdac-io/friday/x/mint"
+	"github.com/hdac-io/friday/x/slashing"
+	"github.com/hdac-io/friday/x/staking"
+	"github.com/hdac-io/friday/x/supply"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/hdac-io/friday/types"
 )
 
 var (

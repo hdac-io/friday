@@ -1,10 +1,10 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/hdac-io/friday/codec"
+	sdk "github.com/hdac-io/friday/types"
+	authtypes "github.com/hdac-io/friday/x/auth/types"
+	stakingtypes "github.com/hdac-io/friday/x/staking/types"
 )
 
 // ModuleCdc defines a generic sealed codec to be used throughout this module

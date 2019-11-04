@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/hdac-io/friday/baseapp"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/auth"
+	"github.com/hdac-io/friday/x/distribution"
+	"github.com/hdac-io/friday/x/gov"
+	govsim "github.com/hdac-io/friday/x/gov/simulation"
+	"github.com/hdac-io/friday/x/simulation"
 )
 
 // SimulateMsgSetWithdrawAddress generates a MsgSetWithdrawAddress with random values.

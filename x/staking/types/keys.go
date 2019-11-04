@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/hdac-io/friday/types"
 )
 
 const (

@@ -5,9 +5,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/hdac-io/friday/client/context"
+	"github.com/hdac-io/friday/types/rest"
+	"github.com/hdac-io/friday/x/auth/types"
 )
 
 // EncodeResp defines a tx encoding response.

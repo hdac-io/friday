@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/hdac-io/friday/x/params"
 )
 
 const (

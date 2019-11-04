@@ -13,12 +13,12 @@
 package client
 
 import (
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/client/lcd"
-	"github.com/cosmos/cosmos-sdk/client/rpc"
+	"github.com/hdac-io/friday/client/context"
+	"github.com/hdac-io/friday/client/flags"
+	"github.com/hdac-io/friday/client/input"
+	"github.com/hdac-io/friday/client/keys"
+	"github.com/hdac-io/friday/client/lcd"
+	"github.com/hdac-io/friday/client/rpc"
 )
 
 const (

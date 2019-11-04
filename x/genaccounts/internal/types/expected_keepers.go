@@ -1,8 +1,8 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	sdk "github.com/hdac-io/friday/types"
+	authexported "github.com/hdac-io/friday/x/auth/exported"
 )
 
 // AccountKeeper defines the expected account keeper (noalias)

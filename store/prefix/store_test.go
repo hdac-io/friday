@@ -4,11 +4,11 @@ import (
 	"crypto/rand"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	"github.com/cosmos/cosmos-sdk/store/gaskv"
-	"github.com/cosmos/cosmos-sdk/store/iavl"
-	"github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/hdac-io/friday/store/dbadapter"
+	"github.com/hdac-io/friday/store/gaskv"
+	"github.com/hdac-io/friday/store/iavl"
+	"github.com/hdac-io/friday/store/types"
+	sdk "github.com/hdac-io/friday/types"
 
 	"github.com/stretchr/testify/require"
 

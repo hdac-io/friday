@@ -1,8 +1,8 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
+	"github.com/hdac-io/friday/codec"
+	"github.com/hdac-io/friday/x/auth/exported"
 )
 
 // RegisterCodec registers concrete types on the codec

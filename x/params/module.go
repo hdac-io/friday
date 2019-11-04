@@ -6,10 +6,10 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/hdac-io/friday/client/context"
+	"github.com/hdac-io/friday/codec"
+	"github.com/hdac-io/friday/types/module"
+	"github.com/hdac-io/friday/x/params/types"
 )
 
 var (

@@ -1,9 +1,9 @@
 package gov
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingexported "github.com/cosmos/cosmos-sdk/x/staking/exported"
-	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
+	sdk "github.com/hdac-io/friday/types"
+	stakingexported "github.com/hdac-io/friday/x/staking/exported"
+	supplyexported "github.com/hdac-io/friday/x/supply/exported"
 )
 
 // SupplyKeeper defines the supply Keeper for module accounts

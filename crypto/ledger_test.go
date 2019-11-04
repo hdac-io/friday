@@ -9,9 +9,9 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
-	"github.com/cosmos/cosmos-sdk/tests"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/hdac-io/friday/crypto/keys/hd"
+	"github.com/hdac-io/friday/tests"
+	sdk "github.com/hdac-io/friday/types"
 )
 
 func TestLedgerErrorHandling(t *testing.T) {

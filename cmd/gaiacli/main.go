@@ -5,17 +5,17 @@ import (
 	"os"
 	"path"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/client/lcd"
-	"github.com/cosmos/cosmos-sdk/client/rpc"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
+	"github.com/hdac-io/friday/client"
+	"github.com/hdac-io/friday/client/keys"
+	"github.com/hdac-io/friday/client/lcd"
+	"github.com/hdac-io/friday/client/rpc"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/version"
+	"github.com/hdac-io/friday/x/auth"
+	authcmd "github.com/hdac-io/friday/x/auth/client/cli"
+	authrest "github.com/hdac-io/friday/x/auth/client/rest"
+	"github.com/hdac-io/friday/x/bank"
+	bankcmd "github.com/hdac-io/friday/x/bank/client/cli"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -23,7 +23,7 @@ import (
 	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/gaia/app"
+	"github.com/hdac-io/friday/app"
 )
 
 func main() {

@@ -6,8 +6,8 @@
 package mint
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/mint/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
+	"github.com/hdac-io/friday/x/mint/internal/keeper"
+	"github.com/hdac-io/friday/x/mint/internal/types"
 )
 
 const (

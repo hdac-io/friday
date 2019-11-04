@@ -7,9 +7,9 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/supply/exported"
+	sdk "github.com/hdac-io/friday/types"
+	authtypes "github.com/hdac-io/friday/x/auth/types"
+	"github.com/hdac-io/friday/x/supply/exported"
 )
 
 var _ exported.ModuleAccountI = (*ModuleAccount)(nil)

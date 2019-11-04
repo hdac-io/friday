@@ -3,8 +3,8 @@ package keeper
 import (
 	"encoding/binary"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/distribution/types"
 )
 
 const (

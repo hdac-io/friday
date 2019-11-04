@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	params "github.com/cosmos/cosmos-sdk/x/params/subspace"
+	sdk "github.com/hdac-io/friday/types"
+	params "github.com/hdac-io/friday/x/params/subspace"
 )
 
 // Parameter store key

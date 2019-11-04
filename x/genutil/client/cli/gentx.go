@@ -18,18 +18,18 @@ import (
 	"github.com/tendermint/tendermint/libs/common"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
-	kbkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/server"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	"github.com/hdac-io/friday/client"
+	"github.com/hdac-io/friday/client/context"
+	"github.com/hdac-io/friday/codec"
+	kbkeys "github.com/hdac-io/friday/crypto/keys"
+	"github.com/hdac-io/friday/server"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/types/module"
+	"github.com/hdac-io/friday/x/auth/client/utils"
 
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/hdac-io/friday/x/auth"
+	"github.com/hdac-io/friday/x/genutil"
+	"github.com/hdac-io/friday/x/genutil/types"
 )
 
 // StakingMsgBuildingHelpers helpers for message building gen-tx command

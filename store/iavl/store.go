@@ -5,10 +5,10 @@ import (
 	"io"
 	"sync"
 
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	serrors "github.com/cosmos/cosmos-sdk/store/errors"
-	"github.com/cosmos/cosmos-sdk/store/tracekv"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/hdac-io/friday/store/cachekv"
+	serrors "github.com/hdac-io/friday/store/errors"
+	"github.com/hdac-io/friday/store/tracekv"
+	"github.com/hdac-io/friday/store/types"
 
 	"github.com/pkg/errors"
 	"github.com/tendermint/iavl"

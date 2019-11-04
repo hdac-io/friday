@@ -1,10 +1,10 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
-	stakingexported "github.com/cosmos/cosmos-sdk/x/staking/exported"
-	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
+	sdk "github.com/hdac-io/friday/types"
+	authexported "github.com/hdac-io/friday/x/auth/exported"
+	stakingexported "github.com/hdac-io/friday/x/staking/exported"
+	supplyexported "github.com/hdac-io/friday/x/supply/exported"
 )
 
 // DistributionKeeper expected distribution keeper (noalias)

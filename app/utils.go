@@ -7,9 +7,9 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/hdac-io/friday/baseapp"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/staking"
 )
 
 var (

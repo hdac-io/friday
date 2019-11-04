@@ -6,11 +6,11 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/hdac-io/friday/baseapp"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/gov"
+	"github.com/hdac-io/friday/x/params"
+	"github.com/hdac-io/friday/x/simulation"
 )
 
 type simParamChange struct {

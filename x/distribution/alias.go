@@ -7,9 +7,9 @@
 package distribution
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/distribution/client"
-	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/hdac-io/friday/x/distribution/client"
+	"github.com/hdac-io/friday/x/distribution/keeper"
+	"github.com/hdac-io/friday/x/distribution/types"
 )
 
 const (

@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/hdac-io/friday/client/context"
+	"github.com/hdac-io/friday/codec"
 )
 
 func TestQueryDelegationRewardsAddrValidation(t *testing.T) {

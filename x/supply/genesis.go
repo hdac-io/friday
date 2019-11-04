@@ -1,9 +1,9 @@
 package supply
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	autypes "github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
+	sdk "github.com/hdac-io/friday/types"
+	autypes "github.com/hdac-io/friday/x/auth"
+	"github.com/hdac-io/friday/x/supply/internal/types"
 )
 
 // InitGenesis sets supply information for genesis.

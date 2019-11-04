@@ -6,8 +6,8 @@
 package supply
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/supply/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
+	"github.com/hdac-io/friday/x/supply/internal/keeper"
+	"github.com/hdac-io/friday/x/supply/internal/types"
 )
 
 const (

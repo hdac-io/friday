@@ -3,8 +3,8 @@ package gov
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/gov/types"
 )
 
 // Handle all "gov" type messages.

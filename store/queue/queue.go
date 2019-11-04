@@ -3,10 +3,10 @@ package store
 // TODO: make it independent from list
 /*
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/hdac-io/friday/codec"
+	sdk "github.com/hdac-io/friday/types"
 
-	"github.com/cosmos/cosmos-sdk/store/list"
+	"github.com/hdac-io/friday/store/list"
 )
 
 // Key for the top element position in the queue

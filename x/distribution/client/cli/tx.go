@@ -8,17 +8,17 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/hdac-io/friday/client"
+	"github.com/hdac-io/friday/client/context"
+	"github.com/hdac-io/friday/codec"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/version"
+	"github.com/hdac-io/friday/x/auth"
+	"github.com/hdac-io/friday/x/auth/client/utils"
+	"github.com/hdac-io/friday/x/gov"
 
-	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/hdac-io/friday/x/distribution/client/common"
+	"github.com/hdac-io/friday/x/distribution/types"
 )
 
 var (

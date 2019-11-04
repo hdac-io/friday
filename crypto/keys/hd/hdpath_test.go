@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/hdac-io/friday/types"
 
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/stretchr/testify/assert"

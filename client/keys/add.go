@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/hdac-io/friday/client/flags"
+	"github.com/hdac-io/friday/client/input"
+	"github.com/hdac-io/friday/crypto/keys"
+	sdk "github.com/hdac-io/friday/types"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

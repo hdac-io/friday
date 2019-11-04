@@ -8,9 +8,9 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
-	"github.com/cosmos/cosmos-sdk/tests"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/hdac-io/friday/crypto/keys/hd"
+	"github.com/hdac-io/friday/tests"
+	sdk "github.com/hdac-io/friday/types"
 )
 
 func TestNew(t *testing.T) {

@@ -8,8 +8,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/hdac-io/friday/codec"
+	"github.com/hdac-io/friday/simapp"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )

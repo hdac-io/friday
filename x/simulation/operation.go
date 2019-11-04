@@ -6,8 +6,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/hdac-io/friday/baseapp"
+	sdk "github.com/hdac-io/friday/types"
 )
 
 // Operation runs a state machine transition, and ensures the transition

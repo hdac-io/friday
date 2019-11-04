@@ -5,9 +5,9 @@ package v0_36
 import (
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_34"
+	"github.com/hdac-io/friday/codec"
+	sdk "github.com/hdac-io/friday/types"
+	v034staking "github.com/hdac-io/friday/x/staking/legacy/v0_34"
 	"github.com/tendermint/tendermint/crypto"
 )
 

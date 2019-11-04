@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/hdac-io/friday/client/flags"
 )
 
 // For https://github.com/cosmos/cosmos-sdk/issues/3899

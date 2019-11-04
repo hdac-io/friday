@@ -7,12 +7,12 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/server"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/genaccounts"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
+	"github.com/hdac-io/friday/client/keys"
+	"github.com/hdac-io/friday/codec"
+	"github.com/hdac-io/friday/server"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/genaccounts"
+	"github.com/hdac-io/friday/x/genutil"
 )
 
 const (

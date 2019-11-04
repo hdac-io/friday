@@ -12,9 +12,9 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/hdac-io/friday/client/flags"
+	"github.com/hdac-io/friday/codec"
+	sdk "github.com/hdac-io/friday/types"
 )
 
 const (

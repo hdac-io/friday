@@ -10,8 +10,8 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/server"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/hdac-io/friday/server"
+	sdk "github.com/hdac-io/friday/types"
 )
 
 func TestPrepareFlagsForTxCreateValidator(t *testing.T) {

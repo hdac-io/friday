@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/x/supply/exported"
+	"github.com/hdac-io/friday/codec"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/gov/types"
+	"github.com/hdac-io/friday/x/params"
+	"github.com/hdac-io/friday/x/supply/exported"
 
 	"github.com/tendermint/tendermint/libs/log"
 )

@@ -6,7 +6,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/hdac-io/friday/codec"
 )
 
 // State to Unmarshal

@@ -3,10 +3,10 @@ package server
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/hdac-io/friday/crypto/keys"
 
-	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	clkeys "github.com/hdac-io/friday/client/keys"
+	sdk "github.com/hdac-io/friday/types"
 )
 
 // GenerateCoinKey returns the address of a public key, along with the secret

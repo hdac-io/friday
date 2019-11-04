@@ -13,17 +13,17 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/gaia/app"
+	"github.com/hdac-io/friday/app"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/store"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/genaccounts"
-	genaccscli "github.com/cosmos/cosmos-sdk/x/genaccounts/client/cli"
-	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/hdac-io/friday/baseapp"
+	"github.com/hdac-io/friday/client"
+	"github.com/hdac-io/friday/server"
+	"github.com/hdac-io/friday/store"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/genaccounts"
+	genaccscli "github.com/hdac-io/friday/x/genaccounts/client/cli"
+	genutilcli "github.com/hdac-io/friday/x/genutil/client/cli"
+	"github.com/hdac-io/friday/x/staking"
 )
 
 // gaiad custom flags

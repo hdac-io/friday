@@ -5,9 +5,9 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/exported"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/distribution/types"
+	"github.com/hdac-io/friday/x/staking/exported"
 )
 
 // AllocateTokens handles distribution of the collected fees

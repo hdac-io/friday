@@ -6,7 +6,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/hdac-io/friday/types"
 
 	"github.com/stretchr/testify/require"
 )

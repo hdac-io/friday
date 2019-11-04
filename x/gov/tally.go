@@ -1,9 +1,9 @@
 package gov
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/exported"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/gov/types"
+	"github.com/hdac-io/friday/x/staking/exported"
 )
 
 // validatorGovInfo used for tallying
