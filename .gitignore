@@ -1,12 +1,48 @@
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+# OS
+.DS_Store
+*.swp
+*.swo
+*.swl
+*.swm
+*.swn
+.vscode
+.idea
+*.pyc
 
-# Test binary, build with `go test -c`
-*.test
+# Build
+vendor
+build
+tools/bin/*
+examples/build/*
+docs/_build
+docs/tutorial
+dist
+tools-stamp
 
-# Output of the go coverage tool, specifically when used with LiteIDE
+# Data - ideally these don't exist
+baseapp/data/*
+client/lcd/keys/*
+mytestnet
+
+# Testing
+coverage.txt
+profile.out
+sim_log_file
+
+# Vagrant
+.vagrant/
+*.box
+*.log
+vagrant
+
+# IDE
+.idea/
+*.iml
+
+# Graphviz
+dependency-graph.png
+
+# Latex
+*.aux
 *.out
+*.synctex.gz
