@@ -42,10 +42,10 @@ func registerTestCodec(cdc *codec.Codec) {
 	sdk.RegisterCodec(cdc)
 
 	// register test types
-	cdc.RegisterConcrete(&txTest{}, "cosmos-sdk/baseapp/txTest", nil)
-	cdc.RegisterConcrete(&msgCounter{}, "cosmos-sdk/baseapp/msgCounter", nil)
-	cdc.RegisterConcrete(&msgCounter2{}, "cosmos-sdk/baseapp/msgCounter2", nil)
-	cdc.RegisterConcrete(&msgNoRoute{}, "cosmos-sdk/baseapp/msgNoRoute", nil)
+	cdc.RegisterConcrete(&txTest{}, "friday/baseapp/txTest", nil)
+	cdc.RegisterConcrete(&msgCounter{}, "friday/baseapp/msgCounter", nil)
+	cdc.RegisterConcrete(&msgCounter2{}, "friday/baseapp/msgCounter2", nil)
+	cdc.RegisterConcrete(&msgNoRoute{}, "friday/baseapp/msgNoRoute", nil)
 }
 
 // simple one store baseapp
@@ -832,7 +832,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 		// new codec so we can encode the tx, but we shouldn't be able to decode
 		newCdc := codec.New()
 		registerTestCodec(newCdc)
-		newCdc.RegisterConcrete(&msgNoDecode{}, "cosmos-sdk/baseapp/msgNoDecode", nil)
+		newCdc.RegisterConcrete(&msgNoDecode{}, "friday/baseapp/msgNoDecode", nil)
 
 		txBytes, err := newCdc.MarshalBinaryLengthPrefixed(tx)
 		require.NoError(t, err)

@@ -28,7 +28,7 @@ func TestValidatorTestEquivalent(t *testing.T) {
 
 func TestUpdateDescription(t *testing.T) {
 	d1 := Description{
-		Website: "https://validator.cosmos",
+		Website: "https://validator.friday",
 		Details: "Test validator",
 	}
 
@@ -231,7 +231,7 @@ func TestValidatorMarshalUnmarshalJSON(t *testing.T) {
 	js, err := codec.Cdc.MarshalJSON(validator)
 	require.NoError(t, err)
 	require.NotEmpty(t, js)
-	require.Contains(t, string(js), "\"consensus_pubkey\":\"cosmosvalconspu")
+	require.Contains(t, string(js), "\"consensus_pubkey\":\"fridayvalconspu")
 	got := &Validator{}
 	err = codec.Cdc.UnmarshalJSON(js, got)
 	assert.NoError(t, err)

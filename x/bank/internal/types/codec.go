@@ -6,8 +6,8 @@ import (
 
 // Register concrete types on codec codec
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterConcrete(MsgSend{}, "cosmos-sdk/MsgSend", nil)
-	cdc.RegisterConcrete(MsgMultiSend{}, "cosmos-sdk/MsgMultiSend", nil)
+	cdc.RegisterConcrete(MsgSend{}, "friday/MsgSend", nil)
+	cdc.RegisterConcrete(MsgMultiSend{}, "friday/MsgMultiSend", nil)
 }
 
 // module codec

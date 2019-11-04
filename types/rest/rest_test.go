@@ -21,7 +21,7 @@ import (
 type mockResponseWriter struct{}
 
 func TestBaseReqValidateBasic(t *testing.T) {
-	fromAddr := "cosmos1cq0sxam6x4l0sv9yz3a2vlqhdhvt2k6jtgcse0"
+	fromAddr := "friday1cq0sxam6x4l0sv9yz3a2vlqhdhvt2k6jtgcse0"
 	tenstakes, err := types.ParseCoins("10stake")
 	require.NoError(t, err)
 	onestake, err := types.ParseDecCoins("1.0stake")
@@ -169,7 +169,7 @@ func TestProcessPostResponse(t *testing.T) {
 	acc := mockAccount{addr, coins, pubKey, accNumber, sequence}
 	cdc := codec.New()
 	codec.RegisterCrypto(cdc)
-	cdc.RegisterConcrete(&mockAccount{}, "cosmos-sdk/mockAccount", nil)
+	cdc.RegisterConcrete(&mockAccount{}, "friday/mockAccount", nil)
 	ctx = ctx.WithCodec(cdc)
 
 	// setup expected results

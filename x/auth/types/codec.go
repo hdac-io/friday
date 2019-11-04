@@ -8,12 +8,12 @@ import (
 // RegisterCodec registers concrete types on the codec
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.Account)(nil), nil)
-	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/Account", nil)
+	cdc.RegisterConcrete(&BaseAccount{}, "friday/Account", nil)
 	cdc.RegisterInterface((*exported.VestingAccount)(nil), nil)
-	cdc.RegisterConcrete(&BaseVestingAccount{}, "cosmos-sdk/BaseVestingAccount", nil)
-	cdc.RegisterConcrete(&ContinuousVestingAccount{}, "cosmos-sdk/ContinuousVestingAccount", nil)
-	cdc.RegisterConcrete(&DelayedVestingAccount{}, "cosmos-sdk/DelayedVestingAccount", nil)
-	cdc.RegisterConcrete(StdTx{}, "cosmos-sdk/StdTx", nil)
+	cdc.RegisterConcrete(&BaseVestingAccount{}, "friday/BaseVestingAccount", nil)
+	cdc.RegisterConcrete(&ContinuousVestingAccount{}, "friday/ContinuousVestingAccount", nil)
+	cdc.RegisterConcrete(&DelayedVestingAccount{}, "friday/DelayedVestingAccount", nil)
+	cdc.RegisterConcrete(StdTx{}, "friday/StdTx", nil)
 }
 
 // module wide codec

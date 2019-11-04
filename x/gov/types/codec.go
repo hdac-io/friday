@@ -12,12 +12,12 @@ var ModuleCdc = codec.New()
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*Content)(nil), nil)
 
-	cdc.RegisterConcrete(MsgSubmitProposal{}, "cosmos-sdk/MsgSubmitProposal", nil)
-	cdc.RegisterConcrete(MsgDeposit{}, "cosmos-sdk/MsgDeposit", nil)
-	cdc.RegisterConcrete(MsgVote{}, "cosmos-sdk/MsgVote", nil)
+	cdc.RegisterConcrete(MsgSubmitProposal{}, "friday/MsgSubmitProposal", nil)
+	cdc.RegisterConcrete(MsgDeposit{}, "friday/MsgDeposit", nil)
+	cdc.RegisterConcrete(MsgVote{}, "friday/MsgVote", nil)
 
-	cdc.RegisterConcrete(TextProposal{}, "cosmos-sdk/TextProposal", nil)
-	cdc.RegisterConcrete(SoftwareUpgradeProposal{}, "cosmos-sdk/SoftwareUpgradeProposal", nil)
+	cdc.RegisterConcrete(TextProposal{}, "friday/TextProposal", nil)
+	cdc.RegisterConcrete(SoftwareUpgradeProposal{}, "friday/SoftwareUpgradeProposal", nil)
 }
 
 // RegisterProposalTypeCodec registers an external proposal content type defined
