@@ -35,13 +35,13 @@ var (
 
 // DONTCOVER
 
-// NewGaiaAppUNSAFE is used for debugging purposes only.
+// NewFridayAppUNSAFE is used for debugging purposes only.
 //
 // NOTE: to not use this function with non-test code
-func NewGaiaAppUNSAFE(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
+func NewFridayAppUNSAFE(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 	invCheckPeriod uint, baseAppOptions ...func(*baseapp.BaseApp),
-) (gapp *GaiaApp, keyMain, keyStaking *sdk.KVStoreKey, stakingKeeper staking.Keeper) {
+) (fapp *FridayApp, keyMain, keyStaking *sdk.KVStoreKey, stakingKeeper staking.Keeper) {
 
-	gapp = NewGaiaApp(logger, db, traceStore, loadLatest, invCheckPeriod, baseAppOptions...)
-	return gapp, gapp.keys[baseapp.MainStoreKey], gapp.keys[staking.StoreKey], gapp.stakingKeeper
+	fapp = NewFridayApp(logger, db, traceStore, loadLatest, invCheckPeriod, baseAppOptions...)
+	return fapp, fapp.keys[baseapp.MainStoreKey], fapp.keys[staking.StoreKey], fapp.stakingKeeper
 }

@@ -14,7 +14,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	gaia "github.com/hdac-io/friday/app"
+	friday "github.com/hdac-io/friday/app"
 
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/auth"
@@ -36,14 +36,14 @@ func init() {
 }
 
 var rootCmd = &cobra.Command{
-	Use:          "gaiadebug",
-	Short:        "Gaia debug tool",
+	Use:          "fridaydebug",
+	Short:        "Faiday debug tool",
 	SilenceUsage: true,
 }
 
 var txCmd = &cobra.Command{
 	Use:   "tx",
-	Short: "Decode a gaia tx from hex or base64",
+	Short: "Decode a friday tx from hex or base64",
 	RunE:  runTxCmd,
 }
 
@@ -139,7 +139,7 @@ func runPubKeyCmd(cmd *cobra.Command, args []string) error {
 		pubkeyBytes = pubKey[:]
 	}
 
-	cdc := gaia.MakeCodec()
+	cdc := friday.MakeCodec()
 	pubKeyJSONBytes, err := cdc.MarshalJSON(pubKey)
 	if err != nil {
 		return err
@@ -226,7 +226,7 @@ func runTxCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	var tx = auth.StdTx{}
-	cdc := gaia.MakeCodec()
+	cdc := friday.MakeCodec()
 
 	err = cdc.UnmarshalBinaryLengthPrefixed(txBytes, &tx)
 	if err != nil {

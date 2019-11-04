@@ -20,7 +20,7 @@ import (
 
 	sdk "github.com/hdac-io/friday/types"
 
-	gaia "github.com/hdac-io/friday/app"
+	friday "github.com/hdac-io/friday/app"
 )
 
 func runHackCmd(cmd *cobra.Command, args []string) error {
@@ -29,18 +29,18 @@ func runHackCmd(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Expected 1 arg")
 	}
 
-	// ".gaiad"
+	// ".fryd"
 	dataDir := args[0]
 	dataDir = path.Join(dataDir, "data")
 
 	// load the app
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	db, err := sdk.NewLevelDB("gaia", dataDir)
+	db, err := sdk.NewLevelDB("friday", dataDir)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	app, keyMain, keyStaking, stakingKeeper := gaia.NewGaiaAppUNSAFE(
+	app, keyMain, keyStaking, stakingKeeper := friday.NewFridayAppUNSAFE(
 		logger, db, nil, false, 0, baseapp.SetPruning(store.NewPruningOptionsFromString(viper.GetString("pruning"))))
 
 	// print some info
