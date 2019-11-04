@@ -58,7 +58,7 @@ func TestMsgSendGetSignBytes(t *testing.T) {
 	var msg = NewMsgSend(addr1, addr2, coins)
 	res := msg.GetSignBytes()
 
-	expected := `{"type":"friday/MsgSend","value":{"amount":[{"amount":"10","denom":"atom"}],"from_address":"friday1d9h8qat57ljhcm","to_address":"friday1da6hgur4wsmpnjyg"}}`
+	expected := `{"type":"friday/MsgSend","value":{"amount":[{"amount":"10","denom":"atom"}],"from_address":"friday1d9h8qat5535qph","to_address":"friday1da6hgur4wszqs96h"}}`
 	require.Equal(t, expected, string(res))
 }
 
@@ -224,7 +224,7 @@ func TestMsgMultiSendGetSignBytes(t *testing.T) {
 	}
 	res := msg.GetSignBytes()
 
-	expected := `{"type":"friday/MsgMultiSend","value":{"inputs":[{"address":"friday1d9h8qat57ljhcm","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"friday1da6hgur4wsmpnjyg","coins":[{"amount":"10","denom":"atom"}]}]}}`
+	expected := `{"type":"friday/MsgMultiSend","value":{"inputs":[{"address":"friday1d9h8qat5535qph","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"friday1da6hgur4wszqs96h","coins":[{"amount":"10","denom":"atom"}]}]}}`
 	require.Equal(t, expected, string(res))
 }
 

@@ -21,7 +21,7 @@ func TestPrepareFlagsForTxCreateValidator(t *testing.T) {
 	logger := log.NewNopLogger()
 	ctx := server.NewContext(config, logger)
 
-	valPubKey, _ := sdk.GetConsPubKeyBech32("fridayvalconspub1zcjduepq7jsrkl9fgqk0wj3ahmfr8pgxj6vakj2wzn656s8pehh0zhv2w5as5gd80a")
+	valPubKey, _ := sdk.GetConsPubKeyBech32("fridayvalconspub1zcjduepq7jsrkl9fgqk0wj3ahmfr8pgxj6vakj2wzn656s8pehh0zhv2w5as5vk58g")
 
 	type args struct {
 		config    *cfg.Config
