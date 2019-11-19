@@ -6,10 +6,10 @@ import (
 
 // QueryExecutionLayer payload for a UnitAccount query
 type QueryExecutionLayer struct {
-	StateHash []byte `json:state_hash`
-	KeyType   string `json:key_type`
-	KeyData   []byte `json:key_data`
-	Path      string `json:path`
+	StateHash []byte `json:"state_hash"`
+	KeyType   string `json:"key_type"`
+	KeyData   []byte `json:"key_data"`
+	Path      string `json:"path"`
 }
 
 // implement fmt.Stringer
