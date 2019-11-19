@@ -18,7 +18,9 @@ var (
 )
 
 type (
-	MsgExecute          = types.MsgExecute
-	QueryExecutionLayer = types.QueryExecutionLayer
-	UnitHashMap         = types.UnitHashMap
+	MsgExecute                = types.MsgExecute
+	QueryExecutionLayer       = types.QueryExecutionLayer
+	UnitHashMap               = types.UnitHashMap
+	QueryExecutionLayerResp   = types.QueryExecutionLayerResp
+	QueryExecutionLayerDetail = types.QueryExecutionLayerDetail
 )
