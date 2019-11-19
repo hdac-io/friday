@@ -1,12 +1,15 @@
 package executionlayer
 
 import (
+	"bytes"
+	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
+
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
 )
@@ -33,11 +36,11 @@ func NewExecutionLayerKeeper(
 	}
 }
 
-func (k Keeper) SetUnitHashMap(ctx sdk.Context, blockState []byte, eeState []byte) {
-	if Equal(blockState, []byte{}) {
+func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockState []byte, eeState []byte) {
+	if bytes.Equal(blockState, []byte{}) {
 		return
 	}
-	if Equal(eeState, []byte{}) || len(eeState) != 32 {
+	if bytes.Equal(eeState, []byte{}) || len(eeState) != 32 {
 		return
 	}
 
@@ -45,7 +48,33 @@ func (k Keeper) SetUnitHashMap(ctx sdk.Context, blockState []byte, eeState []byt
 	store.Set(blockState, eeState)
 }
 
-func (k Keeper) GetEEState(ctx sdk.Context, blockState []byte) []byte {
+func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockState []byte) []byte {
 	store := ctx.KVStore(k.storeKey)
 	return store.Get(blockState)
+}
+
+// GetQueryResult queries with whole parameters
+func (k ExecutionLayerKeeper) GetQueryResult(ctx sdk.Context,
+	stateHash []byte, keyType string, keyData string, path string) (state.Value, error) {
+	arrPath := strings.Split(path, "/")
+	res, err := grpc.Query(k.client, stateHash, keyType, keyData, arrPath, k.protocolVersion)
+	if err != "" {
+		return state.Value{}, fmt.Errorf("")
+	}
+
+	return *res, nil
+}
+
+// GetQueryResultSimple queries without state hash.
+// State hash comes from Tendermint block state - EE state mapping DB
+func (k ExecutionLayerKeeper) GetQueryResultSimple(ctx sdk.Context,
+	keyType string, keyData string, path string) (state.Value, error) {
+	stateHash := k.GetEEState(ctx, ctx.BlockHeader().LastBlockId.Hash)
+	arrPath := strings.Split(path, "/")
+	res, err := grpc.Query(k.client, stateHash, keyType, keyData, arrPath, k.protocolVersion)
+	if err != "" {
+		return state.Value{}, fmt.Errorf("")
+	}
+
+	return *res, nil
 }
