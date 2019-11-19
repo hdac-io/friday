@@ -48,3 +48,6 @@ dependency-graph.png
 *.aux
 *.out
 *.synctex.gz
+
+# x/executionlayer
+x/executionlayer/wasms/
