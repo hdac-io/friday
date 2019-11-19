@@ -15,21 +15,23 @@ import (
 )
 
 type ExecutionLayerKeeper struct {
-	storeKey        sdk.StoreKey
+	HashMapStoreKey sdk.StoreKey
+	DeployStoreKey  sdk.StoreKey
 	client          ipc.ExecutionEngineServiceClient
 	protocolVersion *state.ProtocolVersion
 	cdc             *codec.Codec
 }
 
 func NewExecutionLayerKeeper(
-	cdc *codec.Codec, storeKey sdk.StoreKey, path string, protocolVersion string) ExecutionLayerKeeper {
+	cdc *codec.Codec, hashMapStoreKey sdk.StoreKey, deployStoreKey sdk.StoreKey, path string, protocolVersion string) ExecutionLayerKeeper {
 	pv := strings.Split(protocolVersion, ".")
 	pvInts := make([]int, 3)
 	pvInts[0], _ = strconv.Atoi(pv[0])
 	pvInts[1], _ = strconv.Atoi(pv[1])
 	pvInts[2], _ = strconv.Atoi(pv[2])
 	return ExecutionLayerKeeper{
-		storeKey:        storeKey,
+		HashMapStoreKey: hashMapStoreKey,
+		DeployStoreKey:  deployStoreKey,
 		client:          grpc.Connect(path),
 		protocolVersion: &state.ProtocolVersion{Major: uint32(pvInts[0]), Minor: uint32(pvInts[1]), Patch: uint32(pvInts[2])},
 		cdc:             cdc,
@@ -44,12 +46,12 @@ func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockState []byte,
 		return
 	}
 
-	store := ctx.KVStore(k.storeKey)
+	store := ctx.KVStore(k.HashMapStoreKey)
 	store.Set(blockState, eeState)
 }
 
 func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockState []byte) []byte {
-	store := ctx.KVStore(k.storeKey)
+	store := ctx.KVStore(k.HashMapStoreKey)
 	return store.Get(blockState)
 }
 
@@ -59,7 +61,7 @@ func (k ExecutionLayerKeeper) GetQueryResult(ctx sdk.Context,
 	arrPath := strings.Split(path, "/")
 	res, err := grpc.Query(k.client, stateHash, keyType, keyData, arrPath, k.protocolVersion)
 	if err != "" {
-		return state.Value{}, fmt.Errorf("")
+		return state.Value{}, fmt.Errorf(err)
 	}
 
 	return *res, nil

@@ -5,5 +5,6 @@ const (
 	ModuleName = "executionlayer"
 
 	// StoreKey sets schema name from ModuleName
-	StoreKey = ModuleName
+	HashMapStoreKey = ModuleName + "_hashmap"
+	DeployStoreKey  = ModuleName + "_deploy"
 )

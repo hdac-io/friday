@@ -49,3 +49,6 @@ dependency-graph.png
 
 # third party
 CasperLabs
+
+# x/executionlayer
+x/executionlayer/wasms/
