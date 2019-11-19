@@ -1,3 +1,6 @@
+[![Travis](https://travis-ci.com/hdac-io/friday.svg?token=bhU3g7FdixBp5h3M2its&branch=dev)](https://travis-ci.com/hdac-io/friday/branches)
+[![codecov](https://codecov.io/gh/hdac-io/friday/branch/dev/graph/badge.svg?token=hQEgzmULjh)](https://codecov.io/gh/hdac-io/friday))
+
 # TESTNET
 
 * go 1.13 is required
