@@ -11,6 +11,7 @@ import (
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/types/module"
+
 	"github.com/hdac-io/friday/x/auth/client/cli"
 	"github.com/hdac-io/friday/x/auth/client/rest"
 	"github.com/hdac-io/friday/x/auth/types"
@@ -81,24 +82,24 @@ func NewAppModule(executionLayerKeeper ExecutionLayerKeeper) AppModule {
 
 // module name
 func (AppModule) Name() string {
-	return types.ModuleName
+	return ModuleName
 }
 
 // register invariants
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// module message route name
-func (AppModule) Route() string { return "" }
+// Route works to route msg to this module (revised)
+func (AppModule) Route() string { return RouterKey }
 
 // module handler
 func (AppModule) NewHandler() sdk.Handler { return nil }
 
-// module querier route name
+// QuerierRoute works to route query to this module (revised)
 func (AppModule) QuerierRoute() string {
-	return types.QuerierRoute
+	return ModuleName
 }
 
-// module querier
+// NewQuerierHandler constructs the query router
 func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return NewQuerier(am.executionLayerKeeper)
 }
