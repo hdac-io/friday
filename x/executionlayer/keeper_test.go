@@ -37,3 +37,23 @@ func TestGetQueryResult(t *testing.T) {
 
 	assert.NotNil(t, res)
 }
+
+func TestGetQueryBalanceResult(t *testing.T) {
+	input := setupTestInput()
+
+	keeper := NewExecutionLayerKeeper(input.cdc, sdk.NewKVStoreKey(HashMapStoreKey), sdk.NewKVStoreKey(DeployStoreKey),
+		os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"), "1.0.0")
+
+	parentHash := genesis(keeper)
+
+	res, err := keeper.GetQueryBalanceResult(input.ctx, parentHash, input.genesisAddress)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		panic("Fail to execute")
+	}
+
+	fmt.Println(res)
+
+	assert.NotNil(t, res)
+}

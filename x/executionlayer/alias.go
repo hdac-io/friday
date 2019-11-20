@@ -24,4 +24,6 @@ type (
 	UnitHashMap               = types.UnitHashMap
 	QueryExecutionLayerResp   = types.QueryExecutionLayerResp
 	QueryExecutionLayerDetail = types.QueryExecutionLayerDetail
+	QueryGetBalance           = types.QueryGetBalance
+	QueryGetBalanceDetail     = types.QueryGetBalanceDetail
 )

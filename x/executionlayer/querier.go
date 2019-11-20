@@ -9,8 +9,10 @@ import (
 )
 
 const (
-	QueryEE       = "query"
-	QueryEEDetail = "querydetail"
+	QueryEE              = "query"
+	QueryEEDetail        = "querydetail"
+	QueryEEBalance       = "querybalance"
+	QueryEEBalanceDetail = "querybalancedetail"
 )
 
 // NewQuerier is the module level router for state queries
@@ -21,6 +23,11 @@ func NewQuerier(keeper ExecutionLayerKeeper) sdk.Querier {
 			return queryEEDetail(ctx, path[1:], req, keeper)
 		case QueryEE:
 			return queryEE(ctx, path[1:], req, keeper)
+		case QueryEEBalance:
+			return queryBalance(ctx, path[1:], req, keeper)
+		case QueryEEBalanceDetail:
+			return queryBalanceDetail(ctx, path[1:], req, keeper)
+
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown ee query")
 		}
@@ -29,7 +36,7 @@ func NewQuerier(keeper ExecutionLayerKeeper) sdk.Querier {
 
 func queryEEDetail(ctx sdk.Context, path []string, req abci.RequestQuery, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
 	var param QueryExecutionLayerDetail
-	err := types.ModuleCdc.UnmarshalJSON(req.Data, param)
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &param)
 	if err != nil {
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
@@ -49,7 +56,7 @@ func queryEEDetail(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 
 func queryEE(ctx sdk.Context, path []string, req abci.RequestQuery, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
 	var param QueryExecutionLayer
-	err := types.ModuleCdc.UnmarshalJSON(req.Data, param)
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &param)
 	if err != nil {
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
@@ -64,5 +71,45 @@ func queryEE(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Execu
 	}
 
 	res, _ := codec.MarshalJSONIndent(keeper.cdc, qryvalue)
+	return res, nil
+}
+
+func queryBalanceDetail(ctx sdk.Context, path []string, req abci.RequestQuery, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
+	var param QueryGetBalanceDetail
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &param)
+	if err != nil {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
+	}
+
+	val, err := keeper.GetQueryBalanceResult(ctx, param.StateHash, string(param.Address))
+	if err != nil {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, err.Error())
+	}
+
+	queryvalue := QueryExecutionLayerResp{
+		Value: val,
+	}
+
+	res, _ := codec.MarshalJSONIndent(keeper.cdc, queryvalue)
+	return res, nil
+}
+
+func queryBalance(ctx sdk.Context, path []string, req abci.RequestQuery, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
+	var param QueryGetBalance
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &param)
+	if err != nil {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
+	}
+
+	val, err := keeper.GetQueryBalanceResultSimple(ctx, param.Address)
+	if err != nil {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, err.Error())
+	}
+
+	queryvalue := QueryExecutionLayerResp{
+		Value: val,
+	}
+
+	res, _ := codec.MarshalJSONIndent(keeper.cdc, queryvalue)
 	return res, nil
 }
