@@ -75,8 +75,29 @@ func (k ExecutionLayerKeeper) GetQueryResultSimple(ctx sdk.Context,
 	arrPath := strings.Split(path, "/")
 	res, err := grpc.Query(k.client, stateHash, keyType, keyData, arrPath, k.protocolVersion)
 	if err != "" {
-		return state.Value{}, fmt.Errorf("")
+		return state.Value{}, fmt.Errorf(err)
 	}
 
 	return *res, nil
+}
+
+// GetQueryBalanceResult queries with whole parameters
+func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, stateHash []byte, address string) (string, error) {
+	res, err := grpc.QueryBlanace(k.client, stateHash, address, k.protocolVersion)
+	if err != "" {
+		return "", fmt.Errorf(err)
+	}
+
+	return res, nil
+}
+
+// GetQueryBalanceResultSimple queries with whole parameters
+func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, address string) (string, error) {
+	stateHash := k.GetEEState(ctx, ctx.BlockHeader().LastBlockId.Hash)
+	res, err := grpc.QueryBlanace(k.client, stateHash, address, k.protocolVersion)
+	if err != "" {
+		return "", fmt.Errorf(err)
+	}
+
+	return res, nil
 }
