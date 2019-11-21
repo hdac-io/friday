@@ -55,7 +55,7 @@ var (
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
 		supply.AppModuleBasic{},
-		executionlayer.AppModuleBasic{},
+		//executionlayer.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -120,7 +120,9 @@ func NewSimApp(
 
 	keys := sdk.NewKVStoreKeys(bam.MainStoreKey, auth.StoreKey, staking.StoreKey,
 		supply.StoreKey, mint.StoreKey, distr.StoreKey, slashing.StoreKey,
-		gov.StoreKey, params.StoreKey, executionlayer.StoreKey)
+		gov.StoreKey, params.StoreKey,
+		//executionlayer.StoreKey
+	)
 	tkeys := sdk.NewTransientStoreKeys(staking.TStoreKey, params.TStoreKey)
 
 	app := &SimApp{
@@ -155,7 +157,7 @@ func NewSimApp(
 		slashingSubspace, slashing.DefaultCodespace)
 	app.crisisKeeper = crisis.NewKeeper(crisisSubspace, invCheckPeriod, app.supplyKeeper, auth.FeeCollectorName)
 	// TODO - Need to change default value(socket path, protocol version)
-	app.executionLayerKeeper = executionlayer.NewExecutionLayerKeeper(app.cdc, keys[executionlayer.StoreKey], os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"), os.ExpandEnv("1.0.0"))
+	//app.executionLayerKeeper = executionlayer.NewExecutionLayerKeeper(app.cdc, keys[executionlayer.StoreKey], os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"), os.ExpandEnv("1.0.0"))
 
 	// register the proposal types
 	govRouter := gov.NewRouter()
@@ -185,7 +187,7 @@ func NewSimApp(
 		mint.NewAppModule(app.mintKeeper),
 		slashing.NewAppModule(app.slashingKeeper, app.stakingKeeper),
 		staking.NewAppModule(app.stakingKeeper, app.distrKeeper, app.accountKeeper, app.supplyKeeper),
-		executionlayer.NewAppModule(app.ExecutionLayerKeeper),
+		//executionlayer.NewAppModule(app.ExecutionLayerKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
