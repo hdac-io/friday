@@ -19,7 +19,6 @@ docs/tutorial
 dist
 tools-stamp
 friday
-fryd
 
 # Data - ideally these don't exist
 baseapp/data/*
@@ -48,3 +47,6 @@ dependency-graph.png
 *.aux
 *.out
 *.synctex.gz
+
+# third party
+CasperLabs

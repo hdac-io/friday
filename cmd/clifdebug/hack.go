@@ -29,7 +29,7 @@ func runHackCmd(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Expected 1 arg")
 	}
 
-	// ".fryd"
+	// ".nodef"
 	dataDir := args[0]
 	dataDir = path.Join(dataDir, "data")
 

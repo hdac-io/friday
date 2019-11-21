@@ -3,8 +3,9 @@
 all: install
 
 install: go.sum
-	go install -mod=readonly ./cmd/fryd
-	go install -mod=readonly ./cmd/friday
+	bash ./scripts/install_casperlabs_ee.sh
+	go install -mod=readonly ./cmd/nodf
+	go install -mod=readonly ./cmd/clif
 
 go.sum: go.mod
 	@go mod verify

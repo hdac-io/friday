@@ -34,10 +34,10 @@ const appName = "FridayApp"
 
 var (
 	// default home directories for friday client
-	DefaultCLIHome = os.ExpandEnv("$HOME/.friday")
+	DefaultCLIHome = os.ExpandEnv("$HOME/.clif")
 
 	// default home directories for friday server daemon
-	DefaultNodeHome = os.ExpandEnv("$HOME/.fryd")
+	DefaultNodeHome = os.ExpandEnv("$HOME/.nodef")
 
 	// The module BasicManager is in charge of setting up basic,
 	// non-dependant module elements, such as codec registration
