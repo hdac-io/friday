@@ -54,3 +54,8 @@ func (q QueryGetBalance) String() string {
 type QueryExecutionLayerResp struct {
 	Value string `json:"value"`
 }
+
+// implement fmt.Stringer
+func (q QueryExecutionLayerResp) String() string {
+	return fmt.Sprintf("Value: %s", q.Value)
+}
