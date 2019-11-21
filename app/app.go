@@ -123,7 +123,7 @@ func NewFridayApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest
 	keys := sdk.NewKVStoreKeys(
 		bam.MainStoreKey, auth.StoreKey, staking.StoreKey,
 		supply.StoreKey, mint.StoreKey, distr.StoreKey, slashing.StoreKey,
-		gov.StoreKey, params.StoreKey, executionlayer.StoreKey,
+		gov.StoreKey, params.StoreKey, executionlayer.DeployStoreKey, executionlayer.HashMapStoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(staking.TStoreKey, params.TStoreKey)
 
@@ -162,7 +162,10 @@ func NewFridayApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest
 	)
 	app.crisisKeeper = crisis.NewKeeper(crisisSubspace, invCheckPeriod, app.supplyKeeper, auth.FeeCollectorName)
 	// TODO - Need to change default value(socket path, protocol version)
-	app.executionLayerKeeper = executionlayer.NewExecutionLayerKeeper(app.cdc, keys[executionlayer.StoreKey], os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock", "1.0.0"))
+	app.executionLayerKeeper = executionlayer.NewExecutionLayerKeeper(
+		app.cdc,
+		keys[executionlayer.HashMapStoreKey], keys[executionlayer.DeployStoreKey],
+		os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"), "1.0.0")
 
 	// register the proposal types
 	govRouter := gov.NewRouter()
@@ -194,7 +197,7 @@ func NewFridayApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest
 		mint.NewAppModule(app.mintKeeper),
 		slashing.NewAppModule(app.slashingKeeper, app.stakingKeeper),
 		staking.NewAppModule(app.stakingKeeper, app.distrKeeper, app.accountKeeper, app.supplyKeeper),
-		executionlayer.NewAppModule(app.ExecutionLayerKeeper),
+		executionlayer.NewAppModule(app.executionLayerKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -209,7 +212,7 @@ func NewFridayApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest
 	app.mm.SetOrderInitGenesis(
 		genaccounts.ModuleName, distr.ModuleName, staking.ModuleName,
 		auth.ModuleName, bank.ModuleName, slashing.ModuleName, gov.ModuleName,
-		mint.ModuleName, supply.ModuleName, crisis.ModuleName, genutil.ModuleName, executionlayer.MoudleName,
+		mint.ModuleName, supply.ModuleName, crisis.ModuleName, genutil.ModuleName, executionlayer.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.crisisKeeper)
