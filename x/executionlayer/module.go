@@ -12,9 +12,9 @@ import (
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/types/module"
 
-	"github.com/hdac-io/friday/x/auth/client/cli"
-	"github.com/hdac-io/friday/x/auth/client/rest"
 	"github.com/hdac-io/friday/x/auth/types"
+	"github.com/hdac-io/friday/x/executionlayer/client/cli"
+	"github.com/hdac-io/friday/x/executionlayer/client/rest"
 )
 
 var (
@@ -57,26 +57,26 @@ func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router
 
 // get the root tx command of this module
 func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetTxCmd(cdc)
+	return cli.GetExecutionLayerTxCmd(cdc)
 }
 
 // get the root query command of this module
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetQueryCmd(cdc)
+	return cli.GetExecutionLayerQueryCmd(cdc)
 }
 
 //___________________________
 // app module object
 type AppModule struct {
 	AppModuleBasic
-	executionLayerKeeper ExecutionLayerKeeper
+	keeper ExecutionLayerKeeper
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(executionLayerKeeper ExecutionLayerKeeper) AppModule {
 	return AppModule{
-		AppModuleBasic:       AppModuleBasic{},
-		executionLayerKeeper: executionLayerKeeper,
+		AppModuleBasic: AppModuleBasic{},
+		keeper:         executionLayerKeeper,
 	}
 }
 
@@ -101,7 +101,7 @@ func (AppModule) QuerierRoute() string {
 
 // NewQuerierHandler constructs the query router
 func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return NewQuerier(am.executionLayerKeeper)
+	return NewQuerier(am.keeper)
 }
 
 // module init-genesis
