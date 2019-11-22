@@ -35,18 +35,16 @@ func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExe
 	deploys = util.AddDeploy(deploys, deploy)
 	effects, errGrpc := grpc.Execute(k.client, stateHash, ctx.BlockTime().Unix(), deploys, k.protocolVersion)
 	if errGrpc != "" {
-		return sdk.Result{}
+		return sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", errGrpc).Result()
 	}
 
 	// Commit
-	postStateHash, validators, errGrpc := grpc.Commit(k.client, stateHash, effects, k.protocolVersion)
+	postStateHash, _, errGrpc := grpc.Commit(k.client, stateHash, effects, k.protocolVersion)
 	if errGrpc != "" {
-		return sdk.Result{}
+		return sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", errGrpc).Result()
 	}
 
 	k.SetNextState(ctx, msg.BlockState, postStateHash)
-
-	_ = validators
 
 	return sdk.Result{}
 }
