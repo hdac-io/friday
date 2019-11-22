@@ -35,12 +35,10 @@ func setupTestInput() testInput {
 	types.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 
-	hashMapStoreKey := sdk.NewKVStoreKey("hashMapStoreKey")
-	deployStoreKey := sdk.NewKVStoreKey("deployStoreKey")
+	hashMapStoreKey := sdk.NewKVStoreKey(HashMapStoreKey)
 
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(hashMapStoreKey, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(deployStoreKey, sdk.StoreTypeIAVL, db)
 	ms.LoadLatestVersion()
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
@@ -63,7 +61,7 @@ func setupTestInput() testInput {
 		"opcodes-multiplier": 3,
 		"opcodes-divisor":    8}
 
-	elk := NewExecutionLayerKeeper(cdc, hashMapStoreKey, deployStoreKey, os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"), "1.0.0")
+	elk := NewExecutionLayerKeeper(cdc, hashMapStoreKey, os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"), "1.0.0")
 
 	elk.InitialUnitHashMap(ctx, blockStateHash)
 

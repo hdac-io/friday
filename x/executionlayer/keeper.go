@@ -18,14 +18,13 @@ import (
 
 type ExecutionLayerKeeper struct {
 	HashMapStoreKey sdk.StoreKey
-	DeployStoreKey  sdk.StoreKey
 	client          ipc.ExecutionEngineServiceClient
 	protocolVersion *state.ProtocolVersion
 	cdc             *codec.Codec
 }
 
 func NewExecutionLayerKeeper(
-	cdc *codec.Codec, hashMapStoreKey sdk.StoreKey, deployStoreKey sdk.StoreKey, path string, protocolVersion string) ExecutionLayerKeeper {
+	cdc *codec.Codec, hashMapStoreKey sdk.StoreKey, path string, protocolVersion string) ExecutionLayerKeeper {
 	pv := strings.Split(protocolVersion, ".")
 	pvInts := make([]int, 3)
 	pvInts[0], _ = strconv.Atoi(pv[0])
@@ -33,7 +32,6 @@ func NewExecutionLayerKeeper(
 	pvInts[2], _ = strconv.Atoi(pv[2])
 	return ExecutionLayerKeeper{
 		HashMapStoreKey: hashMapStoreKey,
-		DeployStoreKey:  deployStoreKey,
 		client:          grpc.Connect(path),
 		protocolVersion: &state.ProtocolVersion{Major: uint32(pvInts[0]), Minor: uint32(pvInts[1]), Patch: uint32(pvInts[2])},
 		cdc:             cdc,
@@ -54,9 +52,14 @@ func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockState []byte,
 	if bytes.Equal(eeState, []byte{}) || len(eeState) != 32 {
 		return false
 	}
-	result := append(eeState, eeState...)
+
+	unit := UnitHashMap{
+		EEState:     eeState,
+		NextEEState: eeState,
+	}
+	unitBytes := k.cdc.MustMarshalBinaryBare(unit)
 	store := ctx.KVStore(k.HashMapStoreKey)
-	store.Set(blockState, result)
+	store.Set(blockState, unitBytes)
 
 	return true
 }
@@ -64,13 +67,19 @@ func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockState []byte,
 // GetEEState returns a eeState for blockState
 func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockState []byte) []byte {
 	store := ctx.KVStore(k.HashMapStoreKey)
-	return store.Get(blockState)[:32]
+	bytes := store.Get(blockState)
+	var unit UnitHashMap
+	k.cdc.MustUnmarshalBinaryBare(bytes, &unit)
+	return unit.EEState
 }
 
 // GetNextState return a next EE State for blockState
 func (k ExecutionLayerKeeper) GetNextState(ctx sdk.Context, blockState []byte) []byte {
 	store := ctx.KVStore(k.HashMapStoreKey)
-	return store.Get(blockState)[32:]
+	bytes := store.Get(blockState)
+	var unit UnitHashMap
+	k.cdc.MustUnmarshalBinaryBare(bytes, &unit)
+	return unit.NextEEState
 }
 
 // SetNextState set a nextEEState to blockState
@@ -82,8 +91,13 @@ func (k ExecutionLayerKeeper) SetNextState(ctx sdk.Context, blockState []byte, n
 		return false
 	}
 	store := ctx.KVStore(k.HashMapStoreKey)
-	eeStates := store.Get(blockState)
-	store.Set(blockState, append(eeStates[:32], nextEEState...))
+	bytes := store.Get(blockState)
+	var unit UnitHashMap
+	k.cdc.MustUnmarshalBinaryBare(bytes, &unit)
+	unit.NextEEState = nextEEState
+
+	bytes = k.cdc.MustMarshalBinaryBare(unit)
+	store.Set(blockState, bytes)
 	return true
 }
 
