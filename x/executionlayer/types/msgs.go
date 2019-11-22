@@ -16,6 +16,7 @@ type MsgExecute struct {
 	SessionArgs          []byte         `json:"session_args"`
 	PaymentCode          []byte         `json:"payment_code"`
 	PaymentArgs          []byte         `json:"payment_args"`
+	GasPrice             uint64         `json:"gas_price"`
 }
 
 // NewMsgExecute is a constructor function for MsgSetName
@@ -24,6 +25,7 @@ func NewMsgExecute(
 	execAccount sdk.AccAddress, contractOwnerAccount sdk.AccAddress,
 	sessionCode []byte, sessionArgs []byte,
 	paymentCode []byte, paymentArgs []byte,
+	gasPrice uint64,
 ) MsgExecute {
 	return MsgExecute{
 		BlockState:           blockState,
@@ -33,6 +35,7 @@ func NewMsgExecute(
 		SessionArgs:          sessionArgs,
 		PaymentCode:          paymentCode,
 		PaymentArgs:          paymentArgs,
+		GasPrice:             gasPrice,
 	}
 }
 
