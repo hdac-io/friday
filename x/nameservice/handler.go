@@ -2,6 +2,7 @@ package nameservice
 
 import (
 	"fmt"
+	"reflect"
 
 	sdk "github.com/hdac-io/friday/types"
 )
@@ -23,27 +24,42 @@ func NewHandler(k AccountKeeper) sdk.Handler {
 	}
 }
 
+func getResult(ok bool, msg sdk.Msg) sdk.Result {
+	res := sdk.Result{}
+	if ok {
+		res.Code = sdk.CodeOK
+	} else {
+		res.Code = sdk.CodeUnknownRequest
+	}
+
+	events := sdk.EmptyEvents()
+	event := sdk.Event{}
+	v := reflect.ValueOf(msg)
+	typeOfV := v.Type()
+	for i := 0; i < v.NumField(); i++ {
+		event.AppendAttributes(
+			sdk.NewAttribute(typeOfV.Field(i).Name, fmt.Sprintf("%v", v.Field(i).Interface())),
+		)
+	}
+	events.AppendEvent(event)
+	res.Events = events
+
+	return res
+}
+
 // Handle a message to set name
 func handleMsgSetAccount(ctx sdk.Context, k AccountKeeper, msg MsgSetAccount) sdk.Result {
-	k.SetUnitAccount(ctx, msg.ID, msg.Address)
-	return sdk.Result{}
+	res := k.SetUnitAccount(ctx, msg.ID, msg.Address)
+	return getResult(res, msg)
 }
 
 func handleMsgAddrCheck(ctx sdk.Context, k AccountKeeper, msg MsgAddrCheck) sdk.Result {
-	result := k.AddrCheck(ctx, msg.ID, msg.Address)
-	res := ""
-	if result {
-		res = "true"
-	} else {
-		res = "false"
-	}
-	return sdk.Result{
-		Log: res,
-	}
+	res := k.AddrCheck(ctx, msg.ID, msg.Address)
+	return getResult(res, msg)
 }
 
 // Handle a message to change key
 func handleMsgChangeKey(ctx sdk.Context, k AccountKeeper, msg MsgChangeKey) sdk.Result {
-	k.ChangeKey(ctx, msg.ID, msg.OldAddress, msg.NewAddress)
-	return sdk.Result{}
+	res := k.ChangeKey(ctx, msg.ID, msg.OldAddress, msg.NewAddress)
+	return getResult(res, msg)
 }
