@@ -24,6 +24,7 @@ import (
 	"github.com/hdac-io/friday/x/genutil"
 	"github.com/hdac-io/friday/x/gov"
 	"github.com/hdac-io/friday/x/mint"
+	"github.com/hdac-io/friday/x/nameservice"
 	"github.com/hdac-io/friday/x/params"
 	paramsclient "github.com/hdac-io/friday/x/params/client"
 	"github.com/hdac-io/friday/x/slashing"
@@ -56,6 +57,7 @@ var (
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
 		supply.AppModuleBasic{},
+		nameservice.AppModuleBasic{},
 		executionlayer.AppModuleBasic{},
 	)
 
@@ -104,6 +106,7 @@ type FridayApp struct {
 	govKeeper            gov.Keeper
 	crisisKeeper         crisis.Keeper
 	paramsKeeper         params.Keeper
+	nameserviceKeeper    nameservice.AccountKeeper
 	executionLayerKeeper executionlayer.ExecutionLayerKeeper
 
 	// the module manager
@@ -123,7 +126,9 @@ func NewFridayApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest
 	keys := sdk.NewKVStoreKeys(
 		bam.MainStoreKey, auth.StoreKey, staking.StoreKey,
 		supply.StoreKey, mint.StoreKey, distr.StoreKey, slashing.StoreKey,
-		gov.StoreKey, params.StoreKey, executionlayer.DeployStoreKey, executionlayer.HashMapStoreKey,
+		gov.StoreKey, params.StoreKey,
+		nameservice.StoreKey,
+		executionlayer.DeployStoreKey, executionlayer.HashMapStoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(staking.TStoreKey, params.TStoreKey)
 
@@ -162,6 +167,7 @@ func NewFridayApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest
 	)
 	app.crisisKeeper = crisis.NewKeeper(crisisSubspace, invCheckPeriod, app.supplyKeeper, auth.FeeCollectorName)
 	// TODO - Need to change default value(socket path, protocol version)
+	app.nameserviceKeeper = nameservice.NewAccountKeeper(keys[nameservice.StoreKey], app.cdc)
 	app.executionLayerKeeper = executionlayer.NewExecutionLayerKeeper(
 		app.cdc,
 		keys[executionlayer.HashMapStoreKey], keys[executionlayer.DeployStoreKey],
@@ -212,7 +218,9 @@ func NewFridayApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest
 	app.mm.SetOrderInitGenesis(
 		genaccounts.ModuleName, distr.ModuleName, staking.ModuleName,
 		auth.ModuleName, bank.ModuleName, slashing.ModuleName, gov.ModuleName,
-		mint.ModuleName, supply.ModuleName, crisis.ModuleName, genutil.ModuleName, executionlayer.ModuleName,
+		mint.ModuleName, supply.ModuleName, crisis.ModuleName, genutil.ModuleName,
+		nameservice.ModuleName,
+		executionlayer.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.crisisKeeper)
