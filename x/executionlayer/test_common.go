@@ -3,6 +3,7 @@ package executionlayer
 import (
 	"fmt"
 	"math/big"
+	"os"
 	"time"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
@@ -19,7 +20,8 @@ import (
 type testInput struct {
 	cdc            *codec.Codec
 	ctx            sdk.Context
-	rootState      []byte
+	elk            ExecutionLayerKeeper
+	blockStateHash []byte
 	genesisAddress string
 	genesisAccount map[string][]string
 	chainName      string
@@ -33,15 +35,17 @@ func setupTestInput() testInput {
 	types.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 
-	unitHashMapKey := sdk.NewKVStoreKey("unitHashMapKey")
+	hashMapStoreKey := sdk.NewKVStoreKey("hashMapStoreKey")
+	deployStoreKey := sdk.NewKVStoreKey("deployStoreKey")
 
 	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(unitHashMapKey, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(hashMapStoreKey, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(deployStoreKey, sdk.StoreTypeIAVL, db)
 	ms.LoadLatestVersion()
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
 
-	emptyStateHash := util.DecodeHexString(util.StrEmptyStateHash)
+	blockStateHash := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
 	genesisAddress := "d70243dd9d0d646fd6df282a8f7a8fa05a6629bec01d8024c3611eb1c1fb9f84"
 	chainName := "hdac"
 	accounts := map[string][]string{
@@ -59,10 +63,15 @@ func setupTestInput() testInput {
 		"opcodes-multiplier": 3,
 		"opcodes-divisor":    8}
 
+	elk := NewExecutionLayerKeeper(cdc, hashMapStoreKey, deployStoreKey, os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"), "1.0.0")
+
+	elk.InitialUnitHashMap(ctx, blockStateHash)
+
 	return testInput{
 		cdc:            cdc,
 		ctx:            ctx,
-		rootState:      emptyStateHash,
+		elk:            elk,
+		blockStateHash: blockStateHash,
 		genesisAddress: genesisAddress,
 		genesisAccount: accounts,
 		chainName:      chainName,
@@ -75,7 +84,7 @@ func genesis(keeper ExecutionLayerKeeper) []byte {
 	mintCode := util.LoadWasmFile("./wasms/mint_install.wasm")
 	posCode := util.LoadWasmFile("./wasms/pos_install.wasm")
 
-	_, effects, errMsg := grpc.RunGenesis(keeper.client,
+	postStateHash, _, errMsg := grpc.RunGenesis(keeper.client,
 		input.chainName,
 		0,
 		keeper.protocolVersion,
@@ -86,12 +95,6 @@ func genesis(keeper ExecutionLayerKeeper) []byte {
 
 	if errMsg != "" {
 		panic(errMsg)
-	}
-
-	postStateHash, _, errMessage := grpc.Commit(keeper.client, input.rootState, effects, keeper.protocolVersion)
-
-	if errMessage != "" {
-		panic(errMessage)
 	}
 
 	return postStateHash
