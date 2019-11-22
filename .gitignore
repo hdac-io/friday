@@ -18,7 +18,6 @@ docs/_build
 docs/tutorial
 dist
 tools-stamp
-friday
 
 # Data - ideally these don't exist
 baseapp/data/*
