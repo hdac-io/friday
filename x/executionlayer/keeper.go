@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
+
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
@@ -38,21 +40,51 @@ func NewExecutionLayerKeeper(
 	}
 }
 
-func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockState []byte, eeState []byte) {
-	if bytes.Equal(blockState, []byte{}) {
-		return
-	}
-	if bytes.Equal(eeState, []byte{}) || len(eeState) != 32 {
-		return
-	}
-
-	store := ctx.KVStore(k.HashMapStoreKey)
-	store.Set(blockState, eeState)
+// InitialUnitHashMap initial UnitMapHash using empty hash value
+func (k ExecutionLayerKeeper) InitialUnitHashMap(ctx sdk.Context, blockState []byte) {
+	emptyHash := util.DecodeHexString(util.StrEmptyStateHash)
+	k.SetUnitHashMap(ctx, blockState, emptyHash)
 }
 
+// SetUnitHashMap map blockstate eeState to blockState
+func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockState []byte, eeState []byte) bool {
+	if bytes.Equal(blockState, []byte{}) {
+		return false
+	}
+	if bytes.Equal(eeState, []byte{}) || len(eeState) != 32 {
+		return false
+	}
+	result := append(eeState, eeState...)
+	store := ctx.KVStore(k.HashMapStoreKey)
+	store.Set(blockState, result)
+
+	return true
+}
+
+// GetEEState returns a eeState for blockState
 func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockState []byte) []byte {
 	store := ctx.KVStore(k.HashMapStoreKey)
-	return store.Get(blockState)
+	return store.Get(blockState)[:32]
+}
+
+// GetNextState return a next EE State for blockState
+func (k ExecutionLayerKeeper) GetNextState(ctx sdk.Context, blockState []byte) []byte {
+	store := ctx.KVStore(k.HashMapStoreKey)
+	return store.Get(blockState)[32:]
+}
+
+// SetNextState set a nextEEState to blockState
+func (k ExecutionLayerKeeper) SetNextState(ctx sdk.Context, blockState []byte, nextEEState []byte) bool {
+	if bytes.Equal(blockState, []byte{}) {
+		return false
+	}
+	if bytes.Equal(nextEEState, []byte{}) || len(nextEEState) != 32 {
+		return false
+	}
+	store := ctx.KVStore(k.HashMapStoreKey)
+	eeStates := store.Get(blockState)
+	store.Set(blockState, append(eeStates[:32], nextEEState...))
+	return true
 }
 
 // GetQueryResult queries with whole parameters
