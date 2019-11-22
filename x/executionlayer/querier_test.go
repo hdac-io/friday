@@ -12,7 +12,7 @@ import (
 
 func setup() (testInput, ExecutionLayerKeeper, func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error)) {
 	input := setupTestInput()
-	keeper := NewExecutionLayerKeeper(input.cdc, sdk.NewKVStoreKey(HashMapStoreKey), sdk.NewKVStoreKey(DeployStoreKey),
+	keeper := NewExecutionLayerKeeper(input.cdc, sdk.NewKVStoreKey(HashMapStoreKey),
 		os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"), "1.0.0")
 	querier := NewQuerier(keeper)
 
