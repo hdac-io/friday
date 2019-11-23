@@ -170,7 +170,7 @@ func NewFridayApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest
 	app.nameserviceKeeper = nameservice.NewAccountKeeper(keys[nameservice.StoreKey], app.cdc)
 	app.executionLayerKeeper = executionlayer.NewExecutionLayerKeeper(
 		app.cdc,
-		keys[executionlayer.HashMapStoreKey], keys[executionlayer.DeployStoreKey],
+		keys[executionlayer.HashMapStoreKey],
 		os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"), "1.0.0")
 
 	// register the proposal types

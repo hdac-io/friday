@@ -10,6 +10,7 @@ require (
 	github.com/cosmos/ledger-cosmos-go v0.10.3
 	github.com/gogo/protobuf v1.3.0
 	github.com/golang/mock v1.3.1-0.20190508161146-9fa652df1129
+	github.com/golang/protobuf v1.3.2
 	github.com/gorilla/mux v1.7.0
 	github.com/hdac-io/casperlabs-ee-grpc-go-util v0.0.0-20191107092152-6fe21a3370fe
 	github.com/mattn/go-isatty v0.0.6
