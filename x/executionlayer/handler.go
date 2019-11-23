@@ -2,6 +2,7 @@ package executionlayer
 
 import (
 	"fmt"
+	"reflect"
 
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
@@ -35,16 +36,39 @@ func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExe
 	deploys = util.AddDeploy(deploys, deploy)
 	effects, errGrpc := grpc.Execute(k.client, stateHash, ctx.BlockTime().Unix(), deploys, k.protocolVersion)
 	if errGrpc != "" {
-		return sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", errGrpc).Result()
+		return getResult(false, msg)
 	}
 
 	// Commit
 	postStateHash, _, errGrpc := grpc.Commit(k.client, stateHash, effects, k.protocolVersion)
 	if errGrpc != "" {
-		return sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", errGrpc).Result()
+		return getResult(false, msg)
 	}
 
 	k.SetNextState(ctx, msg.BlockState, postStateHash)
 
 	return sdk.Result{}
+}
+
+func getResult(ok bool, msg sdk.Msg) sdk.Result {
+	res := sdk.Result{}
+	if ok {
+		res.Code = sdk.CodeOK
+	} else {
+		res.Code = sdk.CodeUnknownRequest
+	}
+
+	events := sdk.EmptyEvents()
+	event := sdk.Event{}
+	v := reflect.ValueOf(msg)
+	typeOfV := v.Type()
+	for i := 0; i < v.NumField(); i++ {
+		event.AppendAttributes(
+			sdk.NewAttribute(typeOfV.Field(i).Name, fmt.Sprintf("%v", v.Field(i).Interface())),
+		)
+	}
+	events.AppendEvent(event)
+	res.Events = events
+
+	return res
 }
