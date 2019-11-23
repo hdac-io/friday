@@ -47,7 +47,7 @@ func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExe
 
 	k.SetNextState(ctx, msg.BlockState, postStateHash)
 
-	return sdk.Result{}
+	return getResult(true, msg)
 }
 
 func getResult(ok bool, msg sdk.Msg) sdk.Result {
