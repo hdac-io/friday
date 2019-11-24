@@ -42,3 +42,22 @@ func TestReadChainSpec(t *testing.T) {
 		t.Errorf("Bad Unmarshal, expected %v, got %v", expected, *got)
 	}
 }
+
+func TestReadGenesisAccountsCsv(t *testing.T) {
+	got, err := ReadGenesisAccountsCsv("")
+	require.NotNil(t, err)
+	require.Empty(t, got)
+
+	got, err = ReadGenesisAccountsCsv("../resources/accounts.csv")
+	require.Nil(t, err)
+	require.Equal(t, 1, len(got))
+
+	expected := Account{
+		publicKey:           "s8qP7TauBe0WoHUDEKyFR99XM6q7aGzacLa6M6vHtO0=",
+		initialBalance:      "50000000000",
+		initialBondedAmount: "1000000",
+	}
+	if !reflect.DeepEqual(expected, got[0]) {
+		t.Errorf("Bad accounts.csv, expected %v, got %v", expected, got)
+	}
+}
