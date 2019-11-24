@@ -2,7 +2,9 @@ package types
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"strings"
 
 	toml "github.com/pelletier/go-toml"
 )
@@ -37,6 +39,13 @@ type GenesisConf struct {
 	WasmCosts WasmCosts `toml:"wasm-costs"`
 }
 
+// Account : Genesis Account Information.
+type Account struct {
+	publicKey           string
+	initialBalance      string
+	initialBondedAmount string
+}
+
 // ReadChainSpec : Load Chain Specification from the toml file.
 func ReadChainSpec(chainSpecPath string) (*GenesisConf, error) {
 	if _, err := os.Stat(chainSpecPath); os.IsNotExist(err) {
@@ -56,4 +65,38 @@ func ReadChainSpec(chainSpecPath string) (*GenesisConf, error) {
 	}
 
 	return &genesisConf, nil
+}
+
+// MalformedAccountsCsvError : invalid accounts.csv
+type MalformedAccountsCsvError struct{}
+
+func (err *MalformedAccountsCsvError) Error() string {
+	return "Malformed Account.csv!"
+}
+
+// ReadGenesisAccountsCsv : parse accounts.csv corresponding path and
+// load into Account array
+func ReadGenesisAccountsCsv(accountsCsvPath string) ([]Account, error) {
+	content, err := ioutil.ReadFile(accountsCsvPath)
+	if err != nil {
+		return nil, err
+	}
+
+	splittedContent := strings.Split(string(content), ",")
+	splittedContentLen := len(splittedContent)
+
+	if splittedContentLen%3 != 0 {
+		return nil, &MalformedAccountsCsvError{}
+	}
+
+	accounts := make([]Account, splittedContentLen/3)
+	for i := 0; i < splittedContentLen; i += 3 {
+		accounts[i] = Account{
+			publicKey:           splittedContent[i],
+			initialBalance:      splittedContent[i+1],
+			initialBondedAmount: splittedContent[i+2],
+		}
+	}
+
+	return accounts, err
 }
