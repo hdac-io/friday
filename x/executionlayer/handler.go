@@ -28,7 +28,7 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 
 // Handle MsgExecute
 func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) sdk.Result {
-	stateHash := k.GetNextState(ctx, msg.BlockState)
+	stateHash := k.GetEEState(ctx, msg.BlockState)
 
 	// Execute
 	deploys := util.MakeInitDeploys()
@@ -45,7 +45,7 @@ func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExe
 		return getResult(false, msg)
 	}
 
-	k.SetNextState(ctx, msg.BlockState, postStateHash)
+	k.SetUnitHashMap(ctx, msg.BlockState, postStateHash)
 
 	return getResult(true, msg)
 }
