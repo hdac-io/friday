@@ -49,7 +49,7 @@ func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExe
 		return getResult(false, msg)
 	}
 
-	k.SetUnitHashMap(ctx, msg.BlockState, postStateHash)
+	k.SetEEState(ctx, msg.BlockState, postStateHash)
 
 	return getResult(true, msg)
 }

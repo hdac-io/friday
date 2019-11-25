@@ -39,13 +39,43 @@ func NewExecutionLayerKeeper(
 }
 
 // InitialUnitHashMap initial UnitMapHash using empty hash value
+// Used when genesis load
 func (k ExecutionLayerKeeper) InitialUnitHashMap(ctx sdk.Context, blockState []byte) {
 	emptyHash := util.DecodeHexString(util.StrEmptyStateHash)
-	k.SetUnitHashMap(ctx, blockState, emptyHash)
+	k.SetEEState(ctx, blockState, emptyHash)
 }
 
-// SetUnitHashMap map blockstate eeState to blockState
-func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockState []byte, eeState []byte) bool {
+// SetUnitHashMap map unitHash to blockState
+func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockState []byte, unitHash UnitHashMap) bool {
+	if bytes.Equal(blockState, []byte{}) {
+		return false
+	}
+	if bytes.Equal(unitHash.EEState, []byte{}) || len(unitHash.EEState) != 32 {
+		return false
+	}
+
+	unitBytes, err := k.cdc.MarshalBinaryBare(unitHash)
+	if err != nil {
+		return false
+	}
+
+	store := ctx.KVStore(k.HashMapStoreKey)
+	store.Set(blockState, unitBytes)
+
+	return true
+}
+
+// GetUnitHashMap returns a UnitHashMap for blockState
+func (k ExecutionLayerKeeper) GetUnitHashMap(ctx sdk.Context, blockState []byte) UnitHashMap {
+	store := ctx.KVStore(k.HashMapStoreKey)
+	unitBytes := store.Get(blockState)
+	var unit UnitHashMap
+	k.cdc.UnmarshalBinaryBare(unitBytes, &unit)
+	return unit
+}
+
+// SetEEState map eeState to blockState
+func (k ExecutionLayerKeeper) SetEEState(ctx sdk.Context, blockState []byte, eeState []byte) bool {
 	if bytes.Equal(blockState, []byte{}) {
 		return false
 	}
@@ -68,13 +98,13 @@ func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockState []byte,
 	return true
 }
 
-// GetUnitHashMap returns a eeState for blockState
-func (k ExecutionLayerKeeper) GetUnitHashMap(ctx sdk.Context, blockState []byte) UnitHashMap {
+// GetEEState returns a eeState for blockState
+func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockState []byte) []byte {
 	store := ctx.KVStore(k.HashMapStoreKey)
 	unitBytes := store.Get(blockState)
 	var unit UnitHashMap
 	k.cdc.UnmarshalBinaryBare(unitBytes, &unit)
-	return unit
+	return unit.EEState
 }
 
 // GetQueryResult queries with whole parameters
