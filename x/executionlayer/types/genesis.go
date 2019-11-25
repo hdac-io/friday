@@ -72,27 +72,6 @@ func readChainSpec(chainSpecPath string) (*GenesisConf, error) {
 	return &genesisConf, nil
 }
 
-// MalformedAccountsCsvError : invalid accounts.csv
-type MalformedAccountsCsvError struct{}
-
-func (err *MalformedAccountsCsvError) Error() string {
-	return "Malformed Account.csv!"
-}
-
-// ProtocolVersionParseError :
-type ProtocolVersionParseError struct{}
-
-func (err *ProtocolVersionParseError) Error() string {
-	return "Error occurs in parsing protocol version in chainspec"
-}
-
-// InvalidWasmPathError :
-type InvalidWasmPathError struct{}
-
-func (err *InvalidWasmPathError) Error() string {
-	return "Invalid wasm path in chainspec"
-}
-
 // ReadGenesisAccountsCsv : parse accounts.csv corresponding path and
 // load into Account array
 func readGenesisAccountsCsv(accountsCsvPath string) ([]Account, error) {
@@ -105,7 +84,7 @@ func readGenesisAccountsCsv(accountsCsvPath string) ([]Account, error) {
 	splittedContentLen := len(splittedContent)
 
 	if splittedContentLen%3 != 0 {
-		return nil, &MalformedAccountsCsvError{}
+		return nil, ErrMalforemdAccountsCsv(DefaultCodespace)
 	}
 
 	accounts := make([]Account, splittedContentLen/3)
@@ -161,19 +140,19 @@ func fromWasmCosts(wasmCosts WasmCosts) *ipc.ChainSpec_CostTable {
 func parseProtocolVersion(pvString string) (*state.ProtocolVersion, error) {
 	splittedProtocolVer := strings.Split(pvString, ".")
 	if len(splittedProtocolVer) != 3 {
-		return nil, &ProtocolVersionParseError{}
+		return nil, ErrProtocolVersionParse(DefaultCodespace)
 	}
 	major, err := strconv.ParseUint(splittedProtocolVer[0], 10, 32)
 	if err != nil {
-		return nil, &ProtocolVersionParseError{}
+		return nil, ErrProtocolVersionParse(DefaultCodespace)
 	}
 	minor, err := strconv.ParseUint(splittedProtocolVer[1], 10, 32)
 	if err != nil {
-		return nil, &ProtocolVersionParseError{}
+		return nil, ErrProtocolVersionParse(DefaultCodespace)
 	}
 	patch, err := strconv.ParseUint(splittedProtocolVer[2], 10, 32)
 	if err != nil {
-		return nil, &ProtocolVersionParseError{}
+		return nil, ErrProtocolVersionParse(DefaultCodespace)
 	}
 
 	return &state.ProtocolVersion{
