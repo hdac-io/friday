@@ -65,16 +65,7 @@ func TestUnitHashMapNormalInput(t *testing.T) {
 	assert.Equal(t, true, result)
 
 	resEEState := input.elk.GetEEState(input.ctx, blockState)
-	resNextEEState := input.elk.GetNextState(input.ctx, blockState)
 	assert.Equal(t, eeState, resEEState)
-	assert.Equal(t, eeState, resNextEEState)
-
-	nextState := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
-	input.elk.SetNextState(input.ctx, blockState, nextState)
-	resEEState = input.elk.GetEEState(input.ctx, blockState)
-	resNextEEState = input.elk.GetNextState(input.ctx, blockState)
-	assert.Equal(t, eeState, resEEState)
-	assert.Equal(t, nextState, resNextEEState)
 }
 
 func TestUnitHashMapInCorrectInput(t *testing.T) {
@@ -92,7 +83,7 @@ func TestUnitHashMapInCorrectInput(t *testing.T) {
 func TestCreateBlock(t *testing.T) {
 	input := setupTestInput()
 	parentHash := genesis(input.elk)
-	input.elk.SetNextState(input.ctx, input.blockStateHash, parentHash)
+	input.elk.SetUnitHashMap(input.ctx, input.blockStateHash, parentHash)
 	path := "counter/count"
 
 	blockState1 := []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}

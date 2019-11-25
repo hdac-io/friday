@@ -53,13 +53,8 @@ func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockState []byte,
 		return false
 	}
 
-	unit := UnitHashMap{
-		EEState:     eeState,
-		NextEEState: eeState,
-	}
-	unitBytes := k.cdc.MustMarshalBinaryBare(unit)
 	store := ctx.KVStore(k.HashMapStoreKey)
-	store.Set(blockState, unitBytes)
+	store.Set(blockState, eeState)
 
 	return true
 }
@@ -67,38 +62,8 @@ func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockState []byte,
 // GetEEState returns a eeState for blockState
 func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockState []byte) []byte {
 	store := ctx.KVStore(k.HashMapStoreKey)
-	bytes := store.Get(blockState)
-	var unit UnitHashMap
-	k.cdc.MustUnmarshalBinaryBare(bytes, &unit)
-	return unit.EEState
-}
-
-// GetNextState return a next EE State for blockState
-func (k ExecutionLayerKeeper) GetNextState(ctx sdk.Context, blockState []byte) []byte {
-	store := ctx.KVStore(k.HashMapStoreKey)
-	bytes := store.Get(blockState)
-	var unit UnitHashMap
-	k.cdc.MustUnmarshalBinaryBare(bytes, &unit)
-	return unit.NextEEState
-}
-
-// SetNextState set a nextEEState to blockState
-func (k ExecutionLayerKeeper) SetNextState(ctx sdk.Context, blockState []byte, nextEEState []byte) bool {
-	if bytes.Equal(blockState, []byte{}) {
-		return false
-	}
-	if bytes.Equal(nextEEState, []byte{}) || len(nextEEState) != 32 {
-		return false
-	}
-	store := ctx.KVStore(k.HashMapStoreKey)
-	bytes := store.Get(blockState)
-	var unit UnitHashMap
-	k.cdc.MustUnmarshalBinaryBare(bytes, &unit)
-	unit.NextEEState = nextEEState
-
-	bytes = k.cdc.MustMarshalBinaryBare(unit)
-	store.Set(blockState, bytes)
-	return true
+	eeState := store.Get(blockState)
+	return eeState
 }
 
 // GetQueryResult queries with whole parameters

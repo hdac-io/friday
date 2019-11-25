@@ -7,7 +7,7 @@ import (
 
 func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, elk ExecutionLayerKeeper) {
 	preHash := req.Header.LastBlockId.Hash
-	eeState := elk.GetNextState(ctx, preHash)
+	eeState := elk.GetEEState(ctx, preHash)
 
 	elk.SetUnitHashMap(ctx, req.Hash, eeState)
 }
