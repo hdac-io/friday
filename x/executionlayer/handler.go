@@ -1,6 +1,7 @@
 package executionlayer
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 
@@ -28,19 +29,22 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 
 // Handle MsgExecute
 func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) sdk.Result {
-	stateHash := k.GetEEState(ctx, msg.BlockState)
+	if bytes.Equal(msg.BlockState, []byte{}) {
+		msg.BlockState = ctx.BlockHeader().LastCommitHash
+	}
+	unitHash := k.GetUnitHashMap(ctx, msg.BlockState)
 
 	// Execute
 	deploys := util.MakeInitDeploys()
 	deploy := util.MakeDeploy(util.EncodeToHexString(msg.ContractOwnerAccount), msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
 	deploys = util.AddDeploy(deploys, deploy)
-	effects, errGrpc := grpc.Execute(k.client, stateHash, ctx.BlockTime().Unix(), deploys, k.protocolVersion)
+	effects, errGrpc := grpc.Execute(k.client, unitHash.EEState, ctx.BlockTime().Unix(), deploys, k.protocolVersion)
 	if errGrpc != "" {
 		return getResult(false, msg)
 	}
 
 	// Commit
-	postStateHash, _, errGrpc := grpc.Commit(k.client, stateHash, effects, k.protocolVersion)
+	postStateHash, _, errGrpc := grpc.Commit(k.client, unitHash.EEState, effects, k.protocolVersion)
 	if errGrpc != "" {
 		return getResult(false, msg)
 	}

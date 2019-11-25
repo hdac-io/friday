@@ -64,8 +64,8 @@ func TestUnitHashMapNormalInput(t *testing.T) {
 	result := input.elk.SetUnitHashMap(input.ctx, blockState, eeState)
 	assert.Equal(t, true, result)
 
-	resEEState := input.elk.GetEEState(input.ctx, blockState)
-	assert.Equal(t, eeState, resEEState)
+	unitHash := input.elk.GetUnitHashMap(input.ctx, blockState)
+	assert.Equal(t, eeState, unitHash.EEState)
 }
 
 func TestUnitHashMapInCorrectInput(t *testing.T) {
@@ -76,8 +76,8 @@ func TestUnitHashMapInCorrectInput(t *testing.T) {
 	result := input.elk.SetUnitHashMap(input.ctx, blockState, eeState)
 	assert.Equal(t, false, result)
 
-	res := input.elk.GetEEState(input.ctx, blockState)
-	assert.NotEqual(t, eeState, res)
+	unitHash := input.elk.GetUnitHashMap(input.ctx, blockState)
+	assert.NotEqual(t, eeState, unitHash.EEState)
 }
 
 func TestCreateBlock(t *testing.T) {
@@ -130,12 +130,12 @@ func TestCreateBlock(t *testing.T) {
 
 	arrPath := strings.Split(path, "/")
 
-	stateHash1 := input.elk.GetEEState(input.ctx, blockState1)
-	res1, _ := grpc.Query(input.elk.client, stateHash1, "address", input.genesisAddress, arrPath, input.elk.protocolVersion)
+	unitHash1 := input.elk.GetUnitHashMap(input.ctx, blockState1)
+	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", input.genesisAddress, arrPath, input.elk.protocolVersion)
 	assert.Equal(t, int32(0), res1.GetIntValue())
 
-	stateHash2 := input.elk.GetEEState(input.ctx, blockState2)
-	res2, _ := grpc.Query(input.elk.client, stateHash2, "address", input.genesisAddress, arrPath, input.elk.protocolVersion)
+	unitHash2 := input.elk.GetUnitHashMap(input.ctx, blockState2)
+	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", input.genesisAddress, arrPath, input.elk.protocolVersion)
 	assert.Equal(t, int32(1), res2.GetIntValue())
 }
 

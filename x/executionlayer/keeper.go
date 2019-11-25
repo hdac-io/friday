@@ -53,17 +53,28 @@ func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockState []byte,
 		return false
 	}
 
+	unit := UnitHashMap{
+		EEState: eeState,
+	}
+
+	unitBytes, err := k.cdc.MarshalBinaryBare(unit)
+	if err != nil {
+		return false
+	}
+
 	store := ctx.KVStore(k.HashMapStoreKey)
-	store.Set(blockState, eeState)
+	store.Set(blockState, unitBytes)
 
 	return true
 }
 
-// GetEEState returns a eeState for blockState
-func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockState []byte) []byte {
+// GetUnitHashMap returns a eeState for blockState
+func (k ExecutionLayerKeeper) GetUnitHashMap(ctx sdk.Context, blockState []byte) UnitHashMap {
 	store := ctx.KVStore(k.HashMapStoreKey)
-	eeState := store.Get(blockState)
-	return eeState
+	unitBytes := store.Get(blockState)
+	var unit UnitHashMap
+	k.cdc.UnmarshalBinaryBare(unitBytes, &unit)
+	return unit
 }
 
 // GetQueryResult queries with whole parameters
@@ -82,9 +93,9 @@ func (k ExecutionLayerKeeper) GetQueryResult(ctx sdk.Context,
 // State hash comes from Tendermint block state - EE state mapping DB
 func (k ExecutionLayerKeeper) GetQueryResultSimple(ctx sdk.Context,
 	keyType string, keyData string, path string) (state.Value, error) {
-	stateHash := k.GetEEState(ctx, ctx.BlockHeader().LastBlockId.Hash)
+	unitHash := k.GetUnitHashMap(ctx, ctx.BlockHeader().LastBlockId.Hash)
 	arrPath := strings.Split(path, "/")
-	res, err := grpc.Query(k.client, stateHash, keyType, keyData, arrPath, k.protocolVersion)
+	res, err := grpc.Query(k.client, unitHash.EEState, keyType, keyData, arrPath, k.protocolVersion)
 	if err != "" {
 		return state.Value{}, fmt.Errorf(err)
 	}
@@ -104,8 +115,8 @@ func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, stateHash [
 
 // GetQueryBalanceResultSimple queries with whole parameters
 func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, address string) (string, error) {
-	stateHash := k.GetEEState(ctx, ctx.BlockHeader().LastBlockId.Hash)
-	res, err := grpc.QueryBlanace(k.client, stateHash, address, k.protocolVersion)
+	unitHash := k.GetUnitHashMap(ctx, ctx.BlockHeader().LastBlockId.Hash)
+	res, err := grpc.QueryBlanace(k.client, unitHash.EEState, address, k.protocolVersion)
 	if err != "" {
 		return "", fmt.Errorf(err)
 	}
