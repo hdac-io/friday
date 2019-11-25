@@ -16,6 +16,10 @@ var (
 	ModuleCdc      = types.ModuleCdc
 	RegisterCodec  = types.RegisterCodec
 	NewUnitHashMap = types.NewUnitHashMap
+
+	ErrMalforemdAccountsCsv = types.ErrMalforemdAccountsCsv
+	ErrProtocolVersionParse = types.ErrProtocolVersionParse
+	ErrInvalidWasmPath      = types.ErrInvalidWasmPath
 )
 
 type (
