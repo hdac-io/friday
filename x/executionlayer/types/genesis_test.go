@@ -11,12 +11,74 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	resourceDir         = "../resources"
+	mintInstallWasmName = "mint_install.wasm"
+	posInstallWasmName  = "pos_install.wasm"
+	chainSpecfileName   = "manifest.toml"
+	genAccountsfileName = "accounts.csv"
+
+	genAccountPublicKey    = "s8qP7TauBe0WoHUDEKyFR99XM6q7aGzacLa6M6vHtO0="
+	genAccountBalance      = "50000000000"
+	genAccountBondedAmount = "1000000"
+)
+
+func genesisConfigMock() (*ipc.ChainSpec_GenesisConfig, error) {
+	genesisConfig := ipc.ChainSpec_GenesisConfig{}
+	genesisConfig.Name = "friday-devnet"
+	genesisConfig.Timestamp = 0
+	genesisConfig.ProtocolVersion = &state.ProtocolVersion{
+		Major: 1,
+		Minor: 0,
+		Patch: 0,
+	}
+
+	// load mint_install.wasm, pos_install.wasm
+	var err error
+	genesisConfig.MintInstaller, err = ioutil.ReadFile(resourceDir + "/" + mintInstallWasmName)
+	if err != nil {
+		return nil, err
+	}
+	genesisConfig.PosInstaller, err = ioutil.ReadFile(resourceDir + "/" + posInstallWasmName)
+	if err != nil {
+		return nil, err
+	}
+
+	// GenesisAccount
+	accounts := make([]*ipc.ChainSpec_GenesisAccount, 1)
+	accounts[0] = &ipc.ChainSpec_GenesisAccount{}
+	accounts[0].PublicKey, err = base64.StdEncoding.DecodeString(genAccountPublicKey)
+	accounts[0].Balance = &state.BigInt{Value: genAccountBalance, BitWidth: 512}
+	accounts[0].BondedAmount = &state.BigInt{Value: genAccountBondedAmount, BitWidth: 512}
+	genesisConfig.Accounts = accounts
+
+	// CostTable
+	genesisConfig.Costs = &ipc.ChainSpec_CostTable{}
+	wasmTable := ipc.ChainSpec_CostTable_WasmCosts{
+		Regular:        1,
+		Div:            16,
+		Mul:            4,
+		Mem:            2,
+		InitialMem:     4096,
+		GrowMem:        8192,
+		Memcpy:         1,
+		MaxStackHeight: 65536,
+		OpcodesMul:     3,
+		OpcodesDiv:     8,
+	}
+	genesisConfig.Costs.Wasm = &wasmTable
+
+	return &genesisConfig, nil
+}
+
 func TestReadChainSpec(t *testing.T) {
+	// invalid path
 	got, err := readChainSpec("")
 	require.NotNil(t, err)
 	require.Nil(t, got)
 
-	got, err = readChainSpec("../resources/manifest.toml")
+	// valid path
+	got, err = readChainSpec(resourceDir + "/" + chainSpecfileName)
 	require.Nil(t, err)
 	require.NotNil(t, got)
 
@@ -24,9 +86,9 @@ func TestReadChainSpec(t *testing.T) {
 		Genesis: Genesis{
 			Name:                "friday-devnet",
 			Timestamp:           0,
-			MintCodePath:        "mint_install.wasm",
-			PosCodePath:         "pos_install.wasm",
-			InitialAccountsPath: "accounts.csv",
+			MintCodePath:        mintInstallWasmName,
+			PosCodePath:         posInstallWasmName,
+			InitialAccountsPath: genAccountsfileName,
 			ProtocolVersion:     "1.0.0",
 		},
 		WasmCosts: WasmCosts{
@@ -48,18 +110,20 @@ func TestReadChainSpec(t *testing.T) {
 }
 
 func TestReadGenesisAccountsCsv(t *testing.T) {
+	// invalid path
 	got, err := readGenesisAccountsCsv("")
 	require.NotNil(t, err)
 	require.Empty(t, got)
 
-	got, err = readGenesisAccountsCsv("../resources/accounts.csv")
+	// valid path
+	got, err = readGenesisAccountsCsv(resourceDir + "/" + genAccountsfileName)
 	require.Nil(t, err)
 	require.Equal(t, 1, len(got))
 
 	expected := Account{
-		publicKey:           "s8qP7TauBe0WoHUDEKyFR99XM6q7aGzacLa6M6vHtO0=",
-		initialBalance:      "50000000000",
-		initialBondedAmount: "1000000",
+		publicKey:           genAccountPublicKey,
+		initialBalance:      genAccountBalance,
+		initialBondedAmount: genAccountBondedAmount,
 	}
 	if !reflect.DeepEqual(expected, got[0]) {
 		t.Errorf("Bad accounts.csv, expected %v, got %v", expected, got)
@@ -67,70 +131,72 @@ func TestReadGenesisAccountsCsv(t *testing.T) {
 }
 
 func TestFromAccount(t *testing.T) {
+	// mock account
+	account := Account{
+		publicKey:           genAccountPublicKey,
+		initialBalance:      genAccountBalance,
+		initialBondedAmount: genAccountBondedAmount,
+	}
 
+	got, err := fromAccount(account)
+	require.Nil(t, err)
+	require.NotNil(t, got)
+
+	expected := ipc.ChainSpec_GenesisAccount{}
+	expected.PublicKey, err = base64.StdEncoding.DecodeString(genAccountPublicKey)
+	require.Nil(t, err)
+	expected.Balance = &state.BigInt{Value: genAccountBalance, BitWidth: 512}
+	expected.BondedAmount = &state.BigInt{Value: genAccountBondedAmount, BitWidth: 512}
+
+	if !reflect.DeepEqual(expected, *got) {
+		t.Errorf("Bad Account parsing. expected %v, got %v", expected, got)
+	}
 }
 
 func TestParseProtocolVersion(t *testing.T) {
+	// empty string
+	got, err := parseProtocolVersion("")
+	require.NotNil(t, err)
+	require.Nil(t, got)
 
-}
+	// just a number
+	got, err = parseProtocolVersion("123")
+	require.NotNil(t, err)
+	require.Nil(t, got)
 
-func genesisConfigMock() (*ipc.ChainSpec_GenesisConfig, error) {
-	expected := ipc.ChainSpec_GenesisConfig{}
-	expected.Name = "friday-devnet"
-	expected.Timestamp = 0
-	expected.ProtocolVersion = &state.ProtocolVersion{
-		Major: 1,
-		Minor: 0,
-		Patch: 0,
+	// trailing dot
+	got, err = parseProtocolVersion("1.0.0.")
+	require.NotNil(t, err)
+	require.Nil(t, got)
+
+	// too many digit
+	got, err = parseProtocolVersion("1.0.0.0")
+	require.NotNil(t, err)
+	require.Nil(t, got)
+
+	// valid case
+	got, err = parseProtocolVersion("123.456.789")
+	require.Nil(t, err)
+	expected := state.ProtocolVersion{Major: 123, Minor: 456, Patch: 789}
+	if !reflect.DeepEqual(expected, *got) {
+		t.Errorf("Bad protocol version parsing. expected %v, got %v", expected, got)
 	}
-
-	// load mint_install.wasm, pos_install.wasm
-	var err error
-	expected.MintInstaller, err = ioutil.ReadFile("../resources/mint_install.wasm")
-	if err != nil {
-		return nil, err
-	}
-	expected.PosInstaller, err = ioutil.ReadFile("../resources/pos_install.wasm")
-	if err != nil {
-		return nil, err
-	}
-
-	// GenesisAccount
-	accounts := make([]*ipc.ChainSpec_GenesisAccount, 1)
-	accounts[0] = &ipc.ChainSpec_GenesisAccount{}
-	accounts[0].PublicKey, err = base64.StdEncoding.DecodeString(
-		"s8qP7TauBe0WoHUDEKyFR99XM6q7aGzacLa6M6vHtO0=")
-	accounts[0].Balance = &state.BigInt{Value: "50000000000", BitWidth: 512}
-	accounts[0].BondedAmount = &state.BigInt{Value: "1000000", BitWidth: 512}
-	expected.Accounts = accounts
-
-	// CostTable
-
-	expected.Costs = &ipc.ChainSpec_CostTable{}
-	wasmTable := ipc.ChainSpec_CostTable_WasmCosts{
-		Regular:        1,
-		Div:            16,
-		Mul:            4,
-		Mem:            2,
-		InitialMem:     4096,
-		GrowMem:        8192,
-		Memcpy:         1,
-		MaxStackHeight: 65536,
-		OpcodesMul:     3,
-		OpcodesDiv:     8,
-	}
-	expected.Costs.Wasm = &wasmTable
-
-	return &expected, nil
 }
 
 func TestReadGenesisConfig(t *testing.T) {
-	got, err := ReadGenesisConfig("../resources/manifest.toml")
+	// invalid path
+	got, err := ReadGenesisConfig("")
+	require.NotNil(t, err)
+	require.Nil(t, got)
+
+	// valid path
+	got, err = ReadGenesisConfig(resourceDir + "/" + chainSpecfileName)
 	require.Nil(t, err)
 	require.NotNil(t, got)
 	expected, err := genesisConfigMock()
 	require.Nil(t, err)
 
+	// validation
 	require.Equal(t, expected.Name, got.Name)
 	require.Equal(t, expected.Timestamp, got.Timestamp)
 	if !reflect.DeepEqual(expected.ProtocolVersion, got.ProtocolVersion) {
