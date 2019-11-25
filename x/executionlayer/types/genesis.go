@@ -1,18 +1,23 @@
 package types
 
 import (
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
 	toml "github.com/pelletier/go-toml"
 )
 
 // Genesis : Chain Genesis information
 type Genesis struct {
 	Name                string `toml:"name"`
-	Timestamp           int64  `toml:"timestamp"`
+	Timestamp           uint64 `toml:"timestamp"`
 	MintCodePath        string `toml:"mint-code-path"`
 	PosCodePath         string `toml:"pos-code-path"`
 	InitialAccountsPath string `toml:"initial-accounts-path"`
@@ -47,7 +52,7 @@ type Account struct {
 }
 
 // ReadChainSpec : Load Chain Specification from the toml file.
-func ReadChainSpec(chainSpecPath string) (*GenesisConf, error) {
+func readChainSpec(chainSpecPath string) (*GenesisConf, error) {
 	if _, err := os.Stat(chainSpecPath); os.IsNotExist(err) {
 		fmt.Fprintf(
 			os.Stderr, "ReadChainSpec: \"%s\" does not exist\n", chainSpecPath)
@@ -74,9 +79,23 @@ func (err *MalformedAccountsCsvError) Error() string {
 	return "Malformed Account.csv!"
 }
 
+// ProtocolVersionParseError :
+type ProtocolVersionParseError struct{}
+
+func (err *ProtocolVersionParseError) Error() string {
+	return "Error occurs in parsing protocol version in chainspec"
+}
+
+// InvalidWasmPathError :
+type InvalidWasmPathError struct{}
+
+func (err *InvalidWasmPathError) Error() string {
+	return "Invalid wasm path in chainspec"
+}
+
 // ReadGenesisAccountsCsv : parse accounts.csv corresponding path and
 // load into Account array
-func ReadGenesisAccountsCsv(accountsCsvPath string) ([]Account, error) {
+func readGenesisAccountsCsv(accountsCsvPath string) ([]Account, error) {
 	content, err := ioutil.ReadFile(accountsCsvPath)
 	if err != nil {
 		return nil, err
@@ -99,4 +118,114 @@ func ReadGenesisAccountsCsv(accountsCsvPath string) ([]Account, error) {
 	}
 
 	return accounts, err
+}
+
+func fromAccount(account Account) (*ipc.ChainSpec_GenesisAccount, error) {
+	publicKey, err := base64.StdEncoding.DecodeString(account.publicKey)
+	if err != nil {
+		return nil, err
+	}
+	// TODO : value vaiadation, define error code
+	balance := state.BigInt{
+		Value:    account.initialBalance,
+		BitWidth: 512,
+	}
+	bondedAmount := state.BigInt{
+		Value:    account.initialBondedAmount,
+		BitWidth: 512,
+	}
+
+	return &ipc.ChainSpec_GenesisAccount{
+		PublicKey:    publicKey,
+		Balance:      &balance,
+		BondedAmount: &bondedAmount,
+	}, nil
+}
+
+func fromWasmCosts(wasmCosts WasmCosts) *ipc.ChainSpec_CostTable {
+	costTable := ipc.ChainSpec_CostTable{}
+	costTable.Wasm = &ipc.ChainSpec_CostTable_WasmCosts{}
+	costTable.Wasm.Regular = wasmCosts.Regular
+	costTable.Wasm.Div = wasmCosts.DivMultiplier
+	costTable.Wasm.Mul = wasmCosts.MulMultiplier
+	costTable.Wasm.Mem = wasmCosts.MemMultiplier
+	costTable.Wasm.InitialMem = wasmCosts.MemInitialPages
+	costTable.Wasm.GrowMem = wasmCosts.MemGrowPerPage
+	costTable.Wasm.Memcpy = wasmCosts.MemCopyPerByte
+	costTable.Wasm.MaxStackHeight = wasmCosts.MaxStackHeight
+	costTable.Wasm.OpcodesMul = wasmCosts.OpcodesMultiplier
+	costTable.Wasm.OpcodesDiv = wasmCosts.OpcodesDivisor
+	return &costTable
+}
+
+func parseProtocolVersion(pvString string) (*state.ProtocolVersion, error) {
+	splittedProtocolVer := strings.Split(pvString, ".")
+	if len(splittedProtocolVer) != 3 {
+		return nil, &ProtocolVersionParseError{}
+	}
+	major, err := strconv.ParseUint(splittedProtocolVer[0], 10, 32)
+	if err != nil {
+		return nil, &ProtocolVersionParseError{}
+	}
+	minor, err := strconv.ParseUint(splittedProtocolVer[1], 10, 32)
+	if err != nil {
+		return nil, &ProtocolVersionParseError{}
+	}
+	patch, err := strconv.ParseUint(splittedProtocolVer[2], 10, 32)
+	if err != nil {
+		return nil, &ProtocolVersionParseError{}
+	}
+
+	return &state.ProtocolVersion{
+			Major: uint32(major), Minor: uint32(minor), Patch: uint32(patch)},
+		nil
+}
+
+// ReadGenesisConfig :
+func ReadGenesisConfig(chainSpecPath string) (*ipc.ChainSpec_GenesisConfig, error) {
+	genesisConfig := ipc.ChainSpec_GenesisConfig{}
+	chainSpec, err := readChainSpec(chainSpecPath)
+	if err != nil {
+		return nil, err
+	}
+
+	genesisConfig.Name = chainSpec.Genesis.Name
+	genesisConfig.Timestamp = chainSpec.Genesis.Timestamp
+
+	if genesisConfig.ProtocolVersion, err = parseProtocolVersion(
+		chainSpec.Genesis.ProtocolVersion); err != nil {
+		return nil, err
+	}
+
+	if err = os.Chdir(filepath.Dir(chainSpecPath)); err != nil {
+		return nil, err
+	}
+
+	if genesisConfig.MintInstaller, err = ioutil.ReadFile(
+		chainSpec.Genesis.MintCodePath); err != nil {
+		return nil, err
+	}
+	if genesisConfig.PosInstaller, err = ioutil.ReadFile(
+		chainSpec.Genesis.PosCodePath); err != nil {
+		return nil, err
+	}
+
+	accounts, err := readGenesisAccountsCsv(chainSpec.Genesis.InitialAccountsPath)
+	if err != nil {
+		return nil, err
+	}
+
+	genesisAccounts := make([]*ipc.ChainSpec_GenesisAccount, len(accounts))
+	for i, v := range accounts {
+		genesisAccount, err := fromAccount(v)
+		if err != nil {
+			return nil, err
+		}
+		genesisAccounts[i] = genesisAccount
+	}
+	genesisConfig.Accounts = genesisAccounts
+
+	genesisConfig.Costs = fromWasmCosts(chainSpec.WasmCosts)
+
+	return &genesisConfig, nil
 }
