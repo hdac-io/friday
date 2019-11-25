@@ -49,5 +49,5 @@ dependency-graph.png
 *.out
 *.synctex.gz
 
-# x/executionlayer
-x/executionlayer/wasms/
+# Wasm binary
+*.wasm
