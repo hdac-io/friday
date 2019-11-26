@@ -203,6 +203,7 @@ func NewFridayApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest
 		mint.NewAppModule(app.mintKeeper),
 		slashing.NewAppModule(app.slashingKeeper, app.stakingKeeper),
 		staking.NewAppModule(app.stakingKeeper, app.distrKeeper, app.accountKeeper, app.supplyKeeper),
+		nameservice.NewAppModule(app.nameserviceKeeper),
 		executionlayer.NewAppModule(app.executionLayerKeeper),
 	)
 
