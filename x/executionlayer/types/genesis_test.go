@@ -130,7 +130,7 @@ func TestReadGenesisAccountsCsv(t *testing.T) {
 	}
 }
 
-func TestFromAccount(t *testing.T) {
+func TestToGenesisAccount(t *testing.T) {
 	// mock account
 	account := Account{
 		publicKey:           genAccountPublicKey,
@@ -138,7 +138,7 @@ func TestFromAccount(t *testing.T) {
 		initialBondedAmount: genAccountBondedAmount,
 	}
 
-	got, err := fromAccount(account)
+	got, err := toGenesisAccount(account)
 	require.Nil(t, err)
 	require.NotNil(t, got)
 
@@ -153,29 +153,29 @@ func TestFromAccount(t *testing.T) {
 	}
 }
 
-func TestParseProtocolVersion(t *testing.T) {
+func TestToProtocolVersion(t *testing.T) {
 	// empty string
-	got, err := parseProtocolVersion("")
+	got, err := toProtocolVersion("")
 	require.NotNil(t, err)
 	require.Nil(t, got)
 
 	// just a number
-	got, err = parseProtocolVersion("123")
+	got, err = toProtocolVersion("123")
 	require.NotNil(t, err)
 	require.Nil(t, got)
 
 	// trailing dot
-	got, err = parseProtocolVersion("1.0.0.")
+	got, err = toProtocolVersion("1.0.0.")
 	require.NotNil(t, err)
 	require.Nil(t, got)
 
 	// too many digit
-	got, err = parseProtocolVersion("1.0.0.0")
+	got, err = toProtocolVersion("1.0.0.0")
 	require.NotNil(t, err)
 	require.Nil(t, got)
 
 	// valid case
-	got, err = parseProtocolVersion("123.456.789")
+	got, err = toProtocolVersion("123.456.789")
 	require.Nil(t, err)
 	expected := state.ProtocolVersion{Major: 123, Minor: 456, Patch: 789}
 	if !reflect.DeepEqual(expected, *got) {

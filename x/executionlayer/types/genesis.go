@@ -99,7 +99,7 @@ func readGenesisAccountsCsv(accountsCsvPath string) ([]Account, error) {
 	return accounts, err
 }
 
-func fromAccount(account Account) (*ipc.ChainSpec_GenesisAccount, error) {
+func toGenesisAccount(account Account) (*ipc.ChainSpec_GenesisAccount, error) {
 	publicKey, err := base64.StdEncoding.DecodeString(account.publicKey)
 	if err != nil {
 		return nil, err
@@ -121,7 +121,7 @@ func fromAccount(account Account) (*ipc.ChainSpec_GenesisAccount, error) {
 	}, nil
 }
 
-func fromWasmCosts(wasmCosts WasmCosts) *ipc.ChainSpec_CostTable {
+func toCostTable(wasmCosts WasmCosts) *ipc.ChainSpec_CostTable {
 	costTable := ipc.ChainSpec_CostTable{}
 	costTable.Wasm = &ipc.ChainSpec_CostTable_WasmCosts{}
 	costTable.Wasm.Regular = wasmCosts.Regular
@@ -137,7 +137,7 @@ func fromWasmCosts(wasmCosts WasmCosts) *ipc.ChainSpec_CostTable {
 	return &costTable
 }
 
-func parseProtocolVersion(pvString string) (*state.ProtocolVersion, error) {
+func toProtocolVersion(pvString string) (*state.ProtocolVersion, error) {
 	splittedProtocolVer := strings.Split(pvString, ".")
 	if len(splittedProtocolVer) != 3 {
 		return nil, ErrProtocolVersionParse(DefaultCodespace)
@@ -171,7 +171,7 @@ func ReadGenesisConfig(chainSpecPath string) (*ipc.ChainSpec_GenesisConfig, erro
 	genesisConfig.Name = chainSpec.Genesis.Name
 	genesisConfig.Timestamp = chainSpec.Genesis.Timestamp
 
-	if genesisConfig.ProtocolVersion, err = parseProtocolVersion(
+	if genesisConfig.ProtocolVersion, err = toProtocolVersion(
 		chainSpec.Genesis.ProtocolVersion); err != nil {
 		return nil, err
 	}
@@ -196,7 +196,7 @@ func ReadGenesisConfig(chainSpecPath string) (*ipc.ChainSpec_GenesisConfig, erro
 
 	genesisAccounts := make([]*ipc.ChainSpec_GenesisAccount, len(accounts))
 	for i, v := range accounts {
-		genesisAccount, err := fromAccount(v)
+		genesisAccount, err := toGenesisAccount(v)
 		if err != nil {
 			return nil, err
 		}
@@ -204,7 +204,7 @@ func ReadGenesisConfig(chainSpecPath string) (*ipc.ChainSpec_GenesisConfig, erro
 	}
 	genesisConfig.Accounts = genesisAccounts
 
-	genesisConfig.Costs = fromWasmCosts(chainSpec.WasmCosts)
+	genesisConfig.Costs = toCostTable(chainSpec.WasmCosts)
 
 	return &genesisConfig, nil
 }
