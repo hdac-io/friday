@@ -7,15 +7,15 @@ import (
 const (
 	DefaultCodespace sdk.CodespaceType = ModuleName
 
-	CodeMalforemdAccountsCsv sdk.CodeType = 101
+	CodePublicKeyDecode      sdk.CodeType = 101
 	CodeProtocolVersionParse sdk.CodeType = 102
 	CodeInvalidWasmPath      sdk.CodeType = 103
 )
 
-// ErrMalforemdAccountsCsv is an error
-func ErrMalforemdAccountsCsv(codespace sdk.CodespaceType) sdk.Error {
+// ErrPublicKeyDecode :
+func ErrPublicKeyDecode(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(
-		codespace, CodeMalforemdAccountsCsv, "Malformed account.csv")
+		codespace, CodePublicKeyDecode, "Could not decode public key as Base64")
 }
 
 // ErrProtocolVersionParse is an error

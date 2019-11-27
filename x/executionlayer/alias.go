@@ -12,14 +12,13 @@ const (
 )
 
 var (
+	// function aliases
 	NewMsgExecute  = types.NewMsgExecute
-	ModuleCdc      = types.ModuleCdc
 	RegisterCodec  = types.RegisterCodec
 	NewUnitHashMap = types.NewUnitHashMap
 
-	ErrMalforemdAccountsCsv = types.ErrMalforemdAccountsCsv
-	ErrProtocolVersionParse = types.ErrProtocolVersionParse
-	ErrInvalidWasmPath      = types.ErrInvalidWasmPath
+	// variable aliases
+	ModuleCdc = types.ModuleCdc
 )
 
 type (

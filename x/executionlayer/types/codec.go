@@ -5,9 +5,10 @@ import (
 )
 
 // ModuleCdc is used as a codec in types package
-var ModuleCdc = codec.New()
+var ModuleCdc *codec.Codec
 
 func init() {
+	ModuleCdc = codec.New()
 	RegisterCodec(ModuleCdc)
 }
 
