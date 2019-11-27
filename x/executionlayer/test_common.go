@@ -79,23 +79,23 @@ func setupTestInput() testInput {
 
 func genesis(keeper ExecutionLayerKeeper) []byte {
 	input := setupTestInput()
-	mintCode := util.LoadWasmFile("./wasms/mint_install.wasm")
-	posCode := util.LoadWasmFile("./wasms/pos_install.wasm")
+	fmt.Printf("%v", input.genesisAccount)
+	genesisConfig, err := util.GenesisConfigMock(
+		input.chainName, input.genesisAddress,
+		input.genesisAccount[input.genesisAddress][0], input.genesisAccount[input.genesisAddress][1],
+		input.elk.protocolVersion, input.costs, "./wasms/mint_install.wasm", "./wasms/pos_install.wasm")
 
-	postStateHash, _, errMsg := grpc.RunGenesis(keeper.client,
-		input.chainName,
-		0,
-		keeper.protocolVersion,
-		mintCode,
-		posCode,
-		input.genesisAccount,
-		input.costs)
-
-	if errMsg != "" {
-		panic(errMsg)
+	if err != nil {
+		panic(err)
 	}
 
-	return postStateHash
+	response, err := grpc.RunGenesis(keeper.client, genesisConfig)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return response.GetSuccess().PoststateHash
 }
 
 func counterDefine(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {

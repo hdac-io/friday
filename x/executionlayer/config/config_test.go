@@ -1,7 +1,6 @@
-package types
+package config
 
 import (
-	"encoding/base64"
 	"io/ioutil"
 	"reflect"
 	"testing"
@@ -17,10 +16,6 @@ const (
 	posInstallWasmName  = "pos_install.wasm"
 	chainSpecfileName   = "manifest.toml"
 	genAccountsfileName = "accounts.csv"
-
-	genAccountPublicKey    = "s8qP7TauBe0WoHUDEKyFR99XM6q7aGzacLa6M6vHtO0="
-	genAccountBalance      = "50000000000"
-	genAccountBondedAmount = "1000000"
 )
 
 func genesisConfigMock() (*ipc.ChainSpec_GenesisConfig, error) {
@@ -43,14 +38,6 @@ func genesisConfigMock() (*ipc.ChainSpec_GenesisConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// GenesisAccount
-	accounts := make([]*ipc.ChainSpec_GenesisAccount, 1)
-	accounts[0] = &ipc.ChainSpec_GenesisAccount{}
-	accounts[0].PublicKey, err = base64.StdEncoding.DecodeString(genAccountPublicKey)
-	accounts[0].Balance = &state.BigInt{Value: genAccountBalance, BitWidth: 512}
-	accounts[0].BondedAmount = &state.BigInt{Value: genAccountBondedAmount, BitWidth: 512}
-	genesisConfig.Accounts = accounts
 
 	// CostTable
 	genesisConfig.Costs = &ipc.ChainSpec_CostTable{}
@@ -109,50 +96,6 @@ func TestReadChainSpec(t *testing.T) {
 	}
 }
 
-func TestReadGenesisAccountsCsv(t *testing.T) {
-	// invalid path
-	got, err := readGenesisAccountsCsv("")
-	require.NotNil(t, err)
-	require.Empty(t, got)
-
-	// valid path
-	got, err = readGenesisAccountsCsv(resourceDir + "/" + genAccountsfileName)
-	require.Nil(t, err)
-	require.Equal(t, 1, len(got))
-
-	expected := Account{
-		publicKey:           genAccountPublicKey,
-		initialBalance:      genAccountBalance,
-		initialBondedAmount: genAccountBondedAmount,
-	}
-	if !reflect.DeepEqual(expected, got[0]) {
-		t.Errorf("Bad accounts.csv, expected %v, got %v", expected, got)
-	}
-}
-
-func TestToGenesisAccount(t *testing.T) {
-	// mock account
-	account := Account{
-		publicKey:           genAccountPublicKey,
-		initialBalance:      genAccountBalance,
-		initialBondedAmount: genAccountBondedAmount,
-	}
-
-	got, err := toGenesisAccount(account)
-	require.Nil(t, err)
-	require.NotNil(t, got)
-
-	expected := ipc.ChainSpec_GenesisAccount{}
-	expected.PublicKey, err = base64.StdEncoding.DecodeString(genAccountPublicKey)
-	require.Nil(t, err)
-	expected.Balance = &state.BigInt{Value: genAccountBalance, BitWidth: 512}
-	expected.BondedAmount = &state.BigInt{Value: genAccountBondedAmount, BitWidth: 512}
-
-	if !reflect.DeepEqual(expected, *got) {
-		t.Errorf("Bad Account parsing. expected %v, got %v", expected, got)
-	}
-}
-
 func TestToProtocolVersion(t *testing.T) {
 	// empty string
 	got, err := toProtocolVersion("")
@@ -206,10 +149,6 @@ func TestReadGenesisConfig(t *testing.T) {
 	require.Equal(t, expected.MintInstaller, got.MintInstaller)
 	require.Equal(t, expected.PosInstaller, got.PosInstaller)
 
-	if !reflect.DeepEqual(expected.Accounts, got.Accounts) {
-		t.Errorf("Genesis Accounts differ. expected %v, got %v",
-			expected.Accounts, got.Accounts)
-	}
 	if !reflect.DeepEqual(expected.Costs, got.Costs) {
 		t.Errorf("Costs table differ. expected %v, got %v",
 			expected.Costs, got.Costs)

@@ -2,6 +2,7 @@ package executionlayer
 
 import (
 	"encoding/json"
+	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -12,9 +13,9 @@ import (
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/types/module"
 
-	"github.com/hdac-io/friday/x/auth/types"
 	"github.com/hdac-io/friday/x/executionlayer/client/cli"
-	"github.com/hdac-io/friday/x/executionlayer/client/rest"
+	"github.com/hdac-io/friday/x/executionlayer/config"
+	"github.com/hdac-io/friday/x/executionlayer/types"
 )
 
 var (
@@ -52,7 +53,7 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 
 // register rest routes
 func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
-	rest.RegisterRoutes(ctx, rtr, types.StoreKey)
+	// rest.RegisterRoutes(ctx, rtr, types.StoreKey)
 }
 
 // get the root tx command of this module
@@ -106,16 +107,30 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 
 // module init-genesis
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
-	// var genesisState GenesisState
-	// types.ModuleCdc.MustUnmarshalJSON(data, &genesisState)
-	// InitGenesis(ctx, am.executionLayerKeeper, genesisState)
+	// var genesisState types.GenesisState
+	// ModuleCdc.MustUnmarshalJSON(data, &genesisState)
+
+	// TODO : make GenesisState injectable
+	accounts := make([]types.Account, 1)
+	accounts[0] = types.Account{
+		PublicKey:           "s8qP7TauBe0WoHUDEKyFR99XM6q7aGzacLa6M6vHtO0=",
+		InitialBalance:      "50000000000",
+		InitialBondedAmount: "1000000",
+	}
+	genesisState := types.NewGenesisState(accounts)
+
+	// TODO : Remove ReadGenesisConfig Call from here
+	genesisConfig, err := config.ReadGenesisConfig(os.ExpandEnv("$HOME/.fryd/chainspec/genesis/manifest.toml"))
+	if err != nil {
+		panic(err)
+	}
+
+	InitGenesis(ctx, am.keeper, genesisState, *genesisConfig)
 	return []abci.ValidatorUpdate{}
 }
 
 // module export genesis
 func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
-	// gs := ExportGenesis(ctx, am.executionLayerKeeper)
-	// return types.ModuleCdc.MustMarshalJSON(gs)
 	return json.RawMessage{}
 }
 
