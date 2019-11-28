@@ -14,6 +14,7 @@ import (
 
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/executionlayer/types"
 )
 
 type ExecutionLayerKeeper struct {
@@ -152,4 +153,21 @@ func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, addre
 	}
 
 	return res, nil
+}
+
+// GetGenesisConf retrieves GenesisConf from sdk store
+func (k ExecutionLayerKeeper) GetGenesisConf(ctx sdk.Context) types.GenesisConf {
+	store := ctx.KVStore(k.HashMapStoreKey)
+	genesisConfBytes := store.Get([]byte("genesisconf"))
+
+	var genesisConf types.GenesisConf
+	k.cdc.UnmarshalBinaryBare(genesisConfBytes, &genesisConf)
+	return genesisConf
+}
+
+// SetGenesisConf saves GenesisConf in sdk store
+func (k ExecutionLayerKeeper) SetGenesisConf(ctx sdk.Context, genesisConf types.GenesisConf) {
+	store := ctx.KVStore(k.HashMapStoreKey)
+	genesisConfBytes := k.cdc.MustMarshalBinaryBare(genesisConf)
+	store.Set([]byte("genesisconf"), genesisConfBytes)
 }

@@ -12,21 +12,21 @@ const (
 	CodeInvalidWasmPath      sdk.CodeType = 103
 )
 
-// ErrPublicKeyDecode :
-func ErrPublicKeyDecode(codespace sdk.CodespaceType) sdk.Error {
+// ErrPublicKeyDecode is an error
+func ErrPublicKeyDecode(codespace sdk.CodespaceType, publicKey string) sdk.Error {
 	return sdk.NewError(
-		codespace, CodePublicKeyDecode, "Could not decode public key as Base64")
+		codespace, CodePublicKeyDecode, "Could not decode public key as Base64 : %v", publicKey)
 }
 
 // ErrProtocolVersionParse is an error
-func ErrProtocolVersionParse(codespace sdk.CodespaceType) sdk.Error {
+func ErrProtocolVersionParse(codespace sdk.CodespaceType, protocolVersion string) sdk.Error {
 	return sdk.NewError(
 		codespace, CodeProtocolVersionParse,
-		"Error occurs in parsing protocol version in chainspec")
+		"Could not parse Protocol Version : %v", protocolVersion)
 }
 
 // ErrInvalidWasmPath is an error
-func ErrInvalidWasmPath(codespace sdk.CodespaceType) sdk.Error {
+func ErrInvalidWasmPath(codespace sdk.CodespaceType, path string) sdk.Error {
 	return sdk.NewError(
-		codespace, CodeInvalidWasmPath, "Invalid wasm path in chainspec")
+		codespace, CodeInvalidWasmPath, "Invalid wasm path in chainspec : %v", path)
 }
