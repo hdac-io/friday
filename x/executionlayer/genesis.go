@@ -9,23 +9,14 @@ import (
 	"github.com/hdac-io/friday/x/executionlayer/types"
 )
 
-// InitGenesis sets distribution information for genesis.
+// InitGenesis sets an executionlayer configuration for genesis.
 func InitGenesis(
-	ctx sdk.Context, keeper ExecutionLayerKeeper, data types.GenesisState,
-	genesisConfig ipc.ChainSpec_GenesisConfig) {
-	// Genesis Accounts
-	if accountsLen := len(data.Accounts); accountsLen != 0 {
-		genesisConfig.Accounts = make([]*ipc.ChainSpec_GenesisAccount, accountsLen)
-		for i, v := range data.Accounts {
-			genAccount, err := types.ToGenesisAccount(v)
-			if err != nil {
-				panic(err)
-			}
-			genesisConfig.Accounts[i] = genAccount
-		}
+	ctx sdk.Context, keeper ExecutionLayerKeeper, data types.GenesisState) {
+	genesisConfig, err := types.ToChainSpecGenesisConfig(data.GenesisConf)
+	if err != nil {
+		panic(err)
 	}
-
-	response, err := grpc.RunGenesis(keeper.client, &genesisConfig)
+	response, err := grpc.RunGenesis(keeper.client, genesisConfig)
 	if err != nil {
 		panic(err)
 	}
@@ -34,12 +25,11 @@ func InitGenesis(
 		panic(response.GetResult())
 	}
 
-	// keeper.InitialUnitHashMap(ctx)
-	//
-	// keeper.SetUnitHashMap(ctx, ctx.BlockHeader().LastBlockId.GetHash(), reponse.poststatehash)
+	keeper.SetGenesisConf(ctx, data.GenesisConf)
+	// keeper.SetEEState(ctx, ctx.BlockHeader().LastBlockId.GetHash(), response.GetSuccess().PoststateHash)
 }
 
-// ExportGenesis :
-func ExportGenesis(ctx sdk.Context, keeper ExecutionLayerKeeper) error {
-	return nil
+// ExportGenesis : exports an executionlayer configuration for genesis
+func ExportGenesis(ctx sdk.Context, keeper ExecutionLayerKeeper) types.GenesisState {
+	return types.NewGenesisState(keeper.GetGenesisConf(ctx))
 }
