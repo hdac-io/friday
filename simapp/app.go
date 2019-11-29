@@ -55,7 +55,7 @@ var (
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
 		supply.AppModuleBasic{},
-		//executionlayer.AppModuleBasic{},
+		executionlayer.AppModuleBasic{},
 	)
 
 	// module account permissions
