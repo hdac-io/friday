@@ -13,7 +13,7 @@ import (
 
 // GenesisState : the executionlayer state that must be provided at genesis.
 type GenesisState struct {
-	GenesisConf GenesisConf `json:"genesis_conf`
+	GenesisConf GenesisConf `json:"genesis_conf"`
 }
 
 // GenesisConf : the executionlayer configuration that must be provided at genesis.
@@ -35,9 +35,9 @@ type Genesis struct {
 // Account : Genesis Account Information.
 type Account struct {
 	// PublicKey : base64 encoded public key string
-	PublicKey           string `json="public_key"`
-	InitialBalance      string `json="initial_balance"`
-	InitialBondedAmount string `json="initial_bonded_amount"`
+	PublicKey           string `json:"public_key"`
+	InitialBalance      string `json:"initial_balance"`
+	InitialBondedAmount string `json:"initial_bonded_amount"`
 }
 
 // WasmCosts : CasperLabs EE Wasm Cost table
