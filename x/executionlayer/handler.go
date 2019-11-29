@@ -29,7 +29,7 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 
 // Handle MsgExecute
 func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) sdk.Result {
-	if bytes.Equal(msg.BlockState, []byte{}) {
+	if bytes.Equal(msg.BlockState, []byte{0}) {
 		msg.BlockState = ctx.BlockHeader().LastCommitHash
 	}
 	unitHash := k.GetUnitHashMap(ctx, msg.BlockState)

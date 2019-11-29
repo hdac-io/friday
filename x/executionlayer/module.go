@@ -13,6 +13,7 @@ import (
 	"github.com/hdac-io/friday/types/module"
 
 	"github.com/hdac-io/friday/x/executionlayer/client/cli"
+	"github.com/hdac-io/friday/x/executionlayer/client/rest"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 )
 
@@ -35,23 +36,14 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 }
 
 // default genesis state
-func (AppModuleBasic) DefaultGenesis() json.RawMessage {
-	return types.ModuleCdc.MustMarshalJSON(types.DefaultGenesisState())
-}
+func (AppModuleBasic) DefaultGenesis() json.RawMessage { return nil }
 
 // module validate genesis
-func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
-	var data types.GenesisState
-	err := types.ModuleCdc.UnmarshalJSON(bz, &data)
-	if err != nil {
-		return err
-	}
-	return types.ValidateGenesis(data)
-}
+func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error { return nil }
 
 // register rest routes
 func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
-	// rest.RegisterRoutes(ctx, rtr, types.StoreKey)
+	rest.RegisterRoutes(ctx, rtr, types.HashMapStoreKey)
 }
 
 // get the root tx command of this module
@@ -91,7 +83,7 @@ func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 func (AppModule) Route() string { return RouterKey }
 
 // module handler
-func (AppModule) NewHandler() sdk.Handler { return nil }
+func (am AppModule) NewHandler() sdk.Handler { return NewHandler(am.keeper) }
 
 // QuerierRoute works to route query to this module (revised)
 func (AppModule) QuerierRoute() string {

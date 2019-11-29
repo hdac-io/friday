@@ -1,10 +1,19 @@
 package cli
 
 import (
+	"math/big"
+	"os"
+	"strconv"
+
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	"github.com/hdac-io/friday/client"
 	"github.com/hdac-io/friday/codec"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 
+	"github.com/hdac-io/friday/client/context"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/auth"
+	"github.com/hdac-io/friday/x/auth/client/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +27,7 @@ func GetExecutionLayerTxCmd(cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 	executionlayerTxCmd.AddCommand(client.GetCommands(
-	//GetCmdQueryBalance(cdc),
+		GetCmdTransfer(cdc),
 	)...)
 	return executionlayerTxCmd
 }
@@ -26,31 +35,46 @@ func GetExecutionLayerTxCmd(cdc *codec.Codec) *cobra.Command {
 // The code below is a pattern of sending Tx
 // You may start from the example first
 
-// // GetCmdChangeKey is the CLI command for changing key
-// func GetCmdChangeKey(cdc *codec.Codec) *cobra.Command {
-// 	return &cobra.Command{
-// 		Use:   "changekey [name] [old private key] [new private key]",
-// 		Short: "",
-// 		Args:  cobra.ExactArgs(3), // # of arguments
-// 		RunE: func(cmd *cobra.Command, args []string) error {
-//			// Make context and tx builder
-// 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-//			// TxBuilder is defined in auth package so you may use it.
-// 			// Don't have to find NewTxBuilderFromCLI in your module
-// 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+// GetCmdTransfer is the CLI command for transfer
+func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "transfer [from_key_or_address] [to_address] [amount] [fee] [gas_price]",
+		Short: "Create and sign a send tx",
+		Args:  cobra.ExactArgs(5), // # of arguments
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContextWithFrom(args[0]).WithCodec(cdc)
 
-//			// Parse arguments
-// 			oldaddr, _ := sdk.AccAddressFromBech32(args[1])
-// 			newaddr, _ := sdk.AccAddressFromBech32(args[2])
-//			// Build messages
-// 			msg := types.NewMsgChangeKey(args[0], oldaddr, newaddr)
-// 			err := msg.ValidateBasic()
-// 			if err != nil {
-// 				return err
-// 			}
+			to, err := sdk.AccAddressFromBech32(args[1])
 
-//			// Broadcast message in Tx
-// 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
-// 		},
-// 	}
-// }
+			if err != nil {
+				return err
+			}
+
+			coins, err := strconv.ParseUint(args[2], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			fee, err := strconv.ParseUint(args[3], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			gasPrice, err := strconv.ParseUint(args[4], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			transferCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm"))
+			transferAbi := util.MakeArgsTransferToAccount(util.EncodeToHexString(to.Bytes()), coins)
+			paymentCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
+			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
+
+			// build and sign the transaction, then broadcast to Tendermint
+			msg := types.NewMsgExecute([]byte{0}, cliCtx.FromAddress, cliCtx.FromAddress, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
+			txBldr = txBldr.WithGas(gasPrice)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+}
