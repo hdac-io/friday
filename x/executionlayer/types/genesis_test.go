@@ -1,18 +1,18 @@
 package types
 
 import (
-	"encoding/base64"
 	"os"
 	"reflect"
 	"testing"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
+	sdk "github.com/hdac-io/friday/types"
 	"github.com/stretchr/testify/require"
 )
 
 const (
 	mintCodePath = "$HOME/.fryd/contracts/mint_install.wasm"
-	posCodePath  = "$HOME/.fryd/contracts/genesis/pos_install.wasm"
+	posCodePath  = "$HOME/.fryd/contracts/pos_install.wasm"
 )
 
 func TestToProtocolVersion(t *testing.T) {
@@ -47,21 +47,24 @@ func TestToProtocolVersion(t *testing.T) {
 
 func TestToChainSpecGenesisAccount(t *testing.T) {
 	// valid input
+	addr, _ := sdk.AccAddressFromBech32("friday15evpva2u57vv6l5czehyk69s0wnq9hrkqulwfz")
 	account := Account{
-		PublicKey:           "lGBOOzBXMuDEPxDIE5of4u9U+yzmnrB2MbjA0dQM9LQ=",
+		PublicKey:           addr,
 		InitialBalance:      "100000000",
 		InitialBondedAmount: "10000",
 	}
 	_, err := toChainSpecGenesisAccount(account)
 	require.Nil(t, err)
 
-	account.PublicKey = "invalid-public-key"
-	_, err = toChainSpecGenesisAccount(account)
-	require.NotNil(t, err)
+	// The reason of the blocked tests below: AccAddressFromBech32 type blocks malformed address
 
-	account.PublicKey = base64.StdEncoding.EncodeToString([]byte("invalid-public-key"))
-	_, err = toChainSpecGenesisAccount(account)
-	require.NotNil(t, err)
+	// account.PublicKey = "invalid-public-key"
+	// _, err = toChainSpecGenesisAccount(account)
+	// require.NotNil(t, err)
+
+	// account.PublicKey = base64.StdEncoding.EncodeToString([]byte("invalid-public-key"))
+	// _, err = toChainSpecGenesisAccount(account)
+	// require.NotNil(t, err)
 }
 
 func TestToChainSpecGenesisConfig(t *testing.T) {
@@ -94,18 +97,20 @@ func TestToChainSpecGenesisConfig(t *testing.T) {
 	// revert to valid input
 	genesisState.GenesisConf.Genesis.ProtocolVersion = "1.0.0"
 
-	// invalid account(not conformant to base64 encoded public key)
-	genesisState.GenesisConf.Genesis.Accounts = make([]Account, 1)
-	genesisState.GenesisConf.Genesis.Accounts[0] = Account{
-		PublicKey:           "invalid-public-key",
-		InitialBalance:      "100000000",
-		InitialBondedAmount: "10000",
-	}
-	_, err = ToChainSpecGenesisConfig(genesisState.GenesisConf)
-	require.NotNil(t, err)
+	// The reason of the blocked tests below: AccAddressFromBech32 type blocks malformed address
 
-	genesisState.GenesisConf.Genesis.Accounts[0].PublicKey =
-		base64.StdEncoding.EncodeToString([]byte("invalid-public-key"))
-	_, err = ToChainSpecGenesisConfig(genesisState.GenesisConf)
-	require.NotNil(t, err)
+	// invalid account(not conformant to base64 encoded public key)
+	// genesisState.GenesisConf.Genesis.Accounts = make([]Account, 1)
+	// genesisState.GenesisConf.Genesis.Accounts[0] = Account{
+	// 	PublicKey:           "invalid-public-key",
+	// 	InitialBalance:      "100000000",
+	// 	InitialBondedAmount: "10000",
+	// }
+	// _, err = ToChainSpecGenesisConfig(genesisState.GenesisConf)
+	// require.NotNil(t, err)
+
+	// genesisState.GenesisConf.Genesis.Accounts[0].PublicKey =
+	// 	base64.StdEncoding.EncodeToString([]byte("invalid-public-key"))
+	// _, err = ToChainSpecGenesisConfig(genesisState.GenesisConf)
+	// require.NotNil(t, err)
 }

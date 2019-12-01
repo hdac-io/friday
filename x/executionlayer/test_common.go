@@ -1,6 +1,7 @@
 package executionlayer
 
 import (
+	"encoding/hex"
 	"fmt"
 	"math/big"
 	"os"
@@ -44,7 +45,7 @@ func setupTestInput() testInput {
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
 
 	blockStateHash := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
-	genesisAddress := "d70243dd9d0d646fd6df282a8f7a8fa05a6629bec01d8024c3611eb1c1fb9f84"
+	genesisAddress := "friday15evpva2u57vv6l5czehyk69s0wnq9hrkqulwfz"
 	chainName := "hdac"
 	accounts := map[string][]string{
 		genesisAddress: []string{"500000000", "1000000"}}
@@ -80,8 +81,11 @@ func setupTestInput() testInput {
 func genesis(keeper ExecutionLayerKeeper) []byte {
 	input := setupTestInput()
 	fmt.Printf("%v", input.genesisAccount)
+	genaddr, _ := sdk.AccAddressFromBech32(input.genesisAddress)
+	appendedAddr := append(genaddr.Bytes(), make([]byte, 12)...)
+	hexaddr := hex.EncodeToString(appendedAddr)
 	genesisConfig, err := util.GenesisConfigMock(
-		input.chainName, input.genesisAddress,
+		input.chainName, hexaddr,
 		input.genesisAccount[input.genesisAddress][0], input.genesisAccount[input.genesisAddress][1],
 		input.elk.protocolVersion, input.costs, "./wasms/mint_install.wasm", "./wasms/pos_install.wasm")
 

@@ -81,7 +81,7 @@ func queryBalanceDetail(ctx sdk.Context, path []string, req abci.RequestQuery, k
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
-	val, err := keeper.GetQueryBalanceResult(ctx, param.StateHash, string(param.Address))
+	val, err := keeper.GetQueryBalanceResult(ctx, param.StateHash, param.Address)
 	if err != nil {
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, err.Error())
 	}

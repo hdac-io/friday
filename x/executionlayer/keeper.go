@@ -2,6 +2,7 @@ package executionlayer
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"strconv"
 	"strings"
@@ -135,8 +136,10 @@ func (k ExecutionLayerKeeper) GetQueryResultSimple(ctx sdk.Context,
 }
 
 // GetQueryBalanceResult queries with whole parameters
-func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, stateHash []byte, address string) (string, error) {
-	res, err := grpc.QueryBlanace(k.client, stateHash, address, k.protocolVersion)
+func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, stateHash []byte, address sdk.AccAddress) (string, error) {
+	appendedAddr := append(address.Bytes(), make([]byte, 12)...)
+	hexaddr := hex.EncodeToString(appendedAddr)
+	res, err := grpc.QueryBlanace(k.client, stateHash, hexaddr, k.protocolVersion)
 	if err != "" {
 		return "", fmt.Errorf(err)
 	}
@@ -145,9 +148,11 @@ func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, stateHash [
 }
 
 // GetQueryBalanceResultSimple queries with whole parameters
-func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, address string) (string, error) {
+func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, address sdk.AccAddress) (string, error) {
+	appendedAddr := append(address.Bytes(), make([]byte, 12)...)
+	hexaddr := hex.EncodeToString(appendedAddr)
 	unitHash := k.GetUnitHashMap(ctx, ctx.BlockHeader().LastBlockId.Hash)
-	res, err := grpc.QueryBlanace(k.client, unitHash.EEState, address, k.protocolVersion)
+	res, err := grpc.QueryBlanace(k.client, unitHash.EEState, hexaddr, k.protocolVersion)
 	if err != "" {
 		return "", fmt.Errorf(err)
 	}

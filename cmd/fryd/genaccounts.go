@@ -11,6 +11,8 @@ import (
 	"github.com/hdac-io/friday/server"
 	eltypes "github.com/hdac-io/friday/x/executionlayer/types"
 	"github.com/hdac-io/friday/x/genutil"
+
+	sdk "github.com/hdac-io/friday/types"
 )
 
 const (
@@ -36,9 +38,10 @@ the base64 encoded publickey and a list of initial coins.`,
 			balance := args[1]
 			bondedAmount := args[2]
 
+			parsedPubKey, err := sdk.AccAddressFromBech32(publicKey)
 			// create concrete account type based on input parameters
 			account := eltypes.Account{
-				PublicKey:           publicKey,
+				PublicKey:           parsedPubKey,
 				InitialBalance:      balance,
 				InitialBondedAmount: bondedAmount,
 			}

@@ -1,11 +1,13 @@
 package types
 
 import (
-	"encoding/base64"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
+
+	sdk "github.com/hdac-io/friday/types"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
@@ -35,9 +37,9 @@ type Genesis struct {
 // Account : Genesis Account Information.
 type Account struct {
 	// PublicKey : base64 encoded public key string
-	PublicKey           string `json:"public_key"`
-	InitialBalance      string `json:"initial_balance"`
-	InitialBondedAmount string `json:"initial_bonded_amount"`
+	PublicKey           sdk.AccAddress `json:"public_key"`
+	InitialBalance      string         `json:"initial_balance"`
+	InitialBondedAmount string         `json:"initial_bonded_amount"`
 }
 
 // WasmCosts : CasperLabs EE Wasm Cost table
@@ -100,11 +102,13 @@ func ToChainSpecGenesisConfig(config GenesisConf) (*ipc.ChainSpec_GenesisConfig,
 
 	mintWasm, err := ioutil.ReadFile(config.Genesis.MintCodePath)
 	if err != nil {
+		fmt.Println(err)
 		return nil, ErrInvalidWasmPath(DefaultCodespace, config.Genesis.MintCodePath)
 	}
 	posWasm, err := ioutil.ReadFile(config.Genesis.PosCodePath)
 	if err != nil {
-		return nil, ErrInvalidWasmPath(DefaultCodespace, config.Genesis.MintCodePath)
+		fmt.Println(err)
+		return nil, ErrInvalidWasmPath(DefaultCodespace, config.Genesis.PosCodePath)
 	}
 
 	var accounts []*ipc.ChainSpec_GenesisAccount
@@ -155,15 +159,15 @@ func toProtocolVersion(pvString string) (*state.ProtocolVersion, error) {
 }
 
 func toChainSpecGenesisAccount(account Account) (*ipc.ChainSpec_GenesisAccount, error) {
-	publicKey, err := base64.StdEncoding.DecodeString(account.PublicKey)
-	if err != nil || len(publicKey) != 32 {
-		return nil, ErrPublicKeyDecode(DefaultCodespace, account.PublicKey)
-	}
+	// publicKey, err := base64.StdEncoding.DecodeString(account.PublicKey)
+	// if err != nil || len(publicKey) != 32 {
+	// 	return nil, ErrPublicKeyDecode(DefaultCodespace, account.PublicKey)
+	// }
 	balance := toBigInt(account.InitialBalance)
 	bondedAmount := toBigInt(account.InitialBondedAmount)
 
 	genesisAccount := ipc.ChainSpec_GenesisAccount{}
-	genesisAccount.PublicKey = publicKey
+	genesisAccount.PublicKey = append(account.PublicKey.Bytes(), make([]byte, 12)...)
 	genesisAccount.Balance = &balance
 	genesisAccount.BondedAmount = &bondedAmount
 

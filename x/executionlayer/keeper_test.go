@@ -11,6 +11,7 @@ import (
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc/transforms"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
+	sdk "github.com/hdac-io/friday/types"
 	"github.com/stretchr/testify/assert"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -44,7 +45,8 @@ func TestGetQueryResult(t *testing.T) {
 func TestGetQueryBalanceResult(t *testing.T) {
 	input := setupTestInput()
 	parentHash := genesis(input.elk)
-	res, err := input.elk.GetQueryBalanceResult(input.ctx, parentHash, input.genesisAddress)
+	addr, _ := sdk.AccAddressFromBech32(input.genesisAddress)
+	res, err := input.elk.GetQueryBalanceResult(input.ctx, parentHash, addr)
 
 	if err != nil {
 		fmt.Println(err.Error())

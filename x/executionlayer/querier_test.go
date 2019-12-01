@@ -49,10 +49,11 @@ func TestQueryEEDetail(t *testing.T) {
 func TestQueryBalanceDetail(t *testing.T) {
 	input, keeper, querier := setup()
 	parentHash := genesis(keeper)
+	genAddr, _ := sdk.AccAddressFromBech32(input.genesisAddress)
 
 	queryData := QueryGetBalanceDetail{
 		StateHash: parentHash,
-		Address:   input.genesisAddress,
+		Address:   genAddr,
 	}
 
 	bz, _ := input.cdc.MarshalJSON(queryData)

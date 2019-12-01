@@ -2,6 +2,8 @@ package types
 
 import (
 	"fmt"
+
+	sdk "github.com/hdac-io/friday/types"
 )
 
 // QueryExecutionLayer payload for a EE query
@@ -32,22 +34,22 @@ func (q QueryExecutionLayer) String() string {
 // QueryGetBalanceDetail payload for balance query
 type QueryGetBalanceDetail struct {
 	StateHash []byte
-	Address   string
+	Address   sdk.AccAddress
 }
 
 // implement fmt.Stringer
 func (q QueryGetBalanceDetail) String() string {
-	return fmt.Sprintf("State: %s\nAddress: %s", q.StateHash, q.Address)
+	return fmt.Sprintf("State: %s\nAddress: %s", q.StateHash, q.Address.String())
 }
 
 // QueryGetBalance payload for balance query in the latest data
 type QueryGetBalance struct {
-	Address string
+	Address sdk.AccAddress
 }
 
 // implement fmt.Stringer
 func (q QueryGetBalance) String() string {
-	return fmt.Sprintf("Address: %s", q.Address)
+	return fmt.Sprintf("Address: %s", q.Address.String())
 }
 
 // QueryExecutionLayerResp is used for response of EE query

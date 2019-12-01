@@ -210,6 +210,7 @@ func createTestAddrs(numAddrs int) []sdk.AccAddress {
 	for i := 100; i < (numAddrs + 100); i++ {
 		numString := strconv.Itoa(i)
 		buffer.WriteString("A58856F0FD53BF058B4909A21AEC019107BA6") //base address string
+		//buffer.WriteString("A58856F0FD53BF058B4909A21AEC019107BA60A109A21AEC019107BA60A10") //base address string
 
 		buffer.WriteString(numString) //adding on final two digits to make addresses unique
 		res, _ := sdk.AccAddressFromHex(buffer.String())
