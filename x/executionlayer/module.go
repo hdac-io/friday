@@ -36,10 +36,19 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 }
 
 // default genesis state
-func (AppModuleBasic) DefaultGenesis() json.RawMessage { return nil }
+func (AppModuleBasic) DefaultGenesis() json.RawMessage {
+	return types.ModuleCdc.MustMarshalJSON(types.DefaultGenesisState())
+}
 
 // module validate genesis
-func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error { return nil }
+func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
+	var data types.GenesisState
+	err := types.ModuleCdc.UnmarshalJSON(bz, &data)
+	if err != nil {
+		return err
+	}
+	return types.ValidateGenesis(data)
+}
 
 // register rest routes
 func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
