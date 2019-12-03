@@ -27,3 +27,11 @@ jobs:
       script:
         - unset -f cd # workaround for https://github.com/travis-ci/travis-ci/issues/8703
         - make test
+
+env:
+  - PATH="$PATH:$HOME/.cargo/bin"
+before_install:
+  - sudo apt-get -y install curl
+  - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain none
+install:
+  - make install
