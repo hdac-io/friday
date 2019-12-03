@@ -46,6 +46,7 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 			cliCtx := context.NewCLIContextWithFrom(args[0]).WithCodec(cdc)
 
 			to, err := sdk.AccAddressFromBech32(args[1])
+			toPublicKey := types.ToPublicKey(to)
 
 			if err != nil {
 				return err
@@ -67,7 +68,7 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 			}
 
 			transferCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm"))
-			transferAbi := util.MakeArgsTransferToAccount(util.EncodeToHexString(to.Bytes()), coins)
+			transferAbi := util.MakeArgsTransferToAccount(util.EncodeToHexString(toPublicKey), coins)
 			paymentCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
 			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
 
