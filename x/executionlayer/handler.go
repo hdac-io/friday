@@ -30,13 +30,13 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 // Handle MsgExecute
 func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) sdk.Result {
 	if bytes.Equal(msg.BlockState, []byte{0}) {
-		msg.BlockState = ctx.BlockHeader().LastCommitHash
+		msg.BlockState = ctx.BlockHeader().LastBlockId.Hash
 	}
 	unitHash := k.GetUnitHashMap(ctx, msg.BlockState)
 
 	// Execute
 	deploys := util.MakeInitDeploys()
-	deploy := util.MakeDeploy(util.EncodeToHexString(msg.ContractOwnerAccount), msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
+	deploy := util.MakeDeploy(util.EncodeToHexString(types.ToPublicKey(msg.ContractOwnerAccount)), msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
 	deploys = util.AddDeploy(deploys, deploy)
 	effects, errGrpc := grpc.Execute(k.client, unitHash.EEState, ctx.BlockTime().Unix(), deploys, k.protocolVersion)
 	if errGrpc != "" {
