@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"path"
 	"time"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
@@ -15,6 +16,15 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
+)
+
+var (
+	contractPath        = os.ExpandEnv("$HOME/.nodef/contracts")
+	mintInstallWasm     = "mint_install.wasm"
+	posInstallWasm      = "pos_install.wasm"
+	standardPaymentWasm = "standard_payment.wasm"
+	counterDefineWasm   = "counter_define.wasm"
+	counterCallWasm     = "counter_call.wasm"
 )
 
 type testInput struct {
@@ -82,8 +92,11 @@ func genesis(keeper ExecutionLayerKeeper) []byte {
 	fmt.Printf("%v", input.genesisAccount)
 	genesisConfig, err := util.GenesisConfigMock(
 		input.chainName, input.genesisAddress,
-		input.genesisAccount[input.genesisAddress][0], input.genesisAccount[input.genesisAddress][1],
-		input.elk.protocolVersion, input.costs, "./wasms/mint_install.wasm", "./wasms/pos_install.wasm")
+		input.genesisAccount[input.genesisAddress][0],
+		input.genesisAccount[input.genesisAddress][1],
+		input.elk.protocolVersion, input.costs, path.Join(contractPath, mintInstallWasm),
+		path.Join(contractPath, posInstallWasm),
+	)
 
 	if err != nil {
 		panic(err)
@@ -102,8 +115,8 @@ func counterDefine(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	input := setupTestInput()
 	timestamp := time.Now().Unix()
 	paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000))
-	cntDefCode := util.LoadWasmFile("./wasms/counter_define.wasm")
-	standardPaymentCode := util.LoadWasmFile("./wasms/standard_payment.wasm")
+	cntDefCode := util.LoadWasmFile(path.Join(contractPath, counterDefineWasm))
+	standardPaymentCode := util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm))
 
 	deploy := util.MakeDeploy(input.genesisAddress, cntDefCode, []byte{},
 		standardPaymentCode, paymentAbi, uint64(10), timestamp, input.chainName)
@@ -129,8 +142,8 @@ func counterCall(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	input := setupTestInput()
 	timestamp := time.Now().Unix()
 	paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000))
-	cntCallCode := util.LoadWasmFile("./wasms/counter_call.wasm")
-	standardPaymentCode := util.LoadWasmFile("./wasms/standard_payment.wasm")
+	cntCallCode := util.LoadWasmFile(path.Join(contractPath, counterCallWasm))
+	standardPaymentCode := util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm))
 
 	timestamp = time.Now().Unix()
 	deploy := util.MakeDeploy(input.genesisAddress, cntCallCode,

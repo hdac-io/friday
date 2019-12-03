@@ -3,6 +3,7 @@ package executionlayer
 import (
 	"fmt"
 	"math/big"
+	"path"
 	"strings"
 	"testing"
 
@@ -19,7 +20,7 @@ import (
 
 func TestGetQueryResult(t *testing.T) {
 	input := setupTestInput()
-	path := "counter/count"
+	queryPath := "counter/count"
 
 	parentHash := genesis(input.elk)
 
@@ -29,7 +30,7 @@ func TestGetQueryResult(t *testing.T) {
 	res, err := input.elk.GetQueryResult(
 		input.ctx,
 		parentHash,
-		"address", input.genesisAddress, path)
+		"address", input.genesisAddress, queryPath)
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -84,7 +85,7 @@ func TestCreateBlock(t *testing.T) {
 	input := setupTestInput()
 	parentHash := genesis(input.elk)
 	input.elk.SetEEState(input.ctx, input.blockStateHash, parentHash)
-	path := "counter/count"
+	queryPath := "counter/count"
 
 	blockState1 := []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 	blockState2 := []byte{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
@@ -92,9 +93,9 @@ func TestCreateBlock(t *testing.T) {
 		input.blockStateHash,
 		util.DecodeHexString(input.genesisAddress),
 		util.DecodeHexString(input.genesisAddress),
-		util.LoadWasmFile("./wasms/counter_define.wasm"),
+		util.LoadWasmFile(path.Join(contractPath, counterDefineWasm)),
 		[]byte{},
-		util.LoadWasmFile("./wasms/standard_payment.wasm"),
+		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
 		util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000)),
 		uint64(10),
 	)
@@ -112,9 +113,9 @@ func TestCreateBlock(t *testing.T) {
 		input.blockStateHash,
 		util.DecodeHexString(input.genesisAddress),
 		util.DecodeHexString(input.genesisAddress),
-		util.LoadWasmFile("./wasms/counter_call.wasm"),
+		util.LoadWasmFile(path.Join(contractPath, counterCallWasm)),
 		[]byte{},
-		util.LoadWasmFile("./wasms/standard_payment.wasm"),
+		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
 		util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000)),
 		uint64(10),
 	)
@@ -128,7 +129,7 @@ func TestCreateBlock(t *testing.T) {
 
 	BeginBlocker(input.ctx, nextBlockABCI2, input.elk)
 
-	arrPath := strings.Split(path, "/")
+	arrPath := strings.Split(queryPath, "/")
 
 	unitHash1 := input.elk.GetUnitHashMap(input.ctx, blockState1)
 	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", input.genesisAddress, arrPath, input.elk.protocolVersion)
