@@ -20,6 +20,8 @@ cargo build --release # build execution engine
 declare -a TARGET_CONTRACTS=(
   "mint-install"
   "pos-install"
+  "counter-call"
+  "counter-define"
   "standard-payment"
   "transfer-to-account"
   "bonding"
@@ -29,6 +31,8 @@ declare -a TARGET_CONTRACTS=(
 declare -a WASM_FILES=(
   "mint_install.wasm"
   "pos_install.wasm"
+  "counter_call.wasm"
+  "counter_define.wasm"
   "standard_payment.wasm"
   "transfer_to_account.wasm"
   "bonding.wasm"
