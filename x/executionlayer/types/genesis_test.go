@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/base64"
 	"os"
 	"reflect"
 	"testing"
@@ -45,25 +44,6 @@ func TestToProtocolVersion(t *testing.T) {
 	}
 }
 
-func TestToChainSpecGenesisAccount(t *testing.T) {
-	// valid input
-	account := Account{
-		PublicKey:           "lGBOOzBXMuDEPxDIE5of4u9U+yzmnrB2MbjA0dQM9LQ=",
-		InitialBalance:      "100000000",
-		InitialBondedAmount: "10000",
-	}
-	_, err := toChainSpecGenesisAccount(account)
-	require.Nil(t, err)
-
-	account.PublicKey = "invalid-public-key"
-	_, err = toChainSpecGenesisAccount(account)
-	require.NotNil(t, err)
-
-	account.PublicKey = base64.StdEncoding.EncodeToString([]byte("invalid-public-key"))
-	_, err = toChainSpecGenesisAccount(account)
-	require.NotNil(t, err)
-}
-
 func TestToChainSpecGenesisConfig(t *testing.T) {
 	// valid input
 	genesisState := DefaultGenesisState()
@@ -88,24 +68,6 @@ func TestToChainSpecGenesisConfig(t *testing.T) {
 
 	// invalid protocol version
 	genesisState.GenesisConf.Genesis.ProtocolVersion = "1.0.0.0"
-	_, err = ToChainSpecGenesisConfig(genesisState.GenesisConf)
-	require.NotNil(t, err)
-
-	// revert to valid input
-	genesisState.GenesisConf.Genesis.ProtocolVersion = "1.0.0"
-
-	// invalid account(not conformant to base64 encoded public key)
-	genesisState.GenesisConf.Genesis.Accounts = make([]Account, 1)
-	genesisState.GenesisConf.Genesis.Accounts[0] = Account{
-		PublicKey:           "invalid-public-key",
-		InitialBalance:      "100000000",
-		InitialBondedAmount: "10000",
-	}
-	_, err = ToChainSpecGenesisConfig(genesisState.GenesisConf)
-	require.NotNil(t, err)
-
-	genesisState.GenesisConf.Genesis.Accounts[0].PublicKey =
-		base64.StdEncoding.EncodeToString([]byte("invalid-public-key"))
 	_, err = ToChainSpecGenesisConfig(genesisState.GenesisConf)
 	require.NotNil(t, err)
 }

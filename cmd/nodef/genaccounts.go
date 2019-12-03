@@ -2,13 +2,16 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/hdac-io/friday/client/keys"
 	"github.com/hdac-io/friday/codec"
 	"github.com/hdac-io/friday/server"
+	sdk "github.com/hdac-io/friday/types"
 	eltypes "github.com/hdac-io/friday/x/executionlayer/types"
 	"github.com/hdac-io/friday/x/genutil"
 )
@@ -23,7 +26,7 @@ func AddElGenesisAccountCmd(
 ) *cobra.Command {
 
 	cmd := &cobra.Command{
-		Use:   `add-el-genesis-account [publickey_encoded_with_base64] [initial_balance] [initial_bonded_amount]`,
+		Use:   `add-el-genesis-account [bech32 string] [initial_balance] [initial_bonded_amount]`,
 		Short: "Add a genesis account to genesis.json",
 		Long: `Add a genesis account to genesis.json. The provided account must specify
 the base64 encoded publickey and a list of initial coins.`,
@@ -32,7 +35,24 @@ the base64 encoded publickey and a list of initial coins.`,
 			config := ctx.Config
 			config.SetRoot(viper.GetString(cli.HomeFlag))
 
-			publicKey := args[0]
+			accAddr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				kb, err := keys.NewKeyBaseFromDir(viper.GetString(flagClientHome))
+				if err != nil {
+					return err
+				}
+
+				info, err := kb.Get(args[0])
+				if err != nil {
+					return err
+				}
+
+				accAddr = info.GetAddress()
+			}
+
+			// Use sdk.AccAddress as public key for PoC.
+			// It should be replaced with a raw public key later.
+			publicKey := eltypes.ToPublicKey(accAddr)
 			balance := args[1]
 			bondedAmount := args[2]
 
