@@ -1,5 +1,3 @@
-sudo: false
-
 jobs:
   include:
     - stage: unit test
@@ -11,6 +9,7 @@ jobs:
         directories:
           - $HOME/.cache/go-build
           - $HOME/gopath/pkg/mod
+          - ./CasperLabs/execution-engine/target
       script:
         - make test
       after_success:
@@ -24,19 +23,21 @@ jobs:
         directories:
           - $HOME/Library/Caches/go-build
           - $HOME/gopath/pkg/mod
+          - ./CasperLabs/execution-engine/target
       script:
         - unset -f cd # workaround for https://github.com/travis-ci/travis-ci/issues/8703
         - make test
 
-env:
-  - PATH="$PATH:$HOME/.cargo/bin"
+addons:
+  apt:
+    packages: curl
+  homebrew:
+    package: curl
 before_install:
-  - sudo apt-get -y install curl
-  - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain none
-  - export PROTOBUF_VERSION=3.10.0
-  - export PROTOBUF_FILE="protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
-  - wget -v "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/${PROTOBUF_FILE}"
-  - unzip "${PROTOBUF_FILE}" -d "${HOME}/protoc"
-  - export PATH="$HOME/protoc/bin:$PATH"
+  - bash scripts/ci_prerequisites.sh
+  - export PATH="$PATH:$HOME/.cargo/bin"
+  - export PATH="$PATH:$HOME/protoc/bin"
 install:
   - make install
+before_script:
+  - ./CasperLabs/execution-engine/target/release/casperlabs-engine-grpc-server $HOME/.casperlabs/.casper-node.sock& # for integration test.
