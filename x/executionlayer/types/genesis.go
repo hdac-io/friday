@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/base64"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -35,9 +34,9 @@ type Genesis struct {
 // Account : Genesis Account Information.
 type Account struct {
 	// PublicKey : base64 encoded public key string
-	PublicKey           string `json:"public_key"`
-	InitialBalance      string `json:"initial_balance"`
-	InitialBondedAmount string `json:"initial_bonded_amount"`
+	PublicKey           PublicKey `json:"public_key"`
+	InitialBalance      string    `json:"initial_balance"`
+	InitialBondedAmount string    `json:"initial_bonded_amount"`
 }
 
 // WasmCosts : CasperLabs EE Wasm Cost table
@@ -111,11 +110,8 @@ func ToChainSpecGenesisConfig(config GenesisConf) (*ipc.ChainSpec_GenesisConfig,
 	if n := len(config.Genesis.Accounts); n != 0 {
 		accounts = make([]*ipc.ChainSpec_GenesisAccount, n)
 		for i, v := range config.Genesis.Accounts {
-			account, err := toChainSpecGenesisAccount(v)
-			if err != nil {
-				return nil, err
-			}
-			accounts[i] = account
+			account := toChainSpecGenesisAccount(v)
+			accounts[i] = &account
 		}
 	}
 
@@ -154,20 +150,16 @@ func toProtocolVersion(pvString string) (*state.ProtocolVersion, error) {
 		nil
 }
 
-func toChainSpecGenesisAccount(account Account) (*ipc.ChainSpec_GenesisAccount, error) {
-	publicKey, err := base64.StdEncoding.DecodeString(account.PublicKey)
-	if err != nil || len(publicKey) != 32 {
-		return nil, ErrPublicKeyDecode(DefaultCodespace, account.PublicKey)
-	}
+func toChainSpecGenesisAccount(account Account) ipc.ChainSpec_GenesisAccount {
 	balance := toBigInt(account.InitialBalance)
 	bondedAmount := toBigInt(account.InitialBondedAmount)
 
 	genesisAccount := ipc.ChainSpec_GenesisAccount{}
-	genesisAccount.PublicKey = publicKey
+	genesisAccount.PublicKey = account.PublicKey
 	genesisAccount.Balance = &balance
 	genesisAccount.BondedAmount = &bondedAmount
 
-	return &genesisAccount, nil
+	return genesisAccount
 }
 
 func toCostTable(wasmCosts WasmCosts) *ipc.ChainSpec_CostTable {
