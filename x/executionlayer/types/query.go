@@ -4,11 +4,11 @@ import (
 	"fmt"
 )
 
-// QueryExecutionLayer payload for a EE query
+// QueryExecutionLayerDetail payload for a EE query
 type QueryExecutionLayerDetail struct {
 	StateHash []byte `json:"state_hash"`
 	KeyType   string `json:"key_type"`
-	KeyData   []byte `json:"key_data"`
+	KeyData   string `json:"key_data"`
 	Path      string `json:"path"`
 }
 
@@ -20,7 +20,7 @@ func (q QueryExecutionLayerDetail) String() string {
 // QueryExecutionLayer payload for a EE query
 type QueryExecutionLayer struct {
 	KeyType string `json:"key_type"`
-	KeyData []byte `json:"key_data"`
+	KeyData string `json:"key_data"`
 	Path    string `json:"path"`
 }
 
@@ -32,7 +32,7 @@ func (q QueryExecutionLayer) String() string {
 // QueryGetBalanceDetail payload for balance query
 type QueryGetBalanceDetail struct {
 	StateHash []byte
-	Address   string
+	Address   PublicKey
 }
 
 // implement fmt.Stringer
@@ -42,7 +42,7 @@ func (q QueryGetBalanceDetail) String() string {
 
 // QueryGetBalance payload for balance query in the latest data
 type QueryGetBalance struct {
-	Address string
+	Address PublicKey
 }
 
 // implement fmt.Stringer

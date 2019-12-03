@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/executionlayer/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -30,7 +30,7 @@ func TestQueryEEDetail(t *testing.T) {
 	queryData := QueryExecutionLayerDetail{
 		StateHash: parentHash,
 		KeyType:   "address",
-		KeyData:   util.DecodeHexString(input.strGenesisAddress),
+		KeyData:   input.genesisAddress.String(),
 		Path:      queryPath,
 	}
 
@@ -53,7 +53,7 @@ func TestQueryBalanceDetail(t *testing.T) {
 
 	queryData := QueryGetBalanceDetail{
 		StateHash: parentHash,
-		Address:   input.strGenesisAddress,
+		Address:   types.ToPublicKey(input.genesisAddress),
 	}
 
 	bz, _ := input.cdc.MarshalJSON(queryData)

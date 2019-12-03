@@ -55,6 +55,7 @@ func setupTestInput() testInput {
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
 
 	blockStateHash := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
+
 	genesisAddress, _ := sdk.AccAddressFromBech32("friday1dl2cjlfpmc9hcyd4rxts047tze87s0gxmzqx70")
 	strGenesisAddress := util.EncodeToHexString(types.ToPublicKey(genesisAddress))
 	chainName := "hdac"
@@ -92,7 +93,7 @@ func setupTestInput() testInput {
 
 func genesis(keeper ExecutionLayerKeeper) []byte {
 	input := setupTestInput()
-	fmt.Printf("%v", input.genesisAccount)
+	fmt.Printf("%v\n", input.genesisAccount)
 	genesisConfig, err := util.GenesisConfigMock(
 		input.chainName, input.strGenesisAddress,
 		input.genesisAccount[input.strGenesisAddress][0],
@@ -127,14 +128,14 @@ func counterDefine(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	deploys := util.MakeInitDeploys()
 	deploys = util.AddDeploy(deploys, deploy)
 
-	effects2, err := grpc.Execute(keeper.client, parentStateHash, timestamp, deploys, keeper.protocolVersion)
-	if err != "" {
-		panic(fmt.Sprintf("counter define execute: %s", err))
+	effects2, grpcErr := grpc.Execute(keeper.client, parentStateHash, timestamp, deploys, keeper.protocolVersion)
+	if grpcErr != "" {
+		panic(fmt.Sprintf("counter define execute: %s", grpcErr))
 	}
 
-	postStateHash, _, err := grpc.Commit(keeper.client, parentStateHash, effects2, keeper.protocolVersion)
-	if err != "" {
-		panic(fmt.Sprintf("counter define commmit: %s", err))
+	postStateHash, _, grpcErr := grpc.Commit(keeper.client, parentStateHash, effects2, keeper.protocolVersion)
+	if grpcErr != "" {
+		panic(fmt.Sprintf("counter define commmit: %s", grpcErr))
 	}
 
 	return postStateHash
@@ -150,18 +151,19 @@ func counterCall(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 
 	timestamp = time.Now().Unix()
 	deploy := util.MakeDeploy(input.strGenesisAddress, cntCallCode,
+
 		[]byte{}, standardPaymentCode, paymentAbi, uint64(10), timestamp, input.chainName)
 	deploys := util.MakeInitDeploys()
 	deploys = util.AddDeploy(deploys, deploy)
 
-	effects3, err := grpc.Execute(keeper.client, parentStateHash, timestamp, deploys, keeper.protocolVersion)
-	if err != "" {
-		panic(fmt.Sprintf("counter call execute: %s", err))
+	effects3, grpcErr := grpc.Execute(keeper.client, parentStateHash, timestamp, deploys, keeper.protocolVersion)
+	if grpcErr != "" {
+		panic(fmt.Sprintf("counter call execute: %s", grpcErr))
 	}
 
-	postStateHash, _, err := grpc.Commit(keeper.client, parentStateHash, effects3, keeper.protocolVersion)
-	if err != "" {
-		panic(fmt.Sprintf("counter call commit: %s", err))
+	postStateHash, _, grpcErr := grpc.Commit(keeper.client, parentStateHash, effects3, keeper.protocolVersion)
+	if grpcErr != "" {
+		panic(fmt.Sprintf("counter call commit: %s", grpcErr))
 	}
 
 	return postStateHash
