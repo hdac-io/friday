@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	mintCodePath = "$HOME/.fryd/contracts/mint_install.wasm"
-	posCodePath  = "$HOME/.fryd/contracts/genesis/pos_install.wasm"
+	mintCodePath = "$HOME/.nodef/contracts/mint_install.wasm"
+	posCodePath  = "$HOME/.nodef/contracts/genesis/pos_install.wasm"
 )
 
 func TestToProtocolVersion(t *testing.T) {

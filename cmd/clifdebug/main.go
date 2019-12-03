@@ -36,7 +36,7 @@ func init() {
 }
 
 var rootCmd = &cobra.Command{
-	Use:          "fridaydebug",
+	Use:          "clifdebug",
 	Short:        "Faiday debug tool",
 	SilenceUsage: true,
 }

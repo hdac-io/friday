@@ -46,8 +46,8 @@ func main() {
 	// with the cdc
 
 	rootCmd := &cobra.Command{
-		Use:   "friday",
-		Short: "Command line interface for interacting with fryday daemon",
+		Use:   "clif",
+		Short: "Command line interface for interacting with friday daemon",
 	}
 
 	// Add --chain-id to persistent flags and mark it required

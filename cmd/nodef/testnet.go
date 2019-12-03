@@ -55,7 +55,7 @@ necessary files (private validator, genesis, config, etc.).
 Note, strict routability for addresses is turned off in the config file.
 
 Example:
-	fryd testnet --v 4 --output-dir ./output --starting-ip-address 192.168.10.2
+	nodef testnet --v 4 --output-dir ./output --starting-ip-address 192.168.10.2
 	`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			config := ctx.Config
@@ -80,9 +80,9 @@ Example:
 		"Directory to store initialization data for the testnet")
 	cmd.Flags().String(flagNodeDirPrefix, "node",
 		"Prefix the directory name for each node with (node results in node0, node1, ...)")
-	cmd.Flags().String(flagNodeDaemonHome, "fryd",
+	cmd.Flags().String(flagNodeDaemonHome, "nodef",
 		"Home directory of the node's daemon configuration")
-	cmd.Flags().String(flagNodeCLIHome, "friday",
+	cmd.Flags().String(flagNodeCLIHome, "clif",
 		"Home directory of the node's cli configuration")
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1",
 		"Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
@@ -235,7 +235,7 @@ func InitTestnet(cmd *cobra.Command, config *tmconfig.Config, cdc *codec.Codec,
 			return err
 		}
 
-		fridayConfigFilePath := filepath.Join(nodeDir, "config/fryd.toml")
+		fridayConfigFilePath := filepath.Join(nodeDir, "config/nodef.toml")
 		srvconfig.WriteConfigFile(fridayConfigFilePath, fridayConfig)
 	}
 
