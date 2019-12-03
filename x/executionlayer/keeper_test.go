@@ -12,6 +12,7 @@ import (
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc/transforms"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
+	"github.com/hdac-io/friday/x/executionlayer/types"
 	"github.com/stretchr/testify/assert"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -30,7 +31,7 @@ func TestGetQueryResult(t *testing.T) {
 	res, err := input.elk.GetQueryResult(
 		input.ctx,
 		parentHash,
-		"address", input.strGenesisAddress, queryPath)
+		"address", input.genesisAddress.String(), queryPath)
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -45,7 +46,7 @@ func TestGetQueryResult(t *testing.T) {
 func TestGetQueryBalanceResult(t *testing.T) {
 	input := setupTestInput()
 	parentHash := genesis(input.elk)
-	res, err := input.elk.GetQueryBalanceResult(input.ctx, parentHash, input.strGenesisAddress)
+	res, err := input.elk.GetQueryBalanceResult(input.ctx, parentHash, types.ToPublicKey(input.genesisAddress))
 
 	if err != nil {
 		fmt.Println(err.Error())

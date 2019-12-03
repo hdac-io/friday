@@ -6,6 +6,7 @@ import (
 	"github.com/hdac-io/friday/client"
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/codec"
+	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 
 	"github.com/spf13/cobra"
@@ -37,8 +38,14 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			name := args[0]
+			addr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				fmt.Println("Malformed address - ", args[0])
+				fmt.Println(err)
+				return nil
+			}
 
+			name := types.ToPublicKey(addr)
 			queryData := types.QueryGetBalance{
 				Address: name,
 			}
@@ -46,7 +53,7 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 
 			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalance", types.ModuleName), bz)
 			if err != nil {
-				fmt.Printf("could not resolve address - %s \n", name)
+				fmt.Printf("No balance data - %s \n", args[0])
 				return nil
 			}
 
@@ -65,18 +72,23 @@ func GetCmdQueryBalanceWithBlockHash(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			name := args[0]
+			name, err := types.NewPublicKey(args[0])
+			if err != nil {
+				fmt.Println("Malformed address - ", args[0])
+				fmt.Println(err)
+				return nil
+			}
 			blockHash := []byte(args[1])
 
 			queryData := types.QueryGetBalanceDetail{
-				Address:   name,
+				Address:   *name,
 				StateHash: blockHash,
 			}
 			bz := cdc.MustMarshalJSON(queryData)
 
 			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalancedetail", types.ModuleName), bz)
 			if err != nil {
-				fmt.Printf("could not resolve address - %s \n", name)
+				fmt.Printf("No balance data - %s \n", args[0])
 				return nil
 			}
 
@@ -96,7 +108,7 @@ func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			dataType := args[0]
-			data := []byte(args[1])
+			data := args[1]
 			path := args[2]
 
 			queryData := types.QueryExecutionLayer{
@@ -128,7 +140,7 @@ func GetCmdQueryWithHash(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			dataType := args[0]
-			data := []byte(args[1])
+			data := args[1]
 			path := args[2]
 			blockHash := []byte(args[3])
 

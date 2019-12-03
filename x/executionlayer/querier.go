@@ -1,7 +1,6 @@
 package executionlayer
 
 import (
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -42,7 +41,7 @@ func queryEEDetail(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
-	val, errmsg := keeper.GetQueryResult(ctx, param.StateHash, param.KeyType, util.EncodeToHexString(param.KeyData), param.Path)
+	val, errmsg := keeper.GetQueryResult(ctx, param.StateHash, param.KeyType, param.KeyData, param.Path)
 	if errmsg != nil {
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, errmsg.Error())
 	}
@@ -62,7 +61,7 @@ func queryEE(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Execu
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
-	val, errmsg := keeper.GetQueryResultSimple(ctx, param.KeyType, string(param.KeyData), param.Path)
+	val, errmsg := keeper.GetQueryResultSimple(ctx, param.KeyType, param.KeyData, param.Path)
 	if errmsg != nil {
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, errmsg.Error())
 	}
@@ -82,7 +81,7 @@ func queryBalanceDetail(ctx sdk.Context, path []string, req abci.RequestQuery, k
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
-	val, err := keeper.GetQueryBalanceResult(ctx, param.StateHash, string(param.Address))
+	val, err := keeper.GetQueryBalanceResult(ctx, param.StateHash, param.Address)
 	if err != nil {
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, err.Error())
 	}
