@@ -65,8 +65,8 @@ func DefaultGenesisState() GenesisState {
 		Genesis: Genesis{
 			Name:            "friday-devnet",
 			Timestamp:       0,
-			MintCodePath:    os.ExpandEnv("$HOME/.fryd/contracts/mint_install.wasm"),
-			PosCodePath:     os.ExpandEnv("$HOME/.fryd/contracts/pos_install.wasm"),
+			MintCodePath:    os.ExpandEnv("$HOME/.nodef/contracts/mint_install.wasm"),
+			PosCodePath:     os.ExpandEnv("$HOME/.nodef/contracts/pos_install.wasm"),
 			Accounts:        make([]Account, 0),
 			ProtocolVersion: "1.0.0",
 		},

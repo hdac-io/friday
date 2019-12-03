@@ -26,7 +26,7 @@ import (
 	"github.com/hdac-io/friday/x/staking"
 )
 
-// fryd custom flags
+// nodef custom flags
 const flagInvCheckPeriod = "inv-check-period"
 
 var invCheckPeriod uint
@@ -43,7 +43,7 @@ func main() {
 	ctx := server.NewDefaultContext()
 	cobra.EnableCommandSorting = false
 	rootCmd := &cobra.Command{
-		Use:               "fryd",
+		Use:               "nodef",
 		Short:             "Friday Daemon (server)",
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
