@@ -9,7 +9,8 @@ jobs:
         directories:
           - $HOME/.cache/go-build
           - $HOME/gopath/pkg/mod
-          - ./CasperLabs/execution-engine/target
+          - $HOME/.cargo
+          - CasperLabs
       script:
         - make test
       after_success:
@@ -23,7 +24,8 @@ jobs:
         directories:
           - $HOME/Library/Caches/go-build
           - $HOME/gopath/pkg/mod
-          - ./CasperLabs/execution-engine/target
+          - $HOME/.cargo
+          - CasperLabs
       script:
         - unset -f cd # workaround for https://github.com/travis-ci/travis-ci/issues/8703
         - make test
@@ -34,7 +36,7 @@ addons:
   homebrew:
     package: curl
 before_install:
-  - bash scripts/ci_prerequisites.sh
+  - bash scripts/travis_ci_prerequisites.sh
   - export PATH="$PATH:$HOME/.cargo/bin"
   - export PATH="$PATH:$HOME/protoc/bin"
 install:

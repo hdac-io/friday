@@ -7,13 +7,16 @@ if [ ${PWD##*/} != "friday" ]; then
   exit 1
 fi
 
-NODE_DIR="$HOME/.nodef"
+CASPERLABS_TARGET_TAG="v0.9.0"
+if [ ! -d "CasperLabs/.git" ]; then
+  git clone --single-branch --branch $CASPERLABS_TARGET_TAG https://github.com/CasperLabs/CasperLabs.git
+fi
 
-rm -rf CasperLabs $NODE_DIR
+cd CasperLabs
+git fetch origin refs/tags/$CASPERLABS_TARGET_TAG:refs/tags/$CASPERLABS_TARGET_TAG
+git checkout $CASPERLABS_TARGET_TAG
 
-git clone --single-branch --branch release-v0.9 https://github.com/CasperLabs/CasperLabs
-
-cd CasperLabs/execution-engine
+cd execution-engine
 make setup
 cargo build --release # build execution engine
 
@@ -43,7 +46,7 @@ for pkg in "${TARGET_CONTRACTS[@]}"; do
   make build-contract/$pkg
 done
 
-CONTRACT_DIR="$NODE_DIR/contracts"
+CONTRACT_DIR="$HOME/.nodef/contracts"
 mkdir -p $CONTRACT_DIR
 
 for wasm in "${WASM_FILES[@]}"; do
