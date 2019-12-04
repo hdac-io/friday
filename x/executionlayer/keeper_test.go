@@ -30,7 +30,7 @@ func TestGetQueryResult(t *testing.T) {
 	res, err := input.elk.GetQueryResult(
 		input.ctx,
 		parentHash,
-		"address", input.genesisAddress, queryPath)
+		"address", input.strGenesisAddress, queryPath)
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -45,7 +45,7 @@ func TestGetQueryResult(t *testing.T) {
 func TestGetQueryBalanceResult(t *testing.T) {
 	input := setupTestInput()
 	parentHash := genesis(input.elk)
-	res, err := input.elk.GetQueryBalanceResult(input.ctx, parentHash, input.genesisAddress)
+	res, err := input.elk.GetQueryBalanceResult(input.ctx, parentHash, input.strGenesisAddress)
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -91,8 +91,8 @@ func TestCreateBlock(t *testing.T) {
 	blockState2 := []byte{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
 	counterDefineMSG := NewMsgExecute(
 		input.blockStateHash,
-		util.DecodeHexString(input.genesisAddress),
-		util.DecodeHexString(input.genesisAddress),
+		input.genesisAddress,
+		input.genesisAddress,
 		util.LoadWasmFile(path.Join(contractPath, counterDefineWasm)),
 		[]byte{},
 		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
@@ -111,8 +111,8 @@ func TestCreateBlock(t *testing.T) {
 
 	counterCallMSG := NewMsgExecute(
 		input.blockStateHash,
-		util.DecodeHexString(input.genesisAddress),
-		util.DecodeHexString(input.genesisAddress),
+		input.genesisAddress,
+		input.genesisAddress,
 		util.LoadWasmFile(path.Join(contractPath, counterCallWasm)),
 		[]byte{},
 		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
@@ -132,11 +132,11 @@ func TestCreateBlock(t *testing.T) {
 	arrPath := strings.Split(queryPath, "/")
 
 	unitHash1 := input.elk.GetUnitHashMap(input.ctx, blockState1)
-	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", input.genesisAddress, arrPath, input.elk.protocolVersion)
+	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", input.strGenesisAddress, arrPath, input.elk.protocolVersion)
 	assert.Equal(t, int32(0), res1.GetIntValue())
 
 	unitHash2 := input.elk.GetUnitHashMap(input.ctx, blockState2)
-	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", input.genesisAddress, arrPath, input.elk.protocolVersion)
+	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", input.strGenesisAddress, arrPath, input.elk.protocolVersion)
 	assert.Equal(t, int32(1), res2.GetIntValue())
 }
 

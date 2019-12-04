@@ -1,6 +1,7 @@
 package executionlayer
 
 import (
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -41,7 +42,7 @@ func queryEEDetail(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
-	val, errmsg := keeper.GetQueryResult(ctx, param.StateHash, param.KeyType, string(param.KeyData), param.Path)
+	val, errmsg := keeper.GetQueryResult(ctx, param.StateHash, param.KeyType, util.EncodeToHexString(param.KeyData), param.Path)
 	if errmsg != nil {
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, errmsg.Error())
 	}
