@@ -12,6 +12,7 @@ import (
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc/transforms"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
+	"github.com/hdac-io/friday/x/executionlayer/types"
 	"github.com/stretchr/testify/assert"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -30,7 +31,7 @@ func TestGetQueryResult(t *testing.T) {
 	res, err := input.elk.GetQueryResult(
 		input.ctx,
 		parentHash,
-		"address", input.strGenesisAddress, queryPath)
+		"address", types.ToPublicKey(input.genesisAddress), queryPath)
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -45,7 +46,7 @@ func TestGetQueryResult(t *testing.T) {
 func TestGetQueryBalanceResult(t *testing.T) {
 	input := setupTestInput()
 	parentHash := genesis(input.elk)
-	res, err := input.elk.GetQueryBalanceResult(input.ctx, parentHash, input.strGenesisAddress)
+	res, err := input.elk.GetQueryBalanceResult(input.ctx, parentHash, types.ToPublicKey(input.genesisAddress))
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -131,12 +132,13 @@ func TestCreateBlock(t *testing.T) {
 
 	arrPath := strings.Split(queryPath, "/")
 
+	genesisAddressPublicKey := types.ToPublicKey(input.genesisAddress)
 	unitHash1 := input.elk.GetUnitHashMap(input.ctx, blockState1)
-	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", input.strGenesisAddress, arrPath, input.elk.protocolVersion)
+	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", genesisAddressPublicKey, arrPath, input.elk.protocolVersion)
 	assert.Equal(t, int32(0), res1.GetIntValue())
 
 	unitHash2 := input.elk.GetUnitHashMap(input.ctx, blockState2)
-	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", input.strGenesisAddress, arrPath, input.elk.protocolVersion)
+	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", genesisAddressPublicKey, arrPath, input.elk.protocolVersion)
 	assert.Equal(t, int32(1), res2.GetIntValue())
 }
 

@@ -68,7 +68,7 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 			}
 
 			transferCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm"))
-			transferAbi := util.MakeArgsTransferToAccount(util.EncodeToHexString(toPublicKey), coins)
+			transferAbi := util.MakeArgsTransferToAccount(toPublicKey, coins)
 			paymentCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
 			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
 

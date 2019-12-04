@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/executionlayer/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -30,7 +30,7 @@ func TestQueryEEDetail(t *testing.T) {
 	queryData := QueryExecutionLayerDetail{
 		StateHash: parentHash,
 		KeyType:   "address",
-		KeyData:   util.DecodeHexString(input.strGenesisAddress),
+		KeyData:   types.ToPublicKey(input.genesisAddress),
 		Path:      queryPath,
 	}
 

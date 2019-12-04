@@ -116,7 +116,7 @@ func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockState []byte) []b
 
 // GetQueryResult queries with whole parameters
 func (k ExecutionLayerKeeper) GetQueryResult(ctx sdk.Context,
-	stateHash []byte, keyType string, keyData string, path string) (state.Value, error) {
+	stateHash []byte, keyType string, keyData []byte, path string) (state.Value, error) {
 	arrPath := strings.Split(path, "/")
 	res, err := grpc.Query(k.client, stateHash, keyType, keyData, arrPath, k.protocolVersion)
 	if err != "" {
@@ -129,7 +129,7 @@ func (k ExecutionLayerKeeper) GetQueryResult(ctx sdk.Context,
 // GetQueryResultSimple queries without state hash.
 // State hash comes from Tendermint block state - EE state mapping DB
 func (k ExecutionLayerKeeper) GetQueryResultSimple(ctx sdk.Context,
-	keyType string, keyData string, path string) (state.Value, error) {
+	keyType string, keyData []byte, path string) (state.Value, error) {
 	unitHash := k.GetUnitHashMap(ctx, ctx.BlockHeader().LastBlockId.Hash)
 	arrPath := strings.Split(path, "/")
 	res, err := grpc.Query(k.client, unitHash.EEState, keyType, keyData, arrPath, k.protocolVersion)
@@ -141,8 +141,8 @@ func (k ExecutionLayerKeeper) GetQueryResultSimple(ctx sdk.Context,
 }
 
 // GetQueryBalanceResult queries with whole parameters
-func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, stateHash []byte, address string) (string, error) {
-	res, err := grpc.QueryBlanace(k.client, stateHash, address, k.protocolVersion)
+func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, stateHash []byte, address []byte) (string, error) {
+	res, err := grpc.QueryBalance(k.client, stateHash, address, k.protocolVersion)
 	if err != "" {
 		return "", fmt.Errorf(err)
 	}
@@ -151,9 +151,9 @@ func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, stateHash [
 }
 
 // GetQueryBalanceResultSimple queries with whole parameters
-func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, address string) (string, error) {
+func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, address []byte) (string, error) {
 	unitHash := k.GetUnitHashMap(ctx, ctx.BlockHeader().LastBlockId.Hash)
-	res, err := grpc.QueryBlanace(k.client, unitHash.EEState, address, k.protocolVersion)
+	res, err := grpc.QueryBalance(k.client, unitHash.EEState, address, k.protocolVersion)
 	if err != "" {
 		return "", fmt.Errorf(err)
 	}
