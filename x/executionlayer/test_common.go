@@ -31,7 +31,7 @@ type testInput struct {
 	cdc               *codec.Codec
 	ctx               sdk.Context
 	elk               ExecutionLayerKeeper
-	blockStateHash    []byte
+	blockHash         []byte
 	genesisAddress    sdk.AccAddress
 	strGenesisAddress string
 	genesisAccount    map[string][]string
@@ -54,7 +54,7 @@ func setupTestInput() testInput {
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
 
-	blockStateHash := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
+	blockHash := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
 	strGenesisAddress := "friday1dl2cjlfpmc9hcyd4rxts047tze87s0gxmzqx70"
 	genesisAddress, _ := sdk.AccAddressFromBech32(strGenesisAddress)
 	chainName := "hdac"
@@ -75,13 +75,13 @@ func setupTestInput() testInput {
 
 	elk := NewExecutionLayerKeeper(cdc, hashMapStoreKey, os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"), "1.0.0")
 
-	elk.InitialUnitHashMap(ctx, blockStateHash)
+	elk.InitialUnitHashMap(ctx, blockHash)
 
 	return testInput{
 		cdc:               cdc,
 		ctx:               ctx,
 		elk:               elk,
-		blockStateHash:    blockStateHash,
+		blockHash:         blockHash,
 		genesisAddress:    genesisAddress,
 		strGenesisAddress: strGenesisAddress,
 		genesisAccount:    accounts,
