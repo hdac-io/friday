@@ -28,14 +28,15 @@ var (
 )
 
 type testInput struct {
-	cdc            *codec.Codec
-	ctx            sdk.Context
-	elk            ExecutionLayerKeeper
-	blockStateHash []byte
-	genesisAddress string
-	genesisAccount map[string][]string
-	chainName      string
-	costs          map[string]uint32
+	cdc               *codec.Codec
+	ctx               sdk.Context
+	elk               ExecutionLayerKeeper
+	blockStateHash    []byte
+	genesisAddress    sdk.AccAddress
+	strGenesisAddress string
+	genesisAccount    map[string][]string
+	chainName         string
+	costs             map[string]uint32
 }
 
 func setupTestInput() testInput {
@@ -54,10 +55,11 @@ func setupTestInput() testInput {
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
 
 	blockStateHash := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
-	genesisAddress := "d70243dd9d0d646fd6df282a8f7a8fa05a6629bec01d8024c3611eb1c1fb9f84"
+	genesisAddress, _ := sdk.AccAddressFromBech32("friday1dl2cjlfpmc9hcyd4rxts047tze87s0gxmzqx70")
+	strGenesisAddress := util.EncodeToHexString(types.ToPublicKey(genesisAddress))
 	chainName := "hdac"
 	accounts := map[string][]string{
-		genesisAddress: []string{"500000000", "1000000"}}
+		strGenesisAddress: []string{"500000000", "1000000"}}
 
 	costs := map[string]uint32{
 		"regular":            1,
@@ -76,14 +78,15 @@ func setupTestInput() testInput {
 	elk.InitialUnitHashMap(ctx, blockStateHash)
 
 	return testInput{
-		cdc:            cdc,
-		ctx:            ctx,
-		elk:            elk,
-		blockStateHash: blockStateHash,
-		genesisAddress: genesisAddress,
-		genesisAccount: accounts,
-		chainName:      chainName,
-		costs:          costs,
+		cdc:               cdc,
+		ctx:               ctx,
+		elk:               elk,
+		blockStateHash:    blockStateHash,
+		genesisAddress:    genesisAddress,
+		strGenesisAddress: strGenesisAddress,
+		genesisAccount:    accounts,
+		chainName:         chainName,
+		costs:             costs,
 	}
 }
 
@@ -91,9 +94,9 @@ func genesis(keeper ExecutionLayerKeeper) []byte {
 	input := setupTestInput()
 	fmt.Printf("%v", input.genesisAccount)
 	genesisConfig, err := util.GenesisConfigMock(
-		input.chainName, input.genesisAddress,
-		input.genesisAccount[input.genesisAddress][0],
-		input.genesisAccount[input.genesisAddress][1],
+		input.chainName, input.strGenesisAddress,
+		input.genesisAccount[input.strGenesisAddress][0],
+		input.genesisAccount[input.strGenesisAddress][1],
 		input.elk.protocolVersion, input.costs, path.Join(contractPath, mintInstallWasm),
 		path.Join(contractPath, posInstallWasm),
 	)
@@ -118,7 +121,7 @@ func counterDefine(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	cntDefCode := util.LoadWasmFile(path.Join(contractPath, counterDefineWasm))
 	standardPaymentCode := util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm))
 
-	deploy := util.MakeDeploy(input.genesisAddress, cntDefCode, []byte{},
+	deploy := util.MakeDeploy(input.strGenesisAddress, cntDefCode, []byte{},
 		standardPaymentCode, paymentAbi, uint64(10), timestamp, input.chainName)
 
 	deploys := util.MakeInitDeploys()
@@ -146,7 +149,7 @@ func counterCall(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	standardPaymentCode := util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm))
 
 	timestamp = time.Now().Unix()
-	deploy := util.MakeDeploy(input.genesisAddress, cntCallCode,
+	deploy := util.MakeDeploy(input.strGenesisAddress, cntCallCode,
 		[]byte{}, standardPaymentCode, paymentAbi, uint64(10), timestamp, input.chainName)
 	deploys := util.MakeInitDeploys()
 	deploys = util.AddDeploy(deploys, deploy)
