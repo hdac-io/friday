@@ -144,7 +144,7 @@ func (k ExecutionLayerKeeper) GetQueryResult(ctx sdk.Context,
 // State hash comes from Tendermint block state - EE state mapping DB
 func (k ExecutionLayerKeeper) GetQueryResultSimple(ctx sdk.Context,
 	keyType string, keyData string, path string) (state.Value, error) {
-	unitHash := k.GetUnitHashMap(ctx, ctx.BlockHeader().LastBlockId.Hash)
+	unitHash := k.GetUnitHashMap(ctx, k.GetCurrentBlockHash(ctx))
 	arrPath := strings.Split(path, "/")
 
 	var changedkeydata string
@@ -179,7 +179,7 @@ func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, stateHash [
 
 // GetQueryBalanceResultSimple queries with whole parameters
 func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, address types.PublicKey) (string, error) {
-	unitHash := k.GetUnitHashMap(ctx, ctx.BlockHeader().LastBlockId.Hash)
+	unitHash := k.GetUnitHashMap(ctx, k.GetCurrentBlockHash(ctx))
 	hexaddr := hex.EncodeToString(address)
 	res, err := grpc.QueryBlanace(k.client, unitHash.EEState, hexaddr, k.protocolVersion)
 	if err != "" {
@@ -204,4 +204,18 @@ func (k ExecutionLayerKeeper) SetGenesisConf(ctx sdk.Context, genesisConf types.
 	store := ctx.KVStore(k.HashMapStoreKey)
 	genesisConfBytes := k.cdc.MustMarshalBinaryBare(genesisConf)
 	store.Set([]byte("genesisconf"), genesisConfBytes)
+}
+
+// GetCurrentBlockHash returns current block hash
+func (k ExecutionLayerKeeper) GetCurrentBlockHash(ctx sdk.Context) []byte {
+	store := ctx.KVStore(k.HashMapStoreKey)
+	blockHash := store.Get([]byte("currentblockhash"))
+
+	return blockHash
+}
+
+// SetCurrentBlockHash saves current block hash
+func (k ExecutionLayerKeeper) SetCurrentBlockHash(ctx sdk.Context, blockHash []byte) {
+	store := ctx.KVStore(k.HashMapStoreKey)
+	store.Set([]byte("currentblockhash"), blockHash)
 }

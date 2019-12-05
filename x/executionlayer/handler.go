@@ -30,7 +30,7 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 // Handle MsgExecute
 func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) sdk.Result {
 	if bytes.Equal(msg.BlockState, []byte{0}) {
-		msg.BlockState = ctx.BlockHeader().LastBlockId.Hash
+		msg.BlockState = k.GetCurrentBlockHash(ctx)
 	}
 	unitHash := k.GetUnitHashMap(ctx, msg.BlockState)
 
