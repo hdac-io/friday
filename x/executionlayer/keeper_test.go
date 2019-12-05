@@ -133,11 +133,11 @@ func TestCreateBlock(t *testing.T) {
 	arrPath := strings.Split(queryPath, "/")
 
 	unitHash1 := input.elk.GetUnitHashMap(input.ctx, blockHash1)
-	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", input.strGenesisAddress, arrPath, input.elk.protocolVersion)
+	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", types.ToPublicKey(input.genesisAddress), arrPath, input.elk.protocolVersion)
 	assert.Equal(t, int32(0), res1.GetIntValue())
 
 	unitHash2 := input.elk.GetUnitHashMap(input.ctx, blockHash2)
-	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", input.strGenesisAddress, arrPath, input.elk.protocolVersion)
+	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", types.ToPublicKey(input.genesisAddress), arrPath, input.elk.protocolVersion)
 	assert.Equal(t, int32(1), res2.GetIntValue())
 }
 

@@ -2,7 +2,6 @@ package executionlayer
 
 import (
 	"bytes"
-	"encoding/hex"
 	"fmt"
 	"strconv"
 	"strings"
@@ -120,16 +119,16 @@ func (k ExecutionLayerKeeper) GetQueryResult(ctx sdk.Context,
 	stateHash []byte, keyType string, keyData string, path string) (state.Value, error) {
 	arrPath := strings.Split(path, "/")
 
-	var changedkeydata string
+	var changedkeydata []byte
 	if keyType == "address" {
 		bech32addr, err := sdk.AccAddressFromBech32(keyData)
 		if err != nil {
 			return state.Value{}, err
 		}
-		changedkeydata = hex.EncodeToString(types.ToPublicKey(bech32addr))
+		changedkeydata = types.ToPublicKey(bech32addr)
 		fmt.Println(changedkeydata)
 	} else {
-		changedkeydata = keyData
+		changedkeydata = util.DecodeHexString(keyData)
 	}
 
 	res, err := grpc.Query(k.client, stateHash, keyType, changedkeydata, arrPath, k.protocolVersion)
@@ -147,15 +146,15 @@ func (k ExecutionLayerKeeper) GetQueryResultSimple(ctx sdk.Context,
 	unitHash := k.GetUnitHashMap(ctx, k.GetCurrentBlockHash(ctx))
 	arrPath := strings.Split(path, "/")
 
-	var changedkeydata string
+	var changedkeydata []byte
 	if keyType == "address" {
 		bech32addr, err := sdk.AccAddressFromBech32(keyData)
 		if err != nil {
 			return state.Value{}, err
 		}
-		changedkeydata = hex.EncodeToString(types.ToPublicKey(bech32addr))
+		changedkeydata = types.ToPublicKey(bech32addr)
 	} else {
-		changedkeydata = keyData
+		changedkeydata = util.DecodeHexString(keyData)
 	}
 
 	res, err := grpc.Query(k.client, unitHash.EEState, keyType, changedkeydata, arrPath, k.protocolVersion)
@@ -168,8 +167,7 @@ func (k ExecutionLayerKeeper) GetQueryResultSimple(ctx sdk.Context,
 
 // GetQueryBalanceResult queries with whole parameters
 func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, stateHash []byte, address types.PublicKey) (string, error) {
-	hexaddr := hex.EncodeToString(address)
-	res, err := grpc.QueryBlanace(k.client, stateHash, hexaddr, k.protocolVersion)
+	res, err := grpc.QueryBalance(k.client, stateHash, address, k.protocolVersion)
 	if err != "" {
 		return "", fmt.Errorf(err)
 	}
@@ -180,8 +178,7 @@ func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, stateHash [
 // GetQueryBalanceResultSimple queries with whole parameters
 func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, address types.PublicKey) (string, error) {
 	unitHash := k.GetUnitHashMap(ctx, k.GetCurrentBlockHash(ctx))
-	hexaddr := hex.EncodeToString(address)
-	res, err := grpc.QueryBlanace(k.client, unitHash.EEState, hexaddr, k.protocolVersion)
+	res, err := grpc.QueryBalance(k.client, unitHash.EEState, address, k.protocolVersion)
 	if err != "" {
 		return "", fmt.Errorf(err)
 	}

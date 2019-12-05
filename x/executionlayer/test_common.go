@@ -56,8 +56,8 @@ func setupTestInput() testInput {
 
 	blockHash := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
 
-	genesisAddress, _ := sdk.AccAddressFromBech32("friday1dl2cjlfpmc9hcyd4rxts047tze87s0gxmzqx70")
-	strGenesisAddress := util.EncodeToHexString(types.ToPublicKey(genesisAddress))
+	strGenesisAddress := "friday1dl2cjlfpmc9hcyd4rxts047tze87s0gxmzqx70"
+	genesisAddress, _ := sdk.AccAddressFromBech32(strGenesisAddress)
 	chainName := "hdac"
 	accounts := map[string][]string{
 		strGenesisAddress: []string{"500000000", "1000000"}}
@@ -95,7 +95,7 @@ func genesis(keeper ExecutionLayerKeeper) []byte {
 	input := setupTestInput()
 	fmt.Printf("%v\n", input.genesisAccount)
 	genesisConfig, err := util.GenesisConfigMock(
-		input.chainName, input.strGenesisAddress,
+		input.chainName, types.ToPublicKey(input.genesisAddress),
 		input.genesisAccount[input.strGenesisAddress][0],
 		input.genesisAccount[input.strGenesisAddress][1],
 		input.elk.protocolVersion, input.costs, path.Join(contractPath, mintInstallWasm),
@@ -122,7 +122,7 @@ func counterDefine(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	cntDefCode := util.LoadWasmFile(path.Join(contractPath, counterDefineWasm))
 	standardPaymentCode := util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm))
 
-	deploy := util.MakeDeploy(input.strGenesisAddress, cntDefCode, []byte{},
+	deploy := util.MakeDeploy(types.ToPublicKey(input.genesisAddress), cntDefCode, []byte{},
 		standardPaymentCode, paymentAbi, uint64(10), timestamp, input.chainName)
 
 	deploys := util.MakeInitDeploys()
@@ -150,7 +150,7 @@ func counterCall(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	standardPaymentCode := util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm))
 
 	timestamp = time.Now().Unix()
-	deploy := util.MakeDeploy(input.strGenesisAddress, cntCallCode,
+	deploy := util.MakeDeploy(types.ToPublicKey(input.genesisAddress), cntCallCode,
 
 		[]byte{}, standardPaymentCode, paymentAbi, uint64(10), timestamp, input.chainName)
 	deploys := util.MakeInitDeploys()

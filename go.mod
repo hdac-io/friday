@@ -12,7 +12,7 @@ require (
 	github.com/golang/mock v1.3.1
 	github.com/golang/protobuf v1.3.2
 	github.com/gorilla/mux v1.7.3
-	github.com/hdac-io/casperlabs-ee-grpc-go-util v0.0.0-20191126063215-17189765d1c0
+	github.com/hdac-io/casperlabs-ee-grpc-go-util v0.0.0-20191204072007-3ca563b18909
 	github.com/mattn/go-isatty v0.0.8
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
