@@ -61,37 +61,37 @@ func TestGetQueryBalanceResult(t *testing.T) {
 func TestUnitHashMapNormalInput(t *testing.T) {
 	input := setupTestInput()
 
-	blockState := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
+	blockHash := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
 	eeState := []byte{31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0}
-	result := input.elk.SetEEState(input.ctx, blockState, eeState)
+	result := input.elk.SetEEState(input.ctx, blockHash, eeState)
 	assert.Equal(t, true, result)
 
-	unitHash := input.elk.GetUnitHashMap(input.ctx, blockState)
+	unitHash := input.elk.GetUnitHashMap(input.ctx, blockHash)
 	assert.Equal(t, eeState, unitHash.EEState)
 }
 
 func TestUnitHashMapInCorrectInput(t *testing.T) {
 	input := setupTestInput()
 
-	blockState := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
+	blockHash := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
 	eeState := []byte{31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
-	result := input.elk.SetEEState(input.ctx, blockState, eeState)
+	result := input.elk.SetEEState(input.ctx, blockHash, eeState)
 	assert.Equal(t, false, result)
 
-	unitHash := input.elk.GetUnitHashMap(input.ctx, blockState)
+	unitHash := input.elk.GetUnitHashMap(input.ctx, blockHash)
 	assert.NotEqual(t, eeState, unitHash.EEState)
 }
 
 func TestCreateBlock(t *testing.T) {
 	input := setupTestInput()
 	parentHash := genesis(input.elk)
-	input.elk.SetEEState(input.ctx, input.blockStateHash, parentHash)
+	input.elk.SetEEState(input.ctx, input.blockHash, parentHash)
 	queryPath := "counter/count"
 
-	blockState1 := []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
-	blockState2 := []byte{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
+	blockHash1 := []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+	blockHash2 := []byte{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
 	counterDefineMSG := NewMsgExecute(
-		input.blockStateHash,
+		input.blockHash,
 		input.genesisAddress,
 		input.genesisAddress,
 		util.LoadWasmFile(path.Join(contractPath, counterDefineWasm)),
@@ -104,14 +104,14 @@ func TestCreateBlock(t *testing.T) {
 	handlerMsgExecute(input.ctx, input.elk, counterDefineMSG)
 
 	nextBlockABCI1 := abci.RequestBeginBlock{
-		Hash:   blockState1,
-		Header: abci.Header{LastBlockId: abci.BlockID{Hash: input.blockStateHash}},
+		Hash:   blockHash1,
+		Header: abci.Header{LastBlockId: abci.BlockID{Hash: input.blockHash}},
 	}
 
 	BeginBlocker(input.ctx, nextBlockABCI1, input.elk)
 
 	counterCallMSG := NewMsgExecute(
-		input.blockStateHash,
+		input.blockHash,
 		input.genesisAddress,
 		input.genesisAddress,
 		util.LoadWasmFile(path.Join(contractPath, counterCallWasm)),
@@ -124,19 +124,19 @@ func TestCreateBlock(t *testing.T) {
 	handlerMsgExecute(input.ctx, input.elk, counterCallMSG)
 
 	nextBlockABCI2 := abci.RequestBeginBlock{
-		Hash:   blockState2,
-		Header: abci.Header{LastBlockId: abci.BlockID{Hash: input.blockStateHash}},
+		Hash:   blockHash2,
+		Header: abci.Header{LastBlockId: abci.BlockID{Hash: input.blockHash}},
 	}
 
 	BeginBlocker(input.ctx, nextBlockABCI2, input.elk)
 
 	arrPath := strings.Split(queryPath, "/")
 
-	unitHash1 := input.elk.GetUnitHashMap(input.ctx, blockState1)
+	unitHash1 := input.elk.GetUnitHashMap(input.ctx, blockHash1)
 	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", input.strGenesisAddress, arrPath, input.elk.protocolVersion)
 	assert.Equal(t, int32(0), res1.GetIntValue())
 
-	unitHash2 := input.elk.GetUnitHashMap(input.ctx, blockState2)
+	unitHash2 := input.elk.GetUnitHashMap(input.ctx, blockHash2)
 	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", input.strGenesisAddress, arrPath, input.elk.protocolVersion)
 	assert.Equal(t, int32(1), res2.GetIntValue())
 }
