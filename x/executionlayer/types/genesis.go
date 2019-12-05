@@ -25,8 +25,8 @@ type GenesisConf struct {
 type Genesis struct {
 	Name            string    `json:"name"`
 	Timestamp       uint64    `json:"timestamp"`
-	MintCodePath    string    `json:"mint_code_path"`
-	PosCodePath     string    `json:"pos_code_path"`
+	MintWasm        []byte    `json:"mint_wasm"`
+	PosWasm         []byte    `json:"pos_wasm"`
 	Accounts        []Account `json:"accounts"`
 	ProtocolVersion string    `json:"protocol_version"`
 }
@@ -60,12 +60,20 @@ func NewGenesisState(genesisConf GenesisConf) GenesisState {
 
 // DefaultGenesisState returns a default genesis state
 func DefaultGenesisState() GenesisState {
+	mintWasm, err := ioutil.ReadFile(os.ExpandEnv("$HOME/.nodef/contracts/mint_install.wasm"))
+	if err != nil {
+		panic(err)
+	}
+	posWasm, err := ioutil.ReadFile(os.ExpandEnv("$HOME/.nodef/contracts/pos_install.wasm"))
+	if err != nil {
+		panic(err)
+	}
 	genesisConf := GenesisConf{
 		Genesis: Genesis{
 			Name:            "friday-devnet",
 			Timestamp:       0,
-			MintCodePath:    os.ExpandEnv("$HOME/.nodef/contracts/mint_install.wasm"),
-			PosCodePath:     os.ExpandEnv("$HOME/.nodef/contracts/pos_install.wasm"),
+			MintWasm:        mintWasm,
+			PosWasm:         posWasm,
 			Accounts:        make([]Account, 0),
 			ProtocolVersion: "1.0.0",
 		},
@@ -97,15 +105,6 @@ func ToChainSpecGenesisConfig(config GenesisConf) (*ipc.ChainSpec_GenesisConfig,
 		return nil, err
 	}
 
-	mintWasm, err := ioutil.ReadFile(config.Genesis.MintCodePath)
-	if err != nil {
-		return nil, ErrInvalidWasmPath(DefaultCodespace, config.Genesis.MintCodePath)
-	}
-	posWasm, err := ioutil.ReadFile(config.Genesis.PosCodePath)
-	if err != nil {
-		return nil, ErrInvalidWasmPath(DefaultCodespace, config.Genesis.MintCodePath)
-	}
-
 	var accounts []*ipc.ChainSpec_GenesisAccount
 	if n := len(config.Genesis.Accounts); n != 0 {
 		accounts = make([]*ipc.ChainSpec_GenesisAccount, n)
@@ -119,8 +118,8 @@ func ToChainSpecGenesisConfig(config GenesisConf) (*ipc.ChainSpec_GenesisConfig,
 		Name:            config.Genesis.Name,
 		Timestamp:       config.Genesis.Timestamp,
 		ProtocolVersion: pv,
-		MintInstaller:   mintWasm,
-		PosInstaller:    posWasm,
+		MintInstaller:   config.Genesis.MintWasm,
+		PosInstaller:    config.Genesis.PosWasm,
 		Accounts:        accounts,
 		Costs:           toCostTable(config.WasmCosts),
 	}
