@@ -42,15 +42,15 @@ func NewExecutionLayerKeeper(
 
 // InitialUnitHashMap initial UnitMapHash using empty hash value
 // Used when genesis load
-func (k ExecutionLayerKeeper) InitialUnitHashMap(ctx sdk.Context, blockState []byte) {
+func (k ExecutionLayerKeeper) InitialUnitHashMap(ctx sdk.Context, blockHash []byte) {
 	emptyHash := util.DecodeHexString(util.StrEmptyStateHash)
-	k.SetEEState(ctx, blockState, emptyHash)
+	k.SetEEState(ctx, blockHash, emptyHash)
 }
 
-// SetUnitHashMap map unitHash to blockState
-func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockState []byte, unitHash UnitHashMap) bool {
-	if bytes.Equal(blockState, []byte{}) {
-		blockState = []byte("genesis")
+// SetUnitHashMap map unitHash to blockHash
+func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockHash []byte, unitHash UnitHashMap) bool {
+	if bytes.Equal(blockHash, []byte{}) {
+		blockHash = []byte("genesis")
 	}
 	if bytes.Equal(unitHash.EEState, []byte{}) || len(unitHash.EEState) != 32 {
 		return false
@@ -62,27 +62,27 @@ func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockState []byte,
 	}
 
 	store := ctx.KVStore(k.HashMapStoreKey)
-	store.Set(blockState, unitBytes)
+	store.Set(blockHash, unitBytes)
 
 	return true
 }
 
-// GetUnitHashMap returns a UnitHashMap for blockState
-func (k ExecutionLayerKeeper) GetUnitHashMap(ctx sdk.Context, blockState []byte) UnitHashMap {
-	if bytes.Equal(blockState, []byte{}) {
-		blockState = []byte("genesis")
+// GetUnitHashMap returns a UnitHashMap for blockHash
+func (k ExecutionLayerKeeper) GetUnitHashMap(ctx sdk.Context, blockHash []byte) UnitHashMap {
+	if bytes.Equal(blockHash, []byte{}) {
+		blockHash = []byte("genesis")
 	}
 	store := ctx.KVStore(k.HashMapStoreKey)
-	unitBytes := store.Get(blockState)
+	unitBytes := store.Get(blockHash)
 	var unit UnitHashMap
 	k.cdc.UnmarshalBinaryBare(unitBytes, &unit)
 	return unit
 }
 
-// SetEEState map eeState to blockState
-func (k ExecutionLayerKeeper) SetEEState(ctx sdk.Context, blockState []byte, eeState []byte) bool {
-	if bytes.Equal(blockState, []byte{}) {
-		blockState = []byte("genesis")
+// SetEEState map eeState to blockHash
+func (k ExecutionLayerKeeper) SetEEState(ctx sdk.Context, blockHash []byte, eeState []byte) bool {
+	if bytes.Equal(blockHash, []byte{}) {
+		blockHash = []byte("genesis")
 	}
 	if bytes.Equal(eeState, []byte{}) || len(eeState) != 32 {
 		return false
@@ -98,18 +98,18 @@ func (k ExecutionLayerKeeper) SetEEState(ctx sdk.Context, blockState []byte, eeS
 	}
 
 	store := ctx.KVStore(k.HashMapStoreKey)
-	store.Set(blockState, unitBytes)
+	store.Set(blockHash, unitBytes)
 
 	return true
 }
 
-// GetEEState returns a eeState for blockState
-func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockState []byte) []byte {
-	if bytes.Equal(blockState, []byte{}) {
-		blockState = []byte("genesis")
+// GetEEState returns a eeState for blockHash
+func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockHash []byte) []byte {
+	if bytes.Equal(blockHash, []byte{}) {
+		blockHash = []byte("genesis")
 	}
 	store := ctx.KVStore(k.HashMapStoreKey)
-	unitBytes := store.Get(blockState)
+	unitBytes := store.Get(blockHash)
 	var unit UnitHashMap
 	k.cdc.UnmarshalBinaryBare(unitBytes, &unit)
 	return unit.EEState

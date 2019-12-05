@@ -9,7 +9,7 @@ const RouterKey = ModuleName
 
 // MsgExecute for sending deploy to execution engine
 type MsgExecute struct {
-	BlockState           []byte         `json:"block_state"`
+	BlockHash            []byte         `json:"block_hash"`
 	ExecAccount          sdk.AccAddress `json:"exec_account"`
 	ContractOwnerAccount sdk.AccAddress `json:"contract_owner_account"`
 	SessionCode          []byte         `json:"session_code"`
@@ -21,14 +21,14 @@ type MsgExecute struct {
 
 // NewMsgExecute is a constructor function for MsgSetName
 func NewMsgExecute(
-	blockState []byte,
+	blockHash []byte,
 	execAccount sdk.AccAddress, contractOwnerAccount sdk.AccAddress,
 	sessionCode []byte, sessionArgs []byte,
 	paymentCode []byte, paymentArgs []byte,
 	gasPrice uint64,
 ) MsgExecute {
 	return MsgExecute{
-		BlockState:           blockState,
+		BlockHash:            blockHash,
 		ExecAccount:          execAccount,
 		ContractOwnerAccount: contractOwnerAccount,
 		SessionCode:          sessionCode,
