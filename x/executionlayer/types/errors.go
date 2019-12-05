@@ -24,9 +24,3 @@ func ErrProtocolVersionParse(codespace sdk.CodespaceType, protocolVersion string
 		codespace, CodeProtocolVersionParse,
 		"Could not parse Protocol Version : %v", protocolVersion)
 }
-
-// ErrInvalidWasmPath is an error
-func ErrInvalidWasmPath(codespace sdk.CodespaceType, path string) sdk.Error {
-	return sdk.NewError(
-		codespace, CodeInvalidWasmPath, "Invalid wasm path in chainspec : %v", path)
-}

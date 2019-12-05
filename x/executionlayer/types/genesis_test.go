@@ -1,7 +1,6 @@
 package types
 
 import (
-	"os"
 	"reflect"
 	"testing"
 
@@ -47,24 +46,8 @@ func TestToProtocolVersion(t *testing.T) {
 func TestToChainSpecGenesisConfig(t *testing.T) {
 	// valid input
 	genesisState := DefaultGenesisState()
-	genesisState.GenesisConf.Genesis.MintCodePath = os.ExpandEnv(mintCodePath)
-	genesisState.GenesisConf.Genesis.PosCodePath = os.ExpandEnv(posCodePath)
 	_, err := ToChainSpecGenesisConfig(genesisState.GenesisConf)
 	require.Nil(t, err)
-
-	// invalid system contract path
-	genesisState.GenesisConf.Genesis.MintCodePath = "test-odd-path"
-	_, err = ToChainSpecGenesisConfig(genesisState.GenesisConf)
-	require.NotNil(t, err)
-
-	genesisState.GenesisConf.Genesis.MintCodePath = os.ExpandEnv(mintCodePath)
-	genesisState.GenesisConf.Genesis.PosCodePath = "test-odd-path"
-	_, err = ToChainSpecGenesisConfig(genesisState.GenesisConf)
-	require.NotNil(t, err)
-
-	// revert to valid input
-	genesisState.GenesisConf.Genesis.MintCodePath = os.ExpandEnv(mintCodePath)
-	genesisState.GenesisConf.Genesis.PosCodePath = os.ExpandEnv(posCodePath)
 
 	// invalid protocol version
 	genesisState.GenesisConf.Genesis.ProtocolVersion = "1.0.0.0"
