@@ -70,6 +70,54 @@ clif status | grep \"id\"
 ```
 * your genesis file exists `~/.nodef/config/genesis.json`
 
+### Clif usage
+* query
+  * usage: `clif query executionlayer getbalance [address]`
+```
+clif query executionlayer getbalance $(clif keys show elsa -a)
+
+{
+   "value": "5000000000000"
+}
+```
+
+* transfer (send)
+  * usage: `clif executionlayer transfer [from address] [to address]  [amount] [fee] [gas_price]`
+```
+clif executionlayer transfer $(clif keys show elsa -a) $(clif keys show anna -a) 100 100000000 20000000
+
+...
+confirm transaction before signing and broadcasting [y/N]: y
+Password to sign with 'elsa': # input your password
+{
+  "height": "0",
+  "txhash": "141F12A891659F52B055EF7F701B1D406E5F1721CE929630CC5CE3CE0C4C8718",
+  "raw_log": "[{\"msg_index\":0,\"success\":true,\"log\":\"\",\"events\":[{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"executionengine\"}]}]}]",
+  "logs": [
+    {
+      "msg_index": 0,
+      "success": true,
+      "log": "",
+      "events": [
+        {
+          "type": "message",
+          "attributes": [
+            {
+              "key": "action",
+              "value": "executionengine"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+* bond
+  * usage: `clif executionlayer bond [from address] [bond amount] [fee] [gas_price]`
+* unbond
+  * usage: `clif executionlayer unbond [from address] [unbond amount] [fee] [gas_price]`
+
 ### Connect to seed node
 * run this on another machine
 ```sh
