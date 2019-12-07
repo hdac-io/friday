@@ -105,7 +105,6 @@ func CompleteAndBroadcastTxCLI(txBldr authtypes.TxBuilder, cliCtx context.CLICon
 	}
 
 	// broadcast to a Tendermint node
-	cliCtx = cliCtx.WithBroadcastMode("sync")
 	res, err := cliCtx.BroadcastTx(txBytes)
 	if err != nil {
 		return err

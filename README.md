@@ -32,10 +32,10 @@ clif keys add elsa # select password
 clif keys add anna # select password
 
 # add genesis node
-nodef add-genesis-account $(clif keys show elsa -a) 1000dummy,100000000stake
-nodef add-genesis-account $(clif keys show anna -a) 1000dummy,100000000stake
-nodef add-el-genesis-account $(clif keys show elsa -a) "5000000000000" "1000000"
-nodef add-el-genesis-account $(clif keys show anna -a) "5000000000000" "1000000"
+nodef add-genesis-account $(clif keys show elsa -a) 5000000000000dummy,100000000stake
+nodef add-genesis-account $(clif keys show anna -a) 5000000000000dummy,100000000stake
+nodef add-el-genesis-account $(clif keys show elsa -a) "5000000000000" "100000000"
+nodef add-el-genesis-account $(clif keys show anna -a) "5000000000000" "100000000"
 
 # apply default clif configure
 clif config chain-id testnet
@@ -82,9 +82,9 @@ clif query executionlayer getbalance $(clif keys show elsa -a)
 ```
 
 * transfer (send)
-  * usage: `clif executionlayer transfer [from address] [to address]  [amount] [fee] [gas_price]`
+  * usage: `clif tx send [from address] [to address]  [amount] [fee] [gas_price]`
 ```
-clif executionlayer transfer $(clif keys show elsa -a) $(clif keys show anna -a) 100 100000000 20000000
+clif tx send $(clif keys show elsa -a) $(clif keys show anna -a) 100dummy 100000000 20000000
 
 ...
 confirm transaction before signing and broadcasting [y/N]: y
