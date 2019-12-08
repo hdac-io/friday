@@ -9,7 +9,7 @@ const (
 
 	CodePublicKeyDecode      sdk.CodeType = 101
 	CodeProtocolVersionParse sdk.CodeType = 102
-	CodeInvalidWasmPath      sdk.CodeType = 103
+	CodeTomlParse            sdk.CodeType = 103
 )
 
 // ErrPublicKeyDecode is an error
@@ -23,4 +23,11 @@ func ErrProtocolVersionParse(codespace sdk.CodespaceType, protocolVersion string
 	return sdk.NewError(
 		codespace, CodeProtocolVersionParse,
 		"Could not parse Protocol Version : %v", protocolVersion)
+}
+
+// ErrTomlParse is an error
+func ErrTomlParse(codespace sdk.CodespaceType, keyString string) sdk.Error {
+	return sdk.NewError(
+		codespace, CodeTomlParse,
+		"Could not parse Toml with : %v", keyString)
 }
