@@ -76,8 +76,6 @@ func setupTestInput() testInput {
 
 	elk := NewExecutionLayerKeeper(cdc, hashMapStoreKey, os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"), "1.0.0")
 
-	elk.InitialUnitHashMap(ctx, blockHash)
-
 	return testInput{
 		cdc:               cdc,
 		ctx:               ctx,

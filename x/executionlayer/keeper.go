@@ -39,13 +39,6 @@ func NewExecutionLayerKeeper(
 	}
 }
 
-// InitialUnitHashMap initial UnitMapHash using empty hash value
-// Used when genesis load
-func (k ExecutionLayerKeeper) InitialUnitHashMap(ctx sdk.Context, blockHash []byte) {
-	emptyHash := util.DecodeHexString(util.StrEmptyStateHash)
-	k.SetEEState(ctx, blockHash, emptyHash)
-}
-
 // SetUnitHashMap map unitHash to blockHash
 func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockHash []byte, unitHash UnitHashMap) bool {
 	if bytes.Equal(blockHash, []byte{}) {
