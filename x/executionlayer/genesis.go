@@ -1,6 +1,7 @@
 package executionlayer
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
@@ -12,11 +13,20 @@ import (
 // InitGenesis sets an executionlayer configuration for genesis.
 func InitGenesis(
 	ctx sdk.Context, keeper ExecutionLayerKeeper, data types.GenesisState) {
-	keeper.InitialUnitHashMap(ctx, ctx.BlockHeader().LastBlockId.Hash)
 	genesisConfig, err := types.ToChainSpecGenesisConfig(data.GenesisConf)
 	if err != nil {
 		panic(err)
 	}
+
+	isMintValid, _ := grpc.Validate(
+		keeper.client, genesisConfig.GetMintInstaller(), genesisConfig.GetProtocolVersion())
+	isPosValid, _ := grpc.Validate(
+		keeper.client, genesisConfig.GetPosInstaller(), genesisConfig.GetProtocolVersion())
+
+	if !isMintValid || !isPosValid {
+		panic(fmt.Errorf("Bad system contracts. mint: %v, pos: %v", isMintValid, isPosValid))
+	}
+
 	response, err := grpc.RunGenesis(keeper.client, genesisConfig)
 	if err != nil {
 		panic(err)

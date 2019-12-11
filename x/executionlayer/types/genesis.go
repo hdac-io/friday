@@ -1,8 +1,6 @@
 package types
 
 import (
-	"io/ioutil"
-	"os"
 	"strconv"
 	"strings"
 
@@ -41,16 +39,16 @@ type Account struct {
 
 // WasmCosts : CasperLabs EE Wasm Cost table
 type WasmCosts struct {
-	Regular           uint32 `json:"regular"`
-	DivMultiplier     uint32 `json:"div_multiplier"`
-	MulMultiplier     uint32 `json:"mul_multiplier"`
-	MemMultiplier     uint32 `json:"mem_multiplier"`
-	MemInitialPages   uint32 `json:"mem_initial_pages"`
-	MemGrowPerPage    uint32 `json:"mem_grow_per_page"`
-	MemCopyPerByte    uint32 `json:"mem_copy_per_byte"`
-	MaxStackHeight    uint32 `json:"max_stack_height"`
-	OpcodesMultiplier uint32 `json:"opcodes_multiplier"`
-	OpcodesDivisor    uint32 `json:"opcodes_divisor"`
+	Regular           uint32 `json:"regular" toml:"regular"`
+	DivMultiplier     uint32 `json:"div_multiplier" toml:"div-multiplier"`
+	MulMultiplier     uint32 `json:"mul_multiplier" toml:"mul-multiplier"`
+	MemMultiplier     uint32 `json:"mem_multiplier" toml:"mem-multiplier"`
+	MemInitialPages   uint32 `json:"mem_initial_pages" toml:"mem-initial-pages"`
+	MemGrowPerPage    uint32 `json:"mem_grow_per_page" toml:"mem-grow-per-page"`
+	MemCopyPerByte    uint32 `json:"mem_copy_per_byte" toml:"mem-copy-per-byte"`
+	MaxStackHeight    uint32 `json:"max_stack_height" toml:"max-stack-height"`
+	OpcodesMultiplier uint32 `json:"opcodes_multiplier" toml:"opcodes-multiplier"`
+	OpcodesDivisor    uint32 `json:"opcodes_divisor" toml:"opcodes-divisor"`
 }
 
 // NewGenesisState creates a new genesis state.
@@ -60,21 +58,13 @@ func NewGenesisState(genesisConf GenesisConf) GenesisState {
 
 // DefaultGenesisState returns a default genesis state
 func DefaultGenesisState() GenesisState {
-	mintWasm, err := ioutil.ReadFile(os.ExpandEnv("$HOME/.nodef/contracts/mint_install.wasm"))
-	if err != nil {
-		panic(err)
-	}
-	posWasm, err := ioutil.ReadFile(os.ExpandEnv("$HOME/.nodef/contracts/pos_install.wasm"))
-	if err != nil {
-		panic(err)
-	}
 	genesisConf := GenesisConf{
 		Genesis: Genesis{
 			Name:            "friday-devnet",
 			Timestamp:       0,
-			MintWasm:        mintWasm,
-			PosWasm:         posWasm,
-			Accounts:        make([]Account, 0),
+			MintWasm:        DefaultMintWasm,
+			PosWasm:         DefaultPosWasm,
+			Accounts:        nil,
 			ProtocolVersion: "1.0.0",
 		},
 		WasmCosts: WasmCosts{

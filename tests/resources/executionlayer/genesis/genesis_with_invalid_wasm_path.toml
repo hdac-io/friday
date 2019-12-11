@@ -1,0 +1,6 @@
+[genesis]
+name = "test-chain"
+timestamp = 1568805354071
+protocol-version = "1.0.0"
+mint-code-path = "mint_install.wasm"
+pos-code-path = "invalid_path.wasm"
