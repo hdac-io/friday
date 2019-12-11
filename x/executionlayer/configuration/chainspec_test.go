@@ -3,8 +3,10 @@ package configuration
 import (
 	"path"
 	"reflect"
+	"strings"
 	"testing"
 
+	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 	"github.com/stretchr/testify/require"
 )
@@ -38,7 +40,7 @@ func genesisConfigMock() types.GenesisConf {
 	}
 }
 
-func TestParseGenesisChainSpec(t *testing.T) {
+func TestParseGenesisChainSpecBasic(t *testing.T) {
 	// valid input
 	got, err := ParseGenesisChainSpec(path.Join(testResourceDir, "manifest.toml"))
 	require.Nil(t, err)
@@ -52,5 +54,25 @@ func TestParseGenesisChainSpec(t *testing.T) {
 
 	if !reflect.DeepEqual(expected.WasmCosts, got.WasmCosts) {
 		t.Errorf("Bad WasmCosts, expected %v, got %v", expected.WasmCosts, got.WasmCosts)
+	}
+}
+
+func TestParseGenesisChainSpecWithMissingField(t *testing.T) {
+	_, err := ParseGenesisChainSpec(path.Join(testResourceDir, "genesis_with_missing_field.toml"))
+	require.NotNil(t, err)
+
+	elError, ok := err.(sdk.Error)
+	if !ok || elError.Code() != types.CodeTomlParse {
+		t.Errorf("Should fail with ErrTomlParse. Code: %v", err)
+	}
+}
+
+func TestParseGenesisChainSpecWithInvalidWasmPath(t *testing.T) {
+	_, err := ParseGenesisChainSpec(
+		path.Join(testResourceDir, "genesis_with_invalid_wasm_path.toml"))
+	require.NotNil(t, err)
+
+	if !strings.Contains(err.Error(), "invalid_path.wasm") {
+		t.Errorf("Should fail with invalid wasm path but fail with: %v", err)
 	}
 }

@@ -2,7 +2,6 @@ package configuration
 
 import (
 	"io/ioutil"
-	"os"
 	"path"
 
 	"github.com/hdac-io/friday/x/executionlayer/types"
@@ -42,11 +41,6 @@ func ParseGenesisChainSpec(chainSpecPath string) (*types.GenesisConf, error) {
 }
 
 func parseGenesisTable(genesisTable *toml.Tree, chainSpecPath string) (*types.Genesis, error) {
-	// loading mint, pos contract works with relative path to chainSpecPath.
-	err := os.Chdir(path.Dir(chainSpecPath))
-	if err != nil {
-		return nil, err
-	}
 	genesis := types.Genesis{}
 
 	if genesisTable.Get("name") == nil {
@@ -68,6 +62,9 @@ func parseGenesisTable(genesisTable *toml.Tree, chainSpecPath string) (*types.Ge
 		return nil, types.ErrTomlParse(types.DefaultCodespace, "mint-code-path")
 	}
 	mintCodePath := genesisTable.Get("mint-code-path").(string)
+	if !path.IsAbs(mintCodePath) {
+		mintCodePath = path.Join(path.Dir(chainSpecPath), mintCodePath)
+	}
 	mintWasm, err := ioutil.ReadFile(mintCodePath)
 	if err != nil {
 		return nil, err
@@ -78,6 +75,9 @@ func parseGenesisTable(genesisTable *toml.Tree, chainSpecPath string) (*types.Ge
 		return nil, types.ErrTomlParse(types.DefaultCodespace, "pos-code-path")
 	}
 	posCodePath := genesisTable.Get("pos-code-path").(string)
+	if !path.IsAbs(posCodePath) {
+		posCodePath = path.Join(path.Dir(chainSpecPath), posCodePath)
+	}
 	posWasm, err := ioutil.ReadFile(posCodePath)
 	if err != nil {
 		return nil, err
