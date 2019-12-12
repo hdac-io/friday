@@ -1,80 +1,205 @@
 package rest
 
 import (
-	"github.com/hdac-io/friday/client/context"
+	"fmt"
+	"math/big"
+	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
-)
+	grpc "github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 
-const (
-	restName = "contract"
+	"github.com/hdac-io/friday/client/context"
+	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/types/rest"
+	"github.com/hdac-io/friday/x/auth/client/utils"
+	"github.com/hdac-io/friday/x/executionlayer/types"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) {
-	//r.HandleFunc(fmt.Sprintf("/%s/names", storeName), addressCheckHandler(cliCtx)).Methods("POST")      // Address check
+	r.HandleFunc(fmt.Sprintf("/%s/transfer", storeName), transferHandler(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/%s/bond", storeName), bondHandler(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/%s/unbond", storeName), unbondHandler(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/%s/balance", storeName), getBalanceHandler(cliCtx, storeName)).Methods("GET")
 }
 
-// The code below is a pattern of defining RESTFul API
-// You may start from the example first
+type transferReq struct {
+	BaseReq          rest.BaseReq `json:"base_req"`
+	SenderAddress    string       `json:"sender_address"`
+	PaymentAmt       uint64       `json:"payment_amount"`
+	Fee              uint64       `json:"fee"`
+	GasPrice         uint64       `json:"gas_price"`
+	RecipientAddress string       `json:"recipient_address"`
+}
 
-// // 1. POST/PUT request
+func transferHandler(cliCtx context.CLIContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req transferReq
 
-// // Struct means HTTP body
-// type addressCheckReq struct {
-// 	BaseReq rest.BaseReq `json:"base_req"`
-// 	ID      string       `json:"id"`
-// 	Address string       `json:"address"`
-// }
+		// Get body parameters
+		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse request")
+			return
+		}
 
-// func addressCheckHandler(cliCtx context.CLIContext) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		var req addressCheckReq
+		baseReq := req.BaseReq.Sanitize()
+		if !baseReq.ValidateBasic(w) {
+			return
+		}
 
-//		// Get body parameters
-// 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
-// 			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse request")
-// 			return
-// 		}
+		// Parameter touching
+		senderaddr, err := sdk.AccAddressFromBech32(req.SenderAddress)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		} else if !senderaddr.Equals(cliCtx.FromAddress) {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprint("Sender address should be equal to tx creator"))
+			return
+		}
 
-// 		baseReq := req.BaseReq.Sanitize()
-// 		if !baseReq.ValidateBasic(w) {
-// 			return
-// 		}
+		receipaddr, err := sdk.AccAddressFromBech32(req.RecipientAddress)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
 
-//		// Parameter touching
-// 		addr, err := sdk.AccAddressFromBech32(req.Address)
-// 		if err != nil {
-// 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-// 			return
-// 		}
+		// TODO: Change after WASM store feature merge
+		transferCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm"))
+		transferAbi := grpc.MakeArgsTransferToAccount(receipaddr, req.PaymentAmt)
+		paymentCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
+		paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.Fee))
 
-// 		// create the message
-// 		msg := types.NewMsgAddrCheck(req.ID, addr)
-// 		err = msg.ValidateBasic()
-// 		if err != nil {
-// 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-// 			return
-// 		}
+		// create the message
+		msg := types.NewMsgExecute([]byte{0}, senderaddr, cliCtx.FromAddress, transferCode, transferAbi, paymentCode, paymentAbi, req.GasPrice)
+		err = msg.ValidateBasic()
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
 
-// 		utils.WriteGenerateStdTxResponse(w, cliCtx, baseReq, []sdk.Msg{msg})
-// 	}
-// }
+		utils.WriteGenerateStdTxResponse(w, cliCtx, baseReq, []sdk.Msg{msg})
+	}
+}
 
-////////////////////////////////////////////////////////////////
-//	//	2. Query
+type bondReq struct {
+	BaseReq   rest.BaseReq `json:"base_req"`
+	Address   string       `json:"address"`
+	BondedAmt uint64       `json:"bonded_amount"`
+	GasPrice  uint64       `json:"gas_price"`
+}
 
-// func getNameHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		vars := mux.Vars(r)
-// 		paramType := vars[restName]
+func bondHandler(cliCtx context.CLIContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req bondReq
 
-// 		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/getaccount/%s", storeName, paramType), nil)
-// 		if err != nil {
-// 			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
-// 			return
-// 		}
+		// Get body parameters
+		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse request")
+			return
+		}
 
-// 		rest.PostProcessResponse(w, cliCtx, res)
-// 	}
-// }
+		baseReq := req.BaseReq.Sanitize()
+		if !baseReq.ValidateBasic(w) {
+			return
+		}
+
+		// Parameter touching
+		addr, err := sdk.AccAddressFromBech32(req.Address)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		} else if !addr.Equals(cliCtx.FromAddress) {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprint("Sender address should be equal to tx creator"))
+			return
+		}
+
+		// TODO: Change after WASM store feature merge
+		bondingCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/bonding.wasm"))
+		bondingAbi := grpc.MakeArgsTransferToAccount(addr, req.BondedAmt)
+		paymentCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
+		paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.GasPrice))
+
+		// create the message
+		msg := types.NewMsgExecute([]byte{0}, addr, cliCtx.FromAddress, bondingCode, bondingAbi, paymentCode, paymentAbi, req.GasPrice)
+		err = msg.ValidateBasic()
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		utils.WriteGenerateStdTxResponse(w, cliCtx, baseReq, []sdk.Msg{msg})
+	}
+}
+
+func unbondHandler(cliCtx context.CLIContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req bondReq
+
+		// Get body parameters
+		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse request")
+			return
+		}
+
+		baseReq := req.BaseReq.Sanitize()
+		if !baseReq.ValidateBasic(w) {
+			return
+		}
+
+		// Parameter touching
+		addr, err := sdk.AccAddressFromBech32(req.Address)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		} else if !addr.Equals(cliCtx.FromAddress) {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprint("Sender address should be equal to tx creator"))
+			return
+		}
+
+		// TODO: Change after WASM store feature merge
+		unbondingCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/unbonding.wasm"))
+		unbondingAbi := grpc.MakeArgsTransferToAccount(addr, req.BondedAmt)
+		paymentCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
+		paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.GasPrice))
+
+		// create the message
+		msg := types.NewMsgExecute([]byte{0}, addr, cliCtx.FromAddress, unbondingCode, unbondingAbi, paymentCode, paymentAbi, req.GasPrice)
+		err = msg.ValidateBasic()
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		utils.WriteGenerateStdTxResponse(w, cliCtx, baseReq, []sdk.Msg{msg})
+	}
+}
+
+func getBalanceHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		straddr, addrexist := vars["address"]
+		if addrexist != true {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprint("Need 'address' query string (?address=blahblah)"))
+		}
+
+		addr, err := sdk.AccAddressFromBech32(straddr)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		}
+
+		pubkey := types.ToPublicKey(addr)
+		queryData := types.QueryGetBalance{
+			Address: pubkey,
+		}
+		bz := cliCtx.Codec.MustMarshalJSON(queryData)
+
+		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalance", storeName), bz)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+			return
+		}
+
+		rest.PostProcessResponse(w, cliCtx, res)
+	}
+}
