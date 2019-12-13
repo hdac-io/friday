@@ -61,8 +61,6 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 	senderaddr, err := sdk.AccAddressFromBech32(req.SenderAddress)
 	if err != nil {
 		return rest.BaseReq{}, nil, fmt.Errorf("Wrong address type")
-	} else if !senderaddr.Equals(cliCtx.FromAddress) {
-		return rest.BaseReq{}, nil, fmt.Errorf("Sender address should be equal to tx creator")
 	}
 
 	receipaddr, err := sdk.AccAddressFromBech32(req.RecipientAddress)
@@ -77,7 +75,7 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.Fee))
 
 	// create the message
-	msg := types.NewMsgExecute([]byte{0}, senderaddr, cliCtx.FromAddress, transferCode, transferAbi, paymentCode, paymentAbi, req.GasPrice)
+	msg := types.NewMsgExecute([]byte{0}, senderaddr, senderaddr, transferCode, transferAbi, paymentCode, paymentAbi, req.GasPrice)
 	err = msg.ValidateBasic()
 	if err != nil {
 		return rest.BaseReq{}, nil, err
@@ -132,8 +130,6 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 	addr, err := sdk.AccAddressFromBech32(req.Address)
 	if err != nil {
 		return rest.BaseReq{}, nil, err
-	} else if !addr.Equals(cliCtx.FromAddress) {
-		return rest.BaseReq{}, nil, fmt.Errorf("Sender address should be equal to tx creator")
 	}
 
 	// TODO: Change after WASM store feature merge
@@ -148,7 +144,7 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.GasPrice))
 
 	// create the message
-	msg := types.NewMsgExecute([]byte{0}, addr, cliCtx.FromAddress, bondingCode, bondingAbi, paymentCode, paymentAbi, req.GasPrice)
+	msg := types.NewMsgExecute([]byte{0}, addr, addr, bondingCode, bondingAbi, paymentCode, paymentAbi, req.GasPrice)
 	err = msg.ValidateBasic()
 	if err != nil {
 		return rest.BaseReq{}, nil, err
@@ -159,7 +155,13 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 
 func getBalanceHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res, err := getBalanceQuerying(w, cliCtx, r, storeName)
+		bz, err := getBalanceQuerying(w, cliCtx, r, storeName)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalance", storeName), bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -169,15 +171,12 @@ func getBalanceHandler(cliCtx context.CLIContext, storeName string) http.Handler
 }
 
 func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error) {
-	vars := mux.Vars(r)
-	straddr, addrexist := vars["address"]
-	if addrexist != true {
-		rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprint("Need 'address' query string (?address=blahblah)"))
-	}
+	vars := r.URL.Query()
+	straddr := vars.Get("address")
 
 	addr, err := sdk.AccAddressFromBech32(straddr)
 	if err != nil {
-		rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		return nil, err
 	}
 
 	pubkey := types.ToPublicKey(addr)
@@ -185,11 +184,5 @@ func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 		Address: pubkey,
 	}
 	bz := cliCtx.Codec.MustMarshalJSON(queryData)
-
-	res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalance", storeName), bz)
-
-	if err != nil {
-		return nil, err
-	}
-	return res, err
+	return bz, nil
 }
