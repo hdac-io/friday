@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -53,15 +54,10 @@ the base64 encoded publickey and a list of initial coins.`,
 
 			// Use sdk.AccAddress as public key for PoC.
 			// It should be replaced with a raw public key later.
-			publicKey := eltypes.ToPublicKey(accAddr)
-			balance := args[1]
-			bondedAmount := args[2]
-
-			// create concrete account type based on input parameters
 			account := eltypes.Account{
-				PublicKey:           publicKey,
-				InitialBalance:      balance,
-				InitialBondedAmount: bondedAmount,
+				PublicKey:           eltypes.ToPublicKey(accAddr),
+				InitialBalance:      args[1],
+				InitialBondedAmount: args[2],
 			}
 
 			// get genesis file
@@ -77,6 +73,14 @@ the base64 encoded publickey and a list of initial coins.`,
 				cdc.MustUnmarshalJSON(appState[eltypes.ModuleName], &genesisState)
 			}
 
+			// check already existing address
+			for _, v := range genesisState.Accounts {
+				if bytes.Compare([]byte(v.PublicKey), []byte(account.PublicKey)) == 0 {
+					return fmt.Errorf("already existing address: %v", args[0])
+				}
+			}
+
+			// append an account
 			genesisState.Accounts = append(genesisState.Accounts, account)
 			genesisStateBytes, err := cdc.MarshalJSON(genesisState)
 			if err != nil {
