@@ -196,6 +196,28 @@ func (k ExecutionLayerKeeper) SetGenesisConf(ctx sdk.Context, genesisConf types.
 	store.Set([]byte("genesisconf"), genesisConfBytes)
 }
 
+// GetGenesisAccounts retrieves GenesisAccounts in sdk store
+func (k ExecutionLayerKeeper) GetGenesisAccounts(ctx sdk.Context) []types.Account {
+	store := ctx.KVStore(k.HashMapStoreKey)
+	genesisAccountsBytes := store.Get([]byte("genesisaccounts"))
+	if genesisAccountsBytes == nil {
+		return nil
+	}
+	var genesisAccounts []types.Account
+	k.cdc.UnmarshalBinaryBare(genesisAccountsBytes, &genesisAccounts)
+	return genesisAccounts
+}
+
+// SetGenesisAccounts saves GenesisAccounts in sdk store
+func (k ExecutionLayerKeeper) SetGenesisAccounts(ctx sdk.Context, accounts []types.Account) {
+	if accounts == nil {
+		return
+	}
+	store := ctx.KVStore(k.HashMapStoreKey)
+	genesisAccountsBytes := k.cdc.MustMarshalBinaryBare(accounts)
+	store.Set([]byte("genesisaccounts"), genesisAccountsBytes)
+}
+
 // GetCurrentBlockHash returns current block hash
 func (k ExecutionLayerKeeper) GetCurrentBlockHash(ctx sdk.Context) []byte {
 	store := ctx.KVStore(k.HashMapStoreKey)

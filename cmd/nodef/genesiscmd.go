@@ -77,7 +77,7 @@ the base64 encoded publickey and a list of initial coins.`,
 				cdc.MustUnmarshalJSON(appState[eltypes.ModuleName], &genesisState)
 			}
 
-			genesisState.GenesisConf.Genesis.Accounts = append(genesisState.GenesisConf.Genesis.Accounts, account)
+			genesisState.Accounts = append(genesisState.Accounts, account)
 			genesisStateBytes, err := cdc.MarshalJSON(genesisState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal executionlayer genesis state: %w", err)

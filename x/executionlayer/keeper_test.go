@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 	"path"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -150,4 +151,31 @@ func TestMarsahlAndUnMarshal(t *testing.T) {
 	proto.Unmarshal(bz, obj)
 
 	assert.Equal(t, src.Transform.String(), obj.Transform.String())
+}
+
+func TestGenesisState(t *testing.T) {
+	testMock := setupTestInput()
+
+	expected := types.DefaultGenesisState()
+	testMock.elk.SetGenesisConf(testMock.ctx, expected.GenesisConf)
+	testMock.elk.SetGenesisAccounts(testMock.ctx, expected.Accounts)
+
+	var got types.GenesisState
+	got.GenesisConf = testMock.elk.GetGenesisConf(testMock.ctx)
+	got.Accounts = testMock.elk.GetGenesisAccounts(testMock.ctx)
+	if !reflect.DeepEqual(expected, got) {
+		t.Errorf("expected: %v, but got: %v", expected, got)
+	}
+
+	// accounts Marshal, UnMarshal test
+	expected.Accounts = make([]types.Account, 1)
+	expected.Accounts[0].PublicKey = types.PublicKey([]byte("test-pub-key"))
+	expected.Accounts[0].InitialBalance = "2"
+	expected.Accounts[0].InitialBondedAmount = "1"
+
+	testMock.elk.SetGenesisAccounts(testMock.ctx, expected.Accounts)
+	gottonAccounts := testMock.elk.GetGenesisAccounts(testMock.ctx)
+	if !reflect.DeepEqual(expected.Accounts, gottonAccounts) {
+		t.Errorf("expected: %v, but got: %v", expected.Accounts, gottonAccounts)
+	}
 }
