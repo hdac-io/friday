@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/hdac-io/friday/client/context"
@@ -24,7 +25,12 @@ func prepare() (fromAddr, receipAddr string, w http.ResponseWriter, clictx conte
 	cdc := codec.New()
 	clictx = context.NewCLIContext().WithCodec(cdc)
 
-	basereq = rest.NewBaseReq(fromAddr, "", "monday-0001", "", "", 0, 0, nil, nil, false)
+	basereq = rest.BaseReq{
+		From:    fromAddr,
+		ChainID: "monday-0001",
+		Gas:     fmt.Sprint(60_000_000),
+		Memo:    "",
+	}
 
 	return
 }
@@ -33,12 +39,13 @@ func TestRESTTransfer(t *testing.T) {
 	fromAddr, receipAddr, writer, clictx, basereq := prepare()
 
 	// Body
+	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
 	transReq := transferReq{
-		BaseReq:          basereq,
+		ChainID:          basereq.ChainID,
+		Memo:             basereq.Memo,
 		SenderAddress:    fromAddr,
 		PaymentAmt:       150_000_000,
-		Fee:              80_000_000,
-		GasPrice:         60_000_000,
+		GasPrice:         gas,
 		RecipientAddress: receipAddr,
 	}
 
@@ -57,11 +64,13 @@ func TestRESTBond(t *testing.T) {
 	fromAddr, _, writer, clictx, basereq := prepare()
 
 	// Body
+	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
 	bondReq := bondReq{
-		BaseReq:   basereq,
+		ChainID:   basereq.ChainID,
+		Memo:      basereq.Memo,
 		Address:   fromAddr,
 		BondedAmt: 100_000_000,
-		GasPrice:  20_000_000,
+		GasPrice:  gas,
 	}
 
 	// http.request
@@ -79,11 +88,13 @@ func TestRESTUnbond(t *testing.T) {
 	fromAddr, _, writer, clictx, basereq := prepare()
 
 	// Body
+	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
 	bondReq := bondReq{
-		BaseReq:   basereq,
+		ChainID:   basereq.ChainID,
+		Memo:      basereq.Memo,
 		Address:   fromAddr,
 		BondedAmt: 100_000_000,
-		GasPrice:  20_000_000,
+		GasPrice:  gas,
 	}
 
 	// http.request

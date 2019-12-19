@@ -14,12 +14,12 @@ import (
 )
 
 type transferReq struct {
-	BaseReq          rest.BaseReq `json:"base_req"`
-	SenderAddress    string       `json:"sender_address"`
-	PaymentAmt       uint64       `json:"payment_amount"`
-	Fee              uint64       `json:"fee"`
-	GasPrice         uint64       `json:"gas_price"`
-	RecipientAddress string       `json:"recipient_address"`
+	ChainID          string `json:"chain_id"`
+	SenderAddress    string `json:"sender_address"`
+	PaymentAmt       uint64 `json:"payment_amount"`
+	GasPrice         uint64 `json:"gas_price"`
+	RecipientAddress string `json:"recipient_address"`
+	Memo             string `json:"memo"`
 }
 
 func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
@@ -30,7 +30,13 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse request")
 	}
 
-	baseReq := req.BaseReq.Sanitize()
+	baseReq := rest.BaseReq{
+		From:    req.SenderAddress,
+		ChainID: req.ChainID,
+		Gas:     fmt.Sprint(req.GasPrice),
+		Memo:    req.Memo,
+	}
+
 	if !baseReq.ValidateBasic(w) {
 		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse base request")
 	}
@@ -50,7 +56,7 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 	transferCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm"))
 	transferAbi := grpc.MakeArgsTransferToAccount(receipaddr, req.PaymentAmt)
 	paymentCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
-	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.Fee))
+	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.GasPrice))
 
 	// create the message
 	msg := types.NewMsgExecute([]byte{0}, senderaddr, senderaddr, transferCode, transferAbi, paymentCode, paymentAbi, req.GasPrice)
@@ -63,10 +69,11 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 }
 
 type bondReq struct {
-	BaseReq   rest.BaseReq `json:"base_req"`
-	Address   string       `json:"address"`
-	BondedAmt uint64       `json:"bonded_amount"`
-	GasPrice  uint64       `json:"gas_price"`
+	ChainID   string `json:"chain_id"`
+	Address   string `json:"address"`
+	BondedAmt uint64 `json:"bonded_amount"`
+	GasPrice  uint64 `json:"gas_price"`
+	Memo      string `json:"memo"`
 }
 
 func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
@@ -77,7 +84,13 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse request")
 	}
 
-	baseReq := req.BaseReq.Sanitize()
+	baseReq := rest.BaseReq{
+		From:    req.Address,
+		ChainID: req.ChainID,
+		Gas:     fmt.Sprint(req.GasPrice),
+		Memo:    req.Memo,
+	}
+
 	if !baseReq.ValidateBasic(w) {
 		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse base request")
 	}
