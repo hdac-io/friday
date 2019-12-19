@@ -65,6 +65,6 @@ func getBalanceHandler(cliCtx context.CLIContext, storeName string) http.Handler
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		rest.PostProcessResponse(w, cliCtx, res)
+		rest.PostProcessResponseBare(w, cliCtx, res)
 	}
 }
