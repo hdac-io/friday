@@ -58,6 +58,7 @@ func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTi
 	cfg.MaxOpenConnections = maxOpen
 	cfg.ReadTimeout = time.Duration(readTimeout) * time.Second
 	cfg.WriteTimeout = time.Duration(writeTimeout) * time.Second
+	cfg.MaxBodyBytes = 3000000
 
 	rs.listener, err = rpcserver.Listen(listenAddr, cfg)
 	if err != nil {

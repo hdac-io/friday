@@ -5,18 +5,22 @@ import (
 	"math/big"
 	"net/http"
 	"os"
+	"regexp"
+	"strconv"
 
 	grpc "github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	"github.com/hdac-io/friday/client/context"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/types/rest"
+	bank "github.com/hdac-io/friday/x/bank"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 )
 
 type transferReq struct {
 	ChainID          string `json:"chain_id"`
 	SenderAddress    string `json:"sender_address"`
-	PaymentAmt       uint64 `json:"payment_amount"`
+	Amount           string `json:"amount"`
+	Fee              uint64 `json:"fee"`
 	GasPrice         uint64 `json:"gas_price"`
 	RecipientAddress string `json:"recipient_address"`
 	Memo             string `json:"memo"`
@@ -52,20 +56,33 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 		return rest.BaseReq{}, nil, err
 	}
 
-	// TODO: Change after WASM store feature merge
-	transferCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm"))
-	transferAbi := grpc.MakeArgsTransferToAccount(receipaddr, req.PaymentAmt)
-	paymentCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
-	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.GasPrice))
-
-	// create the message
-	msg := types.NewMsgExecute([]byte{0}, senderaddr, senderaddr, transferCode, transferAbi, paymentCode, paymentAbi, req.GasPrice)
-	err = msg.ValidateBasic()
+	// parse conis trying to be sent
+	coins, err := sdk.ParseCoins(req.Amount)
 	if err != nil {
 		return rest.BaseReq{}, nil, err
 	}
 
-	return baseReq, []sdk.Msg{msg}, nil
+	re := regexp.MustCompile("[0-9]+")
+	amount, err := strconv.ParseUint(re.FindAllString(req.Amount, -1)[0], 10, 64)
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	// TODO: Change after WASM store feature merge
+	transferCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm"))
+	transferAbi := grpc.MakeArgsTransferToAccount(receipaddr, amount)
+	paymentCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
+	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.GasPrice))
+
+	// create the message
+	bankMsg := bank.NewMsgSend(senderaddr, receipaddr, coins)
+	eeMsg := types.NewMsgExecute([]byte{0}, senderaddr, senderaddr, transferCode, transferAbi, paymentCode, paymentAbi, req.GasPrice)
+	err = eeMsg.ValidateBasic()
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	return baseReq, []sdk.Msg{bankMsg, eeMsg}, nil
 }
 
 type bondReq struct {

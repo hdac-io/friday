@@ -36,6 +36,7 @@ var (
 	NewInput               = types.NewInput
 	NewOutput              = types.NewOutput
 	ParamKeyTable          = types.ParamKeyTable
+	NewMsgSend             = types.NewMsgSend
 
 	// variable aliases
 	ModuleCdc                = types.ModuleCdc
