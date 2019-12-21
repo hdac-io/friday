@@ -67,11 +67,11 @@ func TestRESTBond(t *testing.T) {
 	// Body
 	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
 	bondReq := bondReq{
-		ChainID:   basereq.ChainID,
-		Memo:      basereq.Memo,
-		Address:   fromAddr,
-		BondedAmt: 100_000_000,
-		GasPrice:  gas,
+		ChainID:  basereq.ChainID,
+		Memo:     basereq.Memo,
+		Address:  fromAddr,
+		Amount:   100_000_000,
+		GasPrice: gas,
 	}
 
 	// http.request
@@ -91,11 +91,11 @@ func TestRESTUnbond(t *testing.T) {
 	// Body
 	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
 	bondReq := bondReq{
-		ChainID:   basereq.ChainID,
-		Memo:      basereq.Memo,
-		Address:   fromAddr,
-		BondedAmt: 100_000_000,
-		GasPrice:  gas,
+		ChainID:  basereq.ChainID,
+		Memo:     basereq.Memo,
+		Address:  fromAddr,
+		Amount:   100_000_000,
+		GasPrice: gas,
 	}
 
 	// http.request

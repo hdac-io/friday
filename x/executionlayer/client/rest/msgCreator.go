@@ -86,11 +86,11 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 }
 
 type bondReq struct {
-	ChainID   string `json:"chain_id"`
-	Address   string `json:"address"`
-	BondedAmt uint64 `json:"bonded_amount"`
-	GasPrice  uint64 `json:"gas_price"`
-	Memo      string `json:"memo"`
+	ChainID  string `json:"chain_id"`
+	Address  string `json:"address"`
+	Amount   uint64 `json:"amount"`
+	GasPrice uint64 `json:"gas_price"`
+	Memo     string `json:"memo"`
 }
 
 func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
@@ -125,7 +125,7 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 	} else {
 		bondingCode = grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/unbonding.wasm"))
 	}
-	bondingAbi := grpc.MakeArgsTransferToAccount(addr, req.BondedAmt)
+	bondingAbi := grpc.MakeArgsBonding(req.Amount)
 	paymentCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
 	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.GasPrice))
 
