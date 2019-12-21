@@ -70,7 +70,7 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 
 	// TODO: Change after WASM store feature merge
 	transferCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm"))
-	transferAbi := grpc.MakeArgsTransferToAccount(receipaddr, amount)
+	transferAbi := grpc.MakeArgsTransferToAccount(types.ToPublicKey(receipaddr), amount)
 	paymentCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
 	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.GasPrice))
 
