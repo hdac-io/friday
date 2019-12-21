@@ -11,7 +11,7 @@ import (
 
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/codec"
-	rest "github.com/hdac-io/friday/types/rest"
+	"github.com/hdac-io/friday/types/rest"
 	"github.com/stretchr/testify/require"
 
 	"github.com/hdac-io/friday/x/executionlayer/types"
@@ -44,9 +44,10 @@ func TestRESTTransfer(t *testing.T) {
 		ChainID:          basereq.ChainID,
 		Memo:             basereq.Memo,
 		SenderAddress:    fromAddr,
-		PaymentAmt:       150_000_000,
+		Amount:           "100dummy",
 		GasPrice:         gas,
 		RecipientAddress: receipAddr,
+		Fee:              10_000_000,
 	}
 
 	// http.request
