@@ -22,7 +22,6 @@ func genesisConfigMock() types.GenesisConf {
 			Timestamp:       1568805354071,
 			MintWasm:        []byte("mint contract bytes"),
 			PosWasm:         []byte("pos contract bytes"),
-			Accounts:        nil,
 			ProtocolVersion: "1.0.0",
 		},
 		WasmCosts: types.WasmCosts{
@@ -49,7 +48,6 @@ func TestParseGenesisChainSpecBasic(t *testing.T) {
 	require.Equal(t, expected.Genesis.Timestamp, got.Genesis.Timestamp)
 	require.Equal(t, expected.Genesis.MintWasm, got.Genesis.MintWasm)
 	require.Equal(t, expected.Genesis.PosWasm, got.Genesis.PosWasm)
-	require.Equal(t, expected.Genesis.Accounts, got.Genesis.Accounts)
 	require.Equal(t, expected.Genesis.ProtocolVersion, got.Genesis.ProtocolVersion)
 
 	if !reflect.DeepEqual(expected.WasmCosts, got.WasmCosts) {

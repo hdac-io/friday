@@ -13,7 +13,7 @@ import (
 // InitGenesis sets an executionlayer configuration for genesis.
 func InitGenesis(
 	ctx sdk.Context, keeper ExecutionLayerKeeper, data types.GenesisState) {
-	genesisConfig, err := types.ToChainSpecGenesisConfig(data.GenesisConf)
+	genesisConfig, err := types.ToChainSpecGenesisConfig(data)
 	if err != nil {
 		panic(err)
 	}
@@ -36,11 +36,12 @@ func InitGenesis(
 		panic(response.GetResult())
 	}
 
+	keeper.SetGenesisAccounts(ctx, data.Accounts)
 	keeper.SetGenesisConf(ctx, data.GenesisConf)
 	keeper.SetEEState(ctx, ctx.BlockHeader().LastBlockId.Hash, response.GetSuccess().GetPoststateHash())
 }
 
 // ExportGenesis : exports an executionlayer configuration for genesis
 func ExportGenesis(ctx sdk.Context, keeper ExecutionLayerKeeper) types.GenesisState {
-	return types.NewGenesisState(keeper.GetGenesisConf(ctx))
+	return types.NewGenesisState(keeper.GetGenesisConf(ctx), keeper.GetGenesisAccounts(ctx))
 }

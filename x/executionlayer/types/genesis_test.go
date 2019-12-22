@@ -46,11 +46,11 @@ func TestToProtocolVersion(t *testing.T) {
 func TestToChainSpecGenesisConfig(t *testing.T) {
 	// valid input
 	genesisState := DefaultGenesisState()
-	_, err := ToChainSpecGenesisConfig(genesisState.GenesisConf)
+	_, err := ToChainSpecGenesisConfig(genesisState)
 	require.Nil(t, err)
 
 	// invalid protocol version
 	genesisState.GenesisConf.Genesis.ProtocolVersion = "1.0.0.0"
-	_, err = ToChainSpecGenesisConfig(genesisState.GenesisConf)
+	_, err = ToChainSpecGenesisConfig(genesisState)
 	require.NotNil(t, err)
 }

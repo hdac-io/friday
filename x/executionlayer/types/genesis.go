@@ -11,6 +11,7 @@ import (
 // GenesisState : the executionlayer state that must be provided at genesis.
 type GenesisState struct {
 	GenesisConf GenesisConf `json:"genesis_conf"`
+	Accounts    []Account   `json:"accounts"`
 }
 
 // GenesisConf : the executionlayer configuration that must be provided at genesis.
@@ -21,12 +22,11 @@ type GenesisConf struct {
 
 // Genesis : Chain Genesis information
 type Genesis struct {
-	Name            string    `json:"name"`
-	Timestamp       uint64    `json:"timestamp"`
-	MintWasm        []byte    `json:"mint_wasm"`
-	PosWasm         []byte    `json:"pos_wasm"`
-	Accounts        []Account `json:"accounts"`
-	ProtocolVersion string    `json:"protocol_version"`
+	Name            string `json:"name"`
+	Timestamp       uint64 `json:"timestamp"`
+	MintWasm        []byte `json:"mint_wasm"`
+	PosWasm         []byte `json:"pos_wasm"`
+	ProtocolVersion string `json:"protocol_version"`
 }
 
 // Account : Genesis Account Information.
@@ -52,8 +52,8 @@ type WasmCosts struct {
 }
 
 // NewGenesisState creates a new genesis state.
-func NewGenesisState(genesisConf GenesisConf) GenesisState {
-	return GenesisState{GenesisConf: genesisConf}
+func NewGenesisState(genesisConf GenesisConf, accounts []Account) GenesisState {
+	return GenesisState{GenesisConf: genesisConf, Accounts: accounts,}
 }
 
 // DefaultGenesisState returns a default genesis state
@@ -64,7 +64,6 @@ func DefaultGenesisState() GenesisState {
 			Timestamp:       0,
 			MintWasm:        DefaultMintWasm,
 			PosWasm:         DefaultPosWasm,
-			Accounts:        nil,
 			ProtocolVersion: "1.0.0",
 		},
 		WasmCosts: WasmCosts{
@@ -80,25 +79,26 @@ func DefaultGenesisState() GenesisState {
 			OpcodesDivisor:    8,
 		},
 	}
-	return NewGenesisState(genesisConf)
+	return NewGenesisState(genesisConf, nil)
 }
 
 // ValidateGenesis :
 func ValidateGenesis(data GenesisState) error {
-	_, err := ToChainSpecGenesisConfig(data.GenesisConf)
+	_, err := ToChainSpecGenesisConfig(data)
 	return err
 }
 
-func ToChainSpecGenesisConfig(config GenesisConf) (*ipc.ChainSpec_GenesisConfig, error) {
+func ToChainSpecGenesisConfig(gs GenesisState) (*ipc.ChainSpec_GenesisConfig, error) {
+	config := gs.GenesisConf
 	pv, err := toProtocolVersion(config.Genesis.ProtocolVersion)
 	if err != nil {
 		return nil, err
 	}
 
 	var accounts []*ipc.ChainSpec_GenesisAccount
-	if n := len(config.Genesis.Accounts); n != 0 {
+	if n := len(gs.Accounts); n != 0 {
 		accounts = make([]*ipc.ChainSpec_GenesisAccount, n)
-		for i, v := range config.Genesis.Accounts {
+		for i, v := range gs.Accounts {
 			account := toChainSpecGenesisAccount(v)
 			accounts[i] = &account
 		}
