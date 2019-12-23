@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/hdac-io/tendermint/libs/log"
 
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/crisis/internal/types"

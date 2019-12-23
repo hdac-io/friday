@@ -3,8 +3,8 @@ package slashing
 import (
 	"fmt"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmtypes "github.com/tendermint/tendermint/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
+	tmtypes "github.com/hdac-io/tendermint/types"
 
 	sdk "github.com/hdac-io/friday/types"
 )

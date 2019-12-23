@@ -4,7 +4,7 @@ package app
 import (
 	"io"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/hdac-io/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/hdac-io/friday/baseapp"

@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
 
-	"github.com/tendermint/tendermint/libs/bech32"
-	"github.com/tendermint/tendermint/libs/cli"
+	"github.com/hdac-io/tendermint/libs/bech32"
+	"github.com/hdac-io/tendermint/libs/cli"
 
 	"github.com/hdac-io/friday/client/flags"
 	sdk "github.com/hdac-io/friday/types"

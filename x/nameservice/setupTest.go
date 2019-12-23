@@ -6,9 +6,9 @@ import (
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/auth"
 	"github.com/hdac-io/friday/x/params"
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/hdac-io/tendermint/libs/log"
 )
 
 type testInput struct {

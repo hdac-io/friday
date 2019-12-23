@@ -11,8 +11,8 @@ import (
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tendermint/tendermint/libs/log"
-	rpcserver "github.com/tendermint/tendermint/rpc/lib/server"
+	"github.com/hdac-io/tendermint/libs/log"
+	rpcserver "github.com/hdac-io/tendermint/rpc/lib/server"
 
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/client/flags"

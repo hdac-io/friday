@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/hdac-io/tendermint/crypto"
 	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/hdac-io/friday/types"

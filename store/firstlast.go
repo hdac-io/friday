@@ -3,7 +3,7 @@ package store
 import (
 	"bytes"
 
-	cmn "github.com/tendermint/tendermint/libs/common"
+	cmn "github.com/hdac-io/tendermint/libs/common"
 
 	"github.com/hdac-io/friday/store/types"
 )

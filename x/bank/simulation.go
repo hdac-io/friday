@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/hdac-io/tendermint/crypto"
 
 	"github.com/hdac-io/friday/baseapp"
 	sdk "github.com/hdac-io/friday/types"

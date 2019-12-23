@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/tendermint/go-amino"
-	cryptoamino "github.com/tendermint/tendermint/crypto/encoding/amino"
-	tmtypes "github.com/tendermint/tendermint/types"
+	cryptoamino "github.com/hdac-io/tendermint/crypto/encoding/amino"
+	tmtypes "github.com/hdac-io/tendermint/types"
 )
 
 // amino codec to marshal/unmarshal

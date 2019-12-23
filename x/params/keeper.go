@@ -8,7 +8,7 @@ import (
 	"github.com/hdac-io/friday/x/params/subspace"
 	"github.com/hdac-io/friday/x/params/types"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/hdac-io/tendermint/libs/log"
 )
 
 // Keeper of the global paramstore

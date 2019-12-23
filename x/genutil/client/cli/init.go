@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/libs/common"
-	"github.com/tendermint/tendermint/types"
+	cfg "github.com/hdac-io/tendermint/config"
+	"github.com/hdac-io/tendermint/libs/cli"
+	"github.com/hdac-io/tendermint/libs/common"
+	"github.com/hdac-io/tendermint/types"
 
 	"github.com/hdac-io/friday/client"
 	"github.com/hdac-io/friday/codec"

@@ -5,7 +5,7 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/hdac-io/tendermint/crypto"
 
 	sdk "github.com/hdac-io/friday/types"
 	authtypes "github.com/hdac-io/friday/x/auth/types"

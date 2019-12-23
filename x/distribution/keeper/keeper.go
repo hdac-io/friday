@@ -8,7 +8,7 @@ import (
 	"github.com/hdac-io/friday/x/distribution/types"
 	"github.com/hdac-io/friday/x/params"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/hdac-io/tendermint/libs/log"
 )
 
 // Keeper of the distribution store

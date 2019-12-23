@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	tmtypes "github.com/tendermint/tendermint/types"
+	tmtypes "github.com/hdac-io/tendermint/types"
 	"gopkg.in/yaml.v2"
 
 	"github.com/hdac-io/friday/codec"

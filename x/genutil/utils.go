@@ -5,12 +5,12 @@ import (
 	"path/filepath"
 	"time"
 
-	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/libs/common"
-	"github.com/tendermint/tendermint/p2p"
-	"github.com/tendermint/tendermint/privval"
-	tmtypes "github.com/tendermint/tendermint/types"
+	cfg "github.com/hdac-io/tendermint/config"
+	"github.com/hdac-io/tendermint/crypto"
+	"github.com/hdac-io/tendermint/libs/common"
+	"github.com/hdac-io/tendermint/p2p"
+	"github.com/hdac-io/tendermint/privval"
+	tmtypes "github.com/hdac-io/tendermint/types"
 
 	"github.com/hdac-io/friday/server"
 )

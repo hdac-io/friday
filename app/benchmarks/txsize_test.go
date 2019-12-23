@@ -3,7 +3,7 @@ package app
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"github.com/hdac-io/tendermint/crypto/secp256k1"
 
 	"github.com/hdac-io/friday/app"
 

@@ -8,7 +8,7 @@ import (
 
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
 )
 
 func setup() (testInput, ExecutionLayerKeeper, func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error)) {

@@ -11,9 +11,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	tmclient "github.com/tendermint/tendermint/rpc/client"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	rpcclient "github.com/tendermint/tendermint/rpc/lib/client"
+	tmclient "github.com/hdac-io/tendermint/rpc/client"
+	ctypes "github.com/hdac-io/tendermint/rpc/core/types"
+	rpcclient "github.com/hdac-io/tendermint/rpc/lib/client"
 
 	"github.com/hdac-io/friday/codec"
 )

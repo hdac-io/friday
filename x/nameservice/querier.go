@@ -3,7 +3,7 @@ package nameservice
 import (
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
 )
 
 // Query endpoints definition for GET request

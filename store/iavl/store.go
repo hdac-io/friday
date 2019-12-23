@@ -11,10 +11,10 @@ import (
 	"github.com/hdac-io/friday/store/types"
 
 	"github.com/pkg/errors"
-	"github.com/tendermint/iavl"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/merkle"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	"github.com/hdac-io/iavl"
+	abci "github.com/hdac-io/tendermint/abci/types"
+	"github.com/hdac-io/tendermint/crypto/merkle"
+	cmn "github.com/hdac-io/tendermint/libs/common"
 	dbm "github.com/tendermint/tm-db"
 )
 

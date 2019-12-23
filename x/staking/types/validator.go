@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
-	tmtypes "github.com/tendermint/tendermint/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
+	"github.com/hdac-io/tendermint/crypto"
+	tmtypes "github.com/hdac-io/tendermint/types"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/hdac-io/friday/codec"

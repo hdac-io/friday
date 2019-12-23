@@ -8,9 +8,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	"github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/libs/log"
+	tcmd "github.com/hdac-io/tendermint/cmd/tendermint/commands"
+	"github.com/hdac-io/tendermint/libs/cli"
+	"github.com/hdac-io/tendermint/libs/log"
 
 	"github.com/hdac-io/friday/client"
 	"github.com/hdac-io/friday/server"

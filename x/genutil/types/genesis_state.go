@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/tendermint/tendermint/libs/common"
-	tmtypes "github.com/tendermint/tendermint/types"
+	"github.com/hdac-io/tendermint/libs/common"
+	tmtypes "github.com/hdac-io/tendermint/types"
 
 	"github.com/hdac-io/friday/codec"
 	authtypes "github.com/hdac-io/friday/x/auth/types"

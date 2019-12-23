@@ -22,7 +22,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/tendermint/go-amino"
-	"github.com/tendermint/tendermint/libs/cli"
+	"github.com/hdac-io/tendermint/libs/cli"
 
 	"github.com/hdac-io/friday/app"
 )

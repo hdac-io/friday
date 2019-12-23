@@ -17,9 +17,9 @@ import (
 
 	bip39 "github.com/cosmos/go-bip39"
 
-	tmcrypto "github.com/tendermint/tendermint/crypto"
-	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
+	tmcrypto "github.com/hdac-io/tendermint/crypto"
+	cryptoAmino "github.com/hdac-io/tendermint/crypto/encoding/amino"
+	"github.com/hdac-io/tendermint/crypto/secp256k1"
 	dbm "github.com/tendermint/tm-db"
 )
 

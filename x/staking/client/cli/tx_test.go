@@ -5,10 +5,10 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/libs/log"
+	tcmd "github.com/hdac-io/tendermint/cmd/tendermint/commands"
+	cfg "github.com/hdac-io/tendermint/config"
+	"github.com/hdac-io/tendermint/crypto"
+	"github.com/hdac-io/tendermint/libs/log"
 
 	"github.com/hdac-io/friday/server"
 	sdk "github.com/hdac-io/friday/types"

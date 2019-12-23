@@ -7,9 +7,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	tmcrypto "github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/multisig"
-	"github.com/tendermint/tendermint/libs/cli"
+	tmcrypto "github.com/hdac-io/tendermint/crypto"
+	"github.com/hdac-io/tendermint/crypto/multisig"
+	"github.com/hdac-io/tendermint/libs/cli"
 
 	"github.com/hdac-io/friday/client/flags"
 	"github.com/hdac-io/friday/crypto"

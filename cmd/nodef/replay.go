@@ -10,12 +10,12 @@ import (
 	cpm "github.com/otiai10/copy"
 	"github.com/spf13/cobra"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	cmn "github.com/tendermint/tendermint/libs/common"
-	"github.com/tendermint/tendermint/proxy"
-	tmsm "github.com/tendermint/tendermint/state"
-	tmstore "github.com/tendermint/tendermint/store"
-	tm "github.com/tendermint/tendermint/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
+	cmn "github.com/hdac-io/tendermint/libs/common"
+	"github.com/hdac-io/tendermint/proxy"
+	tmsm "github.com/hdac-io/tendermint/state"
+	tmstore "github.com/hdac-io/tendermint/store"
+	tm "github.com/hdac-io/tendermint/types"
 
 	"github.com/hdac-io/friday/app"
 

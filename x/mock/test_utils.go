@@ -8,8 +8,8 @@ import (
 	"github.com/hdac-io/friday/codec"
 
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
+	abci "github.com/hdac-io/tendermint/abci/types"
+	"github.com/hdac-io/tendermint/crypto"
 
 	"github.com/hdac-io/friday/baseapp"
 	sdk "github.com/hdac-io/friday/types"

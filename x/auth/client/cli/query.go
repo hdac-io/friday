@@ -16,7 +16,7 @@ import (
 	"github.com/hdac-io/friday/x/auth/client/utils"
 	"github.com/hdac-io/friday/x/auth/types"
 
-	tmtypes "github.com/tendermint/tendermint/types"
+	tmtypes "github.com/hdac-io/tendermint/types"
 )
 
 const (

@@ -3,8 +3,8 @@ package keys
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	"github.com/hdac-io/tendermint/crypto"
+	cmn "github.com/hdac-io/tendermint/libs/common"
 
 	"github.com/hdac-io/friday/crypto/keys/hd"
 	sdk "github.com/hdac-io/friday/types"

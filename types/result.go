@@ -9,7 +9,7 @@ import (
 
 	"github.com/hdac-io/friday/codec"
 
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	ctypes "github.com/hdac-io/tendermint/rpc/core/types"
 )
 
 // Result is the union of ResponseFormat and ResponseCheckTx.

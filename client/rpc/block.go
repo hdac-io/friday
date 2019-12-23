@@ -14,7 +14,7 @@ import (
 	"github.com/hdac-io/friday/codec"
 	"github.com/hdac-io/friday/types/rest"
 
-	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
+	tmliteProxy "github.com/hdac-io/tendermint/lite/proxy"
 )
 
 //BlockCommand returns the verified block data for a given heights

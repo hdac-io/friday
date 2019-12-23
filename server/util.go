@@ -14,12 +14,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/libs/cli"
-	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
-	"github.com/tendermint/tendermint/libs/log"
-	pvm "github.com/tendermint/tendermint/privval"
+	tcmd "github.com/hdac-io/tendermint/cmd/tendermint/commands"
+	cfg "github.com/hdac-io/tendermint/config"
+	"github.com/hdac-io/tendermint/libs/cli"
+	tmflags "github.com/hdac-io/tendermint/libs/cli/flags"
+	"github.com/hdac-io/tendermint/libs/log"
+	pvm "github.com/hdac-io/tendermint/privval"
 
 	"github.com/hdac-io/friday/client/flags"
 	"github.com/hdac-io/friday/codec"

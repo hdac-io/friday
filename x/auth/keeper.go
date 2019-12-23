@@ -3,8 +3,8 @@ package auth
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/hdac-io/tendermint/crypto"
+	"github.com/hdac-io/tendermint/libs/log"
 
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"

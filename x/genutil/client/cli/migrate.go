@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/types"
+	"github.com/hdac-io/tendermint/types"
 
 	"github.com/hdac-io/friday/codec"
 	"github.com/hdac-io/friday/server"

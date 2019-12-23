@@ -8,7 +8,7 @@ import (
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
 	v034staking "github.com/hdac-io/friday/x/staking/legacy/v0_34"
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/hdac-io/tendermint/crypto"
 )
 
 const (

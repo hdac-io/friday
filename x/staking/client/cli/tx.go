@@ -9,8 +9,8 @@ import (
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/crypto"
+	cfg "github.com/hdac-io/tendermint/config"
+	"github.com/hdac-io/tendermint/crypto"
 
 	"github.com/hdac-io/friday/client"
 	"github.com/hdac-io/friday/client/context"

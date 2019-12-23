@@ -1,7 +1,7 @@
 package keys
 
 import (
-	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
+	cryptoAmino "github.com/hdac-io/tendermint/crypto/encoding/amino"
 
 	"github.com/hdac-io/friday/codec"
 	"github.com/hdac-io/friday/crypto/keys/hd"

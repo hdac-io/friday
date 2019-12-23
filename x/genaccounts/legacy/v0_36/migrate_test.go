@@ -6,8 +6,8 @@ import (
 	v034accounts "github.com/hdac-io/friday/x/genaccounts/legacy/v0_34"
 	v034gov "github.com/hdac-io/friday/x/gov/legacy/v0_34"
 	v034staking "github.com/hdac-io/friday/x/staking/legacy/v0_34"
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"github.com/hdac-io/tendermint/crypto"
+	"github.com/hdac-io/tendermint/crypto/secp256k1"
 	"testing"
 
 	"github.com/stretchr/testify/require"

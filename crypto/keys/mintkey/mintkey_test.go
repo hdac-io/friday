@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
+	cryptoAmino "github.com/hdac-io/tendermint/crypto/encoding/amino"
+	"github.com/hdac-io/tendermint/crypto/secp256k1"
 
 	"github.com/hdac-io/friday/crypto/keys"
 	"github.com/hdac-io/friday/crypto/keys/mintkey"

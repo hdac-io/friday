@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	sdk "github.com/hdac-io/friday/types"
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
 
 	"github.com/stretchr/testify/require"
 )

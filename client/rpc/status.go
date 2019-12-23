@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	ctypes "github.com/hdac-io/tendermint/rpc/core/types"
 
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/client/flags"
@@ -15,7 +15,7 @@ import (
 	"github.com/hdac-io/friday/types/rest"
 	"github.com/hdac-io/friday/version"
 
-	"github.com/tendermint/tendermint/p2p"
+	"github.com/hdac-io/tendermint/p2p"
 )
 
 // StatusCommand returns the command to return the status of the network.
