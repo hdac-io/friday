@@ -4,7 +4,7 @@ package slashing
 import (
 	"time"
 
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/hdac-io/tendermint/crypto"
 
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/slashing/types"

@@ -14,7 +14,7 @@ import (
 
 	"github.com/hdac-io/friday/client/context"
 	sdk "github.com/hdac-io/friday/types"
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
 )
 
 // type check to ensure the interface is properly implemented

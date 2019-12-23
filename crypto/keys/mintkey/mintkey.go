@@ -6,12 +6,12 @@ import (
 
 	"github.com/tendermint/crypto/bcrypt"
 
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/armor"
-	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
-	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
+	"github.com/hdac-io/tendermint/crypto"
+	"github.com/hdac-io/tendermint/crypto/armor"
+	cryptoAmino "github.com/hdac-io/tendermint/crypto/encoding/amino"
+	"github.com/hdac-io/tendermint/crypto/xsalsa20symmetric"
 
-	cmn "github.com/tendermint/tendermint/libs/common"
+	cmn "github.com/hdac-io/tendermint/libs/common"
 
 	"github.com/hdac-io/friday/crypto/keys/keyerror"
 )

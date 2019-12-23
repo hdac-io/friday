@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/tendermint/tendermint/libs/cli"
+	"github.com/hdac-io/tendermint/libs/cli"
 
 	"github.com/hdac-io/friday/client/flags"
 	"github.com/hdac-io/friday/crypto/keys"

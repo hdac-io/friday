@@ -6,7 +6,7 @@ import (
 
 	"github.com/hdac-io/friday/types"
 	sdk "github.com/hdac-io/friday/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/hdac-io/tendermint/crypto/ed25519"
 
 	"github.com/stretchr/testify/assert"
 )

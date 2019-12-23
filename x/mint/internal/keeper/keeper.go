@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/hdac-io/tendermint/libs/log"
 
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"

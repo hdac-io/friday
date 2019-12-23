@@ -2,7 +2,7 @@ package exported
 
 import (
 	sdk "github.com/hdac-io/friday/types"
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/hdac-io/tendermint/crypto"
 )
 
 // DelegationI delegation bond for a delegated proof of stake system

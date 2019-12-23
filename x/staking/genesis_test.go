@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/hdac-io/tendermint/crypto/ed25519"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
 
 	sdk "github.com/hdac-io/friday/types"
 	keep "github.com/hdac-io/friday/x/staking/keeper"

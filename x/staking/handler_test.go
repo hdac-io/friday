@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	tmtypes "github.com/tendermint/tendermint/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
+	"github.com/hdac-io/tendermint/crypto/secp256k1"
+	tmtypes "github.com/hdac-io/tendermint/types"
 
 	sdk "github.com/hdac-io/friday/types"
 	keep "github.com/hdac-io/friday/x/staking/keeper"

@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	tmtypes "github.com/tendermint/tendermint/types"
+	tmtypes "github.com/hdac-io/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/hdac-io/friday/client/flags"

@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/crypto/bcrypt"
 
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/hdac-io/tendermint/crypto"
 )
 
 func BenchmarkBcryptGenerateFromPassword(b *testing.B) {

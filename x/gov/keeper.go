@@ -10,7 +10,7 @@ import (
 	"github.com/hdac-io/friday/x/params"
 	"github.com/hdac-io/friday/x/supply/exported"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/hdac-io/tendermint/libs/log"
 )
 
 // Governance Keeper

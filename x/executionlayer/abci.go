@@ -2,7 +2,7 @@ package executionlayer
 
 import (
 	sdk "github.com/hdac-io/friday/types"
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
 )
 
 func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, elk ExecutionLayerKeeper) {

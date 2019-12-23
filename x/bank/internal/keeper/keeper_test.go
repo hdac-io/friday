@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
+	abci "github.com/hdac-io/tendermint/abci/types"
+	tmtime "github.com/hdac-io/tendermint/types/time"
 
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/auth"

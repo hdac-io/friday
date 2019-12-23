@@ -12,11 +12,11 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	tmconfig "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/crypto"
-	cmn "github.com/tendermint/tendermint/libs/common"
-	"github.com/tendermint/tendermint/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
+	tmconfig "github.com/hdac-io/tendermint/config"
+	"github.com/hdac-io/tendermint/crypto"
+	cmn "github.com/hdac-io/tendermint/libs/common"
+	"github.com/hdac-io/tendermint/types"
+	tmtime "github.com/hdac-io/tendermint/types/time"
 
 	"github.com/hdac-io/friday/client"
 	"github.com/hdac-io/friday/client/keys"

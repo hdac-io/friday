@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	cmn "github.com/hdac-io/tendermint/libs/common"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/hdac-io/friday/store/cachekv"

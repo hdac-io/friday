@@ -15,7 +15,7 @@ import (
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 	"github.com/stretchr/testify/assert"
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
 )
 
 //-------------------------------------------

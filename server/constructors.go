@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmtypes "github.com/tendermint/tendermint/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
+	"github.com/hdac-io/tendermint/libs/log"
+	tmtypes "github.com/hdac-io/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	sdk "github.com/hdac-io/friday/types"

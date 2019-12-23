@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	ctypes "github.com/hdac-io/tendermint/rpc/core/types"
 
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/codec"

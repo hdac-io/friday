@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/common"
-	tmtypes "github.com/tendermint/tendermint/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
+	"github.com/hdac-io/tendermint/libs/common"
+	tmtypes "github.com/hdac-io/tendermint/types"
 
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/staking/keeper"

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/tendermint/tendermint/types"
+	"github.com/hdac-io/tendermint/types"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
+	abci "github.com/hdac-io/tendermint/abci/types"
+	"github.com/hdac-io/tendermint/libs/log"
 
 	bam "github.com/hdac-io/friday/baseapp"
 	"github.com/hdac-io/friday/codec"

@@ -5,9 +5,9 @@ import (
 	"io"
 	"strings"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/merkle"
-	"github.com/tendermint/tendermint/crypto/tmhash"
+	abci "github.com/hdac-io/tendermint/abci/types"
+	"github.com/hdac-io/tendermint/crypto/merkle"
+	"github.com/hdac-io/tendermint/crypto/tmhash"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/hdac-io/friday/store/cachemulti"

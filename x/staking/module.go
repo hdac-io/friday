@@ -7,9 +7,9 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/crypto"
+	abci "github.com/hdac-io/tendermint/abci/types"
+	cfg "github.com/hdac-io/tendermint/config"
+	"github.com/hdac-io/tendermint/crypto"
 
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/codec"

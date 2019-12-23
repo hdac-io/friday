@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
 
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/staking/types"

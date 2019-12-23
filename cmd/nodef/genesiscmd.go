@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/tendermint/libs/cli"
+	"github.com/hdac-io/tendermint/libs/cli"
 
 	"github.com/hdac-io/friday/client/keys"
 	"github.com/hdac-io/friday/codec"

@@ -8,8 +8,8 @@ import (
 	"github.com/pkg/errors"
 
 	tmbtcec "github.com/tendermint/btcd/btcec"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
-	tmsecp256k1 "github.com/tendermint/tendermint/crypto/secp256k1"
+	tmcrypto "github.com/hdac-io/tendermint/crypto"
+	tmsecp256k1 "github.com/hdac-io/tendermint/crypto/secp256k1"
 
 	"github.com/hdac-io/friday/crypto/keys/hd"
 	sdk "github.com/hdac-io/friday/types"

@@ -9,13 +9,13 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tendermint/tendermint/abci/server"
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	cmn "github.com/tendermint/tendermint/libs/common"
-	"github.com/tendermint/tendermint/node"
-	"github.com/tendermint/tendermint/p2p"
-	pvm "github.com/tendermint/tendermint/privval"
-	"github.com/tendermint/tendermint/proxy"
+	"github.com/hdac-io/tendermint/abci/server"
+	tcmd "github.com/hdac-io/tendermint/cmd/tendermint/commands"
+	cmn "github.com/hdac-io/tendermint/libs/common"
+	"github.com/hdac-io/tendermint/node"
+	"github.com/hdac-io/tendermint/p2p"
+	pvm "github.com/hdac-io/tendermint/privval"
+	"github.com/hdac-io/tendermint/proxy"
 )
 
 // Tendermint full-node start flags

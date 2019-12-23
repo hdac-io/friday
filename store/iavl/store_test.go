@@ -6,9 +6,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/iavl"
-	abci "github.com/tendermint/tendermint/abci/types"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	"github.com/hdac-io/iavl"
+	abci "github.com/hdac-io/tendermint/abci/types"
+	cmn "github.com/hdac-io/tendermint/libs/common"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/hdac-io/friday/store/errors"

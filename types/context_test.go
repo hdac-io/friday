@@ -6,12 +6,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/hdac-io/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
 
-	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"github.com/hdac-io/tendermint/crypto/secp256k1"
 
 	"github.com/hdac-io/friday/store"
 	"github.com/hdac-io/friday/types"

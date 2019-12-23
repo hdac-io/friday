@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tendermint/tendermint/crypto/multisig"
+	"github.com/hdac-io/tendermint/crypto/multisig"
 
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/client/flags"

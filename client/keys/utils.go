@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/viper"
-	"github.com/tendermint/tendermint/libs/cli"
+	"github.com/hdac-io/tendermint/libs/cli"
 	"gopkg.in/yaml.v2"
 
 	"github.com/hdac-io/friday/client/flags"

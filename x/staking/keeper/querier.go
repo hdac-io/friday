@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
 
 	"github.com/hdac-io/friday/client"
 	"github.com/hdac-io/friday/codec"

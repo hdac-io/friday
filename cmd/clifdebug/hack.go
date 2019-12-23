@@ -13,10 +13,10 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	abci "github.com/hdac-io/tendermint/abci/types"
+	"github.com/hdac-io/tendermint/crypto/ed25519"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/hdac-io/tendermint/libs/log"
 
 	sdk "github.com/hdac-io/friday/types"
 

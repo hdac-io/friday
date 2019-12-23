@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/hdac-io/friday/store/iavl"

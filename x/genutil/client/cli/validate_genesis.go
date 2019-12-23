@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	tmtypes "github.com/tendermint/tendermint/types"
+	tmtypes "github.com/hdac-io/tendermint/types"
 
 	"github.com/hdac-io/friday/codec"
 	"github.com/hdac-io/friday/server"

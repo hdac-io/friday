@@ -6,13 +6,13 @@ import (
 
 	"github.com/pkg/errors"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/merkle"
-	cmn "github.com/tendermint/tendermint/libs/common"
-	tmliteErr "github.com/tendermint/tendermint/lite/errors"
-	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	tmtypes "github.com/tendermint/tendermint/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
+	"github.com/hdac-io/tendermint/crypto/merkle"
+	cmn "github.com/hdac-io/tendermint/libs/common"
+	tmliteErr "github.com/hdac-io/tendermint/lite/errors"
+	tmliteProxy "github.com/hdac-io/tendermint/lite/proxy"
+	rpcclient "github.com/hdac-io/tendermint/rpc/client"
+	tmtypes "github.com/hdac-io/tendermint/types"
 
 	"github.com/hdac-io/friday/store/rootmulti"
 	sdk "github.com/hdac-io/friday/types"

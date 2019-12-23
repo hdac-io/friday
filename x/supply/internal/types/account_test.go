@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	sdk "github.com/hdac-io/friday/types"
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/hdac-io/tendermint/crypto"
 	"gopkg.in/yaml.v2"
 
 	"github.com/stretchr/testify/require"

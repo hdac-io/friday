@@ -33,7 +33,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
 
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/codec"

@@ -5,13 +5,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/hdac-io/tendermint/libs/log"
 	"github.com/tendermint/tm-db"
 
 	"github.com/hdac-io/friday/codec"
 	"github.com/hdac-io/friday/simapp"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
 )
 
 func TestFridaydExport(t *testing.T) {

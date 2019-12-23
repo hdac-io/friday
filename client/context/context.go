@@ -11,11 +11,11 @@ import (
 	"github.com/spf13/viper"
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/libs/log"
-	tmlite "github.com/tendermint/tendermint/lite"
-	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	"github.com/hdac-io/tendermint/libs/cli"
+	"github.com/hdac-io/tendermint/libs/log"
+	tmlite "github.com/hdac-io/tendermint/lite"
+	tmliteProxy "github.com/hdac-io/tendermint/lite/proxy"
+	rpcclient "github.com/hdac-io/tendermint/rpc/client"
 
 	"github.com/hdac-io/friday/client/flags"
 	"github.com/hdac-io/friday/client/keys"

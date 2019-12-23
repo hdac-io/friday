@@ -5,7 +5,7 @@ package v0_34
 import (
 	"time"
 
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/hdac-io/tendermint/crypto"
 
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"

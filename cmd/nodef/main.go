@@ -7,10 +7,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/libs/log"
-	tmtypes "github.com/tendermint/tendermint/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
+	"github.com/hdac-io/tendermint/libs/cli"
+	"github.com/hdac-io/tendermint/libs/log"
+	tmtypes "github.com/hdac-io/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/hdac-io/friday/app"

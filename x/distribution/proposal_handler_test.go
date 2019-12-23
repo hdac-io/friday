@@ -3,7 +3,7 @@ package distribution
 import (
 	"testing"
 
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/hdac-io/tendermint/crypto/ed25519"
 
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/distribution/types"
