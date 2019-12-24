@@ -131,5 +131,9 @@ seeds = "" -> "<genesis node's ID>@<genesis node's IP>:26656"
 ## Test
 
 ```
-$ make test
+# run execution engine grpc server
+./CasperLabs/execution-engine/target/release/casperlabs-engine-grpc-server $HOME/.casperlabs/.casper-node.sock
+
+# run test
+make test
 ```
