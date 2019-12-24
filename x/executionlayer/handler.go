@@ -38,13 +38,15 @@ func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExe
 	deploys := util.MakeInitDeploys()
 	deploy := util.MakeDeploy(types.ToPublicKey(msg.ContractOwnerAccount), msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
 	deploys = util.AddDeploy(deploys, deploy)
-	effects, errGrpc := grpc.Execute(k.client, unitHash.EEState, ctx.BlockTime().Unix(), deploys, k.protocolVersion)
+
+	protocolVersion := k.MustGetProtocolVersion(ctx)
+	effects, errGrpc := grpc.Execute(k.client, unitHash.EEState, ctx.BlockTime().Unix(), deploys, &protocolVersion)
 	if errGrpc != "" {
 		return getResult(false, msg)
 	}
 
 	// Commit
-	postStateHash, _, errGrpc := grpc.Commit(k.client, unitHash.EEState, effects, k.protocolVersion)
+	postStateHash, _, errGrpc := grpc.Commit(k.client, unitHash.EEState, effects, &protocolVersion)
 	if errGrpc != "" {
 		return getResult(false, msg)
 	}

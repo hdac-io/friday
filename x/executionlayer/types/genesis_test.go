@@ -15,27 +15,27 @@ const (
 
 func TestToProtocolVersion(t *testing.T) {
 	// empty string
-	got, err := toProtocolVersion("")
+	got, err := ToProtocolVersion("")
 	require.NotNil(t, err)
 	require.Nil(t, got)
 
 	// just a number
-	got, err = toProtocolVersion("123")
+	got, err = ToProtocolVersion("123")
 	require.NotNil(t, err)
 	require.Nil(t, got)
 
 	// trailing dot
-	got, err = toProtocolVersion("1.0.0.")
+	got, err = ToProtocolVersion("1.0.0.")
 	require.NotNil(t, err)
 	require.Nil(t, got)
 
 	// too many digit
-	got, err = toProtocolVersion("1.0.0.0")
+	got, err = ToProtocolVersion("1.0.0.0")
 	require.NotNil(t, err)
 	require.Nil(t, got)
 
 	// valid case
-	got, err = toProtocolVersion("123.456.789")
+	got, err = ToProtocolVersion("123.456.789")
 	require.Nil(t, err)
 	expected := state.ProtocolVersion{Major: 123, Minor: 456, Patch: 789}
 	if !reflect.DeepEqual(expected, *got) {

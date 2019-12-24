@@ -14,8 +14,8 @@ import (
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc/transforms"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	"github.com/hdac-io/friday/x/executionlayer/types"
-	"github.com/stretchr/testify/assert"
 	abci "github.com/hdac-io/tendermint/abci/types"
+	"github.com/stretchr/testify/assert"
 )
 
 //-------------------------------------------
@@ -134,11 +134,11 @@ func TestCreateBlock(t *testing.T) {
 	arrPath := strings.Split(queryPath, "/")
 
 	unitHash1 := input.elk.GetUnitHashMap(input.ctx, blockHash1)
-	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", types.ToPublicKey(input.genesisAddress), arrPath, input.elk.protocolVersion)
+	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", types.ToPublicKey(input.genesisAddress), arrPath, input.protocolVersion)
 	assert.Equal(t, int32(0), res1.GetIntValue())
 
 	unitHash2 := input.elk.GetUnitHashMap(input.ctx, blockHash2)
-	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", types.ToPublicKey(input.genesisAddress), arrPath, input.elk.protocolVersion)
+	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", types.ToPublicKey(input.genesisAddress), arrPath, input.protocolVersion)
 	assert.Equal(t, int32(1), res2.GetIntValue())
 }
 

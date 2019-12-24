@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	"github.com/hdac-io/friday/codec"
 	"github.com/hdac-io/friday/store"
@@ -37,6 +38,7 @@ type testInput struct {
 	genesisAccount    map[string][]string
 	chainName         string
 	costs             map[string]uint32
+	protocolVersion   *state.ProtocolVersion
 }
 
 func setupTestInput() testInput {
@@ -74,7 +76,8 @@ func setupTestInput() testInput {
 		"opcodes-multiplier": 3,
 		"opcodes-divisor":    8}
 
-	elk := NewExecutionLayerKeeper(cdc, hashMapStoreKey, os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"), "1.0.0")
+	elk := NewExecutionLayerKeeper(cdc, hashMapStoreKey, os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"))
+	pv, _ := types.ToProtocolVersion("1.0.0")
 
 	return testInput{
 		cdc:               cdc,
@@ -86,6 +89,7 @@ func setupTestInput() testInput {
 		genesisAccount:    accounts,
 		chainName:         chainName,
 		costs:             costs,
+		protocolVersion:   pv,
 	}
 }
 
@@ -96,7 +100,7 @@ func genesis(keeper ExecutionLayerKeeper) []byte {
 		input.chainName, types.ToPublicKey(input.genesisAddress),
 		input.genesisAccount[input.strGenesisAddress][0],
 		input.genesisAccount[input.strGenesisAddress][1],
-		input.elk.protocolVersion, input.costs, path.Join(contractPath, mintInstallWasm),
+		input.protocolVersion, input.costs, path.Join(contractPath, mintInstallWasm),
 		path.Join(contractPath, posInstallWasm),
 	)
 
@@ -126,12 +130,12 @@ func counterDefine(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	deploys := util.MakeInitDeploys()
 	deploys = util.AddDeploy(deploys, deploy)
 
-	effects2, grpcErr := grpc.Execute(keeper.client, parentStateHash, timestamp, deploys, keeper.protocolVersion)
+	effects2, grpcErr := grpc.Execute(keeper.client, parentStateHash, timestamp, deploys, input.protocolVersion)
 	if grpcErr != "" {
 		panic(fmt.Sprintf("counter define execute: %s", grpcErr))
 	}
 
-	postStateHash, _, grpcErr := grpc.Commit(keeper.client, parentStateHash, effects2, keeper.protocolVersion)
+	postStateHash, _, grpcErr := grpc.Commit(keeper.client, parentStateHash, effects2, input.protocolVersion)
 	if grpcErr != "" {
 		panic(fmt.Sprintf("counter define commmit: %s", grpcErr))
 	}
@@ -154,12 +158,12 @@ func counterCall(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	deploys := util.MakeInitDeploys()
 	deploys = util.AddDeploy(deploys, deploy)
 
-	effects3, grpcErr := grpc.Execute(keeper.client, parentStateHash, timestamp, deploys, keeper.protocolVersion)
+	effects3, grpcErr := grpc.Execute(keeper.client, parentStateHash, timestamp, deploys, input.protocolVersion)
 	if grpcErr != "" {
 		panic(fmt.Sprintf("counter call execute: %s", grpcErr))
 	}
 
-	postStateHash, _, grpcErr := grpc.Commit(keeper.client, parentStateHash, effects3, keeper.protocolVersion)
+	postStateHash, _, grpcErr := grpc.Commit(keeper.client, parentStateHash, effects3, input.protocolVersion)
 	if grpcErr != "" {
 		panic(fmt.Sprintf("counter call commit: %s", grpcErr))
 	}
