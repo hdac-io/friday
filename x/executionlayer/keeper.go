@@ -192,15 +192,16 @@ func (k ExecutionLayerKeeper) Execute(ctx sdk.Context,
 
 // GetQueryResult queries with whole parameters
 func (k ExecutionLayerKeeper) GetQueryResult(ctx sdk.Context,
-	stateHash []byte, keyType string, keyData string, path string) (state.Value, error) {
+	blockhash []byte, keyType string, keyData string, path string) (state.Value, error) {
 	arrPath := strings.Split(path, "/")
 
 	protocolVersion := k.MustGetProtocolVersion(ctx)
+	unitHash := k.GetUnitHashMap(ctx, blockhash)
 	keyDataBytes, err := toBytes(keyType, keyData)
 	if err != nil {
 		return state.Value{}, err
 	}
-	res, errstr := grpc.Query(k.client, stateHash, keyType, keyDataBytes, arrPath, &protocolVersion)
+	res, errstr := grpc.Query(k.client, unitHash.EEState, keyType, keyDataBytes, arrPath, &protocolVersion)
 	if errstr != "" {
 		return state.Value{}, fmt.Errorf(errstr)
 	}
@@ -230,9 +231,10 @@ func (k ExecutionLayerKeeper) GetQueryResultSimple(ctx sdk.Context,
 }
 
 // GetQueryBalanceResult queries with whole parameters
-func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, stateHash []byte, address types.PublicKey) (string, error) {
+func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, blockhash []byte, address types.PublicKey) (string, error) {
+	unitHash := k.GetUnitHashMap(ctx, blockhash)
 	protocolVersion := k.MustGetProtocolVersion(ctx)
-	res, err := grpc.QueryBalance(k.client, stateHash, address, &protocolVersion)
+	res, err := grpc.QueryBalance(k.client, unitHash.EEState, address, &protocolVersion)
 	if err != "" {
 		return "", fmt.Errorf(err)
 	}
