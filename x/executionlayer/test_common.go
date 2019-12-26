@@ -26,13 +26,15 @@ const (
 )
 
 var (
-	GenesisAccountAddress, _ = sdk.AccAddressFromBech32("friday1dl2cjlfpmc9hcyd4rxts047tze87s0gxmzqx70")
-	contractPath             = os.ExpandEnv("$HOME/.nodef/contracts")
-	mintInstallWasm          = "mint_install.wasm"
-	posInstallWasm           = "pos_install.wasm"
-	standardPaymentWasm      = "standard_payment.wasm"
-	counterDefineWasm        = "counter_define.wasm"
-	counterCallWasm          = "counter_call.wasm"
+	GenesisAccountAddress, _   = sdk.AccAddressFromBech32("friday1dl2cjlfpmc9hcyd4rxts047tze87s0gxmzqx70")
+	RecipientAccountAddress, _ = sdk.AccAddressFromBech32("friday1y2dx0evs5k6hxuhfrfdmm7wcwsrqr073htghpv")
+	contractPath               = os.ExpandEnv("$HOME/.nodef/contracts")
+	mintInstallWasm            = "mint_install.wasm"
+	posInstallWasm             = "pos_install.wasm"
+	standardPaymentWasm        = "standard_payment.wasm"
+	counterDefineWasm          = "counter_define.wasm"
+	counterCallWasm            = "counter_call.wasm"
+	transferWasm               = "transfer_to_account.wasm"
 )
 
 type testInput struct {

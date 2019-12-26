@@ -14,6 +14,7 @@ const (
 var (
 	// function aliases
 	NewMsgExecute  = types.NewMsgExecute
+	NewMsgTransfer = types.NewMsgTransfer
 	RegisterCodec  = types.RegisterCodec
 	NewUnitHashMap = types.NewUnitHashMap
 

@@ -125,8 +125,6 @@ func (k ExecutionLayerKeeper) Transfer(
 	paymentAbi []byte,
 	gasPrice uint64) error {
 
-	unitHash := k.GetUnitHashMap(ctx, []byte{0})
-
 	// Recepient account existence check, if not, create one
 	toAddressAccountObject := k.AccountKeeper.GetAccount(ctx, toAddress)
 	if toAddressAccountObject == nil {
@@ -143,7 +141,7 @@ func (k ExecutionLayerKeeper) Transfer(
 	*/
 
 	// Parameter preparation
-	err := k.Execute(ctx, unitHash.EEState, fromAddress, tokenOwnerAccount, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
+	err := k.Execute(ctx, []byte{0}, fromAddress, tokenOwnerAccount, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
 	if err != nil {
 		return err
 	}
@@ -162,18 +160,19 @@ func (k ExecutionLayerKeeper) Execute(ctx sdk.Context,
 	paymentArgs []byte,
 	gasPrice uint64) error {
 
-	//
 	copiedBlockhash := blockHash
 	if bytes.Equal(copiedBlockhash, []byte{0}) {
 		copiedBlockhash = k.GetCurrentBlockHash(ctx)
 	}
 
+	// Parameter preparation
+	execAccountPubKey := types.ToPublicKey(execAccount)
 	unitHash := k.GetUnitHashMap(ctx, copiedBlockhash)
 	protocolVersion := k.MustGetProtocolVersion(ctx)
 
 	// Execute
 	deploys := util.MakeInitDeploys()
-	deploy := util.MakeDeploy(contractOwnerAccount, sessionCode, sessionArgs, paymentCode, paymentArgs, gasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
+	deploy := util.MakeDeploy(execAccountPubKey, sessionCode, sessionArgs, paymentCode, paymentArgs, gasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
 	deploys = util.AddDeploy(deploys, deploy)
 	effects, errGrpc := grpc.Execute(k.client, unitHash.EEState, ctx.BlockTime().Unix(), deploys, &protocolVersion)
 	if errGrpc != "" {
