@@ -46,22 +46,31 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 			cliCtx := context.NewCLIContextWithFrom(args[0]).WithCodec(cdc)
 
 			tokenOwnerAddress, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			fromAddress, err := sdk.AccAddressFromBech32(args[1])
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			toAddress, err := sdk.AccAddressFromBech32(args[2])
 			if err != nil {
 				return err
 			}
-			
+
 			toPublicKey := types.ToPublicKey(toAddress)
-			amount := uint64(args[3])
-			fee := uint64(args[4])
-			gasPrice := uint64(args[5])
+			amount, err := strconv.ParseUint(args[3], 10, 64)
+			if err != nil {
+				return err
+			}
+			fee, err := strconv.ParseUint(args[4], 10, 64)
+			if err != nil {
+				return err
+			}
+			gasPrice, err := strconv.ParseUint(args[5], 10, 64)
+			if err != nil {
+				return err
+			}
 
 			transferCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm"))
 			transferAbi := util.MakeArgsTransferToAccount(toPublicKey, amount)
@@ -69,7 +78,7 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgExecute([]byte{0}, tokenOwnerAddress, fromAddress, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
+			msg := types.NewMsgTransfer(tokenOwnerAddress, fromAddress, toAddress, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}

@@ -41,13 +41,14 @@ func TestRESTTransfer(t *testing.T) {
 	// Body
 	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
 	transReq := transferReq{
-		ChainID:          basereq.ChainID,
-		Memo:             basereq.Memo,
-		SenderAddress:    fromAddr,
-		Amount:           "100dummy",
-		GasPrice:         gas,
-		RecipientAddress: receipAddr,
-		Fee:              10_000_000,
+		ChainID:           basereq.ChainID,
+		Memo:              basereq.Memo,
+		TokenOwnerAddress: fromAddr,
+		SenderAddress:     fromAddr,
+		RecipientAddress:  receipAddr,
+		Amount:            20_000_000,
+		GasPrice:          gas,
+		Fee:               10_000_000,
 	}
 
 	// http.request
