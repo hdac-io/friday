@@ -2,11 +2,9 @@ package executionlayer
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
-	"strconv"
 	"strings"
-
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
@@ -20,23 +18,25 @@ import (
 type ExecutionLayerKeeper struct {
 	HashMapStoreKey sdk.StoreKey
 	client          ipc.ExecutionEngineServiceClient
-	protocolVersion *state.ProtocolVersion
 	cdc             *codec.Codec
 }
 
 func NewExecutionLayerKeeper(
-	cdc *codec.Codec, hashMapStoreKey sdk.StoreKey, path string, protocolVersion string) ExecutionLayerKeeper {
-	pv := strings.Split(protocolVersion, ".")
-	pvInts := make([]int, 3)
-	pvInts[0], _ = strconv.Atoi(pv[0])
-	pvInts[1], _ = strconv.Atoi(pv[1])
-	pvInts[2], _ = strconv.Atoi(pv[2])
+	cdc *codec.Codec, hashMapStoreKey sdk.StoreKey, path string) ExecutionLayerKeeper {
 	return ExecutionLayerKeeper{
 		HashMapStoreKey: hashMapStoreKey,
 		client:          grpc.Connect(path),
-		protocolVersion: &state.ProtocolVersion{Major: uint32(pvInts[0]), Minor: uint32(pvInts[1]), Patch: uint32(pvInts[2])},
 		cdc:             cdc,
 	}
+}
+
+func (k ExecutionLayerKeeper) MustGetProtocolVersion(ctx sdk.Context) state.ProtocolVersion {
+	genesisConf := k.GetGenesisConf(ctx)
+	pv, err := types.ToProtocolVersion(genesisConf.Genesis.ProtocolVersion)
+	if err != nil {
+		panic(fmt.Errorf("System has invalid protocol version: %v", err))
+	}
+	return *pv
 }
 
 // SetUnitHashMap map unitHash to blockHash
@@ -107,26 +107,43 @@ func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockHash []byte) []by
 	return unit.EEState
 }
 
+// TODO: change KeyType from string to typed enum.
+func toBytes(keyType string, key string) ([]byte, error) {
+	var bytes []byte
+	var err error = nil
+
+	switch keyType {
+	case "address":
+		bech32addr, err := sdk.AccAddressFromBech32(key)
+		if err != nil {
+			return nil, err
+		}
+		bytes = types.ToPublicKey(bech32addr)
+	case "uref", "local", "hash":
+		bytes, err = hex.DecodeString(key)
+	default:
+		err = fmt.Errorf("Unknown QueryKey type: %v", keyType)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return bytes, nil
+}
+
 // GetQueryResult queries with whole parameters
 func (k ExecutionLayerKeeper) GetQueryResult(ctx sdk.Context,
 	stateHash []byte, keyType string, keyData string, path string) (state.Value, error) {
 	arrPath := strings.Split(path, "/")
 
-	var changedkeydata []byte
-	if keyType == "address" {
-		bech32addr, err := sdk.AccAddressFromBech32(keyData)
-		if err != nil {
-			return state.Value{}, err
-		}
-		changedkeydata = types.ToPublicKey(bech32addr)
-		fmt.Println(changedkeydata)
-	} else {
-		changedkeydata = util.DecodeHexString(keyData)
+	protocolVersion := k.MustGetProtocolVersion(ctx)
+	keyDataBytes, err := toBytes(keyType, keyData)
+	if err != nil {
+		return state.Value{}, err
 	}
-
-	res, err := grpc.Query(k.client, stateHash, keyType, changedkeydata, arrPath, k.protocolVersion)
-	if err != "" {
-		return state.Value{}, fmt.Errorf(err)
+	res, errstr := grpc.Query(k.client, stateHash, keyType, keyDataBytes, arrPath, &protocolVersion)
+	if errstr != "" {
+		return state.Value{}, fmt.Errorf(errstr)
 	}
 
 	return *res, nil
@@ -139,20 +156,15 @@ func (k ExecutionLayerKeeper) GetQueryResultSimple(ctx sdk.Context,
 	unitHash := k.GetUnitHashMap(ctx, k.GetCurrentBlockHash(ctx))
 	arrPath := strings.Split(path, "/")
 
-	var changedkeydata []byte
-	if keyType == "address" {
-		bech32addr, err := sdk.AccAddressFromBech32(keyData)
-		if err != nil {
-			return state.Value{}, err
-		}
-		changedkeydata = types.ToPublicKey(bech32addr)
-	} else {
-		changedkeydata = util.DecodeHexString(keyData)
+	keyDataBytes, err := toBytes(keyType, keyData)
+	if err != nil {
+		return state.Value{}, err
 	}
 
-	res, err := grpc.Query(k.client, unitHash.EEState, keyType, changedkeydata, arrPath, k.protocolVersion)
-	if err != "" {
-		return state.Value{}, fmt.Errorf(err)
+	protocolVersion := k.MustGetProtocolVersion(ctx)
+	res, errstr := grpc.Query(k.client, unitHash.EEState, keyType, keyDataBytes, arrPath, &protocolVersion)
+	if errstr != "" {
+		return state.Value{}, fmt.Errorf(errstr)
 	}
 
 	return *res, nil
@@ -160,7 +172,8 @@ func (k ExecutionLayerKeeper) GetQueryResultSimple(ctx sdk.Context,
 
 // GetQueryBalanceResult queries with whole parameters
 func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, stateHash []byte, address types.PublicKey) (string, error) {
-	res, err := grpc.QueryBalance(k.client, stateHash, address, k.protocolVersion)
+	protocolVersion := k.MustGetProtocolVersion(ctx)
+	res, err := grpc.QueryBalance(k.client, stateHash, address, &protocolVersion)
 	if err != "" {
 		return "", fmt.Errorf(err)
 	}
@@ -171,7 +184,8 @@ func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, stateHash [
 // GetQueryBalanceResultSimple queries with whole parameters
 func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, address types.PublicKey) (string, error) {
 	unitHash := k.GetUnitHashMap(ctx, k.GetCurrentBlockHash(ctx))
-	res, err := grpc.QueryBalance(k.client, unitHash.EEState, address, k.protocolVersion)
+	protocolVersion := k.MustGetProtocolVersion(ctx)
+	res, err := grpc.QueryBalance(k.client, unitHash.EEState, address, &protocolVersion)
 	if err != "" {
 		return "", fmt.Errorf(err)
 	}
@@ -211,7 +225,7 @@ func (k ExecutionLayerKeeper) GetGenesisAccounts(ctx sdk.Context) []types.Accoun
 // SetGenesisAccounts saves GenesisAccounts in sdk store
 func (k ExecutionLayerKeeper) SetGenesisAccounts(ctx sdk.Context, accounts []types.Account) {
 	if accounts == nil {
-		return
+		panic(fmt.Errorf("Nil is not allowed for GenesisAccounts"))
 	}
 	store := ctx.KVStore(k.HashMapStoreKey)
 	genesisAccountsBytes := k.cdc.MustMarshalBinaryBare(accounts)

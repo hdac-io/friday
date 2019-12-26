@@ -53,7 +53,7 @@ type WasmCosts struct {
 
 // NewGenesisState creates a new genesis state.
 func NewGenesisState(genesisConf GenesisConf, accounts []Account) GenesisState {
-	return GenesisState{GenesisConf: genesisConf, Accounts: accounts,}
+	return GenesisState{GenesisConf: genesisConf, Accounts: accounts}
 }
 
 // DefaultGenesisState returns a default genesis state
@@ -90,7 +90,7 @@ func ValidateGenesis(data GenesisState) error {
 
 func ToChainSpecGenesisConfig(gs GenesisState) (*ipc.ChainSpec_GenesisConfig, error) {
 	config := gs.GenesisConf
-	pv, err := toProtocolVersion(config.Genesis.ProtocolVersion)
+	pv, err := ToProtocolVersion(config.Genesis.ProtocolVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func ToChainSpecGenesisConfig(gs GenesisState) (*ipc.ChainSpec_GenesisConfig, er
 	return &chainSpecConfig, nil
 }
 
-func toProtocolVersion(pvString string) (*state.ProtocolVersion, error) {
+func ToProtocolVersion(pvString string) (*state.ProtocolVersion, error) {
 	splittedProtocolVer := strings.Split(pvString, ".")
 	if len(splittedProtocolVer) != 3 {
 		return nil, ErrProtocolVersionParse(DefaultCodespace, pvString)

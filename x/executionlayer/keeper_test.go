@@ -1,7 +1,7 @@
 package executionlayer
 
 import (
-	"fmt"
+	"encoding/hex"
 	"math/big"
 	"path"
 	"reflect"
@@ -13,50 +13,34 @@ import (
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc/transforms"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
+	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
-	"github.com/stretchr/testify/assert"
 	abci "github.com/hdac-io/tendermint/abci/types"
+	"github.com/stretchr/testify/assert"
 )
 
 //-------------------------------------------
 
-func TestGetQueryResult(t *testing.T) {
-	input := setupTestInput()
-	queryPath := "counter/count"
+func TestQueryKeyToBytes(t *testing.T) {
+	_, err := toBytes("address", "friday1dl2cjlfpmc9hcyd4rxts047tze87s0gxmzqx70")
+	assert.Nil(t, err)
+	_, err = toBytes("address", "invalid address")
+	assert.NotNil(t, err)
 
-	parentHash := genesis(input.elk)
+	expected := []byte("test-data")
 
-	parentHash = counterDefine(input.elk, parentHash)
-	parentHash = counterCall(input.elk, parentHash)
+	got, err := toBytes("uref", hex.EncodeToString(expected))
+	assert.Nil(t, err)
+	assert.Equal(t, expected, got)
+	_, err = toBytes("hash", hex.EncodeToString(expected))
+	assert.Nil(t, err)
+	assert.Equal(t, expected, got)
+	_, err = toBytes("local", hex.EncodeToString(expected))
+	assert.Nil(t, err)
+	assert.Equal(t, expected, got)
 
-	res, err := input.elk.GetQueryResult(
-		input.ctx,
-		parentHash,
-		"address", input.genesisAddress.String(), queryPath)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		panic("Fail to execute")
-	}
-
-	fmt.Println(res)
-
-	assert.NotNil(t, res)
-}
-
-func TestGetQueryBalanceResult(t *testing.T) {
-	input := setupTestInput()
-	parentHash := genesis(input.elk)
-	res, err := input.elk.GetQueryBalanceResult(input.ctx, parentHash, types.ToPublicKey(input.genesisAddress))
-
-	if err != nil {
-		fmt.Println(err.Error())
-		panic("Fail to execute")
-	}
-
-	fmt.Println(res)
-
-	assert.NotNil(t, res)
+	_, err = toBytes("invalid key type", "")
+	assert.True(t, strings.Contains(err.Error(), "Unknown QueryKey type:"))
 }
 
 func TestUnitHashMapNormalInput(t *testing.T) {
@@ -83,18 +67,35 @@ func TestUnitHashMapInCorrectInput(t *testing.T) {
 	assert.NotEqual(t, eeState, unitHash.EEState)
 }
 
+func TestMustGetProtocolVersion(t *testing.T) {
+	expected, err := types.ToProtocolVersion(types.DefaultGenesisState().GenesisConf.Genesis.ProtocolVersion)
+	assert.Nil(t, err)
+
+	input := setupTestInput()
+	got := input.elk.MustGetProtocolVersion(input.ctx)
+	assert.Equal(t, *expected, got)
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("MustGetProtocolVersion below should panic!")
+		}
+	}()
+	input.elk.MustGetProtocolVersion(sdk.Context{})
+}
+
 func TestCreateBlock(t *testing.T) {
 	input := setupTestInput()
 	parentHash := genesis(input.elk)
-	input.elk.SetEEState(input.ctx, input.blockHash, parentHash)
+	blockHash := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
+	input.elk.SetEEState(input.ctx, blockHash, parentHash)
 	queryPath := "counter/count"
 
 	blockHash1 := []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 	blockHash2 := []byte{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
 	counterDefineMSG := NewMsgExecute(
-		input.blockHash,
-		input.genesisAddress,
-		input.genesisAddress,
+		blockHash,
+		GenesisAccountAddress,
+		GenesisAccountAddress,
 		util.LoadWasmFile(path.Join(contractPath, counterDefineWasm)),
 		[]byte{},
 		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
@@ -106,15 +107,15 @@ func TestCreateBlock(t *testing.T) {
 
 	nextBlockABCI1 := abci.RequestBeginBlock{
 		Hash:   blockHash1,
-		Header: abci.Header{LastBlockId: abci.BlockID{Hash: input.blockHash}},
+		Header: abci.Header{LastBlockId: abci.BlockID{Hash: blockHash}},
 	}
 
 	BeginBlocker(input.ctx, nextBlockABCI1, input.elk)
 
 	counterCallMSG := NewMsgExecute(
-		input.blockHash,
-		input.genesisAddress,
-		input.genesisAddress,
+		blockHash,
+		GenesisAccountAddress,
+		GenesisAccountAddress,
 		util.LoadWasmFile(path.Join(contractPath, counterCallWasm)),
 		[]byte{},
 		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
@@ -126,7 +127,7 @@ func TestCreateBlock(t *testing.T) {
 
 	nextBlockABCI2 := abci.RequestBeginBlock{
 		Hash:   blockHash2,
-		Header: abci.Header{LastBlockId: abci.BlockID{Hash: input.blockHash}},
+		Header: abci.Header{LastBlockId: abci.BlockID{Hash: blockHash}},
 	}
 
 	BeginBlocker(input.ctx, nextBlockABCI2, input.elk)
@@ -134,11 +135,12 @@ func TestCreateBlock(t *testing.T) {
 	arrPath := strings.Split(queryPath, "/")
 
 	unitHash1 := input.elk.GetUnitHashMap(input.ctx, blockHash1)
-	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", types.ToPublicKey(input.genesisAddress), arrPath, input.elk.protocolVersion)
+	pv := input.elk.MustGetProtocolVersion(input.ctx)
+	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", types.ToPublicKey(GenesisAccountAddress), arrPath, &pv)
 	assert.Equal(t, int32(0), res1.GetIntValue())
 
 	unitHash2 := input.elk.GetUnitHashMap(input.ctx, blockHash2)
-	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", types.ToPublicKey(input.genesisAddress), arrPath, input.elk.protocolVersion)
+	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", types.ToPublicKey(GenesisAccountAddress), arrPath, &pv)
 	assert.Equal(t, int32(1), res2.GetIntValue())
 }
 
@@ -157,17 +159,22 @@ func TestGenesisState(t *testing.T) {
 	testMock := setupTestInput()
 
 	expected := types.DefaultGenesisState()
-	testMock.elk.SetGenesisConf(testMock.ctx, expected.GenesisConf)
-	testMock.elk.SetGenesisAccounts(testMock.ctx, expected.Accounts)
-
 	var got types.GenesisState
-	got.GenesisConf = testMock.elk.GetGenesisConf(testMock.ctx)
-	got.Accounts = testMock.elk.GetGenesisAccounts(testMock.ctx)
-	if !reflect.DeepEqual(expected, got) {
-		t.Errorf("expected: %v, but got: %v", expected, got)
-	}
 
-	// accounts Marshal, UnMarshal test
+	// GenesisConf test
+	testMock.elk.SetGenesisConf(testMock.ctx, expected.GenesisConf)
+	got.GenesisConf = testMock.elk.GetGenesisConf(testMock.ctx)
+
+	if !reflect.DeepEqual(expected.GenesisConf.WasmCosts, got.GenesisConf.WasmCosts) {
+		t.Errorf("expected: %v, but got: %v", expected.GenesisConf.WasmCosts, got.GenesisConf.WasmCosts)
+	}
+	assert.Equal(t, expected.GenesisConf.Genesis.Name, got.GenesisConf.Genesis.Name)
+	assert.Equal(t, expected.GenesisConf.Genesis.Timestamp, got.GenesisConf.Genesis.Timestamp)
+	assert.Equal(t, expected.GenesisConf.Genesis.ProtocolVersion, got.GenesisConf.Genesis.ProtocolVersion)
+	assert.Equal(t, expected.GenesisConf.Genesis.MintWasm, got.GenesisConf.Genesis.MintWasm)
+	assert.Equal(t, expected.GenesisConf.Genesis.PosWasm, got.GenesisConf.Genesis.PosWasm)
+
+	// GenesisAccounts test
 	expected.Accounts = make([]types.Account, 1)
 	expected.Accounts[0].PublicKey = types.PublicKey([]byte("test-pub-key"))
 	expected.Accounts[0].InitialBalance = "2"

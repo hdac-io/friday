@@ -36,7 +36,9 @@ func InitGenesis(
 		panic(response.GetResult())
 	}
 
-	keeper.SetGenesisAccounts(ctx, data.Accounts)
+	if data.Accounts != nil {
+		keeper.SetGenesisAccounts(ctx, data.Accounts)
+	}
 	keeper.SetGenesisConf(ctx, data.GenesisConf)
 	keeper.SetEEState(ctx, ctx.BlockHeader().LastBlockId.Hash, response.GetSuccess().GetPoststateHash())
 }
