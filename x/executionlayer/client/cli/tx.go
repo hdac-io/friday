@@ -38,43 +38,38 @@ func GetExecutionLayerTxCmd(cdc *codec.Codec) *cobra.Command {
 // GetCmdTransfer is the CLI command for transfer
 func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "transfer [from_key_or_address] [to_address] [amount] [fee] [gas_price]",
+		Use:   "transfer [tokenb_owner_address] [from_key_or_address] [to_address] [amount] [fee] [gas_price]",
 		Short: "Create and sign a send tx",
-		Args:  cobra.ExactArgs(5), // # of arguments
+		Args:  cobra.ExactArgs(6), // # of arguments
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContextWithFrom(args[0]).WithCodec(cdc)
 
-			to, err := sdk.AccAddressFromBech32(args[1])
-			toPublicKey := types.ToPublicKey(to)
-
+			tokenOwnerAddress, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil{
+				return err
+			}
+			fromAddress, err := sdk.AccAddressFromBech32(args[1])
+			if err != nil{
+				return err
+			}
+			toAddress, err := sdk.AccAddressFromBech32(args[2])
 			if err != nil {
 				return err
 			}
-
-			coins, err := strconv.ParseUint(args[2], 10, 64)
-			if err != nil {
-				return err
-			}
-
-			fee, err := strconv.ParseUint(args[3], 10, 64)
-			if err != nil {
-				return err
-			}
-
-			gasPrice, err := strconv.ParseUint(args[4], 10, 64)
-			if err != nil {
-				return err
-			}
+			
+			toPublicKey := types.ToPublicKey(toAddress)
+			amount := uint64(args[3])
+			fee := uint64(args[4])
+			gasPrice := uint64(args[5])
 
 			transferCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm"))
-			transferAbi := util.MakeArgsTransferToAccount(toPublicKey, coins)
+			transferAbi := util.MakeArgsTransferToAccount(toPublicKey, amount)
 			paymentCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
 			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgExecute([]byte{0}, cliCtx.FromAddress, cliCtx.FromAddress, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
-			txBldr = txBldr.WithGas(gasPrice)
+			msg := types.NewMsgExecute([]byte{0}, tokenOwnerAddress, fromAddress, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}

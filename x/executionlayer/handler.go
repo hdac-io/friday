@@ -1,15 +1,11 @@
 package executionlayer
 
 import (
-	"bytes"
 	"fmt"
 	"reflect"
 
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
-
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 )
 
 // NewHandler returns a handler for "executionlayer" type messages.
@@ -20,6 +16,8 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 		switch msg := msg.(type) {
 		case types.MsgExecute:
 			return handlerMsgExecute(ctx, k, msg)
+		case types.MsgTransfer:
+			return handlerMsgTransfer(ctx, k, msg)
 		default:
 			errMsg := fmt.Sprintf("unrecognized bank message type: %T", msg)
 			return sdk.ErrUnknownRequest(errMsg).Result()
@@ -28,31 +26,21 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 }
 
 // Handle MsgExecute
+func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTransfer) sdk.Result {
+	err := k.Transfer(ctx, msg.TokenOwnerAccount, msg.FromAccount, msg.ToAccount, msg.TransferCode, msg.TransferArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
+	if err != nil {
+		return getResult(false, msg)
+	}
+	return getResult(true, msg)
+}
+
+// Handle MsgExecute
 func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) sdk.Result {
-	if bytes.Equal(msg.BlockHash, []byte{0}) {
-		msg.BlockHash = k.GetCurrentBlockHash(ctx)
-	}
-	unitHash := k.GetUnitHashMap(ctx, msg.BlockHash)
-
-	// Execute
-	deploys := util.MakeInitDeploys()
-	deploy := util.MakeDeploy(types.ToPublicKey(msg.ContractOwnerAccount), msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
-	deploys = util.AddDeploy(deploys, deploy)
-
-	protocolVersion := k.MustGetProtocolVersion(ctx)
-	effects, errGrpc := grpc.Execute(k.client, unitHash.EEState, ctx.BlockTime().Unix(), deploys, &protocolVersion)
-	if errGrpc != "" {
+	err := k.Execute(ctx, msg.BlockHash, msg.ExecAccount, msg.ContractOwnerAccount,
+		msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
+	if err != nil {
 		return getResult(false, msg)
 	}
-
-	// Commit
-	postStateHash, _, errGrpc := grpc.Commit(k.client, unitHash.EEState, effects, &protocolVersion)
-	if errGrpc != "" {
-		return getResult(false, msg)
-	}
-
-	k.SetEEState(ctx, msg.BlockHash, postStateHash)
-
 	return getResult(true, msg)
 }
 

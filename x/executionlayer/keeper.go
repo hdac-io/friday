@@ -2,13 +2,15 @@ package executionlayer
 
 import (
 	"bytes"
-	"encoding/hex"
 	"fmt"
 	"strings"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
+
+	"github.com/hdac-io/friday/x/auth"
 
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
@@ -18,14 +20,17 @@ import (
 type ExecutionLayerKeeper struct {
 	HashMapStoreKey sdk.StoreKey
 	client          ipc.ExecutionEngineServiceClient
+	AccountKeeper   auth.AccountKeeper
 	cdc             *codec.Codec
 }
 
 func NewExecutionLayerKeeper(
-	cdc *codec.Codec, hashMapStoreKey sdk.StoreKey, path string) ExecutionLayerKeeper {
+	cdc *codec.Codec, hashMapStoreKey sdk.StoreKey, path string, accountKeeper auth.AccountKeeper) ExecutionLayerKeeper {
+
 	return ExecutionLayerKeeper{
 		HashMapStoreKey: hashMapStoreKey,
 		client:          grpc.Connect(path),
+		AccountKeeper:   accountKeeper,
 		cdc:             cdc,
 	}
 }
@@ -107,28 +112,83 @@ func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockHash []byte) []by
 	return unit.EEState
 }
 
-// TODO: change KeyType from string to typed enum.
-func toBytes(keyType string, key string) ([]byte, error) {
-	var bytes []byte
-	var err error = nil
+// Transfer function executes "Execute" of Execution layer, that is specialized for transfer
+// Difference of general execution
+//   1) Raw account is needed for checking address existence
+//   2) Fixed transfer & payemtn WASMs are needed
+func (k ExecutionLayerKeeper) Transfer(
+	ctx sdk.Context,
+	tokenOwnerAccount, fromAddress, toAddress sdk.AccAddress,
+	transferCode []byte,
+	transferAbi []byte,
+	paymentCode []byte,
+	paymentAbi []byte,
+	gasPrice uint64) error {
 
-	switch keyType {
-	case "address":
-		bech32addr, err := sdk.AccAddressFromBech32(key)
+	unitHash := k.GetUnitHashMap(ctx, []byte{0})
+
+	// Recepient account existence check, if not, create one
+	toAddressAccountObject := k.AccountKeeper.GetAccount(ctx, toAddress)
+	if toAddressAccountObject == nil {
+		toAddressAccountObject = k.AccountKeeper.NewAccountWithAddress(ctx, toAddress)
+	}
+
+	/*
+		If error occurs due to empty coin, assign coin:
+
+		err := toAddressAccountObject.SetCoins(amt)
 		if err != nil {
-			return nil, err
+			panic(err)
 		}
-		bytes = types.ToPublicKey(bech32addr)
-	case "uref", "local", "hash":
-		bytes, err = hex.DecodeString(key)
-	default:
-		err = fmt.Errorf("Unknown QueryKey type: %v", keyType)
+	*/
+
+	// Parameter preparation
+	err := k.Execute(ctx, unitHash.EEState, fromAddress, tokenOwnerAccount, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
+	if err != nil {
+		return err
 	}
 
-	if err != nil {
-		return nil, err
+	return nil
+}
+
+// Execute is general execution
+func (k ExecutionLayerKeeper) Execute(ctx sdk.Context,
+	blockHash []byte,
+	execAccount sdk.AccAddress,
+	contractOwnerAccount sdk.AccAddress,
+	sessionCode []byte,
+	sessionArgs []byte,
+	paymentCode []byte,
+	paymentArgs []byte,
+	gasPrice uint64) error {
+
+	//
+	copiedBlockhash := blockHash
+	if bytes.Equal(copiedBlockhash, []byte{0}) {
+		copiedBlockhash = k.GetCurrentBlockHash(ctx)
 	}
-	return bytes, nil
+
+	unitHash := k.GetUnitHashMap(ctx, copiedBlockhash)
+	protocolVersion := k.MustGetProtocolVersion(ctx)
+
+	// Execute
+	deploys := util.MakeInitDeploys()
+	deploy := util.MakeDeploy(contractOwnerAccount, sessionCode, sessionArgs, paymentCode, paymentArgs, gasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
+	deploys = util.AddDeploy(deploys, deploy)
+	effects, errGrpc := grpc.Execute(k.client, unitHash.EEState, ctx.BlockTime().Unix(), deploys, &protocolVersion)
+	if errGrpc != "" {
+		return fmt.Errorf(errGrpc)
+	}
+
+	// Commit
+	postStateHash, _, errGrpc := grpc.Commit(k.client, unitHash.EEState, effects, &protocolVersion)
+	if errGrpc != "" {
+		return fmt.Errorf(errGrpc)
+	}
+
+	k.SetEEState(ctx, copiedBlockhash, postStateHash)
+
+	return nil
 }
 
 // GetQueryResult queries with whole parameters
