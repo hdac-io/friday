@@ -131,15 +131,6 @@ func (k ExecutionLayerKeeper) Transfer(
 		toAddressAccountObject = k.AccountKeeper.NewAccountWithAddress(ctx, toAddress)
 	}
 
-	/*
-		If error occurs due to empty coin, assign coin:
-
-		err := toAddressAccountObject.SetCoins(amt)
-		if err != nil {
-			panic(err)
-		}
-	*/
-
 	// Parameter preparation
 	err := k.Execute(ctx, []byte{0}, fromAddress, tokenOwnerAccount, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
 	if err != nil {
