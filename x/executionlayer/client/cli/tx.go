@@ -79,6 +79,7 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 
 			// build and sign the transaction, then broadcast to Tendermint
 			msg := types.NewMsgTransfer(tokenOwnerAddress, fromAddress, toAddress, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
+			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}

@@ -19,7 +19,7 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 		case types.MsgTransfer:
 			return handlerMsgTransfer(ctx, k, msg)
 		default:
-			errMsg := fmt.Sprintf("unrecognized bank message type: %T", msg)
+			errMsg := fmt.Sprintf("unrecognized execution layer messgae type: %T", msg)
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}
