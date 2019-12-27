@@ -46,10 +46,10 @@ func (k ExecutionLayerKeeper) MustGetProtocolVersion(ctx sdk.Context) state.Prot
 
 // SetUnitHashMap map unitHash to blockHash
 func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockHash []byte, unitHash UnitHashMap) bool {
-	if bytes.Equal(blockHash, []byte{}) {
-		blockHash = []byte("genesis")
+	if k.isEmptyHash(blockHash) {
+		blockHash = []byte(types.GenesisBlockHashKey)
 	}
-	if bytes.Equal(unitHash.EEState, []byte{}) || len(unitHash.EEState) != 32 {
+	if k.isEmptyHash(unitHash.EEState) || len(unitHash.EEState) != 32 {
 		return false
 	}
 
@@ -66,8 +66,8 @@ func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockHash []byte, 
 
 // GetUnitHashMap returns a UnitHashMap for blockHash
 func (k ExecutionLayerKeeper) GetUnitHashMap(ctx sdk.Context, blockHash []byte) UnitHashMap {
-	if bytes.Equal(blockHash, []byte{}) {
-		blockHash = []byte("genesis")
+	if k.isEmptyHash(blockHash) {
+		blockHash = []byte(types.GenesisBlockHashKey)
 	}
 	store := ctx.KVStore(k.HashMapStoreKey)
 	unitBytes := store.Get(blockHash)
@@ -78,10 +78,10 @@ func (k ExecutionLayerKeeper) GetUnitHashMap(ctx sdk.Context, blockHash []byte) 
 
 // SetEEState map eeState to blockHash
 func (k ExecutionLayerKeeper) SetEEState(ctx sdk.Context, blockHash []byte, eeState []byte) bool {
-	if bytes.Equal(blockHash, []byte{}) {
-		blockHash = []byte("genesis")
+	if k.isEmptyHash(blockHash) {
+		blockHash = []byte(types.GenesisBlockHashKey)
 	}
-	if bytes.Equal(eeState, []byte{}) || len(eeState) != 32 {
+	if k.isEmptyHash(eeState) || len(eeState) != 32 {
 		return false
 	}
 
@@ -102,8 +102,8 @@ func (k ExecutionLayerKeeper) SetEEState(ctx sdk.Context, blockHash []byte, eeSt
 
 // GetEEState returns a eeState for blockHash
 func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockHash []byte) []byte {
-	if bytes.Equal(blockHash, []byte{}) {
-		blockHash = []byte("genesis")
+	if k.isEmptyHash(blockHash) {
+		blockHash = []byte(types.GenesisBlockHashKey)
 	}
 	store := ctx.KVStore(k.HashMapStoreKey)
 	unitBytes := store.Get(blockHash)
@@ -126,7 +126,7 @@ func (k ExecutionLayerKeeper) Transfer(
 	gasPrice uint64) error {
 
 	k.SetAccountIfNotExists(ctx, toAddress)
-	err := k.Execute(ctx, k.GetCurrentBlockHash(ctx), fromAddress, tokenOwnerAccount, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
+	err := k.Execute(ctx, k.GetCandidateBlockHash(ctx), fromAddress, tokenOwnerAccount, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
 	if err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func (k ExecutionLayerKeeper) Execute(ctx sdk.Context,
 
 	copiedBlockhash := blockHash
 	if bytes.Equal(copiedBlockhash, []byte{0}) {
-		copiedBlockhash = k.GetCurrentBlockHash(ctx)
+		copiedBlockhash = k.GetCandidateBlockHash(ctx)
 	}
 
 	// Parameter preparation
@@ -165,12 +165,13 @@ func (k ExecutionLayerKeeper) Execute(ctx sdk.Context,
 	}
 
 	// Commit
-	postStateHash, _, errGrpc := grpc.Commit(k.client, unitHash.EEState, effects, &protocolVersion)
+	postStateHash, bonds, errGrpc := grpc.Commit(k.client, unitHash.EEState, effects, &protocolVersion)
 	if errGrpc != "" {
 		return fmt.Errorf(errGrpc)
 	}
 
 	k.SetEEState(ctx, copiedBlockhash, postStateHash)
+	k.SetCandidateBlockBond(ctx, bonds)
 
 	return nil
 }
@@ -198,7 +199,7 @@ func (k ExecutionLayerKeeper) GetQueryResult(ctx sdk.Context,
 // State hash comes from Tendermint block state - EE state mapping DB
 func (k ExecutionLayerKeeper) GetQueryResultSimple(ctx sdk.Context,
 	keyType string, keyData string, path string) (state.Value, error) {
-	currBlock := k.GetCurrentBlockHash(ctx)
+	currBlock := k.GetCandidateBlockHash(ctx)
 	res, err := k.GetQueryResult(ctx, currBlock, keyType, keyData, path)
 	if err != nil {
 		return state.Value{}, err
@@ -221,7 +222,7 @@ func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, blockhash [
 
 // GetQueryBalanceResultSimple queries with whole parameters
 func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, address types.PublicKey) (string, error) {
-	res, err := k.GetQueryBalanceResult(ctx, k.GetCurrentBlockHash(ctx), address)
+	res, err := k.GetQueryBalanceResult(ctx, k.GetCandidateBlockHash(ctx), address)
 	if err != nil {
 		return "", err
 	}
@@ -232,7 +233,7 @@ func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, addre
 // GetGenesisConf retrieves GenesisConf from sdk store
 func (k ExecutionLayerKeeper) GetGenesisConf(ctx sdk.Context) types.GenesisConf {
 	store := ctx.KVStore(k.HashMapStoreKey)
-	genesisConfBytes := store.Get([]byte("genesisconf"))
+	genesisConfBytes := store.Get([]byte(types.GenesisConfigKey))
 
 	var genesisConf types.GenesisConf
 	k.cdc.UnmarshalBinaryBare(genesisConfBytes, &genesisConf)
@@ -243,13 +244,13 @@ func (k ExecutionLayerKeeper) GetGenesisConf(ctx sdk.Context) types.GenesisConf 
 func (k ExecutionLayerKeeper) SetGenesisConf(ctx sdk.Context, genesisConf types.GenesisConf) {
 	store := ctx.KVStore(k.HashMapStoreKey)
 	genesisConfBytes := k.cdc.MustMarshalBinaryBare(genesisConf)
-	store.Set([]byte("genesisconf"), genesisConfBytes)
+	store.Set([]byte(types.GenesisConfigKey), genesisConfBytes)
 }
 
 // GetGenesisAccounts retrieves GenesisAccounts in sdk store
 func (k ExecutionLayerKeeper) GetGenesisAccounts(ctx sdk.Context) []types.Account {
 	store := ctx.KVStore(k.HashMapStoreKey)
-	genesisAccountsBytes := store.Get([]byte("genesisaccounts"))
+	genesisAccountsBytes := store.Get([]byte(types.GenesisAccountKey))
 	if genesisAccountsBytes == nil {
 		return nil
 	}
@@ -265,7 +266,7 @@ func (k ExecutionLayerKeeper) SetGenesisAccounts(ctx sdk.Context, accounts []typ
 	}
 	store := ctx.KVStore(k.HashMapStoreKey)
 	genesisAccountsBytes := k.cdc.MustMarshalBinaryBare(accounts)
-	store.Set([]byte("genesisaccounts"), genesisAccountsBytes)
+	store.Set([]byte(types.GenesisAccountKey), genesisAccountsBytes)
 }
 
 // GetChainName retrieves ChainName in sdk store
@@ -285,11 +286,13 @@ func (k ExecutionLayerKeeper) SetChainName(ctx sdk.Context, chainName string) {
 }
 
 // GetCurrentBlockHash returns current block hash
-func (k ExecutionLayerKeeper) GetCurrentBlockHash(ctx sdk.Context) []byte {
+func (k ExecutionLayerKeeper) GetCandidateBlock(ctx sdk.Context) types.CandidateBlock {
 	store := ctx.KVStore(k.HashMapStoreKey)
-	blockHash := store.Get([]byte("currentblockhash"))
+	candidateBlockBytes := store.Get([]byte(types.CandidateBlockKey))
+	var candidateBlock types.CandidateBlock
+	k.cdc.UnmarshalBinaryBare(candidateBlockBytes, &candidateBlock)
 
-	return blockHash
+	return candidateBlock
 }
 
 // SetAccountIfNotExists runs if network has no given account
@@ -302,9 +305,37 @@ func (k ExecutionLayerKeeper) SetAccountIfNotExists(ctx sdk.Context, account sdk
 	}
 }
 
-// SetCurrentBlockHash saves current block hash
-func (k ExecutionLayerKeeper) SetCurrentBlockHash(ctx sdk.Context, blockHash []byte) {
+func (k ExecutionLayerKeeper) SetCandidateBlock(ctx sdk.Context, candidateBlock types.CandidateBlock) {
 	store := ctx.KVStore(k.HashMapStoreKey)
-	store.Delete([]byte("currentblockhash"))
-	store.Set([]byte("currentblockhash"), blockHash)
+	candidateBlockBytes := k.cdc.MustMarshalBinaryBare(candidateBlock)
+	store.Set([]byte(types.CandidateBlockKey), candidateBlockBytes)
+}
+
+// GetCandidateBlockHash returns current block hash
+func (k ExecutionLayerKeeper) GetCandidateBlockHash(ctx sdk.Context) []byte {
+	candidateBlock := k.GetCandidateBlock(ctx)
+
+	return candidateBlock.Hash
+}
+
+// SetCandidateBlockHash saves current block hash
+func (k ExecutionLayerKeeper) SetCandidateBlockHash(ctx sdk.Context, blockHash []byte) {
+	candidateBlock := k.GetCandidateBlock(ctx)
+	candidateBlock.Hash = blockHash
+	k.SetCandidateBlock(ctx, candidateBlock)
+}
+
+func (k ExecutionLayerKeeper) GetCandidateBlockBond(ctx sdk.Context) []*ipc.Bond {
+	candidateBlock := k.GetCandidateBlock(ctx)
+	return candidateBlock.Bonds
+}
+
+func (k ExecutionLayerKeeper) SetCandidateBlockBond(ctx sdk.Context, bonds []*ipc.Bond) {
+	candidateBlock := k.GetCandidateBlock(ctx)
+	candidateBlock.Bonds = bonds
+	k.SetCandidateBlock(ctx, candidateBlock)
+}
+
+func (k ExecutionLayerKeeper) isEmptyHash(src []byte) bool {
+	return bytes.Equal([]byte{}, src)
 }

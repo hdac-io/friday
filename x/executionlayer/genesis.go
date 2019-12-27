@@ -6,6 +6,7 @@ import (
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 )
@@ -40,8 +41,19 @@ func InitGenesis(
 		keeper.SetGenesisAccounts(ctx, data.Accounts)
 	}
 	keeper.SetChainName(ctx, data.ChainName)
+	stateHash, bonds, errStr := grpc.Commit(keeper.client, util.DecodeHexString(util.StrEmptyStateHash), response.GetSuccess().GetEffect().GetTransformMap(), genesisConfig.GetProtocolVersion())
+	if errStr != "" {
+		panic(errStr)
+	}
+
 	keeper.SetGenesisConf(ctx, data.GenesisConf)
-	keeper.SetEEState(ctx, ctx.BlockHeader().LastBlockId.Hash, response.GetSuccess().GetPoststateHash())
+
+	candidateBlock := CandidateBlock{
+		Hash:  []byte(types.GenesisBlockHashKey),
+		Bonds: bonds,
+	}
+	keeper.SetCandidateBlock(ctx, candidateBlock)
+	keeper.SetEEState(ctx, []byte(types.GenesisBlockHashKey), stateHash)
 }
 
 // ExportGenesis : exports an executionlayer configuration for genesis
