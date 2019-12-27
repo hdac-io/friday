@@ -168,7 +168,6 @@ func TestGenesisState(t *testing.T) {
 	if !reflect.DeepEqual(expected.GenesisConf.WasmCosts, got.GenesisConf.WasmCosts) {
 		t.Errorf("expected: %v, but got: %v", expected.GenesisConf.WasmCosts, got.GenesisConf.WasmCosts)
 	}
-	assert.Equal(t, expected.GenesisConf.Genesis.Name, got.GenesisConf.Genesis.Name)
 	assert.Equal(t, expected.GenesisConf.Genesis.Timestamp, got.GenesisConf.Genesis.Timestamp)
 	assert.Equal(t, expected.GenesisConf.Genesis.ProtocolVersion, got.GenesisConf.Genesis.ProtocolVersion)
 	assert.Equal(t, expected.GenesisConf.Genesis.MintWasm, got.GenesisConf.Genesis.MintWasm)
@@ -185,4 +184,10 @@ func TestGenesisState(t *testing.T) {
 	if !reflect.DeepEqual(expected.Accounts, gottonAccounts) {
 		t.Errorf("expected: %v, but got: %v", expected.Accounts, gottonAccounts)
 	}
+
+	// ChainName test
+	expected.ChainName = "keeper-test-chain-name"
+	testMock.elk.SetChainName(testMock.ctx, expected.ChainName)
+	gottonChainName := testMock.elk.GetChainName(testMock.ctx)
+	assert.Equal(t, expected.ChainName, gottonChainName)
 }

@@ -12,6 +12,7 @@ import (
 type GenesisState struct {
 	GenesisConf GenesisConf `json:"genesis_conf"`
 	Accounts    []Account   `json:"accounts"`
+	ChainName string `json:"chain_name"`
 }
 
 // GenesisConf : the executionlayer configuration that must be provided at genesis.
@@ -22,7 +23,6 @@ type GenesisConf struct {
 
 // Genesis : Chain Genesis information
 type Genesis struct {
-	Name            string `json:"name"`
 	Timestamp       uint64 `json:"timestamp"`
 	MintWasm        []byte `json:"mint_wasm"`
 	PosWasm         []byte `json:"pos_wasm"`
@@ -52,15 +52,14 @@ type WasmCosts struct {
 }
 
 // NewGenesisState creates a new genesis state.
-func NewGenesisState(genesisConf GenesisConf, accounts []Account) GenesisState {
-	return GenesisState{GenesisConf: genesisConf, Accounts: accounts}
+func NewGenesisState(genesisConf GenesisConf, accounts []Account, chainName string) GenesisState {
+	return GenesisState{GenesisConf: genesisConf, Accounts: accounts, ChainName: chainName,}
 }
 
 // DefaultGenesisState returns a default genesis state
 func DefaultGenesisState() GenesisState {
 	genesisConf := GenesisConf{
 		Genesis: Genesis{
-			Name:            "friday-devnet",
 			Timestamp:       0,
 			MintWasm:        DefaultMintWasm,
 			PosWasm:         DefaultPosWasm,
@@ -79,7 +78,7 @@ func DefaultGenesisState() GenesisState {
 			OpcodesDivisor:    8,
 		},
 	}
-	return NewGenesisState(genesisConf, nil)
+	return NewGenesisState(genesisConf, nil, "friday-devnet")
 }
 
 // ValidateGenesis :
@@ -105,7 +104,7 @@ func ToChainSpecGenesisConfig(gs GenesisState) (*ipc.ChainSpec_GenesisConfig, er
 	}
 
 	chainSpecConfig := ipc.ChainSpec_GenesisConfig{
-		Name:            config.Genesis.Name,
+		Name:            gs.ChainName,
 		Timestamp:       config.Genesis.Timestamp,
 		ProtocolVersion: pv,
 		MintInstaller:   config.Genesis.MintWasm,

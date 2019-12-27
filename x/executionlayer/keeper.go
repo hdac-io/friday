@@ -232,6 +232,22 @@ func (k ExecutionLayerKeeper) SetGenesisAccounts(ctx sdk.Context, accounts []typ
 	store.Set([]byte("genesisaccounts"), genesisAccountsBytes)
 }
 
+// GetChainName retrieves ChainName in sdk store
+func (k ExecutionLayerKeeper) GetChainName(ctx sdk.Context) string {
+	store := ctx.KVStore(k.HashMapStoreKey)
+	chainNameBytes := store.Get([]byte("chainname"))
+	return string(chainNameBytes)
+}
+
+// SetChainName saves ChainName in sdk store
+func (k ExecutionLayerKeeper) SetChainName(ctx sdk.Context, chainName string) {
+	if chainName == "" {
+		panic(fmt.Errorf("Empty string is not allowed for ChainName"))
+	}
+	store := ctx.KVStore(k.HashMapStoreKey)
+	store.Set([]byte("chainname"), []byte(chainName))
+}
+
 // GetCurrentBlockHash returns current block hash
 func (k ExecutionLayerKeeper) GetCurrentBlockHash(ctx sdk.Context) []byte {
 	store := ctx.KVStore(k.HashMapStoreKey)
