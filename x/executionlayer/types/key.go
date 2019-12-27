@@ -6,5 +6,10 @@ const (
 
 	// StoreKey sets schema name from ModuleName
 	HashMapStoreKey = ModuleName + "_hashmap"
-	DeployStoreKey  = ModuleName + "_deploy"
+
+	// key value
+	GenesisBlockHashKey = "genesisblockhash"
+	GenesisConfigKey    = "genesisconf"
+	GenesisAccountKey   = "genesisaccount"
+	CandidateBlockKey   = "candidateblock"
 )

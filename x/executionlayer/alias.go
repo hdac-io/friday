@@ -8,7 +8,6 @@ const (
 	ModuleName      = types.ModuleName
 	RouterKey       = types.RouterKey
 	HashMapStoreKey = types.HashMapStoreKey
-	DeployStoreKey  = types.DeployStoreKey
 )
 
 var (
@@ -26,6 +25,7 @@ type (
 	MsgExecute                = types.MsgExecute
 	QueryExecutionLayer       = types.QueryExecutionLayer
 	UnitHashMap               = types.UnitHashMap
+	CandidateBlock            = types.CandidateBlock
 	QueryExecutionLayerResp   = types.QueryExecutionLayerResp
 	QueryExecutionLayerDetail = types.QueryExecutionLayerDetail
 	QueryGetBalance           = types.QueryGetBalance
