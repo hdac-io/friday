@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"encoding/hex"
 	"fmt"
 	"math/big"
 	"net/http"
@@ -132,6 +133,7 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error) {
 	vars := r.URL.Query()
 	straddr := vars.Get("address")
+	blockHashStr := vars.Get("block")
 
 	addr, err := sdk.AccAddressFromBech32(straddr)
 	if err != nil {
@@ -139,9 +141,25 @@ func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 	}
 
 	pubkey := types.ToPublicKey(addr)
-	queryData := types.QueryGetBalance{
-		Address: pubkey,
+	var bz []byte
+
+	if blockHashStr == "" {
+		queryData := types.QueryGetBalance{
+			Address: pubkey,
+		}
+		bz = cliCtx.Codec.MustMarshalJSON(queryData)
+		//return bz, nil
+	} else {
+		blockHash, err := hex.DecodeString(blockHashStr)
+		if err != nil {
+			return nil, err
+		}
+		queryData := types.QueryGetBalanceDetail{
+			Address:   pubkey,
+			StateHash: blockHash,
+		}
+		bz = cliCtx.Codec.MustMarshalJSON(queryData)
 	}
-	bz := cliCtx.Codec.MustMarshalJSON(queryData)
+
 	return bz, nil
 }

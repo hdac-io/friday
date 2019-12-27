@@ -41,9 +41,9 @@ func queryEEDetail(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
-	val, errmsg := keeper.GetQueryResult(ctx, param.StateHash, param.KeyType, param.KeyData, param.Path)
-	if errmsg != nil {
-		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, errmsg.Error())
+	val, err := keeper.GetQueryResult(ctx, param.StateHash, param.KeyType, param.KeyData, param.Path)
+	if err != nil {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, err.Error())
 	}
 
 	qryvalue := QueryExecutionLayerResp{
@@ -61,9 +61,9 @@ func queryEE(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Execu
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
-	val, errmsg := keeper.GetQueryResultSimple(ctx, param.KeyType, param.KeyData, param.Path)
-	if errmsg != nil {
-		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, errmsg.Error())
+	val, err := keeper.GetQueryResultSimple(ctx, param.KeyType, param.KeyData, param.Path)
+	if err != nil {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, err.Error())
 	}
 
 	qryvalue := QueryExecutionLayerResp{

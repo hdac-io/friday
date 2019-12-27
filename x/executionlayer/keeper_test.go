@@ -2,6 +2,7 @@ package executionlayer
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math/big"
 	"path"
 	"reflect"
@@ -164,7 +165,7 @@ func TestTransfer(t *testing.T) {
 		GenesisAccountAddress,
 		RecipientAccountAddress,
 		util.LoadWasmFile(path.Join(contractPath, transferWasm)),
-		util.MakeArgsTransferToAccount(types.ToPublicKey(RecipientAccountAddress), 200000000),
+		util.MakeArgsTransferToAccount(types.ToPublicKey(RecipientAccountAddress), 100000000),
 		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
 		util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000)),
 		uint64(200000000),
@@ -183,8 +184,13 @@ func TestTransfer(t *testing.T) {
 	res, err := input.elk.GetQueryBalanceResultSimple(input.ctx, types.ToPublicKey(RecipientAccountAddress))
 	queriedRes, _ := strconv.Atoi(res)
 
-	assert.Equal(t, queriedRes, 200000000)
+	assert.Equal(t, queriedRes, 100000000)
 	assert.Equal(t, err, nil)
+
+	res2, err := input.elk.GetQueryBalanceResultSimple(input.ctx, types.ToPublicKey(GenesisAccountAddress))
+	queriedRes2, _ := strconv.Atoi(res2)
+	fmt.Println(queriedRes)
+	fmt.Println(queriedRes2)
 }
 
 func TestMarsahlAndUnMarshal(t *testing.T) {

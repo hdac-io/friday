@@ -131,8 +131,7 @@ func (k ExecutionLayerKeeper) Transfer(
 		toAddressAccountObject = k.AccountKeeper.NewAccountWithAddress(ctx, toAddress)
 	}
 
-	// Parameter preparation
-	err := k.Execute(ctx, []byte{0}, fromAddress, tokenOwnerAccount, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
+	err := k.Execute(ctx, k.GetCurrentBlockHash(ctx), fromAddress, tokenOwnerAccount, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
 	if err != nil {
 		return err
 	}
@@ -204,21 +203,13 @@ func (k ExecutionLayerKeeper) GetQueryResult(ctx sdk.Context,
 // State hash comes from Tendermint block state - EE state mapping DB
 func (k ExecutionLayerKeeper) GetQueryResultSimple(ctx sdk.Context,
 	keyType string, keyData string, path string) (state.Value, error) {
-	unitHash := k.GetUnitHashMap(ctx, k.GetCurrentBlockHash(ctx))
-	arrPath := strings.Split(path, "/")
-
-	keyDataBytes, err := toBytes(keyType, keyData)
+	currBlock := k.GetCurrentBlockHash(ctx)
+	res, err := k.GetQueryResult(ctx, currBlock, keyType, keyData, path)
 	if err != nil {
 		return state.Value{}, err
 	}
 
-	protocolVersion := k.MustGetProtocolVersion(ctx)
-	res, errstr := grpc.Query(k.client, unitHash.EEState, keyType, keyDataBytes, arrPath, &protocolVersion)
-	if errstr != "" {
-		return state.Value{}, fmt.Errorf(errstr)
-	}
-
-	return *res, nil
+	return res, nil
 }
 
 // GetQueryBalanceResult queries with whole parameters
@@ -235,11 +226,9 @@ func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, blockhash [
 
 // GetQueryBalanceResultSimple queries with whole parameters
 func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, address types.PublicKey) (string, error) {
-	unitHash := k.GetUnitHashMap(ctx, k.GetCurrentBlockHash(ctx))
-	protocolVersion := k.MustGetProtocolVersion(ctx)
-	res, err := grpc.QueryBalance(k.client, unitHash.EEState, address, &protocolVersion)
-	if err != "" {
-		return "", fmt.Errorf(err)
+	res, err := k.GetQueryBalanceResult(ctx, k.GetCurrentBlockHash(ctx), address)
+	if err != nil {
+		return "", err
 	}
 
 	return res, nil
@@ -295,5 +284,6 @@ func (k ExecutionLayerKeeper) GetCurrentBlockHash(ctx sdk.Context) []byte {
 // SetCurrentBlockHash saves current block hash
 func (k ExecutionLayerKeeper) SetCurrentBlockHash(ctx sdk.Context, blockHash []byte) {
 	store := ctx.KVStore(k.HashMapStoreKey)
+	store.Delete([]byte("currentblockhash"))
 	store.Set([]byte("currentblockhash"), blockHash)
 }

@@ -38,12 +38,12 @@ func GetExecutionLayerTxCmd(cdc *codec.Codec) *cobra.Command {
 // GetCmdTransfer is the CLI command for transfer
 func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "transfer [token_owner_address] [from_key_or_address] [to_address] [amount] [fee] [gas_price]",
-		Short: "Create and sign a send tx",
+		Use:   "transfer [token_owner_address] [from_address] [to_address] [amount] [fee] [gas_price]",
+		Short: "Transfer token",
 		Args:  cobra.ExactArgs(6), // # of arguments
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithFrom(args[0]).WithCodec(cdc)
+			cliCtx := context.NewCLIContextWithFrom(args[1]).WithCodec(cdc)
 
 			tokenOwnerAddress, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
