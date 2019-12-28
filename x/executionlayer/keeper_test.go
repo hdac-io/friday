@@ -256,7 +256,7 @@ func TestValidator(t *testing.T) {
 
 	input.elk.SetValidator(input.ctx, acc, val)
 
-	resVal := input.elk.GetValidator(input.ctx, acc)
+	resVal, _ := input.elk.GetValidator(input.ctx, acc)
 
 	assert.Equal(t, valAddr, resVal.OperatorAddress)
 	assert.Equal(t, valPubKey, resVal.ConsPubKey)

@@ -99,7 +99,7 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgExecute([]byte{0}, cliCtx.FromAddress, cliCtx.FromAddress, bondingCode, bondingAbi, paymentCode, paymentAbi, gasPrice)
+			msg := types.NewMsgBond(cliCtx.FromAddress, cliCtx.FromAddress, bondingCode, bondingAbi, paymentCode, paymentAbi, gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
@@ -137,7 +137,7 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgExecute([]byte{0}, cliCtx.FromAddress, cliCtx.FromAddress, unbondingCode, unbondingAbi, paymentCode, paymentAbi, gasPrice)
+			msg := types.NewMsgUnBond(cliCtx.FromAddress, cliCtx.FromAddress, unbondingCode, unbondingAbi, paymentCode, paymentAbi, gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
