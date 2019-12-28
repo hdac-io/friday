@@ -129,6 +129,7 @@ func (k ExecutionLayerKeeper) Transfer(
 	toAddressAccountObject := k.AccountKeeper.GetAccount(ctx, toAddress)
 	if toAddressAccountObject == nil {
 		toAddressAccountObject = k.AccountKeeper.NewAccountWithAddress(ctx, toAddress)
+		k.AccountKeeper.SetAccount(ctx, toAddressAccountObject)
 	}
 
 	err := k.Execute(ctx, k.GetCurrentBlockHash(ctx), fromAddress, tokenOwnerAccount, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
