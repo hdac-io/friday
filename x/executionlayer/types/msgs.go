@@ -1,7 +1,11 @@
 package types
 
 import (
+	"bytes"
+	"encoding/json"
+
 	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/tendermint/crypto"
 )
 
 // RouterKey is not in sense yet
@@ -116,4 +120,114 @@ func (msg MsgTransfer) GetSignBytes() []byte {
 // GetSigners defines whose signature is required
 func (msg MsgTransfer) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.FromAccount}
+}
+
+//______________________________________________________________________
+// MsgCreateValidator - struct for bonding transactions
+type MsgCreateValidator struct {
+	Description      Description    `json:"description" yaml:"description"`
+	DelegatorAddress sdk.AccAddress `json:"delegator_address" yaml:"delegator_address"`
+	ValidatorAddress sdk.ValAddress `json:"validator_address" yaml:"validator_address"`
+	PubKey           crypto.PubKey  `json:"pubkey" yaml:"pubkey"`
+	Amount           uint64         `json:"amount" yaml:"amount"`
+}
+
+type msgCreateValidatorJSON struct {
+	Description      Description    `json:"description" yaml:"description"`
+	DelegatorAddress sdk.AccAddress `json:"delegator_address" yaml:"delegator_address"`
+	ValidatorAddress sdk.ValAddress `json:"validator_address" yaml:"validator_address"`
+	PubKey           string         `json:"pubkey" yaml:"pubkey"`
+	Amount           uint64         `json:"amount" yaml:"amount"`
+}
+
+// Default way to create validator. Delegator address and validator address are the same
+func NewMsgCreateValidator(
+	valAddr sdk.ValAddress, pubKey crypto.PubKey, amount uint64,
+	description Description,
+) MsgCreateValidator {
+	return MsgCreateValidator{
+		Description:      description,
+		DelegatorAddress: sdk.AccAddress(valAddr),
+		ValidatorAddress: valAddr,
+		PubKey:           pubKey,
+		Amount:           amount,
+	}
+}
+
+//nolint
+func (msg MsgCreateValidator) Route() string { return RouterKey }
+func (msg MsgCreateValidator) Type() string  { return "create_validator" }
+
+// Return address(es) that must sign over msg.GetSignBytes()
+func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
+	// delegator is first signer so delegator pays fees
+	addrs := []sdk.AccAddress{msg.DelegatorAddress}
+
+	if !bytes.Equal(msg.DelegatorAddress.Bytes(), msg.ValidatorAddress.Bytes()) {
+		// if validator addr is not same as delegator addr, validator must sign
+		// msg as well
+		addrs = append(addrs, sdk.AccAddress(msg.ValidatorAddress))
+	}
+	return addrs
+}
+
+// MarshalJSON implements the json.Marshaler interface to provide custom JSON
+// serialization of the MsgCreateValidator type.
+func (msg MsgCreateValidator) MarshalJSON() ([]byte, error) {
+	return json.Marshal(msgCreateValidatorJSON{
+		Description:      msg.Description,
+		DelegatorAddress: msg.DelegatorAddress,
+		ValidatorAddress: msg.ValidatorAddress,
+		PubKey:           sdk.MustBech32ifyConsPub(msg.PubKey),
+		Amount:           msg.Amount,
+	})
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface to provide custom
+// JSON deserialization of the MsgCreateValidator type.
+func (msg *MsgCreateValidator) UnmarshalJSON(bz []byte) error {
+	var msgCreateValJSON msgCreateValidatorJSON
+	if err := json.Unmarshal(bz, &msgCreateValJSON); err != nil {
+		return err
+	}
+
+	msg.Description = msgCreateValJSON.Description
+	msg.DelegatorAddress = msgCreateValJSON.DelegatorAddress
+	msg.ValidatorAddress = msgCreateValJSON.ValidatorAddress
+	var err error
+	msg.PubKey, err = sdk.GetConsPubKeyBech32(msgCreateValJSON.PubKey)
+	if err != nil {
+		return err
+	}
+	msg.Amount = msgCreateValJSON.Amount
+
+	return nil
+}
+
+// GetSignBytes returns the message bytes to sign over.
+func (msg MsgCreateValidator) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// quick validity check
+func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
+	// note that unmarshaling from bech32 ensures either empty or valid
+	if msg.DelegatorAddress.Empty() {
+		return ErrNilDelegatorAddr(DefaultCodespace)
+	}
+	if msg.ValidatorAddress.Empty() {
+		return ErrNilValidatorAddr(DefaultCodespace)
+	}
+	if !sdk.AccAddress(msg.ValidatorAddress).Equals(msg.DelegatorAddress) {
+		return ErrBadValidatorAddr(DefaultCodespace)
+	}
+	if msg.Amount == uint64(0) {
+		return ErrBadDelegationAmount(DefaultCodespace)
+	}
+	if msg.Description == (Description{}) {
+		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "description must be included")
+	}
+
+	return nil
 }

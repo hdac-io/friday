@@ -20,6 +20,7 @@ import (
 	"github.com/hdac-io/friday/server"
 	"github.com/hdac-io/friday/store"
 	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/executionlayer"
 	"github.com/hdac-io/friday/x/genaccounts"
 	genaccscli "github.com/hdac-io/friday/x/genaccounts/client/cli"
 	genutilcli "github.com/hdac-io/friday/x/genutil/client/cli"
@@ -52,7 +53,7 @@ func main() {
 	rootCmd.AddCommand(genutilcli.CollectGenTxsCmd(ctx, cdc, genaccounts.AppModuleBasic{}, app.DefaultNodeHome))
 	rootCmd.AddCommand(genutilcli.MigrateGenesisCmd(ctx, cdc))
 	rootCmd.AddCommand(genutilcli.GenTxCmd(ctx, cdc, app.ModuleBasics, staking.AppModuleBasic{},
-		genaccounts.AppModuleBasic{}, app.DefaultNodeHome, app.DefaultCLIHome))
+		genaccounts.AppModuleBasic{}, executionlayer.AppModuleBasic{}, app.DefaultNodeHome, app.DefaultCLIHome))
 	rootCmd.AddCommand(genutilcli.ValidateGenesisCmd(ctx, cdc, app.ModuleBasics))
 	rootCmd.AddCommand(genaccscli.AddGenesisAccountCmd(ctx, cdc, app.DefaultNodeHome, app.DefaultCLIHome))
 	rootCmd.AddCommand(AddElGenesisAccountCmd(ctx, cdc, app.DefaultNodeHome, app.DefaultCLIHome))

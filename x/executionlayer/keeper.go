@@ -11,6 +11,7 @@ import (
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 
 	"github.com/hdac-io/friday/x/auth"
+	"github.com/hdac-io/tendermint/crypto"
 
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
@@ -43,6 +44,8 @@ func (k ExecutionLayerKeeper) MustGetProtocolVersion(ctx sdk.Context) state.Prot
 	}
 	return *pv
 }
+
+// -----------------------------------------------------------------------------------------------------------
 
 // SetUnitHashMap map unitHash to blockHash
 func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockHash []byte, unitHash UnitHashMap) bool {
@@ -230,6 +233,8 @@ func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, addre
 	return res, nil
 }
 
+// -----------------------------------------------------------------------------------------------------------
+
 // GetGenesisConf retrieves GenesisConf from sdk store
 func (k ExecutionLayerKeeper) GetGenesisConf(ctx sdk.Context) types.GenesisConf {
 	store := ctx.KVStore(k.HashMapStoreKey)
@@ -285,16 +290,6 @@ func (k ExecutionLayerKeeper) SetChainName(ctx sdk.Context, chainName string) {
 	store.Set([]byte("chainname"), []byte(chainName))
 }
 
-// GetCurrentBlockHash returns current block hash
-func (k ExecutionLayerKeeper) GetCandidateBlock(ctx sdk.Context) types.CandidateBlock {
-	store := ctx.KVStore(k.HashMapStoreKey)
-	candidateBlockBytes := store.Get([]byte(types.CandidateBlockKey))
-	var candidateBlock types.CandidateBlock
-	k.cdc.UnmarshalBinaryBare(candidateBlockBytes, &candidateBlock)
-
-	return candidateBlock
-}
-
 // SetAccountIfNotExists runs if network has no given account
 func (k ExecutionLayerKeeper) SetAccountIfNotExists(ctx sdk.Context, account sdk.AccAddress) {
 	// Recepient account existence check, if not, create one
@@ -303,6 +298,17 @@ func (k ExecutionLayerKeeper) SetAccountIfNotExists(ctx sdk.Context, account sdk
 		toAddressAccountObject = k.AccountKeeper.NewAccountWithAddress(ctx, account)
 		k.AccountKeeper.SetAccount(ctx, toAddressAccountObject)
 	}
+}
+
+// -----------------------------------------------------------------------------------------------------------
+// GetCurrentBlockHash returns current block hash
+func (k ExecutionLayerKeeper) GetCandidateBlock(ctx sdk.Context) types.CandidateBlock {
+	store := ctx.KVStore(k.HashMapStoreKey)
+	candidateBlockBytes := store.Get([]byte(types.CandidateBlockKey))
+	var candidateBlock types.CandidateBlock
+	k.cdc.UnmarshalBinaryBare(candidateBlockBytes, &candidateBlock)
+
+	return candidateBlock
 }
 
 func (k ExecutionLayerKeeper) SetCandidateBlock(ctx sdk.Context, candidateBlock types.CandidateBlock) {
@@ -336,6 +342,60 @@ func (k ExecutionLayerKeeper) SetCandidateBlockBond(ctx sdk.Context, bonds []*ip
 	k.SetCandidateBlock(ctx, candidateBlock)
 }
 
+// -----------------------------------------------------------------------------------------------------------
+
+func (k ExecutionLayerKeeper) GetValidator(ctx sdk.Context, accAddress []byte) types.Validator {
+	store := ctx.KVStore(k.HashMapStoreKey)
+	validatorBytes := store.Get(accAddress)
+	var validator types.Validator
+	k.cdc.UnmarshalBinaryBare(validatorBytes, &validator)
+
+	return validator
+}
+
+func (k ExecutionLayerKeeper) SetValidator(ctx sdk.Context, accAddress []byte, validator types.Validator) {
+	store := ctx.KVStore(k.HashMapStoreKey)
+	validatorBytes := k.cdc.MustMarshalBinaryBare(validator)
+	store.Set(accAddress, validatorBytes)
+}
+
+func (k ExecutionLayerKeeper) GetValidatorOperatorAddress(ctx sdk.Context, accAddress []byte) sdk.ValAddress {
+	validator := k.GetValidator(ctx, accAddress)
+
+	return validator.OperatorAddress
+}
+
+func (k ExecutionLayerKeeper) SetValidatorOperatorAddress(ctx sdk.Context, accAddress []byte, valAddress sdk.ValAddress) {
+	validator := k.GetValidator(ctx, accAddress)
+	validator.OperatorAddress = valAddress
+	k.SetValidator(ctx, accAddress, validator)
+}
+
+func (k ExecutionLayerKeeper) GetValidatorConsPubKey(ctx sdk.Context, accAddress []byte) crypto.PubKey {
+	validator := k.GetValidator(ctx, accAddress)
+
+	return validator.ConsPubKey
+}
+
+func (k ExecutionLayerKeeper) SetValidatorConsPubKey(ctx sdk.Context, accAddress []byte, pubKey crypto.PubKey) {
+	validator := k.GetValidator(ctx, accAddress)
+	validator.ConsPubKey = pubKey
+	k.SetValidator(ctx, accAddress, validator)
+}
+
+func (k ExecutionLayerKeeper) GetValidatorDescription(ctx sdk.Context, accAddress []byte) types.Description {
+	validator := k.GetValidator(ctx, accAddress)
+
+	return validator.Description
+}
+
+func (k ExecutionLayerKeeper) SetValidatorDescription(ctx sdk.Context, accAddress []byte, description types.Description) {
+	validator := k.GetValidator(ctx, accAddress)
+	validator.Description = description
+	k.SetValidator(ctx, accAddress, validator)
+}
+
+// -----------------------------------------------------------------------------------------------------------
 func (k ExecutionLayerKeeper) isEmptyHash(src []byte) bool {
 	return bytes.Equal([]byte{}, src)
 }
