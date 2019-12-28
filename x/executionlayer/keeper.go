@@ -125,13 +125,7 @@ func (k ExecutionLayerKeeper) Transfer(
 	paymentAbi []byte,
 	gasPrice uint64) error {
 
-	// Recepient account existence check, if not, create one
-	toAddressAccountObject := k.AccountKeeper.GetAccount(ctx, toAddress)
-	if toAddressAccountObject == nil {
-		toAddressAccountObject = k.AccountKeeper.NewAccountWithAddress(ctx, toAddress)
-		k.AccountKeeper.SetAccount(ctx, toAddressAccountObject)
-	}
-
+	k.SetAccountIfNotExists(ctx, toAddress)
 	err := k.Execute(ctx, k.GetCurrentBlockHash(ctx), fromAddress, tokenOwnerAccount, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
 	if err != nil {
 		return err
@@ -280,6 +274,16 @@ func (k ExecutionLayerKeeper) GetCurrentBlockHash(ctx sdk.Context) []byte {
 	blockHash := store.Get([]byte("currentblockhash"))
 
 	return blockHash
+}
+
+// SetAccountIfNotExists runs if network has no given account
+func (k ExecutionLayerKeeper) SetAccountIfNotExists(ctx sdk.Context, account sdk.AccAddress) {
+	// Recepient account existence check, if not, create one
+	toAddressAccountObject := k.AccountKeeper.GetAccount(ctx, account)
+	if toAddressAccountObject == nil {
+		toAddressAccountObject = k.AccountKeeper.NewAccountWithAddress(ctx, account)
+		k.AccountKeeper.SetAccount(ctx, toAddressAccountObject)
+	}
 }
 
 // SetCurrentBlockHash saves current block hash
