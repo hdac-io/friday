@@ -39,10 +39,14 @@ type StakingMsgBuildingHelpers interface {
 	BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr auth.TxBuilder) (auth.TxBuilder, sdk.Msg, error)
 }
 
+type ExecutionLayerMsgBuildingHelpers interface {
+	BuildCreateValidatorMsg(cliCtx context.CLIContext) (sdk.Msg, error)
+}
+
 // GenTxCmd builds the application's gentx command.
 // nolint: errcheck
 func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, smbh StakingMsgBuildingHelpers,
-	genAccIterator types.GenesisAccountsIterator, defaultNodeHome, defaultCLIHome string) *cobra.Command {
+	genAccIterator types.GenesisAccountsIterator, eembh ExecutionLayerMsgBuildingHelpers, defaultNodeHome, defaultCLIHome string) *cobra.Command {
 
 	ipDefault, _ := server.ExternalIP()
 	fsCreateValidator, flagNodeID, flagPubKey, flagAmount, defaultsDesc := smbh.CreateValidatorMsgHelpers(ipDefault)
@@ -134,6 +138,10 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 			if err != nil {
 				return err
 			}
+			eeMsg, err := eembh.BuildCreateValidatorMsg(cliCtx)
+			if err != nil {
+				return err
+			}
 
 			info, err := txBldr.Keybase().Get(name)
 			if err != nil {
@@ -149,7 +157,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 			w := bytes.NewBuffer([]byte{})
 			cliCtx = cliCtx.WithOutput(w)
 
-			if err = utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}); err != nil {
+			if err = utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg, eeMsg}); err != nil {
 				return err
 			}
 

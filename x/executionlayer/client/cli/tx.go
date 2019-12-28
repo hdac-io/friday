@@ -3,6 +3,7 @@ package cli
 import (
 	"math/big"
 	"os"
+	"regexp"
 	"strconv"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
@@ -14,6 +15,7 @@ import (
 	"github.com/hdac-io/friday/x/auth"
 	"github.com/hdac-io/friday/x/auth/client/utils"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // GetCmdTransfer is the CLI command for transfer
@@ -140,4 +142,32 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
+}
+
+func BuildCreateValidatorMsg(cliCtx context.CLIContext) (sdk.Msg, error) {
+	amounstStr := viper.GetString(FlagAmount)
+	re := regexp.MustCompile("[0-9]+")
+	coins, err := strconv.ParseUint(re.FindAllString(amounstStr, -1)[0], 10, 64)
+	if err != nil {
+		return types.MsgCreateValidator{}, err
+	}
+
+	valAddr := cliCtx.GetFromAddress()
+	pkStr := viper.GetString(FlagPubKey)
+
+	pk, err := sdk.GetConsPubKeyBech32(pkStr)
+	if err != nil {
+		return types.MsgCreateValidator{}, err
+	}
+
+	description := types.NewDescription(
+		viper.GetString(FlagMoniker),
+		viper.GetString(FlagIdentity),
+		viper.GetString(FlagWebsite),
+		viper.GetString(FlagDetails),
+	)
+
+	msg := types.NewMsgCreateValidator(sdk.ValAddress(valAddr), pk, coins, description)
+
+	return msg, nil
 }
