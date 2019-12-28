@@ -23,6 +23,7 @@ var (
 
 type (
 	MsgExecute                = types.MsgExecute
+	MsgCreateValidator        = types.MsgCreateValidator
 	QueryExecutionLayer       = types.QueryExecutionLayer
 	UnitHashMap               = types.UnitHashMap
 	CandidateBlock            = types.CandidateBlock

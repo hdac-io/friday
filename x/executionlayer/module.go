@@ -12,6 +12,7 @@ import (
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/types/module"
 
+	"github.com/hdac-io/friday/x/executionlayer/client/cli"
 	"github.com/hdac-io/friday/x/executionlayer/client/rest"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 )
@@ -62,6 +63,11 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 // get the root query command of this module
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	return nil
+}
+
+// BuildCreateValidatorMsg - used for gen-tx
+func (AppModuleBasic) BuildCreateValidatorMsg(cliCtx context.CLIContext) (sdk.Msg, error) {
+	return cli.BuildCreateValidatorMsg(cliCtx)
 }
 
 //___________________________

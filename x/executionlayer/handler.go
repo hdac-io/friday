@@ -18,6 +18,8 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 			return handlerMsgExecute(ctx, k, msg)
 		case types.MsgTransfer:
 			return handlerMsgTransfer(ctx, k, msg)
+		case types.MsgCreateValidator:
+			return handlerMsgCreateValidator(ctx, k, msg)
 		default:
 			errMsg := fmt.Sprintf("unrecognized execution layer messgae type: %T", msg)
 			return sdk.ErrUnknownRequest(errMsg).Result()
@@ -41,6 +43,18 @@ func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExe
 	if err != nil {
 		return getResult(false, msg)
 	}
+	return getResult(true, msg)
+}
+
+func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgCreateValidator) sdk.Result {
+	validator := types.Validator{
+		OperatorAddress: msg.ValidatorAddress,
+		ConsPubKey:      msg.PubKey,
+		Description:     msg.Description,
+	}
+
+	k.SetValidator(ctx, msg.DelegatorAddress, validator)
+
 	return getResult(true, msg)
 }
 
