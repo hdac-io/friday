@@ -301,7 +301,7 @@ func (k ExecutionLayerKeeper) SetAccountIfNotExists(ctx sdk.Context, account sdk
 }
 
 // -----------------------------------------------------------------------------------------------------------
-// GetCurrentBlockHash returns current block hash
+// GetCandidateBlock returns current block hash
 func (k ExecutionLayerKeeper) GetCandidateBlock(ctx sdk.Context) types.CandidateBlock {
 	store := ctx.KVStore(k.HashMapStoreKey)
 	candidateBlockBytes := store.Get([]byte(types.CandidateBlockKey))
@@ -344,13 +344,15 @@ func (k ExecutionLayerKeeper) SetCandidateBlockBond(ctx sdk.Context, bonds []*ip
 
 // -----------------------------------------------------------------------------------------------------------
 
-func (k ExecutionLayerKeeper) GetValidator(ctx sdk.Context, accAddress []byte) types.Validator {
+func (k ExecutionLayerKeeper) GetValidator(ctx sdk.Context, accAddress []byte) (validator types.Validator, found bool) {
 	store := ctx.KVStore(k.HashMapStoreKey)
 	validatorBytes := store.Get(accAddress)
-	var validator types.Validator
+	if validatorBytes == nil {
+		return validator, false
+	}
 	k.cdc.UnmarshalBinaryBare(validatorBytes, &validator)
 
-	return validator
+	return validator, true
 }
 
 func (k ExecutionLayerKeeper) SetValidator(ctx sdk.Context, accAddress []byte, validator types.Validator) {
@@ -360,37 +362,37 @@ func (k ExecutionLayerKeeper) SetValidator(ctx sdk.Context, accAddress []byte, v
 }
 
 func (k ExecutionLayerKeeper) GetValidatorOperatorAddress(ctx sdk.Context, accAddress []byte) sdk.ValAddress {
-	validator := k.GetValidator(ctx, accAddress)
+	validator, _ := k.GetValidator(ctx, accAddress)
 
 	return validator.OperatorAddress
 }
 
 func (k ExecutionLayerKeeper) SetValidatorOperatorAddress(ctx sdk.Context, accAddress []byte, valAddress sdk.ValAddress) {
-	validator := k.GetValidator(ctx, accAddress)
+	validator, _ := k.GetValidator(ctx, accAddress)
 	validator.OperatorAddress = valAddress
 	k.SetValidator(ctx, accAddress, validator)
 }
 
 func (k ExecutionLayerKeeper) GetValidatorConsPubKey(ctx sdk.Context, accAddress []byte) crypto.PubKey {
-	validator := k.GetValidator(ctx, accAddress)
+	validator, _ := k.GetValidator(ctx, accAddress)
 
 	return validator.ConsPubKey
 }
 
 func (k ExecutionLayerKeeper) SetValidatorConsPubKey(ctx sdk.Context, accAddress []byte, pubKey crypto.PubKey) {
-	validator := k.GetValidator(ctx, accAddress)
+	validator, _ := k.GetValidator(ctx, accAddress)
 	validator.ConsPubKey = pubKey
 	k.SetValidator(ctx, accAddress, validator)
 }
 
 func (k ExecutionLayerKeeper) GetValidatorDescription(ctx sdk.Context, accAddress []byte) types.Description {
-	validator := k.GetValidator(ctx, accAddress)
+	validator, _ := k.GetValidator(ctx, accAddress)
 
 	return validator.Description
 }
 
 func (k ExecutionLayerKeeper) SetValidatorDescription(ctx sdk.Context, accAddress []byte, description types.Description) {
-	validator := k.GetValidator(ctx, accAddress)
+	validator, _ := k.GetValidator(ctx, accAddress)
 	validator.Description = description
 	k.SetValidator(ctx, accAddress, validator)
 }

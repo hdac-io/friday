@@ -129,7 +129,6 @@ type MsgCreateValidator struct {
 	DelegatorAddress sdk.AccAddress `json:"delegator_address" yaml:"delegator_address"`
 	ValidatorAddress sdk.ValAddress `json:"validator_address" yaml:"validator_address"`
 	PubKey           crypto.PubKey  `json:"pubkey" yaml:"pubkey"`
-	Amount           uint64         `json:"amount" yaml:"amount"`
 }
 
 type msgCreateValidatorJSON struct {
@@ -137,7 +136,6 @@ type msgCreateValidatorJSON struct {
 	DelegatorAddress sdk.AccAddress `json:"delegator_address" yaml:"delegator_address"`
 	ValidatorAddress sdk.ValAddress `json:"validator_address" yaml:"validator_address"`
 	PubKey           string         `json:"pubkey" yaml:"pubkey"`
-	Amount           uint64         `json:"amount" yaml:"amount"`
 }
 
 // Default way to create validator. Delegator address and validator address are the same
@@ -150,7 +148,6 @@ func NewMsgCreateValidator(
 		DelegatorAddress: sdk.AccAddress(valAddr),
 		ValidatorAddress: valAddr,
 		PubKey:           pubKey,
-		Amount:           amount,
 	}
 }
 
@@ -179,7 +176,6 @@ func (msg MsgCreateValidator) MarshalJSON() ([]byte, error) {
 		DelegatorAddress: msg.DelegatorAddress,
 		ValidatorAddress: msg.ValidatorAddress,
 		PubKey:           sdk.MustBech32ifyConsPub(msg.PubKey),
-		Amount:           msg.Amount,
 	})
 }
 
@@ -199,7 +195,6 @@ func (msg *MsgCreateValidator) UnmarshalJSON(bz []byte) error {
 	if err != nil {
 		return err
 	}
-	msg.Amount = msgCreateValJSON.Amount
 
 	return nil
 }
@@ -222,12 +217,115 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if !sdk.AccAddress(msg.ValidatorAddress).Equals(msg.DelegatorAddress) {
 		return ErrBadValidatorAddr(DefaultCodespace)
 	}
-	if msg.Amount == uint64(0) {
-		return ErrBadDelegationAmount(DefaultCodespace)
-	}
 	if msg.Description == (Description{}) {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "description must be included")
 	}
 
 	return nil
+}
+
+//______________________________________________________________________
+type MsgBond struct {
+	ExecAccount          sdk.AccAddress `json:"exec_account"`
+	ContractOwnerAccount sdk.AccAddress `json:"contract_owner_account"`
+	SessionCode          []byte         `json:"session_code"`
+	SessionArgs          []byte         `json:"session_args"`
+	PaymentCode          []byte         `json:"payment_code"`
+	PaymentArgs          []byte         `json:"payment_args"`
+	GasPrice             uint64         `json:"gas_price"`
+}
+
+// NewMsgBond is a constructor function for MsgSetName
+func NewMsgBond(
+	execAccount sdk.AccAddress, contractOwnerAccount sdk.AccAddress,
+	sessionCode []byte, sessionArgs []byte,
+	paymentCode []byte, paymentArgs []byte,
+	gasPrice uint64,
+) MsgBond {
+	return MsgBond{
+		ExecAccount:          execAccount,
+		ContractOwnerAccount: contractOwnerAccount,
+		SessionCode:          sessionCode,
+		SessionArgs:          sessionArgs,
+		PaymentCode:          paymentCode,
+		PaymentArgs:          paymentArgs,
+		GasPrice:             gasPrice,
+	}
+}
+
+// Route should return the name of the module
+func (msg MsgBond) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgBond) Type() string { return "executionengine" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgBond) ValidateBasic() sdk.Error {
+	if msg.ExecAccount.Equals(sdk.AccAddress("")) || msg.ContractOwnerAccount.Equals(sdk.AccAddress("")) {
+		return sdk.ErrUnknownRequest("Address cannot be empty")
+	}
+	return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgBond) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgBond) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.ExecAccount}
+}
+
+//______________________________________________________________________
+type MsgUnBond struct {
+	ExecAccount          sdk.AccAddress `json:"exec_account"`
+	ContractOwnerAccount sdk.AccAddress `json:"contract_owner_account"`
+	SessionCode          []byte         `json:"session_code"`
+	SessionArgs          []byte         `json:"session_args"`
+	PaymentCode          []byte         `json:"payment_code"`
+	PaymentArgs          []byte         `json:"payment_args"`
+	GasPrice             uint64         `json:"gas_price"`
+}
+
+// NewMsgBond is a constructor function for MsgSetName
+func NewMsgUnBond(
+	execAccount sdk.AccAddress, contractOwnerAccount sdk.AccAddress,
+	sessionCode []byte, sessionArgs []byte,
+	paymentCode []byte, paymentArgs []byte,
+	gasPrice uint64,
+) MsgUnBond {
+	return MsgUnBond{
+		ExecAccount:          execAccount,
+		ContractOwnerAccount: contractOwnerAccount,
+		SessionCode:          sessionCode,
+		SessionArgs:          sessionArgs,
+		PaymentCode:          paymentCode,
+		PaymentArgs:          paymentArgs,
+		GasPrice:             gasPrice,
+	}
+}
+
+// Route should return the name of the module
+func (msg MsgUnBond) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgUnBond) Type() string { return "executionengine" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgUnBond) ValidateBasic() sdk.Error {
+	if msg.ExecAccount.Equals(sdk.AccAddress("")) || msg.ContractOwnerAccount.Equals(sdk.AccAddress("")) {
+		return sdk.ErrUnknownRequest("Address cannot be empty")
+	}
+	return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgUnBond) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgUnBond) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.ExecAccount}
 }

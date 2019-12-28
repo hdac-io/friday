@@ -14,6 +14,8 @@ var (
 	// function aliases
 	NewMsgExecute  = types.NewMsgExecute
 	NewMsgTransfer = types.NewMsgTransfer
+	NewMsgBond     = types.NewMsgBond
+	NewMsgUnBond   = types.NewMsgUnBond
 	RegisterCodec  = types.RegisterCodec
 	NewUnitHashMap = types.NewUnitHashMap
 
@@ -23,6 +25,8 @@ var (
 
 type (
 	MsgExecute                = types.MsgExecute
+	MsgBond                   = types.MsgBond
+	MsgUnBond                 = types.MsgUnBond
 	MsgCreateValidator        = types.MsgCreateValidator
 	QueryExecutionLayer       = types.QueryExecutionLayer
 	UnitHashMap               = types.UnitHashMap

@@ -10,6 +10,7 @@ import (
 
 	"github.com/hdac-io/friday/codec"
 	authtypes "github.com/hdac-io/friday/x/auth/types"
+	eltypes "github.com/hdac-io/friday/x/executionlayer/types"
 	stakingtypes "github.com/hdac-io/friday/x/staking/types"
 )
 
@@ -95,7 +96,7 @@ func ValidateGenesis(genesisState GenesisState) error {
 		}
 
 		msgs := tx.GetMsgs()
-		if len(msgs) != 1 {
+		if len(msgs) != 2 {
 			return errors.New(
 				"must provide genesis StdTx with exactly 1 CreateValidator message")
 		}
@@ -103,7 +104,12 @@ func ValidateGenesis(genesisState GenesisState) error {
 		// TODO: abstract back to staking
 		if _, ok := msgs[0].(stakingtypes.MsgCreateValidator); !ok {
 			return fmt.Errorf(
-				"genesis transaction %v does not contain a MsgCreateValidator", i)
+				"genesis transaction %v does not contain a staking MsgCreateValidator", i)
+		}
+
+		if _, ok := msgs[1].(eltypes.MsgCreateValidator); !ok {
+			return fmt.Errorf(
+				"genesis transaction %v does not contain a executionlayer MsgCreateValidator", i)
 		}
 	}
 	return nil

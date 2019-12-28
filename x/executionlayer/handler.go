@@ -20,6 +20,10 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 			return handlerMsgTransfer(ctx, k, msg)
 		case types.MsgCreateValidator:
 			return handlerMsgCreateValidator(ctx, k, msg)
+		case types.MsgBond:
+			return handlerMsgBond(ctx, k, msg)
+		case types.MsgUnBond:
+			return handlerMsgUnBond(ctx, k, msg)
 		default:
 			errMsg := fmt.Sprintf("unrecognized execution layer messgae type: %T", msg)
 			return sdk.ErrUnknownRequest(errMsg).Result()
@@ -47,13 +51,80 @@ func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExe
 }
 
 func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgCreateValidator) sdk.Result {
-	validator := types.Validator{
-		OperatorAddress: msg.ValidatorAddress,
-		ConsPubKey:      msg.PubKey,
-		Description:     msg.Description,
+	validator, found := k.GetValidator(ctx, msg.DelegatorAddress)
+	if !found {
+		validator = types.Validator{}
 	}
 
+	validator.OperatorAddress = msg.ValidatorAddress
+	validator.ConsPubKey = msg.PubKey
+	validator.Description = msg.Description
+
 	k.SetValidator(ctx, msg.DelegatorAddress, validator)
+
+	return getResult(true, msg)
+}
+
+func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) sdk.Result {
+	_, found := k.GetValidator(ctx, msg.ExecAccount)
+	if !found {
+		return getResult(false, msg)
+	}
+
+	blockHash := k.GetCandidateBlockHash(ctx)
+	unitHash := k.GetUnitHashMap(ctx, blockHash)
+
+	// Execute
+	deploys := util.MakeInitDeploys()
+	deploy := util.MakeDeploy(types.ToPublicKey(msg.ContractOwnerAccount), msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
+	deploys = util.AddDeploy(deploys, deploy)
+
+	protocolVersion := k.MustGetProtocolVersion(ctx)
+	effects, errGrpc := grpc.Execute(k.client, unitHash.EEState, ctx.BlockTime().Unix(), deploys, &protocolVersion)
+	if errGrpc != "" {
+		return getResult(false, msg)
+	}
+
+	// Commit
+	postStateHash, bonds, errGrpc := grpc.Commit(k.client, unitHash.EEState, effects, &protocolVersion)
+	if errGrpc != "" {
+		return getResult(false, msg)
+	}
+
+	k.SetEEState(ctx, blockHash, postStateHash)
+	k.SetCandidateBlockBond(ctx, bonds)
+
+	return getResult(true, msg)
+}
+
+func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBond) sdk.Result {
+	_, found := k.GetValidator(ctx, msg.ExecAccount)
+	if !found {
+		return getResult(false, msg)
+	}
+
+	blockHash := k.GetCandidateBlockHash(ctx)
+	unitHash := k.GetUnitHashMap(ctx, blockHash)
+
+	// Execute
+	deploys := util.MakeInitDeploys()
+	deploy := util.MakeDeploy(types.ToPublicKey(msg.ContractOwnerAccount), msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
+	deploys = util.AddDeploy(deploys, deploy)
+
+	protocolVersion := k.MustGetProtocolVersion(ctx)
+	effects, errGrpc := grpc.Execute(k.client, unitHash.EEState, ctx.BlockTime().Unix(), deploys, &protocolVersion)
+	if errGrpc != "" {
+		return getResult(false, msg)
+	}
+
+	// Commit
+	postStateHash, bonds, errGrpc := grpc.Commit(k.client, unitHash.EEState, effects, &protocolVersion)
+	if errGrpc != "" {
+		return getResult(false, msg)
+	}
+
+	k.SetEEState(ctx, blockHash, postStateHash)
+	k.SetCandidateBlockBond(ctx, bonds)
 
 	return getResult(true, msg)
 }

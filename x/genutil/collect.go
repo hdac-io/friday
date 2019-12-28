@@ -122,7 +122,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker, genTxsDir string,
 
 		// genesis transactions must be single-message
 		msgs := genStdTx.GetMsgs()
-		if len(msgs) != 1 {
+		if len(msgs) != 2 {
 			return appGenTxs, persistentPeers, errors.New(
 				"each genesis transaction must provide a single genesis message")
 		}

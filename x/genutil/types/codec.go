@@ -4,6 +4,7 @@ import (
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
 	authtypes "github.com/hdac-io/friday/x/auth/types"
+	eltypes "github.com/hdac-io/friday/x/executionlayer/types"
 	stakingtypes "github.com/hdac-io/friday/x/staking/types"
 )
 
@@ -16,6 +17,7 @@ func init() {
 	ModuleCdc = codec.New()
 	stakingtypes.RegisterCodec(ModuleCdc)
 	authtypes.RegisterCodec(ModuleCdc)
+	eltypes.RegisterCodec(ModuleCdc)
 	sdk.RegisterCodec(ModuleCdc)
 	codec.RegisterCrypto(ModuleCdc)
 	ModuleCdc.Seal()

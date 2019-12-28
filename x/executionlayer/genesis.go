@@ -48,7 +48,7 @@ func InitGenesis(
 
 	keeper.SetGenesisConf(ctx, data.GenesisConf)
 
-	candidateBlock := CandidateBlock{
+	candidateBlock := types.CandidateBlock{
 		Hash:  []byte(types.GenesisBlockHashKey),
 		Bonds: bonds,
 	}
