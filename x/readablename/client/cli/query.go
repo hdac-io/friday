@@ -6,7 +6,7 @@ import (
 	"github.com/hdac-io/friday/client"
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/codec"
-	"github.com/hdac-io/friday/x/nameservice/types"
+	"github.com/hdac-io/friday/x/readablename/types"
 
 	"github.com/spf13/cobra"
 )

@@ -1,4 +1,4 @@
-package nameservice
+package readablename
 
 import (
 	"encoding/json"
@@ -9,8 +9,8 @@ import (
 	"github.com/hdac-io/friday/codec"
 	"github.com/hdac-io/friday/types/module"
 	"github.com/hdac-io/friday/x/bank"
-	"github.com/hdac-io/friday/x/nameservice/client/cli"
-	"github.com/hdac-io/friday/x/nameservice/client/rest"
+	"github.com/hdac-io/friday/x/readablename/client/cli"
+	"github.com/hdac-io/friday/x/readablename/client/rest"
 
 	"github.com/hdac-io/friday/client/context"
 	sdk "github.com/hdac-io/friday/types"

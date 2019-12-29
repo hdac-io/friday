@@ -1,4 +1,4 @@
-package nameservice
+package readablename
 
 import (
 	"testing"
