@@ -6,7 +6,7 @@ import (
 
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/types/rest"
-	"github.com/hdac-io/friday/x/nameservice/types"
+	"github.com/hdac-io/friday/x/readablename/types"
 
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/auth/client/utils"

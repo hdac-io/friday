@@ -1,7 +1,7 @@
-package nameservice
+package readablename
 
 import (
-	"github.com/hdac-io/friday/x/nameservice/types"
+	"github.com/hdac-io/friday/x/readablename/types"
 )
 
 const (
