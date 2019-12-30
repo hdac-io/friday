@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/tendermint/crypto"
 )
 
 // RouterKey is not in sense yet
@@ -13,15 +14,17 @@ const RouterKey = ModuleName
 
 // MsgSetAccount defines a SetAccount message
 type MsgSetAccount struct {
-	ID      string         `json:"id"`
+	Name    Name           `json:"name"`
 	Address sdk.AccAddress `json:"address"`
+	PubKey  crypto.PubKey  `json:"pubkey"`
 }
 
 // NewMsgSetAccount is a constructor function for MsgSetName
-func NewMsgSetAccount(name string, address sdk.AccAddress) MsgSetAccount {
+func NewMsgSetAccount(name Name, address sdk.AccAddress, pubkey crypto.PubKey) MsgSetAccount {
 	return MsgSetAccount{
-		ID:      name,
+		Name:    name,
 		Address: address,
+		PubKey:  pubkey,
 	}
 }
 
@@ -33,10 +36,10 @@ func (msg MsgSetAccount) Type() string { return "newaccount" }
 
 // ValidateBasic runs stateless checks on the message
 func (msg MsgSetAccount) ValidateBasic() sdk.Error {
-	if msg.Address.String() == "" {
+	if msg.PubKey.Address().String() == "" {
 		return sdk.ErrUnknownRequest("Address cannot be empty")
 	}
-	if len(msg.ID) == 0 {
+	if msg.Name.Equal(NewName("")) {
 		return sdk.ErrUnknownRequest("ID cannot be empty")
 	}
 	return nil
@@ -53,67 +56,28 @@ func (msg MsgSetAccount) GetSigners() []sdk.AccAddress {
 }
 
 ///////////////////////////////////
-////////// Key check //////////////
-///////////////////////////////////
-
-// MsgAddrCheck defines a ChangeKey message
-type MsgAddrCheck struct {
-	ID      string         `json:"id"`
-	Address sdk.AccAddress `json:"address"`
-}
-
-// NewMsgAddrCheck is a constructor function for MsgAddrCheck
-func NewMsgAddrCheck(name string, address sdk.AccAddress) MsgAddrCheck {
-	return MsgAddrCheck{
-		ID:      name,
-		Address: address,
-	}
-}
-
-// Route should return the name of the module
-func (msg MsgAddrCheck) Route() string { return RouterKey }
-
-// Type should return the action
-func (msg MsgAddrCheck) Type() string { return "addrcheck" }
-
-// ValidateBasic runs stateless checks on the message
-func (msg MsgAddrCheck) ValidateBasic() sdk.Error {
-	if msg.ID == "" || msg.Address.String() == "" {
-		return sdk.ErrUnknownRequest("Address cannot be empty")
-	}
-	if len(msg.ID) == 0 {
-		return sdk.ErrUnknownRequest("ID cannot be empty")
-	}
-	return nil
-}
-
-// GetSignBytes encodes the message for signing
-func (msg MsgAddrCheck) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
-}
-
-// GetSigners defines whose signature is required
-func (msg MsgAddrCheck) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Address}
-}
-
-///////////////////////////////////
 ////////// Change Key /////////////
 ///////////////////////////////////
 
 // MsgChangeKey defines a ChangeKey message
 type MsgChangeKey struct {
 	ID         string         `json:"ID"`
-	OldAddress sdk.AccAddress `json:"oldaddress"`
-	NewAddress sdk.AccAddress `json:"newaddress"`
+	OldAddress sdk.AccAddress `json:"old_address"`
+	NewAddress sdk.AccAddress `json:"new_address"`
+	OldPubKey  crypto.PubKey  `json:"old_pubkey"`
+	NewPubKey  crypto.PubKey  `json:"new_pubkey"`
 }
 
 // NewMsgChangeKey is a constructor function for MsgChangeKey
-func NewMsgChangeKey(name string, oldAddress, newAddress sdk.AccAddress) MsgChangeKey {
+func NewMsgChangeKey(name string,
+	oldAddress, newAddress sdk.AccAddress,
+	oldPubKey, newPubKey crypto.PubKey) MsgChangeKey {
 	return MsgChangeKey{
 		ID:         name,
 		OldAddress: oldAddress,
 		NewAddress: newAddress,
+		OldPubKey:  oldPubKey,
+		NewPubKey:  newPubKey,
 	}
 }
 
@@ -125,8 +89,8 @@ func (msg MsgChangeKey) Type() string { return "changekey" }
 
 // ValidateBasic runs stateless checks on the message
 func (msg MsgChangeKey) ValidateBasic() sdk.Error {
-	if msg.OldAddress.String() == "" || msg.NewAddress.String() == "" {
-		return sdk.ErrUnknownRequest("Address cannot be empty")
+	if len(msg.OldPubKey.Bytes()) == 0 || len(msg.NewPubKey.Bytes()) == 0 {
+		return sdk.ErrUnknownRequest("PubKey cannot be empty")
 	}
 	if len(msg.ID) == 0 {
 		return sdk.ErrUnknownRequest("ID cannot be empty")
@@ -141,5 +105,5 @@ func (msg MsgChangeKey) GetSignBytes() []byte {
 
 // GetSigners defines whose signature is required
 func (msg MsgChangeKey) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.NewAddress}
+	return []sdk.AccAddress{msg.OldAddress}
 }

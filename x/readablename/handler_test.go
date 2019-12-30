@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/hdac-io/friday/types"
 
+	"github.com/hdac-io/tendermint/crypto/secp256k1"
 	"github.com/stretchr/testify/require"
 )
 
@@ -12,14 +13,14 @@ func TestValidMsg(t *testing.T) {
 	input := setupTestInput()
 	h := NewHandler(input.k)
 
-	addr, _ := sdk.AccAddressFromBech32("hdac-io1deadn2dxuy4ls6x7p2mw9prvw3nfhfvph974zt")
-	res := h(input.ctx, NewMsgSetAccount("bryanrhee", addr))
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	addr := sdk.AccAddress(pubkey.Address())
+	res := h(input.ctx, NewMsgSetAccount(NewName("bryanrhee"), addr, pubkey))
 	require.True(t, res.IsOK())
 
-	res = h(input.ctx, NewMsgAddrCheck("bryanrhee", addr))
-	require.True(t, res.IsOK())
-
-	res = h(input.ctx, NewMsgChangeKey("bryanrhee", addr, addr))
+	newpubkey := secp256k1.GenPrivKey().PubKey()
+	newaddr := sdk.AccAddress(newpubkey.Address())
+	res = h(input.ctx, NewMsgChangeKey("bryanrhee", addr, newaddr, pubkey, newpubkey))
 	require.True(t, res.IsOK())
 }
 

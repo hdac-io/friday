@@ -7,14 +7,15 @@ import (
 	"github.com/hdac-io/friday/x/auth"
 	"github.com/hdac-io/friday/x/params"
 	abci "github.com/hdac-io/tendermint/abci/types"
-	dbm "github.com/tendermint/tm-db"
+	cryptoamino "github.com/hdac-io/tendermint/crypto/encoding/amino"
 	"github.com/hdac-io/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 )
 
 type testInput struct {
 	cdc *codec.Codec
 	ctx sdk.Context
-	k   AccountKeeper
+	k   ReadableNameKeeper
 	ak  auth.AccountKeeper
 	pk  params.Keeper
 }
@@ -24,6 +25,7 @@ func setupTestInput() testInput {
 
 	cdc := codec.New()
 	auth.RegisterCodec(cdc)
+	cryptoamino.RegisterAmino(cdc)
 
 	authCapKey := sdk.NewKVStoreKey("authCapKey")
 	fckCapKey := sdk.NewKVStoreKey("fckCapKey")
@@ -46,7 +48,7 @@ func setupTestInput() testInput {
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
 
 	ak.SetParams(ctx, auth.DefaultParams())
-	storeKeeper := NewAccountKeeper(storekey, cdc)
+	storeKeeper := NewReadableNameKeeper(storekey, cdc)
 
 	return testInput{cdc: cdc, ctx: ctx, k: storeKeeper, ak: ak, pk: pk}
 }

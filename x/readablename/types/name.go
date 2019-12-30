@@ -134,3 +134,20 @@ func (N *Name) ToString() (string, error) {
 	}
 	return "", errors.New("Name object is not initialized")
 }
+
+// MustToString works as like ToString but no error return
+func (N *Name) MustToString() string {
+	res, err := N.ToString()
+	if err != nil {
+		return ""
+	}
+	return res
+}
+
+// Equal compares between two name objects
+func (N *Name) Equal(comp Name) bool {
+	if N.H == comp.H && N.L == comp.L {
+		return true
+	}
+	return false
+}

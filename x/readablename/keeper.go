@@ -2,6 +2,7 @@ package readablename
 
 import (
 	"github.com/hdac-io/friday/codec"
+	"github.com/hdac-io/tendermint/crypto"
 
 	sdk "github.com/hdac-io/friday/types"
 )
@@ -18,17 +19,17 @@ Impl:
 
 */
 
-// AccountKeeper is a store of all the account we've seen,
+// ReadableNameKeeper is a store of all the account we've seen,
 // and amino codec
 // Will further check more why store struct should contain codec
-type AccountKeeper struct {
+type ReadableNameKeeper struct {
 	cdc      *codec.Codec
 	storeKey sdk.StoreKey
 }
 
-// NewAccountKeeper returns AccountStore DB object
-func NewAccountKeeper(storeKey sdk.StoreKey, cdc *codec.Codec) AccountKeeper {
-	return AccountKeeper{
+// NewReadableNameKeeper returns AccountStore DB object
+func NewReadableNameKeeper(storeKey sdk.StoreKey, cdc *codec.Codec) ReadableNameKeeper {
+	return ReadableNameKeeper{
 		storeKey: storeKey,
 		cdc:      cdc,
 	}
@@ -36,10 +37,10 @@ func NewAccountKeeper(storeKey sdk.StoreKey, cdc *codec.Codec) AccountKeeper {
 
 // GetUnitAccount fetches the AccountInfo with the given unit account data
 // If not found, acc.UnitAccount is nil.
-func (k *AccountKeeper) GetUnitAccount(ctx sdk.Context, name string) UnitAccount {
+func (k *ReadableNameKeeper) GetUnitAccount(ctx sdk.Context, name string) UnitAccount {
 	st := ctx.KVStore(k.storeKey)
 	if !st.Has([]byte(name)) {
-		return NewUnitAccount()
+		return UnitAccount{}
 	}
 	val := st.Get([]byte(name))
 	var acc UnitAccount
@@ -49,19 +50,15 @@ func (k *AccountKeeper) GetUnitAccount(ctx sdk.Context, name string) UnitAccount
 
 // SetUnitAccount adds the given unit account to the database.
 // It returns false if the account is already stored.
-func (k *AccountKeeper) SetUnitAccount(ctx sdk.Context, name string, address sdk.AccAddress) bool {
+func (k *ReadableNameKeeper) SetUnitAccount(ctx sdk.Context, name string, address sdk.AccAddress, pubkey crypto.PubKey) bool {
 	// check if we already have seen it
 	acc := k.GetUnitAccount(ctx, name)
-	strname, _ := acc.ID.ToString()
-	if strname != "" {
+	if acc.Name.MustToString() != "" {
 		return false
 	}
 
 	// Constructring & Marshal
-	acc = UnitAccount{
-		ID:      NewName(name),
-		Address: address,
-	}
+	acc = NewUnitAccount(NewName(name), address, pubkey)
 	accBytes := k.cdc.MustMarshalBinaryBare(acc)
 
 	// add it to the store
@@ -72,17 +69,17 @@ func (k *AccountKeeper) SetUnitAccount(ctx sdk.Context, name string, address sdk
 }
 
 // ChangeKey updates public key of the account and apply to the database
-func (k *AccountKeeper) ChangeKey(ctx sdk.Context, name string, oldAddr, newAddr sdk.AccAddress) bool {
+func (k *ReadableNameKeeper) ChangeKey(ctx sdk.Context, name string,
+	oldAddr, newAddr sdk.AccAddress,
+	oldpubkey, newpubkey crypto.PubKey) bool {
+
 	// check if we already have seen it
 	acc := k.GetUnitAccount(ctx, name)
 	if acc.Address.String() != oldAddr.String() {
 		return false
 	}
 
-	acc = UnitAccount{
-		ID:      NewName(name),
-		Address: newAddr,
-	}
+	acc = NewUnitAccount(NewName(name), newAddr, newpubkey)
 	accBytes := k.cdc.MustMarshalBinaryBare(acc)
 
 	// add it to the store
@@ -92,18 +89,28 @@ func (k *AccountKeeper) ChangeKey(ctx sdk.Context, name string, oldAddr, newAddr
 	return true
 }
 
-// AddrCheck checks account by given private key
-func (k *AccountKeeper) AddrCheck(ctx sdk.Context, name string, address sdk.AccAddress) bool {
+// AddrCheck checks account by given address
+func (k *ReadableNameKeeper) AddrCheck(ctx sdk.Context, name string, address sdk.AccAddress) bool {
 	acc := k.GetUnitAccount(ctx, name)
-	strName, _ := acc.ID.ToString()
+	strName := acc.Name.MustToString()
 	if acc.Address.String() == address.String() && strName != "" {
 		return true
 	}
 	return false
 }
 
+// PubKeyCheck checks account by given public key
+func (k *ReadableNameKeeper) PubKeyCheck(ctx sdk.Context, name string, pubkey crypto.PubKey) bool {
+	acc := k.GetUnitAccount(ctx, name)
+	strName := acc.Name.MustToString()
+	if acc.PubKey.Equals(pubkey) && strName != "" {
+		return true
+	}
+	return false
+}
+
 // GetAccountIterator get iterator for listting all accounts.
-func (k *AccountKeeper) GetAccountIterator(ctx sdk.Context) sdk.Iterator {
+func (k *ReadableNameKeeper) GetAccountIterator(ctx sdk.Context) sdk.Iterator {
 	str := ctx.KVStore(k.storeKey)
 	return sdk.KVStorePrefixIterator(str, nil)
 }

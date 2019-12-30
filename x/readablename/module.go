@@ -8,7 +8,6 @@ import (
 
 	"github.com/hdac-io/friday/codec"
 	"github.com/hdac-io/friday/types/module"
-	"github.com/hdac-io/friday/x/bank"
 	"github.com/hdac-io/friday/x/readablename/client/cli"
 	"github.com/hdac-io/friday/x/readablename/client/rest"
 
@@ -66,12 +65,11 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 
 type AppModule struct {
 	AppModuleBasic
-	keeper     AccountKeeper
-	coinKeeper bank.Keeper
+	keeper ReadableNameKeeper
 }
 
 // NewAppModule creates a new AppModule Object
-func NewAppModule(k AccountKeeper) AppModule {
+func NewAppModule(k ReadableNameKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         k,

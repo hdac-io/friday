@@ -1,42 +1,27 @@
 package readablename
 
 import (
-	"math/rand"
 	"testing"
 
-	"github.com/hdac-io/friday/types"
 	sdk "github.com/hdac-io/friday/types"
-	"github.com/hdac-io/tendermint/crypto/ed25519"
+	"github.com/hdac-io/tendermint/crypto/secp256k1"
 
 	"github.com/stretchr/testify/assert"
 )
-
-//-------------------------------------------
-
-func addressGenerator(seed []byte) string {
-	var pub ed25519.PubKeyEd25519
-	rand.Read(seed)
-	acc := types.AccAddress(pub.Address())
-	str := acc.String()
-	return str
-}
 
 func TestStoreAddDuplicate(t *testing.T) {
 	assert := assert.New(t)
 	input := setupTestInput()
 	store := input.k
 
-	strAddress := addressGenerator([]byte("1"))
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	addr := sdk.AccAddress(pubkey.Address())
 
-	addr, err := sdk.AccAddressFromBech32(strAddress)
-	if err != nil {
-		panic(err)
-	}
-	added := store.SetUnitAccount(input.ctx, "bryanrhee", addr)
+	added := store.SetUnitAccount(input.ctx, "bryanrhee", addr, pubkey)
 	assert.True(added)
 
 	// cant add twice
-	added = store.SetUnitAccount(input.ctx, "bryanrhee", addr)
+	added = store.SetUnitAccount(input.ctx, "bryanrhee", addr, pubkey)
 	assert.False(added)
 }
 
@@ -45,21 +30,13 @@ func TestStoreKeyChange(t *testing.T) {
 	input := setupTestInput()
 	store := input.k
 
-	strAddressCurr := addressGenerator([]byte("1"))
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	addr := sdk.AccAddress(pubkey.Address())
+	store.SetUnitAccount(input.ctx, "bryanrhee", addr, pubkey)
 
-	addr, err := sdk.AccAddressFromBech32(strAddressCurr)
-	if err != nil {
-		panic(err)
-	}
-	store.SetUnitAccount(input.ctx, "bryanrhee", addr)
-
-	strAddressNew := addressGenerator([]byte("2"))
-	// Try to change
-	newaddr, err := sdk.AccAddressFromBech32(strAddressNew)
-	if err != nil {
-		panic(err)
-	}
-	changed := store.ChangeKey(input.ctx, "bryanrhee", addr, newaddr)
+	newpubkey := secp256k1.GenPrivKey().PubKey()
+	newaddr := sdk.AccAddress(pubkey.Address())
+	changed := store.ChangeKey(input.ctx, "bryanrhee", addr, newaddr, pubkey, newpubkey)
 	assert.True(changed)
 }
 
@@ -67,13 +44,10 @@ func TestStoreAddrCheck(t *testing.T) {
 	assert := assert.New(t)
 	input := setupTestInput()
 	store := input.k
-	strAddress := addressGenerator([]byte("1"))
 
-	addr, err := sdk.AccAddressFromBech32(strAddress)
-	if err != nil {
-		panic(err)
-	}
-	store.SetUnitAccount(input.ctx, "bryanrhee", addr)
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	addr := sdk.AccAddress(pubkey.Address())
+	store.SetUnitAccount(input.ctx, "bryanrhee", addr, pubkey)
 
 	verified := store.AddrCheck(input.ctx, "bryanrhee", addr)
 	assert.True(verified)
