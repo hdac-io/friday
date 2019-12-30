@@ -93,6 +93,10 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 		conf.P2P.SendRate = 5120000
 		conf.TxIndex.IndexAllTags = true
 		conf.Consensus.TimeoutCommit = 5 * time.Second
+		// set max body and yx bytes to 3MiB
+		maxBytes := 3 * 1024 * 1024 // 3MiB
+		conf.RPC.MaxBodyBytes = int64(maxBytes)
+		conf.Mempool.MaxTxBytes = maxBytes
 		cfg.WriteConfigFile(configFilePath, conf)
 		// Fall through, just so that its parsed into memory.
 	}

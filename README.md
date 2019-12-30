@@ -52,17 +52,6 @@ nodef gentx --name elsa # insert password
 nodef collect-gentxs
 nodef validate-genesis
 ```
-* edit ~/.nodef/config/config.toml
-```
-...
-# Maximum size of request body, in bytes
-max_body_bytes = 1000000 -> 3000000
-...
-# Maximum size of a single transaction.
-# NOTE: the max size of a tx transmitted over the network is {max_tx_bytes} + {amino overhead}.
-max_tx_bytes = 1048576 -> 3145728
-...
-```
 * genesis node start
 ```
 nodef start
@@ -134,20 +123,17 @@ nodef init <node_name> --chain-id testnet
 * edit ~/.nodef/config/config.toml
 ```
 ...
-# Maximum size of request body, in bytes
-max_body_bytes = 1000000 -> 3000000
-...
 # Comma separated list of seed nodes to connect to
 seeds = "" -> "<genesis node's ID>@<genesis node's IP>:26656"
-...
-# Maximum size of a single transaction.
-# NOTE: the max size of a tx transmitted over the network is {max_tx_bytes} + {amino overhead}.
-max_tx_bytes = 1048576 -> 3145728
 ...
 ```
 * replace `~/.nodef/config/genesis.json` to genesis node's one what you saved above.
 ## Test
 
 ```
-$ make test
+# run execution engine grpc server
+./CasperLabs/execution-engine/target/release/casperlabs-engine-grpc-server $HOME/.casperlabs/.casper-node.sock
+
+# run test
+make test
 ```
