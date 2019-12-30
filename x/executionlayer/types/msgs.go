@@ -228,22 +228,27 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 type MsgBond struct {
 	FromAddress sdk.AccAddress `json:"from_address"`
 	ValAddress  sdk.ValAddress `json:"val_address"`
-	Amount      uint64         `json:"amount"`
-	Fee         uint64         `json:"fee"`
+	SessionCode []byte         `json:"session_code"`
+	SessionArgs []byte         `json:"session_args"`
+	PaymentCode []byte         `json:"payment_code"`
+	PaymentArgs []byte         `json:"payment_args"`
 	GasPrice    uint64         `json:"gas_price"`
 }
 
 // NewMsgBond is a constructor function for MsgSetName
 func NewMsgBond(
 	fromAddress sdk.AccAddress, valAddress sdk.ValAddress,
-	amount uint64, fee uint64,
+	sessionCode []byte, sessionArgs []byte,
+	paymentCode []byte, paymentArgs []byte,
 	gasPrice uint64,
 ) MsgBond {
 	return MsgBond{
 		FromAddress: fromAddress,
 		ValAddress:  valAddress,
-		Amount:      amount,
-		Fee:         fee,
+		SessionCode: sessionCode,
+		SessionArgs: sessionArgs,
+		PaymentCode: paymentCode,
+		PaymentArgs: paymentArgs,
 		GasPrice:    gasPrice,
 	}
 }
@@ -276,22 +281,27 @@ func (msg MsgBond) GetSigners() []sdk.AccAddress {
 type MsgUnBond struct {
 	FromAddress sdk.AccAddress `json:"from_address"`
 	ValAddress  sdk.ValAddress `json:"val_address"`
-	Amount      uint64         `json:"amount"`
-	Fee         uint64         `json:"fee"`
+	SessionCode []byte         `json:"session_code"`
+	SessionArgs []byte         `json:"session_args"`
+	PaymentCode []byte         `json:"payment_code"`
+	PaymentArgs []byte         `json:"payment_args"`
 	GasPrice    uint64         `json:"gas_price"`
 }
 
 // NewMsgBond is a constructor function for MsgSetName
 func NewMsgUnBond(
 	fromAddress sdk.AccAddress, valAddress sdk.ValAddress,
-	amount uint64, fee uint64,
+	sessionCode []byte, sessionArgs []byte,
+	paymentCode []byte, paymentArgs []byte,
 	gasPrice uint64,
 ) MsgUnBond {
 	return MsgUnBond{
 		FromAddress: fromAddress,
 		ValAddress:  valAddress,
-		Amount:      amount,
-		Fee:         fee,
+		SessionCode: sessionCode,
+		SessionArgs: sessionArgs,
+		PaymentCode: paymentCode,
+		PaymentArgs: paymentArgs,
 		GasPrice:    gasPrice,
 	}
 }
