@@ -2,8 +2,6 @@ package executionlayer
 
 import (
 	"fmt"
-	"math/big"
-	"os"
 	"reflect"
 	"strconv"
 
@@ -80,14 +78,9 @@ func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) 
 
 	accAddress := sdk.AccAddress(msg.ValAddress)
 
-	bondCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/bonding.wasm"))
-	bondAbi := util.MakeArgsBonding(msg.Amount)
-	paymentCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
-	paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(msg.Fee))
-
 	// Execute
 	deploys := util.MakeInitDeploys()
-	deploy := util.MakeDeploy(types.ToPublicKey(accAddress), bondCode, bondAbi, paymentCode, paymentAbi, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
+	deploy := util.MakeDeploy(types.ToPublicKey(accAddress), msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
 	deploys = util.AddDeploy(deploys, deploy)
 
 	protocolVersion := k.MustGetProtocolVersion(ctx)
@@ -114,14 +107,9 @@ func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBo
 
 	accAddress := sdk.AccAddress(msg.ValAddress)
 
-	unbondCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/unbonding.wasm"))
-	unbondAbi := util.MakeArgsUnBonding(msg.Amount)
-	paymentCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
-	paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(msg.Fee))
-
 	// Execute
 	deploys := util.MakeInitDeploys()
-	deploy := util.MakeDeploy(types.ToPublicKey(accAddress), unbondCode, unbondAbi, paymentCode, paymentAbi, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
+	deploy := util.MakeDeploy(types.ToPublicKey(accAddress), msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
 	deploys = util.AddDeploy(deploys, deploy)
 
 	protocolVersion := k.MustGetProtocolVersion(ctx)

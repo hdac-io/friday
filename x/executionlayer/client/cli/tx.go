@@ -71,47 +71,45 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 // GetCmdBonding is the CLI command for bonding
 func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "bond [from_key_or_address] [validator_address] [amount] [fee] [gas_price]",
+		Use:   "bond",
 		Short: "Create and sign a bonding tx",
-		Args:  cobra.ExactArgs(5), // # of arguments
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithFrom(args[0]).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			valAddress, err := sdk.ValAddressFromBech32(args[1])
+			valAddress, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
 
-			amount, err := strconv.ParseUint(args[2], 10, 64)
-			if err != nil {
-				return err
-			}
+			amount := viper.GetUint64(FlagAmount)
 
-			fee, err := strconv.ParseUint(args[3], 10, 64)
-			if err != nil {
-				return err
-			}
+			fee := viper.GetUint64(FlagFee)
 
-			gasPrice, err := strconv.ParseUint(args[4], 10, 64)
-			if err != nil {
-				return err
-			}
+			gasPrice := viper.GetUint64(FlagGasPrice)
+
+			bondingCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/bonding.wasm"))
+			bondingAbi := util.MakeArgsBonding(amount)
+			paymentCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
+			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgBond(cliCtx.FromAddress, valAddress, amount, fee, gasPrice)
+			msg := types.NewMsgBond(cliCtx.FromAddress, valAddress, bondingCode, bondingAbi, paymentCode, paymentAbi, gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
-	// cmd.Flags().AddFlagSet(fsValidator)
-	// cmd.Flags().AddFlagSet(FsAmount)
+	cmd.Flags().String(client.FlagFrom, "", "The Bech32 address")
+	cmd.Flags().String(FlagFee, "", "fee")
+	cmd.Flags().String(FlagGasPrice, "", "gas prices")
+	cmd.Flags().AddFlagSet(fsValidator)
+	cmd.Flags().AddFlagSet(FsAmount)
 
-	// cmd.MarkFlagRequired(client.FlagFrom)
-	// cmd.MarkFlagRequired(client.FlagFees)
-	// cmd.MarkFlagRequired(client.FlagGasPrices)
-	// cmd.MarkFlagRequired(FlagAddressValidator)
-	// cmd.MarkFlagRequired(FlagAmount)
+	cmd.MarkFlagRequired(client.FlagFrom)
+	cmd.MarkFlagRequired(FlagFee)
+	cmd.MarkFlagRequired(FlagGasPrice)
+	cmd.MarkFlagRequired(FlagAddressValidator)
+	cmd.MarkFlagRequired(FlagAmount)
 
 	return cmd
 }
@@ -119,48 +117,46 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 // GetCmdUnbonding is the CLI command for unbonding
 func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unbond [from_key_or_address] [validator_address] [amount] [fee] [gas_price]",
+		Use:   "unbond",
 		Short: "Create and sign a unbonding tx",
-		Args:  cobra.ExactArgs(5), // # of arguments
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithFrom(args[0]).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			valAddress, err := sdk.ValAddressFromBech32(args[1])
+			valAddress, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
 
-			amount, err := strconv.ParseUint(args[2], 10, 64)
-			if err != nil {
-				return err
-			}
+			amount := viper.GetUint64(FlagAmount)
 
-			fee, err := strconv.ParseUint(args[3], 10, 64)
-			if err != nil {
-				return err
-			}
+			fee := viper.GetUint64(FlagFee)
 
-			gasPrice, err := strconv.ParseUint(args[4], 10, 64)
-			if err != nil {
-				return err
-			}
+			gasPrice := viper.GetUint64(FlagGasPrice)
+
+			unbondingCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/unbonding.wasm"))
+			unbondingAbi := util.MakeArgsUnBonding(amount)
+			paymentCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
+			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgUnBond(cliCtx.FromAddress, valAddress, amount, fee, gasPrice)
+			msg := types.NewMsgUnBond(cliCtx.FromAddress, valAddress, unbondingCode, unbondingAbi, paymentCode, paymentAbi, gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 
-	// cmd.Flags().AddFlagSet(fsValidator)
-	// cmd.Flags().AddFlagSet(FsAmount)
+	cmd.Flags().String(client.FlagFrom, "", "The Bech32 address")
+	cmd.Flags().String(FlagFee, "", "fee")
+	cmd.Flags().String(FlagGasPrice, "", "gas prices")
+	cmd.Flags().AddFlagSet(fsValidator)
+	cmd.Flags().AddFlagSet(FsAmount)
 
-	// cmd.MarkFlagRequired(client.FlagFrom)
-	// cmd.MarkFlagRequired(client.FlagFees)
-	// cmd.MarkFlagRequired(client.FlagGasPrices)
-	// cmd.MarkFlagRequired(FlagAddressValidator)
-	// cmd.MarkFlagRequired(FlagAmount)
+	cmd.MarkFlagRequired(client.FlagFrom)
+	cmd.MarkFlagRequired(FlagFee)
+	cmd.MarkFlagRequired(FlagGasPrice)
+	cmd.MarkFlagRequired(FlagAddressValidator)
+	cmd.MarkFlagRequired(FlagAmount)
 
 	return cmd
 }
@@ -183,6 +179,7 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
+	cmd.Flags().String(client.FlagFrom, "", "from address")
 	cmd.Flags().AddFlagSet(FsPk)
 	cmd.Flags().AddFlagSet(fsDescriptionCreate)
 

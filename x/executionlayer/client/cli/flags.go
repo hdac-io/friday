@@ -13,6 +13,8 @@ const (
 	FlagAddressValidatorDst = "addr-validator-dest"
 	FlagPubKey              = "pubkey"
 	FlagAmount              = "amount"
+	FlagFee                 = "fee"
+	FlagGasPrice            = "gas-price"
 
 	FlagMoniker  = "moniker"
 	FlagIdentity = "identity"
