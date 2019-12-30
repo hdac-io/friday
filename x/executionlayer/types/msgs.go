@@ -140,7 +140,7 @@ type msgCreateValidatorJSON struct {
 
 // Default way to create validator. Delegator address and validator address are the same
 func NewMsgCreateValidator(
-	valAddr sdk.ValAddress, pubKey crypto.PubKey, amount uint64,
+	valAddr sdk.ValAddress, pubKey crypto.PubKey,
 	description Description,
 ) MsgCreateValidator {
 	return MsgCreateValidator{
@@ -226,30 +226,25 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 
 //______________________________________________________________________
 type MsgBond struct {
-	ExecAccount          sdk.AccAddress `json:"exec_account"`
-	ContractOwnerAccount sdk.AccAddress `json:"contract_owner_account"`
-	SessionCode          []byte         `json:"session_code"`
-	SessionArgs          []byte         `json:"session_args"`
-	PaymentCode          []byte         `json:"payment_code"`
-	PaymentArgs          []byte         `json:"payment_args"`
-	GasPrice             uint64         `json:"gas_price"`
+	FromAddress sdk.AccAddress `json:"from_address"`
+	ValAddress  sdk.ValAddress `json:"val_address"`
+	Amount      uint64         `json:"amount"`
+	Fee         uint64         `json:"fee"`
+	GasPrice    uint64         `json:"gas_price"`
 }
 
 // NewMsgBond is a constructor function for MsgSetName
 func NewMsgBond(
-	execAccount sdk.AccAddress, contractOwnerAccount sdk.AccAddress,
-	sessionCode []byte, sessionArgs []byte,
-	paymentCode []byte, paymentArgs []byte,
+	fromAddress sdk.AccAddress, valAddress sdk.ValAddress,
+	amount uint64, fee uint64,
 	gasPrice uint64,
 ) MsgBond {
 	return MsgBond{
-		ExecAccount:          execAccount,
-		ContractOwnerAccount: contractOwnerAccount,
-		SessionCode:          sessionCode,
-		SessionArgs:          sessionArgs,
-		PaymentCode:          paymentCode,
-		PaymentArgs:          paymentArgs,
-		GasPrice:             gasPrice,
+		FromAddress: fromAddress,
+		ValAddress:  valAddress,
+		Amount:      amount,
+		Fee:         fee,
+		GasPrice:    gasPrice,
 	}
 }
 
@@ -261,7 +256,7 @@ func (msg MsgBond) Type() string { return "executionengine" }
 
 // ValidateBasic runs stateless checks on the message
 func (msg MsgBond) ValidateBasic() sdk.Error {
-	if msg.ExecAccount.Equals(sdk.AccAddress("")) || msg.ContractOwnerAccount.Equals(sdk.AccAddress("")) {
+	if msg.FromAddress.Equals(sdk.AccAddress("")) || msg.ValAddress.Equals(sdk.ValAddress("")) {
 		return sdk.ErrUnknownRequest("Address cannot be empty")
 	}
 	return nil
@@ -274,35 +269,30 @@ func (msg MsgBond) GetSignBytes() []byte {
 
 // GetSigners defines whose signature is required
 func (msg MsgBond) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.ExecAccount}
+	return []sdk.AccAddress{msg.FromAddress}
 }
 
 //______________________________________________________________________
 type MsgUnBond struct {
-	ExecAccount          sdk.AccAddress `json:"exec_account"`
-	ContractOwnerAccount sdk.AccAddress `json:"contract_owner_account"`
-	SessionCode          []byte         `json:"session_code"`
-	SessionArgs          []byte         `json:"session_args"`
-	PaymentCode          []byte         `json:"payment_code"`
-	PaymentArgs          []byte         `json:"payment_args"`
-	GasPrice             uint64         `json:"gas_price"`
+	FromAddress sdk.AccAddress `json:"from_address"`
+	ValAddress  sdk.ValAddress `json:"val_address"`
+	Amount      uint64         `json:"amount"`
+	Fee         uint64         `json:"fee"`
+	GasPrice    uint64         `json:"gas_price"`
 }
 
 // NewMsgBond is a constructor function for MsgSetName
 func NewMsgUnBond(
-	execAccount sdk.AccAddress, contractOwnerAccount sdk.AccAddress,
-	sessionCode []byte, sessionArgs []byte,
-	paymentCode []byte, paymentArgs []byte,
+	fromAddress sdk.AccAddress, valAddress sdk.ValAddress,
+	amount uint64, fee uint64,
 	gasPrice uint64,
 ) MsgUnBond {
 	return MsgUnBond{
-		ExecAccount:          execAccount,
-		ContractOwnerAccount: contractOwnerAccount,
-		SessionCode:          sessionCode,
-		SessionArgs:          sessionArgs,
-		PaymentCode:          paymentCode,
-		PaymentArgs:          paymentArgs,
-		GasPrice:             gasPrice,
+		FromAddress: fromAddress,
+		ValAddress:  valAddress,
+		Amount:      amount,
+		Fee:         fee,
+		GasPrice:    gasPrice,
 	}
 }
 
@@ -314,7 +304,7 @@ func (msg MsgUnBond) Type() string { return "executionengine" }
 
 // ValidateBasic runs stateless checks on the message
 func (msg MsgUnBond) ValidateBasic() sdk.Error {
-	if msg.ExecAccount.Equals(sdk.AccAddress("")) || msg.ContractOwnerAccount.Equals(sdk.AccAddress("")) {
+	if msg.FromAddress.Equals(sdk.AccAddress("")) || msg.ValAddress.Equals(sdk.ValAddress("")) {
 		return sdk.ErrUnknownRequest("Address cannot be empty")
 	}
 	return nil
@@ -327,5 +317,5 @@ func (msg MsgUnBond) GetSignBytes() []byte {
 
 // GetSigners defines whose signature is required
 func (msg MsgUnBond) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.ExecAccount}
+	return []sdk.AccAddress{msg.FromAddress}
 }

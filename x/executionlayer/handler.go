@@ -2,10 +2,18 @@ package executionlayer
 
 import (
 	"fmt"
+	"math/big"
+	"os"
 	"reflect"
+	"strconv"
 
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
+	tmtypes "github.com/hdac-io/tendermint/types"
+
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 )
 
 // NewHandler returns a handler for "executionlayer" type messages.
@@ -59,24 +67,27 @@ func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg type
 	validator.OperatorAddress = msg.ValidatorAddress
 	validator.ConsPubKey = msg.PubKey
 	validator.Description = msg.Description
+	validator.Stake = "0"
 
-	k.SetValidator(ctx, msg.DelegatorAddress, validator)
+	k.SetValidator(ctx, types.ToPublicKey(msg.DelegatorAddress), validator)
 
 	return getResult(true, msg)
 }
 
 func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) sdk.Result {
-	_, found := k.GetValidator(ctx, msg.ExecAccount)
-	if !found {
-		return getResult(false, msg)
-	}
-
 	blockHash := k.GetCandidateBlockHash(ctx)
 	unitHash := k.GetUnitHashMap(ctx, blockHash)
 
+	accAddress := sdk.AccAddress(msg.ValAddress)
+
+	bondCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/bonding.wasm"))
+	bondAbi := util.MakeArgsBonding(msg.Amount)
+	paymentCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
+	paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(msg.Fee))
+
 	// Execute
 	deploys := util.MakeInitDeploys()
-	deploy := util.MakeDeploy(types.ToPublicKey(msg.ContractOwnerAccount), msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
+	deploy := util.MakeDeploy(types.ToPublicKey(accAddress), bondCode, bondAbi, paymentCode, paymentAbi, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
 	deploys = util.AddDeploy(deploys, deploy)
 
 	protocolVersion := k.MustGetProtocolVersion(ctx)
@@ -98,17 +109,19 @@ func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) 
 }
 
 func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBond) sdk.Result {
-	_, found := k.GetValidator(ctx, msg.ExecAccount)
-	if !found {
-		return getResult(false, msg)
-	}
-
 	blockHash := k.GetCandidateBlockHash(ctx)
 	unitHash := k.GetUnitHashMap(ctx, blockHash)
 
+	accAddress := sdk.AccAddress(msg.ValAddress)
+
+	unbondCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/unbonding.wasm"))
+	unbondAbi := util.MakeArgsUnBonding(msg.Amount)
+	paymentCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
+	paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(msg.Fee))
+
 	// Execute
 	deploys := util.MakeInitDeploys()
-	deploy := util.MakeDeploy(types.ToPublicKey(msg.ContractOwnerAccount), msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
+	deploy := util.MakeDeploy(types.ToPublicKey(accAddress), unbondCode, unbondAbi, paymentCode, paymentAbi, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
 	deploys = util.AddDeploy(deploys, deploy)
 
 	protocolVersion := k.MustGetProtocolVersion(ctx)
@@ -127,6 +140,34 @@ func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBo
 	k.SetCandidateBlockBond(ctx, bonds)
 
 	return getResult(true, msg)
+}
+
+func EndBloker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
+	var validatorUpdates []abci.ValidatorUpdate
+
+	bonds := k.GetCandidateBlockBond(ctx)
+
+	for _, bond := range bonds {
+		validator, found := k.GetValidator(ctx, bond.ValidatorPublicKey)
+		if found == false {
+			continue
+		}
+		if validator.Stake == bond.GetStake().GetValue() {
+			continue
+		}
+		power, err := strconv.ParseInt(bond.Stake.GetValue(), 10, 64)
+		if err != nil {
+			continue
+		}
+		validatorUpdate := abci.ValidatorUpdate{
+			PubKey: tmtypes.TM2PB.PubKey(validator.ConsPubKey),
+			Power:  power,
+		}
+		validatorUpdates = append(validatorUpdates, validatorUpdate)
+		k.SetValidatorStake(ctx, bond.ValidatorPublicKey, bond.GetStake().GetValue())
+
+	}
+	return validatorUpdates
 }
 
 func getResult(ok bool, msg sdk.Msg) sdk.Result {

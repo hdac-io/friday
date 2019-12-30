@@ -3,10 +3,10 @@ package cli
 import (
 	"math/big"
 	"os"
-	"regexp"
 	"strconv"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
+	"github.com/hdac-io/friday/client"
 	"github.com/hdac-io/friday/codec"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 
@@ -70,88 +70,130 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 
 // GetCmdBonding is the CLI command for bonding
 func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
-		Use:   "bond [address] [amount] [fee] [gas_price]",
+	cmd := &cobra.Command{
+		Use:   "bond [from_key_or_address] [validator_address] [amount] [fee] [gas_price]",
 		Short: "Create and sign a bonding tx",
-		Args:  cobra.ExactArgs(4), // # of arguments
+		Args:  cobra.ExactArgs(5), // # of arguments
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContextWithFrom(args[0]).WithCodec(cdc)
 
-			coins, err := strconv.ParseUint(args[1], 10, 64)
+			valAddress, err := sdk.ValAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}
 
-			fee, err := strconv.ParseUint(args[2], 10, 64)
+			amount, err := strconv.ParseUint(args[2], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			gasPrice, err := strconv.ParseUint(args[3], 10, 64)
+			fee, err := strconv.ParseUint(args[3], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			bondingCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/bonding.wasm"))
-			bondingAbi := util.MakeArgsBonding(coins)
-			paymentCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
-			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
+			gasPrice, err := strconv.ParseUint(args[4], 10, 64)
+			if err != nil {
+				return err
+			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgBond(cliCtx.FromAddress, cliCtx.FromAddress, bondingCode, bondingAbi, paymentCode, paymentAbi, gasPrice)
+			msg := types.NewMsgBond(cliCtx.FromAddress, valAddress, amount, fee, gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
+	// cmd.Flags().AddFlagSet(fsValidator)
+	// cmd.Flags().AddFlagSet(FsAmount)
+
+	// cmd.MarkFlagRequired(client.FlagFrom)
+	// cmd.MarkFlagRequired(client.FlagFees)
+	// cmd.MarkFlagRequired(client.FlagGasPrices)
+	// cmd.MarkFlagRequired(FlagAddressValidator)
+	// cmd.MarkFlagRequired(FlagAmount)
+
+	return cmd
 }
 
 // GetCmdUnbonding is the CLI command for unbonding
 func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
-		Use:   "unbond [address] [amount] [fee] [gas_price]",
+	cmd := &cobra.Command{
+		Use:   "unbond [from_key_or_address] [validator_address] [amount] [fee] [gas_price]",
 		Short: "Create and sign a unbonding tx",
-		Args:  cobra.ExactArgs(4), // # of arguments
+		Args:  cobra.ExactArgs(5), // # of arguments
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContextWithFrom(args[0]).WithCodec(cdc)
 
-			coins, err := strconv.ParseUint(args[1], 10, 64)
+			valAddress, err := sdk.ValAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}
 
-			fee, err := strconv.ParseUint(args[2], 10, 64)
+			amount, err := strconv.ParseUint(args[2], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			gasPrice, err := strconv.ParseUint(args[3], 10, 64)
+			fee, err := strconv.ParseUint(args[3], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			unbondingCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/unbonding.wasm"))
-			unbondingAbi := util.MakeArgsUnBonding(coins)
-			paymentCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
-			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
+			gasPrice, err := strconv.ParseUint(args[4], 10, 64)
+			if err != nil {
+				return err
+			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgUnBond(cliCtx.FromAddress, cliCtx.FromAddress, unbondingCode, unbondingAbi, paymentCode, paymentAbi, gasPrice)
+			msg := types.NewMsgUnBond(cliCtx.FromAddress, valAddress, amount, fee, gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
+
+	// cmd.Flags().AddFlagSet(fsValidator)
+	// cmd.Flags().AddFlagSet(FsAmount)
+
+	// cmd.MarkFlagRequired(client.FlagFrom)
+	// cmd.MarkFlagRequired(client.FlagFees)
+	// cmd.MarkFlagRequired(client.FlagGasPrices)
+	// cmd.MarkFlagRequired(FlagAddressValidator)
+	// cmd.MarkFlagRequired(FlagAmount)
+
+	return cmd
+}
+
+// GetCmdCreateValidator implements the create validator command handler.
+func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-validator",
+		Short: "create new validator initialized with a self-delegation to it",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			msg, err := BuildCreateValidatorMsg(cliCtx)
+			if err != nil {
+				return err
+			}
+
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FsPk)
+	cmd.Flags().AddFlagSet(fsDescriptionCreate)
+
+	cmd.MarkFlagRequired(client.FlagFrom)
+	cmd.MarkFlagRequired(FlagPubKey)
+	cmd.MarkFlagRequired(FlagMoniker)
+
+	return cmd
 }
 
 func BuildCreateValidatorMsg(cliCtx context.CLIContext) (sdk.Msg, error) {
-	amounstStr := viper.GetString(FlagAmount)
-	re := regexp.MustCompile("[0-9]+")
-	coins, err := strconv.ParseUint(re.FindAllString(amounstStr, -1)[0], 10, 64)
-	if err != nil {
-		return types.MsgCreateValidator{}, err
-	}
-
 	valAddr := cliCtx.GetFromAddress()
 	pkStr := viper.GetString(FlagPubKey)
 
@@ -167,7 +209,7 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext) (sdk.Msg, error) {
 		viper.GetString(FlagDetails),
 	)
 
-	msg := types.NewMsgCreateValidator(sdk.ValAddress(valAddr), pk, coins, description)
+	msg := types.NewMsgCreateValidator(sdk.ValAddress(valAddr), pk, description)
 
 	return msg, nil
 }
