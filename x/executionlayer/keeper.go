@@ -397,6 +397,18 @@ func (k ExecutionLayerKeeper) SetValidatorDescription(ctx sdk.Context, accAddres
 	k.SetValidator(ctx, accAddress, validator)
 }
 
+func (k ExecutionLayerKeeper) GetValidatorStake(ctx sdk.Context, accAddress []byte) string {
+	validator, _ := k.GetValidator(ctx, accAddress)
+
+	return validator.Stake
+}
+
+func (k ExecutionLayerKeeper) SetValidatorStake(ctx sdk.Context, accAddress []byte, stake string) {
+	validator, _ := k.GetValidator(ctx, accAddress)
+	validator.Stake = stake
+	k.SetValidator(ctx, accAddress, validator)
+}
+
 // -----------------------------------------------------------------------------------------------------------
 func (k ExecutionLayerKeeper) isEmptyHash(src []byte) bool {
 	return bytes.Equal([]byte{}, src)
