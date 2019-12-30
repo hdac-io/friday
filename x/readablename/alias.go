@@ -12,7 +12,6 @@ const (
 
 var (
 	NewMsgSetAccount = types.NewMsgSetAccount
-	NewMsgAddrCheck  = types.NewMsgAddrCheck
 	NewMsgChangeKey  = types.NewMsgChangeKey
 	ModuleCdc        = types.ModuleCdc
 	RegisterCodec    = types.RegisterCodec
@@ -22,8 +21,8 @@ var (
 
 type (
 	MsgSetAccount       = types.MsgSetAccount
-	MsgAddrCheck        = types.MsgAddrCheck
 	MsgChangeKey        = types.MsgChangeKey
 	QueryResUnitAccount = types.QueryResUnitAccount
 	UnitAccount         = types.UnitAccount
+	QueryReqUnitAccount = types.QueryReqUnitAccount
 )

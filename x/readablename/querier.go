@@ -8,29 +8,33 @@ import (
 
 // Query endpoints definition for GET request
 const (
-	//QueryAccountsList = "accountslist"
-	//QueryGetAddress   = "getaddress"
 	QueryGetAccount = "getaccount"
 )
 
 // NewQuerier is the module level router for state queries
-func NewQuerier(k AccountKeeper) sdk.Querier {
+func NewQuerier(k ReadableNameKeeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
 		case QueryGetAccount:
 			return queryUnitAccount(ctx, path[1:], req, k)
 		default:
-			return nil, sdk.ErrUnknownRequest("unknown nameservice query endpoint")
+			return nil, sdk.ErrUnknownRequest("unknown readable name query endpoint")
 		}
 	}
 }
 
-func queryUnitAccount(ctx sdk.Context, path []string, req abci.RequestQuery, k AccountKeeper) ([]byte, sdk.Error) {
-	value := k.GetUnitAccount(ctx, path[0])
-	strname, _ := value.ID.ToString()
+func queryUnitAccount(ctx sdk.Context, path []string, req abci.RequestQuery, k ReadableNameKeeper) ([]byte, sdk.Error) {
+	var param QueryReqUnitAccount
+	err := ModuleCdc.UnmarshalJSON(req.Data, &param)
+	if err != nil {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, err.Error())
+	}
+
+	value := k.GetUnitAccount(ctx, param.Name)
 	qryvalue := QueryResUnitAccount{
-		ID:      strname,
+		Name:    value.Name.MustToString(),
 		Address: value.Address,
+		PubKey:  value.PubKey,
 	}
 	res, _ := codec.MarshalJSONIndent(k.cdc, qryvalue)
 	return res, nil

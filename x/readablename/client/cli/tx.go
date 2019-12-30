@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/hdac-io/friday/client"
@@ -17,7 +19,7 @@ import (
 func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	nameserviceTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      "Nameserver post Tx subcommands",
+		Short:                      "Readable name service subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
@@ -26,7 +28,6 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	nameserviceTxCmd.AddCommand(client.PostCommands(
 		GetCmdSetAccount(cdc),
 		GetCmdChangeKey(cdc),
-		GetCmdAddrCheck(cdc),
 	)...)
 
 	return nameserviceTxCmd
@@ -35,19 +36,25 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 // GetCmdSetAccount is the CLI command for sending a set account Tx
 func GetCmdSetAccount(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "setaccount [name] [address]",
+		Use:   "setkey [name] [pubkey]",
 		Short: "",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			//cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-
-			addr, _ := sdk.AccAddressFromBech32(args[1])
-			msg := types.NewMsgSetAccount(args[0], addr)
-			err := msg.ValidateBasic()
+			pubkey, err := sdk.GetAccPubKeyBech32(args[1])
 			if err != nil {
 				return err
+			}
+			addr := sdk.AccAddress(pubkey.Address())
+			straddr := addr.String()
+			fmt.Println("Register readable name for ", args[0], " -> ", straddr)
+
+			cliCtx := context.NewCLIContextWithFrom(straddr).WithCodec(cdc)
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+
+			msg := types.NewMsgSetAccount(types.NewName(args[0]), addr, pubkey)
+			errValidation := msg.ValidateBasic()
+			if errValidation != nil {
+				return errValidation
 			}
 
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
@@ -58,41 +65,33 @@ func GetCmdSetAccount(cdc *codec.Codec) *cobra.Command {
 // GetCmdChangeKey is the CLI command for changing key
 func GetCmdChangeKey(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "changekey [name] [old private key] [new private key]",
+		Use:   "changekey [name] [old_public_key] [new_public_key]",
 		Short: "",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-
-			oldaddr, _ := sdk.AccAddressFromBech32(args[1])
-			newaddr, _ := sdk.AccAddressFromBech32(args[2])
-			msg := types.NewMsgChangeKey(args[0], oldaddr, newaddr)
-			err := msg.ValidateBasic()
+			oldpubkey, err := sdk.GetAccPubKeyBech32(args[1])
 			if err != nil {
 				return err
 			}
+			oldaddr := sdk.AccAddress(oldpubkey.Address())
+			oldstraddr := oldaddr.String()
 
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
-		},
-	}
-}
-
-// GetCmdAddrCheck is the CLI command for changing key
-func GetCmdAddrCheck(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
-		Use:   "addrcheck [name] [address]",
-		Short: "",
-		Args:  cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-
-			addr, _ := sdk.AccAddressFromBech32(args[1])
-			msg := types.NewMsgAddrCheck(args[0], addr)
-			err := msg.ValidateBasic()
+			newpubkey, err := sdk.GetAccPubKeyBech32(args[2])
 			if err != nil {
 				return err
+			}
+			newaddr := sdk.AccAddress(newpubkey.Address())
+			newstraddr := newaddr.String()
+			fmt.Println("Change key for readable name ", args[0])
+			fmt.Println(oldstraddr, " -> ", newstraddr)
+
+			cliCtx := context.NewCLIContextWithFrom(oldstraddr).WithCodec(cdc)
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+
+			msg := types.NewMsgChangeKey(args[0], oldaddr, newaddr, oldpubkey, newpubkey)
+			errValidation := msg.ValidateBasic()
+			if err != nil {
+				return errValidation
 			}
 
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
