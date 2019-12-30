@@ -38,7 +38,7 @@ func GetExecutionLayerTxCmd(cdc *codec.Codec) *cobra.Command {
 // GetCmdTransfer is the CLI command for transfer
 func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "transfer [token_owner_address] [from_address] [to_address] [amount] [fee] [gas_price]",
+		Use:   "transfer [token_contract_address] [from_address] [to_address] [amount] [fee] [gas_price]",
 		Short: "Transfer token",
 		Args:  cobra.ExactArgs(6), // # of arguments
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -88,7 +88,7 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 // GetCmdBonding is the CLI command for bonding
 func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "bond [from_key_or_address] [amount] [fee] [gas_price]",
+		Use:   "bond [address] [amount] [fee] [gas_price]",
 		Short: "Create and sign a bonding tx",
 		Args:  cobra.ExactArgs(4), // # of arguments
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -126,7 +126,7 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 // GetCmdUnbonding is the CLI command for unbonding
 func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "unbond [from_key_or_address] [amount] [fee] [gas_price]",
+		Use:   "unbond [address] [amount] [fee] [gas_price]",
 		Short: "Create and sign a unbonding tx",
 		Args:  cobra.ExactArgs(4), // # of arguments
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -149,7 +149,7 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 			}
 
 			unbondingCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/unbonding.wasm"))
-			unbondingAbi := util.MakeArgsBonding(coins)
+			unbondingAbi := util.MakeArgsUnBonding(coins)
 			paymentCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
 			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
 

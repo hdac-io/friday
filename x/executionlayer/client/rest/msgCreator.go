@@ -15,14 +15,14 @@ import (
 )
 
 type transferReq struct {
-	ChainID           string `json:"chain_id"`
-	TokenOwnerAddress string `json:"token_owner_address"`
-	SenderAddress     string `json:"sender_address"`
-	RecipientAddress  string `json:"recipient_address"`
-	Amount            uint64 `json:"amount"`
-	Fee               uint64 `json:"fee"`
-	GasPrice          uint64 `json:"gas_price"`
-	Memo              string `json:"memo"`
+	ChainID              string `json:"chain_id"`
+	TokenContractAddress string `json:"token_contract_address"`
+	SenderAddress        string `json:"sender_address"`
+	RecipientAddress     string `json:"recipient_address"`
+	Amount               uint64 `json:"amount"`
+	Fee                  uint64 `json:"fee"`
+	GasPrice             uint64 `json:"gas_price"`
+	Memo                 string `json:"memo"`
 }
 
 func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
@@ -45,9 +45,9 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 	}
 
 	// Parameter touching
-	tokenowneraddr, err := sdk.AccAddressFromBech32(req.TokenOwnerAddress)
+	tokenowneraddr, err := sdk.AccAddressFromBech32(req.TokenContractAddress)
 	if err != nil {
-		return rest.BaseReq{}, nil, fmt.Errorf("wrong address type: %s", req.TokenOwnerAddress)
+		return rest.BaseReq{}, nil, fmt.Errorf("wrong address type: %s", req.TokenContractAddress)
 	}
 
 	senderaddr, err := sdk.AccAddressFromBech32(req.SenderAddress)
@@ -110,18 +110,20 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 	}
 
 	// TODO: Change after WASM store feature merge
-	var bondingCode []byte
+	var bondingUnbondingCode []byte
+	var bondingUnbondingAbi []byte
 	if bondIsTrue == true {
-		bondingCode = grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/bonding.wasm"))
+		bondingUnbondingCode = grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/bonding.wasm"))
+		bondingUnbondingAbi = grpc.MakeArgsBonding(req.Amount)
 	} else {
-		bondingCode = grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/unbonding.wasm"))
+		bondingUnbondingCode = grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/unbonding.wasm"))
+		bondingUnbondingAbi = grpc.MakeArgsUnBonding(req.Amount)
 	}
-	bondingAbi := grpc.MakeArgsBonding(req.Amount)
 	paymentCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
 	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.GasPrice))
 
 	// create the message
-	msg := types.NewMsgExecute([]byte{0}, addr, addr, bondingCode, bondingAbi, paymentCode, paymentAbi, req.GasPrice)
+	msg := types.NewMsgExecute([]byte{0}, addr, addr, bondingUnbondingCode, bondingUnbondingAbi, paymentCode, paymentAbi, req.GasPrice)
 	err = msg.ValidateBasic()
 	if err != nil {
 		return rest.BaseReq{}, nil, err
