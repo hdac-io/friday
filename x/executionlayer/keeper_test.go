@@ -252,7 +252,7 @@ func TestValidator(t *testing.T) {
 	val := types.NewValidator(valAddr, valPubKey, types.Description{
 		Website: "https://validator.friday",
 		Details: "Test validator",
-	})
+	}, "0")
 
 	input.elk.SetValidator(input.ctx, acc, val)
 

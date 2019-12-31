@@ -410,6 +410,12 @@ func (k ExecutionLayerKeeper) SetValidatorStake(ctx sdk.Context, accAddress []by
 }
 
 // -----------------------------------------------------------------------------------------------------------
+
+func (k ExecutionLayerKeeper) ConsensusPower(src int64) int64 {
+	// TODO : After the currency unit has been finalized, it needs to be rebalanced.
+	return 100
+}
+
 func (k ExecutionLayerKeeper) isEmptyHash(src []byte) bool {
 	return bytes.Equal([]byte{}, src)
 }
