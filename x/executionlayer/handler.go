@@ -143,13 +143,13 @@ func EndBloker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
 		if validator.Stake == bond.GetStake().GetValue() {
 			continue
 		}
-		power, err := strconv.ParseInt(bond.Stake.GetValue(), 10, 64)
+		coin, err := strconv.ParseInt(bond.Stake.GetValue(), 10, 64)
 		if err != nil {
 			continue
 		}
 		validatorUpdate := abci.ValidatorUpdate{
 			PubKey: tmtypes.TM2PB.PubKey(validator.ConsPubKey),
-			Power:  power,
+			Power:  k.ConsensusPower(coin),
 		}
 		validatorUpdates = append(validatorUpdates, validatorUpdate)
 		k.SetValidatorStake(ctx, bond.ValidatorPublicKey, bond.GetStake().GetValue())
