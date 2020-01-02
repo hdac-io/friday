@@ -4,15 +4,14 @@ import (
 	"encoding/json"
 
 	"github.com/gorilla/mux"
-	"github.com/spf13/cobra"
 	abci "github.com/hdac-io/tendermint/abci/types"
+	"github.com/spf13/cobra"
 
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/types/module"
 
-	"github.com/hdac-io/friday/x/executionlayer/client/cli"
 	"github.com/hdac-io/friday/x/executionlayer/client/rest"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 )
@@ -57,12 +56,12 @@ func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router
 
 // get the root tx command of this module
 func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetExecutionLayerTxCmd(cdc)
+	return nil
 }
 
 // get the root query command of this module
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	return cli.GetExecutionLayerQueryCmd(cdc)
+	return nil
 }
 
 //___________________________

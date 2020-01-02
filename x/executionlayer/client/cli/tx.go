@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
-	"github.com/hdac-io/friday/client"
 	"github.com/hdac-io/friday/codec"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 
@@ -16,24 +15,6 @@ import (
 	"github.com/hdac-io/friday/x/auth/client/utils"
 	"github.com/spf13/cobra"
 )
-
-// GetExecutionLayerTxCmd controls Tx request of CLI interface
-func GetExecutionLayerTxCmd(cdc *codec.Codec) *cobra.Command {
-	executionlayerTxCmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      "Tx commands for execution layer",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
-	executionlayerTxCmd.AddCommand(client.GetCommands(
-		GetCmdTransfer(cdc), GetCmdBonding(cdc), GetCmdUnbonding(cdc),
-	)...)
-	return executionlayerTxCmd
-}
-
-// The code below is a pattern of sending Tx
-// You may start from the example first
 
 // GetCmdTransfer is the CLI command for transfer
 func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {

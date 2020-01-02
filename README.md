@@ -76,9 +76,9 @@ clif status | grep \"id\"
 
 ### Clif usage
 * query
-  * usage: `clif query executionlayer getbalance [address]`
+  * usage: `clif executionlayer getbalance [address]`
 ```
-clif query executionlayer getbalance $(clif keys show elsa -a)
+clif executionlayer getbalance $(clif keys show elsa -a)
 
 {
    "value": "5000000000000"
@@ -86,10 +86,10 @@ clif query executionlayer getbalance $(clif keys show elsa -a)
 ```
 
 * transfer (send)
-  * usage: `clif tx executionlayer transfer [token_contract_address] [from_address] [to_address]  [amount] [fee] [gas_price]`
+  * usage: `clif executionlayer transfer [token_contract_address] [from_address] [to_address]  [amount] [fee] [gas_price]`
   * `token_contract_address` is currently dummy, and you may input as same as `from_address`
 ```
-clif tx executionlayer transfer $(clif keys show elsa -a) $(clif keys show elsa -a) $(clif keys show anna -a) 1000000 100000000 20000000
+clif executionlayer transfer $(clif keys show elsa -a) $(clif keys show elsa -a) $(clif keys show anna -a) 1000000 100000000 20000000
 
 ...
 confirm transaction before signing and broadcasting [y/N]: y
@@ -119,9 +119,9 @@ Password to sign with 'elsa': # input your password
 }
 ```
 * bond
-  * usage: `clif tx executionlayer bond [from_address] [bond_amount] [fee] [gas_price]`
+  * usage: `clif executionlayer bond [from_address] [bond_amount] [fee] [gas_price]`
 ```
-./clif tx executionlayer bond $(clif keys show elsa -a) 10000000 100000000 20000000
+./clif executionlayer bond $(clif keys show elsa -a) 10000000 100000000 20000000
 
 confirm transaction before signing and broadcasting [y/N]: y
 Password to sign with 'bryan':
@@ -151,9 +151,9 @@ Password to sign with 'bryan':
 ```
 
 * unbond
-  * usage: `clif tx executionlayer unbond [from_address] [unbond_amount] [fee] [gas_price]`
+  * usage: `clif executionlayer unbond [from_address] [unbond_amount] [fee] [gas_price]`
 ```
-./clif tx executionlayer unbond $(clif keys show elsa -a) 10000000 100000000 20000000
+./clif executionlayer unbond $(clif keys show elsa -a) 10000000 100000000 20000000
 
 confirm transaction before signing and broadcasting [y/N]: y
 Password to sign with 'bryan':
