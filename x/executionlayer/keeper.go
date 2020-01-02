@@ -3,6 +3,7 @@ package executionlayer
 import (
 	"bytes"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
@@ -313,6 +314,9 @@ func (k ExecutionLayerKeeper) GetCandidateBlock(ctx sdk.Context) types.Candidate
 
 func (k ExecutionLayerKeeper) SetCandidateBlock(ctx sdk.Context, candidateBlock types.CandidateBlock) {
 	store := ctx.KVStore(k.HashMapStoreKey)
+	sort.Slice(candidateBlock.Bonds, func(i, j int) bool {
+		return bytes.Compare(candidateBlock.Bonds[i].GetValidatorPublicKey(), candidateBlock.Bonds[j].GetValidatorPublicKey()) > 0
+	})
 	candidateBlockBytes := k.cdc.MustMarshalBinaryBare(candidateBlock)
 	store.Set([]byte(types.CandidateBlockKey), candidateBlockBytes)
 }
@@ -410,11 +414,6 @@ func (k ExecutionLayerKeeper) SetValidatorStake(ctx sdk.Context, accAddress []by
 }
 
 // -----------------------------------------------------------------------------------------------------------
-
-func (k ExecutionLayerKeeper) ConsensusPower(src int64) int64 {
-	// TODO : After the currency unit has been finalized, it needs to be rebalanced.
-	return 100
-}
 
 func (k ExecutionLayerKeeper) isEmptyHash(src []byte) bool {
 	return bytes.Equal([]byte{}, src)

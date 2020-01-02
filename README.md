@@ -37,8 +37,8 @@ clif keys add anna # select password
 # add genesis node
 nodef add-genesis-account $(clif keys show elsa -a) 5000000000000dummy,100000000stake
 nodef add-genesis-account $(clif keys show anna -a) 5000000000000dummy,100000000stake
-nodef add-el-genesis-account $(clif keys show elsa -a) "5000000000000" "100000000"
-nodef add-el-genesis-account $(clif keys show anna -a) "5000000000000" "100000000"
+nodef add-el-genesis-account $(clif keys show elsa -a) "5000000000000" "1000000"
+nodef add-el-genesis-account $(clif keys show anna -a) "5000000000000" "1000000"
 nodef load-chainspec ~/.nodef/config/manifest.toml
 
 # apply default clif configure

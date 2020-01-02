@@ -143,17 +143,17 @@ func EndBloker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
 		if validator.Stake == bond.GetStake().GetValue() {
 			continue
 		}
+		// TODO : There is a GasLimit error when the bonding value is greater than 7_000_000.
 		coin, err := strconv.ParseInt(bond.Stake.GetValue(), 10, 64)
 		if err != nil {
 			continue
 		}
 		validatorUpdate := abci.ValidatorUpdate{
 			PubKey: tmtypes.TM2PB.PubKey(validator.ConsPubKey),
-			Power:  k.ConsensusPower(coin),
+			Power:  coin,
 		}
 		validatorUpdates = append(validatorUpdates, validatorUpdate)
 		k.SetValidatorStake(ctx, bond.ValidatorPublicKey, bond.GetStake().GetValue())
-
 	}
 	return validatorUpdates
 }
