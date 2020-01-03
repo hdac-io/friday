@@ -63,7 +63,7 @@ func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockHash []byte, 
 	}
 
 	store := ctx.KVStore(k.HashMapStoreKey)
-	store.Set(blockHash, unitBytes)
+	store.Set(types.GetEEStateKey(blockHash), unitBytes)
 
 	return true
 }
@@ -74,7 +74,7 @@ func (k ExecutionLayerKeeper) GetUnitHashMap(ctx sdk.Context, blockHash []byte) 
 		blockHash = []byte(types.GenesisBlockHashKey)
 	}
 	store := ctx.KVStore(k.HashMapStoreKey)
-	unitBytes := store.Get(blockHash)
+	unitBytes := store.Get(types.GetEEStateKey(blockHash))
 	var unit UnitHashMap
 	k.cdc.UnmarshalBinaryBare(unitBytes, &unit)
 	return unit
@@ -93,15 +93,7 @@ func (k ExecutionLayerKeeper) SetEEState(ctx sdk.Context, blockHash []byte, eeSt
 		EEState: eeState,
 	}
 
-	unitBytes, err := k.cdc.MarshalBinaryBare(unit)
-	if err != nil {
-		return false
-	}
-
-	store := ctx.KVStore(k.HashMapStoreKey)
-	store.Set(blockHash, unitBytes)
-
-	return true
+	return k.SetUnitHashMap(ctx, blockHash, unit)
 }
 
 // GetEEState returns a eeState for blockHash
@@ -109,10 +101,7 @@ func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockHash []byte) []by
 	if k.isEmptyHash(blockHash) {
 		blockHash = []byte(types.GenesisBlockHashKey)
 	}
-	store := ctx.KVStore(k.HashMapStoreKey)
-	unitBytes := store.Get(blockHash)
-	var unit UnitHashMap
-	k.cdc.UnmarshalBinaryBare(unitBytes, &unit)
+	unit := k.GetUnitHashMap(ctx, blockHash)
 	return unit.EEState
 }
 
