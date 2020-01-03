@@ -11,7 +11,7 @@ import (
 func GetExecutionLayerCmd(cdc *codec.Codec) *cobra.Command {
 	executionlayerTxCmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      "Tx commands for execution layer",
+		Short:                      "Commands for execution layer",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
