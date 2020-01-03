@@ -350,19 +350,19 @@ func (k ExecutionLayerKeeper) SetCandidateBlockBond(ctx sdk.Context, bonds []*ip
 
 func (k ExecutionLayerKeeper) GetValidator(ctx sdk.Context, accAddress []byte) (validator types.Validator, found bool) {
 	store := ctx.KVStore(k.HashMapStoreKey)
-	validatorBytes := store.Get(accAddress)
+	validatorBytes := store.Get(types.GetValidatorKey(accAddress))
 	if validatorBytes == nil {
 		return validator, false
 	}
-	k.cdc.UnmarshalBinaryBare(validatorBytes, &validator)
+	validator = types.MustUnmarshalValidator(k.cdc, validatorBytes)
 
 	return validator, true
 }
 
 func (k ExecutionLayerKeeper) SetValidator(ctx sdk.Context, accAddress []byte, validator types.Validator) {
 	store := ctx.KVStore(k.HashMapStoreKey)
-	validatorBytes := k.cdc.MustMarshalBinaryBare(validator)
-	store.Set(accAddress, validatorBytes)
+	validatorBytes := types.MustMarshalValidator(k.cdc, validator)
+	store.Set(types.GetValidatorKey(accAddress), validatorBytes)
 }
 
 func (k ExecutionLayerKeeper) GetValidatorOperatorAddress(ctx sdk.Context, accAddress []byte) sdk.ValAddress {
@@ -411,6 +411,18 @@ func (k ExecutionLayerKeeper) SetValidatorStake(ctx sdk.Context, accAddress []by
 	validator, _ := k.GetValidator(ctx, accAddress)
 	validator.Stake = stake
 	k.SetValidator(ctx, accAddress, validator)
+}
+
+func (k ExecutionLayerKeeper) GetAllValidators(ctx sdk.Context) (validators []types.Validator) {
+	store := ctx.KVStore(k.HashMapStoreKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.ValidatorKey)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		validator := types.MustUnmarshalValidator(k.cdc, iterator.Value())
+		validators = append(validators, validator)
+	}
+	return validators
 }
 
 // -----------------------------------------------------------------------------------------------------------
