@@ -129,6 +129,9 @@ func LoadChainspecCmd(
 				cdc.MustUnmarshalJSON(appState[eltypes.ModuleName], &genesisState)
 			}
 
+			// execution engine also needs chain name
+			genesisState.ChainName = genDoc.ChainID
+
 			// parse chainspec toml
 			genesisConf, err := elconfig.ParseGenesisChainSpec(args[0])
 			if err != nil {

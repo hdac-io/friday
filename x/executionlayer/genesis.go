@@ -39,11 +39,13 @@ func InitGenesis(
 	if data.Accounts != nil {
 		keeper.SetGenesisAccounts(ctx, data.Accounts)
 	}
+	keeper.SetChainName(ctx, data.ChainName)
 	keeper.SetGenesisConf(ctx, data.GenesisConf)
 	keeper.SetEEState(ctx, ctx.BlockHeader().LastBlockId.Hash, response.GetSuccess().GetPoststateHash())
 }
 
 // ExportGenesis : exports an executionlayer configuration for genesis
 func ExportGenesis(ctx sdk.Context, keeper ExecutionLayerKeeper) types.GenesisState {
-	return types.NewGenesisState(keeper.GetGenesisConf(ctx), keeper.GetGenesisAccounts(ctx))
+	return types.NewGenesisState(
+		keeper.GetGenesisConf(ctx), keeper.GetGenesisAccounts(ctx), keeper.GetChainName(ctx))
 }

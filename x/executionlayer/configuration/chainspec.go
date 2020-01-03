@@ -43,11 +43,6 @@ func ParseGenesisChainSpec(chainSpecPath string) (*types.GenesisConf, error) {
 func parseGenesisTable(genesisTable *toml.Tree, chainSpecPath string) (*types.Genesis, error) {
 	genesis := types.Genesis{}
 
-	if genesisTable.Get("name") == nil {
-		return nil, types.ErrTomlParse(types.DefaultCodespace, "name")
-	}
-	genesis.Name = genesisTable.Get("name").(string)
-
 	if genesisTable.Get("timestamp") == nil {
 		return nil, types.ErrTomlParse(types.DefaultCodespace, "timestamp")
 	}

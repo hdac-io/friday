@@ -71,7 +71,7 @@ func setupTestInput() testInput {
 	elk := NewExecutionLayerKeeper(cdc, hashMapStoreKey, os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"), accountKeeper)
 
 	gs := types.DefaultGenesisState()
-	gs.GenesisConf.Genesis.Name = chainID
+	gs.ChainName = chainID
 	gs.Accounts = make([]types.Account, 1)
 	gs.Accounts[0] = types.Account{
 		PublicKey:           types.ToPublicKey(GenesisAccountAddress),
@@ -116,7 +116,7 @@ func counterDefine(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	protocolVersion := input.elk.MustGetProtocolVersion(input.ctx)
 
 	deploy := util.MakeDeploy(input.elk.GetGenesisAccounts(input.ctx)[0].PublicKey, cntDefCode, []byte{},
-		standardPaymentCode, paymentAbi, uint64(10), timestamp, input.elk.GetGenesisConf(input.ctx).Genesis.Name)
+		standardPaymentCode, paymentAbi, uint64(10), timestamp, input.elk.GetChainName(input.ctx))
 
 	deploys := util.MakeInitDeploys()
 	deploys = util.AddDeploy(deploys, deploy)
@@ -145,8 +145,7 @@ func counterCall(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 
 	timestamp = time.Now().Unix()
 	deploy := util.MakeDeploy(input.elk.GetGenesisAccounts(input.ctx)[0].PublicKey, cntCallCode,
-
-		[]byte{}, standardPaymentCode, paymentAbi, uint64(10), timestamp, input.elk.GetGenesisConf(input.ctx).Genesis.Name)
+		[]byte{}, standardPaymentCode, paymentAbi, uint64(10), timestamp, input.elk.GetChainName(input.ctx))
 	deploys := util.MakeInitDeploys()
 	deploys = util.AddDeploy(deploys, deploy)
 

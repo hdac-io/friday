@@ -18,7 +18,6 @@ const (
 func genesisConfigMock() types.GenesisConf {
 	return types.GenesisConf{
 		Genesis: types.Genesis{
-			Name:            "test-chain",
 			Timestamp:       1568805354071,
 			MintWasm:        []byte("mint contract bytes"),
 			PosWasm:         []byte("pos contract bytes"),
@@ -44,7 +43,6 @@ func TestParseGenesisChainSpecBasic(t *testing.T) {
 	got, err := ParseGenesisChainSpec(path.Join(testResourceDir, "manifest.toml"))
 	require.Nil(t, err)
 	expected := genesisConfigMock()
-	require.Equal(t, expected.Genesis.Name, got.Genesis.Name)
 	require.Equal(t, expected.Genesis.Timestamp, got.Genesis.Timestamp)
 	require.Equal(t, expected.Genesis.MintWasm, got.Genesis.MintWasm)
 	require.Equal(t, expected.Genesis.PosWasm, got.Genesis.PosWasm)
