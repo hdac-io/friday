@@ -62,3 +62,58 @@ func (msg MsgExecute) GetSignBytes() []byte {
 func (msg MsgExecute) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.ExecAccount}
 }
+
+// MsgTransfer for sending deploy to execution engine
+type MsgTransfer struct {
+	TokenOwnerAccount sdk.AccAddress `json:"token_owner_account"`
+	FromAccount       sdk.AccAddress `json:"from_account"`
+	ToAccount         sdk.AccAddress `json:"to_account"`
+	TransferCode      []byte         `json:"transfer_code"`
+	TransferArgs      []byte         `json:"transfer_args"`
+	PaymentCode       []byte         `json:"payment_code"`
+	PaymentArgs       []byte         `json:"payment_args"`
+	GasPrice          uint64         `json:"gas_price"`
+}
+
+// NewMsgTransfer is a constructor function for MsgSetName
+func NewMsgTransfer(
+	tokenOwnerAccount sdk.AccAddress,
+	fromAccount, toAccount sdk.AccAddress,
+	transferCode, transferArgs, paymentCode, paymentArgs []byte,
+	gasPrice uint64,
+) MsgTransfer {
+	return MsgTransfer{
+		TokenOwnerAccount: tokenOwnerAccount,
+		FromAccount:       fromAccount,
+		ToAccount:         toAccount,
+		TransferCode:      transferCode,
+		TransferArgs:      transferArgs,
+		PaymentCode:       paymentCode,
+		PaymentArgs:       paymentArgs,
+		GasPrice:          gasPrice,
+	}
+}
+
+// Route should return the name of the module
+func (msg MsgTransfer) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgTransfer) Type() string { return "executionengine" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgTransfer) ValidateBasic() sdk.Error {
+	if msg.FromAccount.Equals(sdk.AccAddress("")) || msg.TokenOwnerAccount.Equals(sdk.AccAddress("")) {
+		return sdk.ErrUnknownRequest("Address cannot be empty")
+	}
+	return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgTransfer) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgTransfer) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.FromAccount}
+}

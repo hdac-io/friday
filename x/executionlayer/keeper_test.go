@@ -2,9 +2,11 @@ package executionlayer
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math/big"
 	"path"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -142,6 +144,53 @@ func TestCreateBlock(t *testing.T) {
 	unitHash2 := input.elk.GetUnitHashMap(input.ctx, blockHash2)
 	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", types.ToPublicKey(GenesisAccountAddress), arrPath, &pv)
 	assert.Equal(t, int32(1), res2.GetIntValue())
+}
+
+func TestTransfer(t *testing.T) {
+	input := setupTestInput()
+	parentHash := genesis(input.elk)
+	blockHash := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
+	input.elk.SetEEState(input.ctx, blockHash, parentHash)
+
+	blockHash1 := []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+	nextBlockABCI1 := abci.RequestBeginBlock{
+		Hash:   blockHash1,
+		Header: abci.Header{LastBlockId: abci.BlockID{Hash: blockHash}},
+	}
+
+	BeginBlocker(input.ctx, nextBlockABCI1, input.elk)
+
+	transferMSG := NewMsgTransfer(
+		GenesisAccountAddress,
+		GenesisAccountAddress,
+		RecipientAccountAddress,
+		util.LoadWasmFile(path.Join(contractPath, transferWasm)),
+		util.MakeArgsTransferToAccount(types.ToPublicKey(RecipientAccountAddress), 100000000),
+		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
+		util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000)),
+		uint64(200000000),
+	)
+
+	handlerMsgTransfer(input.ctx, input.elk, transferMSG)
+
+	blockHash2 := []byte{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
+	nextBlockABCI2 := abci.RequestBeginBlock{
+		Hash:   blockHash2,
+		Header: abci.Header{LastBlockId: abci.BlockID{Hash: blockHash1}},
+	}
+
+	BeginBlocker(input.ctx, nextBlockABCI2, input.elk)
+
+	res, err := input.elk.GetQueryBalanceResultSimple(input.ctx, types.ToPublicKey(RecipientAccountAddress))
+	queriedRes, _ := strconv.Atoi(res)
+
+	assert.Equal(t, queriedRes, 100000000)
+	assert.Equal(t, err, nil)
+
+	res2, err := input.elk.GetQueryBalanceResultSimple(input.ctx, types.ToPublicKey(GenesisAccountAddress))
+	queriedRes2, _ := strconv.Atoi(res2)
+	fmt.Println(queriedRes)
+	fmt.Println(queriedRes2)
 }
 
 func TestMarsahlAndUnMarshal(t *testing.T) {

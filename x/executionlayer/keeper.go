@@ -2,13 +2,15 @@ package executionlayer
 
 import (
 	"bytes"
-	"encoding/hex"
 	"fmt"
 	"strings"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
+
+	"github.com/hdac-io/friday/x/auth"
 
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
@@ -18,14 +20,17 @@ import (
 type ExecutionLayerKeeper struct {
 	HashMapStoreKey sdk.StoreKey
 	client          ipc.ExecutionEngineServiceClient
+	AccountKeeper   auth.AccountKeeper
 	cdc             *codec.Codec
 }
 
 func NewExecutionLayerKeeper(
-	cdc *codec.Codec, hashMapStoreKey sdk.StoreKey, path string) ExecutionLayerKeeper {
+	cdc *codec.Codec, hashMapStoreKey sdk.StoreKey, path string, accountKeeper auth.AccountKeeper) ExecutionLayerKeeper {
+
 	return ExecutionLayerKeeper{
 		HashMapStoreKey: hashMapStoreKey,
 		client:          grpc.Connect(path),
+		AccountKeeper:   accountKeeper,
 		cdc:             cdc,
 	}
 }
@@ -107,41 +112,81 @@ func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockHash []byte) []by
 	return unit.EEState
 }
 
-// TODO: change KeyType from string to typed enum.
-func toBytes(keyType string, key string) ([]byte, error) {
-	var bytes []byte
-	var err error = nil
+// Transfer function executes "Execute" of Execution layer, that is specialized for transfer
+// Difference of general execution
+//   1) Raw account is needed for checking address existence
+//   2) Fixed transfer & payemtn WASMs are needed
+func (k ExecutionLayerKeeper) Transfer(
+	ctx sdk.Context,
+	tokenOwnerAccount, fromAddress, toAddress sdk.AccAddress,
+	transferCode []byte,
+	transferAbi []byte,
+	paymentCode []byte,
+	paymentAbi []byte,
+	gasPrice uint64) error {
 
-	switch keyType {
-	case "address":
-		bech32addr, err := sdk.AccAddressFromBech32(key)
-		if err != nil {
-			return nil, err
-		}
-		bytes = types.ToPublicKey(bech32addr)
-	case "uref", "local", "hash":
-		bytes, err = hex.DecodeString(key)
-	default:
-		err = fmt.Errorf("Unknown QueryKey type: %v", keyType)
-	}
-
+	k.SetAccountIfNotExists(ctx, toAddress)
+	err := k.Execute(ctx, k.GetCurrentBlockHash(ctx), fromAddress, tokenOwnerAccount, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return bytes, nil
+
+	return nil
+}
+
+// Execute is general execution
+func (k ExecutionLayerKeeper) Execute(ctx sdk.Context,
+	blockHash []byte,
+	execAccount sdk.AccAddress,
+	contractOwnerAccount sdk.AccAddress,
+	sessionCode []byte,
+	sessionArgs []byte,
+	paymentCode []byte,
+	paymentArgs []byte,
+	gasPrice uint64) error {
+
+	copiedBlockhash := blockHash
+	if bytes.Equal(copiedBlockhash, []byte{0}) {
+		copiedBlockhash = k.GetCurrentBlockHash(ctx)
+	}
+
+	// Parameter preparation
+	execAccountPubKey := types.ToPublicKey(execAccount)
+	unitHash := k.GetUnitHashMap(ctx, copiedBlockhash)
+	protocolVersion := k.MustGetProtocolVersion(ctx)
+
+	// Execute
+	deploys := util.MakeInitDeploys()
+	deploy := util.MakeDeploy(execAccountPubKey, sessionCode, sessionArgs, paymentCode, paymentArgs, gasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
+	deploys = util.AddDeploy(deploys, deploy)
+	effects, errGrpc := grpc.Execute(k.client, unitHash.EEState, ctx.BlockTime().Unix(), deploys, &protocolVersion)
+	if errGrpc != "" {
+		return fmt.Errorf(errGrpc)
+	}
+
+	// Commit
+	postStateHash, _, errGrpc := grpc.Commit(k.client, unitHash.EEState, effects, &protocolVersion)
+	if errGrpc != "" {
+		return fmt.Errorf(errGrpc)
+	}
+
+	k.SetEEState(ctx, copiedBlockhash, postStateHash)
+
+	return nil
 }
 
 // GetQueryResult queries with whole parameters
 func (k ExecutionLayerKeeper) GetQueryResult(ctx sdk.Context,
-	stateHash []byte, keyType string, keyData string, path string) (state.Value, error) {
+	blockhash []byte, keyType string, keyData string, path string) (state.Value, error) {
 	arrPath := strings.Split(path, "/")
 
 	protocolVersion := k.MustGetProtocolVersion(ctx)
+	unitHash := k.GetUnitHashMap(ctx, blockhash)
 	keyDataBytes, err := toBytes(keyType, keyData)
 	if err != nil {
 		return state.Value{}, err
 	}
-	res, errstr := grpc.Query(k.client, stateHash, keyType, keyDataBytes, arrPath, &protocolVersion)
+	res, errstr := grpc.Query(k.client, unitHash.EEState, keyType, keyDataBytes, arrPath, &protocolVersion)
 	if errstr != "" {
 		return state.Value{}, fmt.Errorf(errstr)
 	}
@@ -153,27 +198,20 @@ func (k ExecutionLayerKeeper) GetQueryResult(ctx sdk.Context,
 // State hash comes from Tendermint block state - EE state mapping DB
 func (k ExecutionLayerKeeper) GetQueryResultSimple(ctx sdk.Context,
 	keyType string, keyData string, path string) (state.Value, error) {
-	unitHash := k.GetUnitHashMap(ctx, k.GetCurrentBlockHash(ctx))
-	arrPath := strings.Split(path, "/")
-
-	keyDataBytes, err := toBytes(keyType, keyData)
+	currBlock := k.GetCurrentBlockHash(ctx)
+	res, err := k.GetQueryResult(ctx, currBlock, keyType, keyData, path)
 	if err != nil {
 		return state.Value{}, err
 	}
 
-	protocolVersion := k.MustGetProtocolVersion(ctx)
-	res, errstr := grpc.Query(k.client, unitHash.EEState, keyType, keyDataBytes, arrPath, &protocolVersion)
-	if errstr != "" {
-		return state.Value{}, fmt.Errorf(errstr)
-	}
-
-	return *res, nil
+	return res, nil
 }
 
 // GetQueryBalanceResult queries with whole parameters
-func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, stateHash []byte, address types.PublicKey) (string, error) {
+func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, blockhash []byte, address types.PublicKey) (string, error) {
+	unitHash := k.GetUnitHashMap(ctx, blockhash)
 	protocolVersion := k.MustGetProtocolVersion(ctx)
-	res, err := grpc.QueryBalance(k.client, stateHash, address, &protocolVersion)
+	res, err := grpc.QueryBalance(k.client, unitHash.EEState, address, &protocolVersion)
 	if err != "" {
 		return "", fmt.Errorf(err)
 	}
@@ -183,11 +221,9 @@ func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, stateHash [
 
 // GetQueryBalanceResultSimple queries with whole parameters
 func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, address types.PublicKey) (string, error) {
-	unitHash := k.GetUnitHashMap(ctx, k.GetCurrentBlockHash(ctx))
-	protocolVersion := k.MustGetProtocolVersion(ctx)
-	res, err := grpc.QueryBalance(k.client, unitHash.EEState, address, &protocolVersion)
-	if err != "" {
-		return "", fmt.Errorf(err)
+	res, err := k.GetQueryBalanceResult(ctx, k.GetCurrentBlockHash(ctx), address)
+	if err != nil {
+		return "", err
 	}
 
 	return res, nil
@@ -240,8 +276,19 @@ func (k ExecutionLayerKeeper) GetCurrentBlockHash(ctx sdk.Context) []byte {
 	return blockHash
 }
 
+// SetAccountIfNotExists runs if network has no given account
+func (k ExecutionLayerKeeper) SetAccountIfNotExists(ctx sdk.Context, account sdk.AccAddress) {
+	// Recepient account existence check, if not, create one
+	toAddressAccountObject := k.AccountKeeper.GetAccount(ctx, account)
+	if toAddressAccountObject == nil {
+		toAddressAccountObject = k.AccountKeeper.NewAccountWithAddress(ctx, account)
+		k.AccountKeeper.SetAccount(ctx, toAddressAccountObject)
+	}
+}
+
 // SetCurrentBlockHash saves current block hash
 func (k ExecutionLayerKeeper) SetCurrentBlockHash(ctx sdk.Context, blockHash []byte) {
 	store := ctx.KVStore(k.HashMapStoreKey)
+	store.Delete([]byte("currentblockhash"))
 	store.Set([]byte("currentblockhash"), blockHash)
 }

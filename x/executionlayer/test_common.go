@@ -12,7 +12,10 @@ import (
 	"github.com/hdac-io/friday/codec"
 	"github.com/hdac-io/friday/store"
 	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/auth"
+	authtypes "github.com/hdac-io/friday/x/auth/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
+	"github.com/hdac-io/friday/x/params/subspace"
 	abci "github.com/hdac-io/tendermint/abci/types"
 	"github.com/hdac-io/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -23,13 +26,15 @@ const (
 )
 
 var (
-	GenesisAccountAddress, _ = sdk.AccAddressFromBech32("friday1dl2cjlfpmc9hcyd4rxts047tze87s0gxmzqx70")
-	contractPath             = os.ExpandEnv("$HOME/.nodef/contracts")
-	mintInstallWasm          = "mint_install.wasm"
-	posInstallWasm           = "pos_install.wasm"
-	standardPaymentWasm      = "standard_payment.wasm"
-	counterDefineWasm        = "counter_define.wasm"
-	counterCallWasm          = "counter_call.wasm"
+	GenesisAccountAddress, _   = sdk.AccAddressFromBech32("friday1dl2cjlfpmc9hcyd4rxts047tze87s0gxmzqx70")
+	RecipientAccountAddress, _ = sdk.AccAddressFromBech32("friday1y2dx0evs5k6hxuhfrfdmm7wcwsrqr073htghpv")
+	contractPath               = os.ExpandEnv("$HOME/.nodef/contracts")
+	mintInstallWasm            = "mint_install.wasm"
+	posInstallWasm             = "pos_install.wasm"
+	standardPaymentWasm        = "standard_payment.wasm"
+	counterDefineWasm          = "counter_define.wasm"
+	counterCallWasm            = "counter_call.wasm"
+	transferWasm               = "transfer_to_account.wasm"
 )
 
 type testInput struct {
@@ -47,13 +52,23 @@ func setupTestInput() testInput {
 
 	hashMapStoreKey := sdk.NewKVStoreKey(HashMapStoreKey)
 
+	authCapKey := sdk.NewKVStoreKey("authCapKey")
+	keyParams := sdk.NewKVStoreKey("subspace")
+	tkeyParams := sdk.NewTransientStoreKey("transient_subspace")
+
+	ps := subspace.NewSubspace(cdc, keyParams, tkeyParams, authtypes.DefaultParamspace)
+
 	ms := store.NewCommitMultiStore(db)
+	ms.MountStoreWithDB(authCapKey, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	ms.MountStoreWithDB(hashMapStoreKey, sdk.StoreTypeIAVL, db)
 	ms.LoadLatestVersion()
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: chainID}, false, log.NewNopLogger())
+	accountKeeper := auth.NewAccountKeeper(cdc, authCapKey, ps, auth.ProtoBaseAccount)
 
-	elk := NewExecutionLayerKeeper(cdc, hashMapStoreKey, os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"))
+	elk := NewExecutionLayerKeeper(cdc, hashMapStoreKey, os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"), accountKeeper)
 
 	gs := types.DefaultGenesisState()
 	gs.GenesisConf.Genesis.Name = chainID

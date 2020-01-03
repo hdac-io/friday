@@ -65,9 +65,9 @@ clif status | grep \"id\"
 
 ### Clif usage
 * query
-  * usage: `clif query executionlayer getbalance [address]`
+  * usage: `clif executionlayer getbalance [address]`
 ```
-clif query executionlayer getbalance $(clif keys show elsa -a)
+clif executionlayer getbalance $(clif keys show elsa -a)
 
 {
    "value": "5000000000000"
@@ -75,9 +75,10 @@ clif query executionlayer getbalance $(clif keys show elsa -a)
 ```
 
 * transfer (send)
-  * usage: `clif tx send [from address] [to address]  [amount] [fee] [gas_price]`
+  * usage: `clif executionlayer transfer [token_contract_address] [from_address] [to_address]  [amount] [fee] [gas_price]`
+  * `token_contract_address` is currently dummy, and you may input as same as `from_address`
 ```
-clif tx send $(clif keys show elsa -a) $(clif keys show anna -a) 100dummy 100000000 20000000
+clif executionlayer transfer $(clif keys show elsa -a) $(clif keys show elsa -a) $(clif keys show anna -a) 1000000 100000000 20000000
 
 ...
 confirm transaction before signing and broadcasting [y/N]: y
@@ -107,9 +108,68 @@ Password to sign with 'elsa': # input your password
 }
 ```
 * bond
-  * usage: `clif executionlayer bond [from address] [bond amount] [fee] [gas_price]`
+  * usage: `clif executionlayer bond [from_address] [bond_amount] [fee] [gas_price]`
+```
+./clif executionlayer bond $(clif keys show elsa -a) 10000000 100000000 20000000
+
+confirm transaction before signing and broadcasting [y/N]: y
+Password to sign with 'bryan':
+{
+  "height": "0",
+  "txhash": "22DF1E0D8D9EB8BE2B5F50995C6FC0AB20E34715875A9F9856A9466A8C406807",
+  "raw_log": "[{\"msg_index\":0,\"success\":true,\"log\":\"\",\"events\":[{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"executionengine\"}]}]}]",
+  "logs": [
+    {
+      "msg_index": 0,
+      "success": true,
+      "log": "",
+      "events": [
+        {
+          "type": "message",
+          "attributes": [
+            {
+              "key": "action",
+              "value": "executionengine"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
 * unbond
-  * usage: `clif executionlayer unbond [from address] [unbond amount] [fee] [gas_price]`
+  * usage: `clif executionlayer unbond [from_address] [unbond_amount] [fee] [gas_price]`
+```
+./clif executionlayer unbond $(clif keys show elsa -a) 10000000 100000000 20000000
+
+confirm transaction before signing and broadcasting [y/N]: y
+Password to sign with 'bryan':
+{
+  "height": "0",
+  "txhash": "69C51D25E3E5DB4F2D4ACE832C775DC8EE993E9CDB7560A3AF470FF07CC7FFC9",
+  "raw_log": "[{\"msg_index\":0,\"success\":true,\"log\":\"\",\"events\":[{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"executionengine\"}]}]}]",
+  "logs": [
+    {
+      "msg_index": 0,
+      "success": true,
+      "log": "",
+      "events": [
+        {
+          "type": "message",
+          "attributes": [
+            {
+              "key": "action",
+              "value": "executionengine"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
 
 ### Connect to seed node
 * run this on another machine

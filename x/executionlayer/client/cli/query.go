@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/hex"
 	"fmt"
 
 	"github.com/hdac-io/friday/client"
@@ -72,16 +73,22 @@ func GetCmdQueryBalanceWithBlockHash(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			name, err := types.NewPublicKey(args[0])
+			addr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				fmt.Println("Malformed address - ", args[0])
 				fmt.Println(err)
 				return nil
 			}
-			blockHash := []byte(args[1])
+			name := types.ToPublicKey(addr)
+			blockHash, err := hex.DecodeString(args[1])
+			if err != nil || len(blockHash) != 32 {
+				fmt.Println("Malformed block hash - ", args[1])
+				fmt.Println(err)
+				return nil
+			}
 
 			queryData := types.QueryGetBalanceDetail{
-				Address:   *name,
+				Address:   name,
 				StateHash: blockHash,
 			}
 			bz := cdc.MustMarshalJSON(queryData)
@@ -142,7 +149,12 @@ func GetCmdQueryWithHash(cdc *codec.Codec) *cobra.Command {
 			dataType := args[0]
 			data := args[1]
 			path := args[2]
-			blockHash := []byte(args[3])
+			blockHash, err := hex.DecodeString(args[3])
+			if err != nil || len(blockHash) != 32 {
+				fmt.Println("Malformed block hash - ", args[3])
+				fmt.Println(err)
+				return nil
+			}
 
 			queryData := types.QueryExecutionLayerDetail{
 				KeyType:   dataType,

@@ -21,8 +21,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/tendermint/go-amino"
 	"github.com/hdac-io/tendermint/libs/cli"
+	"github.com/tendermint/go-amino"
 
 	"github.com/hdac-io/friday/app"
 )
@@ -59,7 +59,7 @@ func main() {
 	// Construct Root Command
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
-		eecmd.GetExecutionLayerTxCmd(cdc),
+		eecmd.GetExecutionLayerCmd(cdc),
 		client.ConfigCmd(app.DefaultCLIHome),
 		queryCmd(cdc),
 		txCmd(cdc),
