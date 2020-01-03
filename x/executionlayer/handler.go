@@ -11,6 +11,7 @@ import (
 	tmtypes "github.com/hdac-io/tendermint/types"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 )
 
@@ -67,7 +68,7 @@ func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg type
 	validator.Description = msg.Description
 	validator.Stake = "0"
 
-	k.SetValidator(ctx, types.ToPublicKey(msg.DelegatorAddress), validator)
+	k.SetValidator(ctx, msg.DelegatorAddress, validator)
 
 	return getResult(true, msg)
 }
@@ -133,18 +134,26 @@ func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBo
 func EndBloker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
 	var validatorUpdates []abci.ValidatorUpdate
 
-	bonds := k.GetCandidateBlockBond(ctx)
+	validators := k.GetAllValidators(ctx)
 
-	for _, bond := range bonds {
-		validator, found := k.GetValidator(ctx, bond.ValidatorPublicKey)
-		if found == false {
-			continue
-		}
-		if validator.Stake == bond.GetStake().GetValue() {
-			continue
+	resultbonds := k.GetCandidateBlockBond(ctx)
+	resultBondsMap := make(map[string]*ipc.Bond)
+	for _, bond := range resultbonds {
+		resultBondsMap[string(bond.GetValidatorPublicKey())] = bond
+	}
+
+	for _, validator := range validators {
+		resultBond, found := resultBondsMap[string(types.ToPublicKey(validator.OperatorAddress))]
+		if found {
+			if validator.Stake == resultBond.GetStake().GetValue() {
+				continue
+			}
+			validator.Stake = resultBond.GetStake().GetValue()
+		} else {
+			validator.Stake = "0"
 		}
 		// TODO : There is a GasLimit error when the bonding value is greater than 7_000_000.
-		coin, err := strconv.ParseInt(bond.Stake.GetValue(), 10, 64)
+		coin, err := strconv.ParseInt(validator.Stake, 10, 64)
 		if err != nil {
 			continue
 		}
@@ -153,8 +162,9 @@ func EndBloker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
 			Power:  coin,
 		}
 		validatorUpdates = append(validatorUpdates, validatorUpdate)
-		k.SetValidatorStake(ctx, bond.ValidatorPublicKey, bond.GetStake().GetValue())
+		k.SetValidator(ctx, validator.OperatorAddress, validator)
 	}
+
 	return validatorUpdates
 }
 

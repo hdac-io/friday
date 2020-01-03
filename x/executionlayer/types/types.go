@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
-	sdk "github.com/hdac-io/friday/types"
 )
 
 // UnitHashMap used to define Unit account structure
@@ -46,6 +45,6 @@ func NewPublicKey(base64PublicKey string) (*PublicKey, error) {
 // ToPublicKey convert sdk.AccAddress to PublicKey appending null padding.
 // we currently use sdk.AccAddress as public key for PoC.
 // This should be removed later.
-func ToPublicKey(accAddr sdk.AccAddress) PublicKey {
-	return append(accAddr.Bytes(), make([]byte, 12)...)
+func ToPublicKey(accAddr []byte) PublicKey {
+	return append(accAddr, make([]byte, 12)...)
 }

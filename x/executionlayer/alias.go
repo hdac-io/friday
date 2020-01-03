@@ -20,7 +20,8 @@ var (
 	NewUnitHashMap = types.NewUnitHashMap
 
 	// variable aliases
-	ModuleCdc = types.ModuleCdc
+	ModuleCdc    = types.ModuleCdc
+	ValidatorKey = types.ValidatorKey
 )
 
 type (

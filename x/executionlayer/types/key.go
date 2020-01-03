@@ -1,5 +1,9 @@
 package types
 
+import (
+	sdk "github.com/hdac-io/friday/types"
+)
+
 const (
 	// ModuleName uses for schema name in key-value store
 	ModuleName = "executionlayer"
@@ -13,3 +17,11 @@ const (
 	GenesisAccountKey   = "genesisaccount"
 	CandidateBlockKey   = "candidateblock"
 )
+
+var (
+	ValidatorKey = []byte{0x21}
+)
+
+func GetValidatorKey(operatorAddr sdk.ValAddress) []byte {
+	return append(ValidatorKey, operatorAddr.Bytes()...)
+}
