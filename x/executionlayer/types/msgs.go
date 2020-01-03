@@ -14,32 +14,35 @@ const RouterKey = ModuleName
 // MsgExecute for sending deploy to execution engine
 type MsgExecute struct {
 	BlockHash            []byte         `json:"block_hash"`
-	ExecAccount          sdk.AccAddress `json:"exec_account"`
-	ContractOwnerAccount sdk.AccAddress `json:"contract_owner_account"`
+	ExecPubkeyOrName     string         `json:"exec_pubkey_or_name"`
+	ContractOwnerAccount string         `json:"contract_owner_account"`
 	SessionCode          []byte         `json:"session_code"`
 	SessionArgs          []byte         `json:"session_args"`
 	PaymentCode          []byte         `json:"payment_code"`
 	PaymentArgs          []byte         `json:"payment_args"`
 	GasPrice             uint64         `json:"gas_price"`
+	Signer               sdk.AccAddress `json:"signer"`
 }
 
 // NewMsgExecute is a constructor function for MsgSetName
 func NewMsgExecute(
 	blockHash []byte,
-	execAccount sdk.AccAddress, contractOwnerAccount sdk.AccAddress,
+	execPubkeyOrName string, contractOwnerAccount string,
 	sessionCode []byte, sessionArgs []byte,
 	paymentCode []byte, paymentArgs []byte,
 	gasPrice uint64,
+	signer sdk.AccAddress,
 ) MsgExecute {
 	return MsgExecute{
 		BlockHash:            blockHash,
-		ExecAccount:          execAccount,
+		ExecPubkeyOrName:     execPubkeyOrName,
 		ContractOwnerAccount: contractOwnerAccount,
 		SessionCode:          sessionCode,
 		SessionArgs:          sessionArgs,
 		PaymentCode:          paymentCode,
 		PaymentArgs:          paymentArgs,
 		GasPrice:             gasPrice,
+		Signer:               signer,
 	}
 }
 
@@ -51,7 +54,7 @@ func (msg MsgExecute) Type() string { return "executionengine" }
 
 // ValidateBasic runs stateless checks on the message
 func (msg MsgExecute) ValidateBasic() sdk.Error {
-	if msg.ExecAccount.Equals(sdk.AccAddress("")) || msg.ContractOwnerAccount.Equals(sdk.AccAddress("")) {
+	if msg.Signer.Equals(sdk.AccAddress("")) {
 		return sdk.ErrUnknownRequest("Address cannot be empty")
 	}
 	return nil
@@ -64,37 +67,40 @@ func (msg MsgExecute) GetSignBytes() []byte {
 
 // GetSigners defines whose signature is required
 func (msg MsgExecute) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.ExecAccount}
+	return []sdk.AccAddress{msg.Signer}
 }
 
 // MsgTransfer for sending deploy to execution engine
 type MsgTransfer struct {
-	TokenOwnerAccount sdk.AccAddress `json:"token_owner_account"`
-	FromAccount       sdk.AccAddress `json:"from_account"`
-	ToAccount         sdk.AccAddress `json:"to_account"`
-	TransferCode      []byte         `json:"transfer_code"`
-	TransferArgs      []byte         `json:"transfer_args"`
-	PaymentCode       []byte         `json:"payment_code"`
-	PaymentArgs       []byte         `json:"payment_args"`
-	GasPrice          uint64         `json:"gas_price"`
+	TokenContractAddress string         `json:"token_owner_contract_address"`
+	FromPubkeyOrName     string         `json:"from_pubkey_or_name"`
+	ToPubkeyOrName       string         `json:"to_pubkey_or_name"`
+	TransferCode         []byte         `json:"transfer_code"`
+	TransferArgs         []byte         `json:"transfer_args"`
+	PaymentCode          []byte         `json:"payment_code"`
+	PaymentArgs          []byte         `json:"payment_args"`
+	GasPrice             uint64         `json:"gas_price"`
+	Signer               sdk.AccAddress `json:"signer"`
 }
 
 // NewMsgTransfer is a constructor function for MsgSetName
 func NewMsgTransfer(
-	tokenOwnerAccount sdk.AccAddress,
-	fromAccount, toAccount sdk.AccAddress,
+	tokenContractAddress string,
+	fromPubkeyOrName, toPubkeyOrName string,
 	transferCode, transferArgs, paymentCode, paymentArgs []byte,
 	gasPrice uint64,
+	signer sdk.AccAddress,
 ) MsgTransfer {
 	return MsgTransfer{
-		TokenOwnerAccount: tokenOwnerAccount,
-		FromAccount:       fromAccount,
-		ToAccount:         toAccount,
-		TransferCode:      transferCode,
-		TransferArgs:      transferArgs,
-		PaymentCode:       paymentCode,
-		PaymentArgs:       paymentArgs,
-		GasPrice:          gasPrice,
+		TokenContractAddress: tokenContractAddress,
+		FromPubkeyOrName:     fromPubkeyOrName,
+		ToPubkeyOrName:       toPubkeyOrName,
+		TransferCode:         transferCode,
+		TransferArgs:         transferArgs,
+		PaymentCode:          paymentCode,
+		PaymentArgs:          paymentArgs,
+		GasPrice:             gasPrice,
+		Signer:               signer,
 	}
 }
 
@@ -106,7 +112,7 @@ func (msg MsgTransfer) Type() string { return "executionengine" }
 
 // ValidateBasic runs stateless checks on the message
 func (msg MsgTransfer) ValidateBasic() sdk.Error {
-	if msg.FromAccount.Equals(sdk.AccAddress("")) || msg.TokenOwnerAccount.Equals(sdk.AccAddress("")) {
+	if msg.Signer.Equals(sdk.AccAddress("")) {
 		return sdk.ErrUnknownRequest("Address cannot be empty")
 	}
 	return nil
@@ -119,7 +125,7 @@ func (msg MsgTransfer) GetSignBytes() []byte {
 
 // GetSigners defines whose signature is required
 func (msg MsgTransfer) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.FromAccount}
+	return []sdk.AccAddress{msg.Signer}
 }
 
 //______________________________________________________________________

@@ -32,22 +32,22 @@ func (q QueryExecutionLayer) String() string {
 // QueryGetBalanceDetail payload for balance query
 type QueryGetBalanceDetail struct {
 	StateHash []byte
-	Address   PublicKey
+	PubKeyOrName string
 }
 
 // implement fmt.Stringer
 func (q QueryGetBalanceDetail) String() string {
-	return fmt.Sprintf("State: %s\nAddress: %s", q.StateHash, q.Address)
+	return fmt.Sprintf("State: %s\nQuery public key or readable name: %s", q.StateHash, q.PubKeyOrName)
 }
 
 // QueryGetBalance payload for balance query in the latest data
 type QueryGetBalance struct {
-	Address PublicKey
+	PubKeyOrName string
 }
 
 // implement fmt.Stringer
 func (q QueryGetBalance) String() string {
-	return fmt.Sprintf("Address: %s", q.Address)
+	return fmt.Sprintf("Query public key or readable name: %s", q.PubKeyOrName)
 }
 
 // QueryExecutionLayerResp is used for response of EE query

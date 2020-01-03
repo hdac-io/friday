@@ -36,8 +36,8 @@ type Genesis struct {
 type Account struct {
 	// PublicKey : base64 encoded public key string
 	PublicKey           PublicKey `json:"public_key"`
-	InitialBalance      string    `json:"initial_balance"`
-	InitialBondedAmount string    `json:"initial_bonded_amount"`
+	InitialBalance      string        `json:"initial_balance"`
+	InitialBondedAmount string        `json:"initial_bonded_amount"`
 }
 
 // WasmCosts : CasperLabs EE Wasm Cost table

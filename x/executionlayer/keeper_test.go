@@ -24,24 +24,26 @@ import (
 //-------------------------------------------
 
 func TestQueryKeyToBytes(t *testing.T) {
-	_, err := toBytes("address", "friday1dl2cjlfpmc9hcyd4rxts047tze87s0gxmzqx70")
+	input := setupTestInput()
+
+	_, err := toBytes("address", "friday1dl2cjlfpmc9hcyd4rxts047tze87s0gxmzqx70", input.elk.ReadableNameKeeper, input.ctx)
 	assert.Nil(t, err)
-	_, err = toBytes("address", "invalid address")
+	_, err = toBytes("address", "invalid address", input.elk.ReadableNameKeeper, input.ctx)
 	assert.NotNil(t, err)
 
 	expected := []byte("test-data")
 
-	got, err := toBytes("uref", hex.EncodeToString(expected))
+	got, err := toBytes("uref", hex.EncodeToString(expected), input.elk.ReadableNameKeeper, input.ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, expected, got)
-	_, err = toBytes("hash", hex.EncodeToString(expected))
+	_, err = toBytes("hash", hex.EncodeToString(expected), input.elk.ReadableNameKeeper, input.ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, expected, got)
-	_, err = toBytes("local", hex.EncodeToString(expected))
+	_, err = toBytes("local", hex.EncodeToString(expected), input.elk.ReadableNameKeeper, input.ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, expected, got)
 
-	_, err = toBytes("invalid key type", "")
+	_, err = toBytes("invalid key type", "", input.elk.ReadableNameKeeper, input.ctx)
 	assert.True(t, strings.Contains(err.Error(), "Unknown QueryKey type:"))
 }
 
@@ -96,13 +98,14 @@ func TestCreateBlock(t *testing.T) {
 	blockHash2 := []byte{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
 	counterDefineMSG := NewMsgExecute(
 		blockHash,
-		GenesisAccountAddress,
-		GenesisAccountAddress,
+		GenesisPubKeyString,
+		GenesisPubKeyString,
 		util.LoadWasmFile(path.Join(contractPath, counterDefineWasm)),
 		[]byte{},
 		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
 		util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000)),
 		uint64(10),
+		GenesisAccountAddress,
 	)
 
 	handlerMsgExecute(input.ctx, input.elk, counterDefineMSG)
@@ -116,13 +119,14 @@ func TestCreateBlock(t *testing.T) {
 
 	counterCallMSG := NewMsgExecute(
 		blockHash,
-		GenesisAccountAddress,
-		GenesisAccountAddress,
+		GenesisPubKeyString,
+		GenesisPubKeyString,
 		util.LoadWasmFile(path.Join(contractPath, counterCallWasm)),
 		[]byte{},
 		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
 		util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000)),
 		uint64(10),
+		GenesisAccountAddress,
 	)
 
 	handlerMsgExecute(input.ctx, input.elk, counterCallMSG)
@@ -161,14 +165,15 @@ func TestTransfer(t *testing.T) {
 	BeginBlocker(input.ctx, nextBlockABCI1, input.elk)
 
 	transferMSG := NewMsgTransfer(
-		GenesisAccountAddress,
-		GenesisAccountAddress,
-		RecipientAccountAddress,
+		GenesisPubKeyString,
+		GenesisPubKeyString,
+		RecipientPubKeyString,
 		util.LoadWasmFile(path.Join(contractPath, transferWasm)),
 		util.MakeArgsTransferToAccount(types.ToPublicKey(RecipientAccountAddress), 100000000),
 		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
 		util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000)),
 		uint64(200000000),
+		GenesisAccountAddress,
 	)
 
 	handlerMsgTransfer(input.ctx, input.elk, transferMSG)
@@ -181,13 +186,13 @@ func TestTransfer(t *testing.T) {
 
 	BeginBlocker(input.ctx, nextBlockABCI2, input.elk)
 
-	res, err := input.elk.GetQueryBalanceResultSimple(input.ctx, types.ToPublicKey(RecipientAccountAddress))
+	res, err := input.elk.GetQueryBalanceResultSimple(input.ctx, GenesisPubKeyString)
 	queriedRes, _ := strconv.Atoi(res)
 
 	assert.Equal(t, queriedRes, 100000000)
 	assert.Equal(t, err, nil)
 
-	res2, err := input.elk.GetQueryBalanceResultSimple(input.ctx, types.ToPublicKey(GenesisAccountAddress))
+	res2, err := input.elk.GetQueryBalanceResultSimple(input.ctx, GenesisPubKeyString)
 	queriedRes2, _ := strconv.Atoi(res2)
 	fmt.Println(queriedRes)
 	fmt.Println(queriedRes2)

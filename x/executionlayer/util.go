@@ -5,21 +5,23 @@ import (
 	"fmt"
 
 	sdk "github.com/hdac-io/friday/types"
-	"github.com/hdac-io/friday/x/executionlayer/types"
+	"github.com/hdac-io/friday/x/readablename"
 )
 
 // TODO: change KeyType from string to typed enum.
-func toBytes(keyType string, key string) ([]byte, error) {
+func toBytes(keyType string, key string,
+	k readablename.ReadableNameKeeper, ctx sdk.Context) ([]byte, error) {
 	var bytes []byte
 	var err error = nil
 
 	switch keyType {
 	case "address":
-		bech32addr, err := sdk.AccAddressFromBech32(key)
+		pubkeybytes, err := sdk.GetAccPubKeyBech32(key)
 		if err != nil {
+			pubkeybytes = k.GetUnitAccount(ctx, key).PubKey
 			return nil, err
 		}
-		bytes = types.ToPublicKey(bech32addr)
+		bytes = pubkeybytes.Bytes()
 	case "uref", "local", "hash":
 		bytes, err = hex.DecodeString(key)
 	default:
