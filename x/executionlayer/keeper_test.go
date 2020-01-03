@@ -266,4 +266,7 @@ func TestValidator(t *testing.T) {
 	val.Description.Moniker = "friday"
 	input.elk.SetValidatorDescription(input.ctx, acc, val.Description)
 	assert.Equal(t, "friday", input.elk.GetValidatorDescription(input.ctx, acc).Moniker)
+
+	validators := input.elk.GetAllValidators(input.ctx)
+	assert.Equal(t, 1, len(validators))
 }
