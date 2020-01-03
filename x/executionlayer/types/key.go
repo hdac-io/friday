@@ -19,8 +19,13 @@ const (
 )
 
 var (
+	EEStateKey = []byte{0x11}
 	ValidatorKey = []byte{0x21}
 )
+
+func GetEEStateKey(eeState []byte) []byte {
+	return append(EEStateKey, eeState...)
+}
 
 func GetValidatorKey(operatorAddr sdk.ValAddress) []byte {
 	return append(ValidatorKey, operatorAddr.Bytes()...)

@@ -66,7 +66,7 @@ func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg type
 	validator.OperatorAddress = msg.ValidatorAddress
 	validator.ConsPubKey = msg.PubKey
 	validator.Description = msg.Description
-	validator.Stake = "0"
+	validator.Stake = ""
 
 	k.SetValidator(ctx, msg.DelegatorAddress, validator)
 
@@ -142,18 +142,23 @@ func EndBloker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
 		resultBondsMap[string(bond.GetValidatorPublicKey())] = bond
 	}
 
+	var power string
 	for _, validator := range validators {
 		resultBond, found := resultBondsMap[string(types.ToPublicKey(validator.OperatorAddress))]
 		if found {
 			if validator.Stake == resultBond.GetStake().GetValue() {
 				continue
 			}
+			power = resultBond.GetStake().GetValue()
 			validator.Stake = resultBond.GetStake().GetValue()
 		} else {
-			validator.Stake = "0"
+			if validator.Stake != "" {
+				power = "0"
+				validator.Stake = ""
+			}
 		}
 		// TODO : There is a GasLimit error when the bonding value is greater than 7_000_000.
-		coin, err := strconv.ParseInt(validator.Stake, 10, 64)
+		coin, err := strconv.ParseInt(power, 10, 64)
 		if err != nil {
 			continue
 		}
