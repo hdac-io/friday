@@ -16,6 +16,7 @@ import (
 	authtypes "github.com/hdac-io/friday/x/auth/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 	"github.com/hdac-io/friday/x/params/subspace"
+	"github.com/hdac-io/friday/x/readablename"
 	abci "github.com/hdac-io/tendermint/abci/types"
 	"github.com/hdac-io/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -26,15 +27,20 @@ const (
 )
 
 var (
-	GenesisAccountAddress, _   = sdk.AccAddressFromBech32("friday1dl2cjlfpmc9hcyd4rxts047tze87s0gxmzqx70")
+	GenesisAccountAddress, _   = sdk.AccAddressFromBech32("friday15evpva2u57vv6l5czehyk69s0wnq9hrkqulwfz")
+	GenesisPubKeyString        = "fridaypub1addwnpepqw6vr6728nvg2duwj062y2yx2mfhmqjh66mjtgsyf7jwyq2kx2kaqlkq94l"
+	GenesisPubKey              = sdk.MustGetAccPubKeyBech32(GenesisPubKeyString)
 	RecipientAccountAddress, _ = sdk.AccAddressFromBech32("friday1y2dx0evs5k6hxuhfrfdmm7wcwsrqr073htghpv")
-	contractPath               = os.ExpandEnv("$HOME/.nodef/contracts")
-	mintInstallWasm            = "mint_install.wasm"
-	posInstallWasm             = "pos_install.wasm"
-	standardPaymentWasm        = "standard_payment.wasm"
-	counterDefineWasm          = "counter_define.wasm"
-	counterCallWasm            = "counter_call.wasm"
-	transferWasm               = "transfer_to_account.wasm"
+	RecipientPubKeyString      = "fridaypub1addwnpepqg3xvg45h4j0wsj6dng0wcze2vwvnc7hse696xjvy0cwk347zm0lvhcskq7"
+	RecipientPubKey            = sdk.MustGetAccPubKeyBech32(RecipientPubKeyString)
+
+	contractPath        = os.ExpandEnv("$HOME/.nodef/contracts")
+	mintInstallWasm     = "mint_install.wasm"
+	posInstallWasm      = "pos_install.wasm"
+	standardPaymentWasm = "standard_payment.wasm"
+	counterDefineWasm   = "counter_define.wasm"
+	counterCallWasm     = "counter_call.wasm"
+	transferWasm        = "transfer_to_account.wasm"
 )
 
 type testInput struct {
@@ -54,6 +60,7 @@ func setupTestInput() testInput {
 
 	authCapKey := sdk.NewKVStoreKey("authCapKey")
 	keyParams := sdk.NewKVStoreKey("subspace")
+	readablenameStoreKey := sdk.NewKVStoreKey("readablename")
 	tkeyParams := sdk.NewTransientStoreKey("transient_subspace")
 
 	ps := subspace.NewSubspace(cdc, keyParams, tkeyParams, authtypes.DefaultParamspace)
@@ -61,14 +68,17 @@ func setupTestInput() testInput {
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(authCapKey, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(readablenameStoreKey, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	ms.MountStoreWithDB(hashMapStoreKey, sdk.StoreTypeIAVL, db)
 	ms.LoadLatestVersion()
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: chainID}, false, log.NewNopLogger())
 	accountKeeper := auth.NewAccountKeeper(cdc, authCapKey, ps, auth.ProtoBaseAccount)
+	readablenameKeeper := readablename.NewReadableNameKeeper(readablenameStoreKey, cdc)
 
-	elk := NewExecutionLayerKeeper(cdc, hashMapStoreKey, os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"), accountKeeper)
+	elk := NewExecutionLayerKeeper(cdc, hashMapStoreKey, os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"),
+		accountKeeper, readablenameKeeper)
 
 	gs := types.DefaultGenesisState()
 	gs.ChainName = chainID

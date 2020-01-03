@@ -38,7 +38,7 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 
 // Handle MsgExecute
 func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTransfer) sdk.Result {
-	err := k.Transfer(ctx, msg.TokenOwnerAccount, msg.FromAccount, msg.ToAccount, msg.TransferCode, msg.TransferArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
+	err := k.Transfer(ctx, msg.TokenContractAddress, msg.FromPubkeyOrName, msg.ToPubkeyOrName, msg.TransferCode, msg.TransferArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
 	if err != nil {
 		return getResult(false, msg)
 	}
@@ -47,7 +47,7 @@ func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTr
 
 // Handle MsgExecute
 func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) sdk.Result {
-	err := k.Execute(ctx, msg.BlockHash, msg.ExecAccount, msg.ContractOwnerAccount,
+	err := k.Execute(ctx, msg.BlockHash, msg.ExecPubkeyOrName, msg.ContractOwnerAccount,
 		msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
 	if err != nil {
 		return getResult(false, msg)
