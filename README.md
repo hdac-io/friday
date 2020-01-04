@@ -77,7 +77,7 @@ clif executionlayer getbalance $(clif keys show elsa -a)
 * transfer (send)
   * usage: `clif executionlayer transfer [token_contract_address] [from_address] [to_address]  [amount] [fee] [gas_price]`
   * `token_contract_address` is currently dummy, and you may input as same as `from_address`
-```
+```sh
 clif executionlayer transfer $(clif keys show elsa -a) $(clif keys show elsa -a) $(clif keys show anna -a) 1000000 100000000 20000000
 
 ...
@@ -108,12 +108,17 @@ Password to sign with 'elsa': # input your password
 }
 ```
 * bond
-  * usage: `clif executionlayer bond [from_address] [bond_amount] [fee] [gas_price]`
-```
-./clif executionlayer bond $(clif keys show elsa -a) 10000000 100000000 20000000
+  * usage: `clif executionlayer bond`
+```sh
+./clif executionlayer bond \
+--from $(clif keys show elsa -a) \
+--validator fridayvaloper19rxdgfn3grqgwc6zhyeljmyas3tsawn64dsges \
+--amount 1000000 \
+--fee 10000000 \
+--gas-price 30000000
 
 confirm transaction before signing and broadcasting [y/N]: y
-Password to sign with 'bryan':
+Password to sign with 'elsa':
 {
   "height": "0",
   "txhash": "22DF1E0D8D9EB8BE2B5F50995C6FC0AB20E34715875A9F9856A9466A8C406807",
@@ -141,11 +146,16 @@ Password to sign with 'bryan':
 
 * unbond
   * usage: `clif executionlayer unbond [from_address] [unbond_amount] [fee] [gas_price]`
-```
-./clif executionlayer unbond $(clif keys show elsa -a) 10000000 100000000 20000000
+```sh
+./clif executionlayer unbond \
+--from $(clif keys show elsa -a) \
+--validator fridayvaloper19rxdgfn3grqgwc6zhyeljmyas3tsawn64dsges \
+--amount 1000000 \
+--fee 10000000 \
+--gas-price 30000000
 
 confirm transaction before signing and broadcasting [y/N]: y
-Password to sign with 'bryan':
+Password to sign with 'elsa':
 {
   "height": "0",
   "txhash": "69C51D25E3E5DB4F2D4ACE832C775DC8EE993E9CDB7560A3AF470FF07CC7FFC9",
@@ -188,6 +198,52 @@ seeds = "" -> "<genesis node's ID>@<genesis node's IP>:26656"
 ...
 ```
 * replace `~/.nodef/config/genesis.json` to genesis node's one what you saved above.
+
+### Running validator
+* run this on another machine
+* create a wallet key
+```sh
+clif keys add bryan # select password
+```
+* show AccAddress & ValAddress
+```sh
+# AccAddress
+clif keys show bryan --bech acc
+
+{
+  "name": "bryan",
+  "type": "local",
+  "address": "friday19rxdgfn3grqgwc6zhyeljmyas3tsawn6qe0quc",
+  "pubkey": "fridaypub1addwnpepqfaxrvy4f95duln3t6vvtd0qd0sdpwfsn3fh9snpnq06w25qualj6rxm04t"
+}
+
+# ValAddress
+clif keys show bryan --bech val
+
+{
+  "name": "bryan",
+  "type": "local",
+  "address": "fridayvaloper19rxdgfn3grqgwc6zhyeljmyas3tsawn64dsges",
+  "pubkey": "fridayvaloperpub1addwnpepqfaxrvy4f95duln3t6vvtd0qd0sdpwfsn3fh9snpnq06w25qualj6vczad0"
+}
+```
+* create validator
+```sh
+ clif executionlayer create-validator \
+--from=friday19rxdgfn3grqgwc6zhyeljmyas3tsawn6qe0quc \
+--pubkey=$(nodef tendermint show-validator) \
+--moniker=bryan
+```
+* bonding amount
+```sh
+clif executionlayer bond \
+--from friday19rxdgfn3grqgwc6zhyeljmyas3tsawn6qe0quc \
+--validator fridayvaloper19rxdgfn3grqgwc6zhyeljmyas3tsawn64dsges \
+--amount 1000000 \
+--fee 10000000 \
+--gas-price 30000000 \
+```
+
 ## Test
 
 ```
