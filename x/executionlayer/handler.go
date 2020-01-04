@@ -10,9 +10,7 @@ import (
 	abci "github.com/hdac-io/tendermint/abci/types"
 	tmtypes "github.com/hdac-io/tendermint/types"
 
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 )
 
 // NewHandler returns a handler for "executionlayer" type messages.
@@ -74,59 +72,22 @@ func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg type
 }
 
 func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) sdk.Result {
-	blockHash := k.GetCandidateBlockHash(ctx)
-	unitHash := k.GetUnitHashMap(ctx, blockHash)
-
 	accAddress := sdk.AccAddress(msg.ValAddress)
 
-	// Execute
-	deploys := util.MakeInitDeploys()
-	deploy := util.MakeDeploy(types.ToPublicKey(accAddress), msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
-	deploys = util.AddDeploy(deploys, deploy)
-
-	protocolVersion := k.MustGetProtocolVersion(ctx)
-	effects, errGrpc := grpc.Execute(k.client, unitHash.EEState, ctx.BlockTime().Unix(), deploys, &protocolVersion)
-	if errGrpc != "" {
+	err := k.Execute(ctx, []byte{0}, accAddress, accAddress, msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
+	if err != nil {
 		return getResult(false, msg)
 	}
-
-	// Commit
-	postStateHash, bonds, errGrpc := grpc.Commit(k.client, unitHash.EEState, effects, &protocolVersion)
-	if errGrpc != "" {
-		return getResult(false, msg)
-	}
-
-	k.SetEEState(ctx, blockHash, postStateHash)
-	k.SetCandidateBlockBond(ctx, bonds)
-
 	return getResult(true, msg)
 }
 
 func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBond) sdk.Result {
-	blockHash := k.GetCandidateBlockHash(ctx)
-	unitHash := k.GetUnitHashMap(ctx, blockHash)
-
 	accAddress := sdk.AccAddress(msg.ValAddress)
 
-	// Execute
-	deploys := util.MakeInitDeploys()
-	deploy := util.MakeDeploy(types.ToPublicKey(accAddress), msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
-	deploys = util.AddDeploy(deploys, deploy)
-
-	protocolVersion := k.MustGetProtocolVersion(ctx)
-	effects, errGrpc := grpc.Execute(k.client, unitHash.EEState, ctx.BlockTime().Unix(), deploys, &protocolVersion)
-	if errGrpc != "" {
+	err := k.Execute(ctx, []byte{0}, accAddress, accAddress, msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
+	if err != nil {
 		return getResult(false, msg)
 	}
-
-	// Commit
-	postStateHash, bonds, errGrpc := grpc.Commit(k.client, unitHash.EEState, effects, &protocolVersion)
-	if errGrpc != "" {
-		return getResult(false, msg)
-	}
-
-	k.SetEEState(ctx, blockHash, postStateHash)
-	k.SetCandidateBlockBond(ctx, bonds)
 
 	return getResult(true, msg)
 }
