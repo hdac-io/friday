@@ -21,6 +21,7 @@ func GetExecutionLayerCmd(cdc *codec.Codec) *cobra.Command {
 		GetCmdTransfer(cdc),
 		GetCmdBonding(cdc),
 		GetCmdUnbonding(cdc),
+		GetCmdCreateValidator(cdc),
 
 		// Query
 		GetCmdQueryBalance(cdc),
