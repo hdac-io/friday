@@ -41,14 +41,14 @@ func TestRESTTransfer(t *testing.T) {
 	// Body
 	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
 	transReq := transferReq{
-		ChainID:           basereq.ChainID,
-		Memo:              basereq.Memo,
-		TokenOwnerAddress: fromAddr,
-		SenderAddress:     fromAddr,
-		RecipientAddress:  receipAddr,
-		Amount:            20_000_000,
-		GasPrice:          gas,
-		Fee:               10_000_000,
+		ChainID:               basereq.ChainID,
+		Memo:                  basereq.Memo,
+		TokenContractAddress:  fromAddr,
+		SenderPubkeyOrName:    fromAddr,
+		RecipientPubkeyOrName: receipAddr,
+		Amount:                20_000_000,
+		GasPrice:              gas,
+		Fee:                   10_000_000,
 	}
 
 	// http.request
@@ -68,11 +68,11 @@ func TestRESTBond(t *testing.T) {
 	// Body
 	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
 	bondReq := bondReq{
-		ChainID:  basereq.ChainID,
-		Memo:     basereq.Memo,
-		Address:  fromAddr,
-		Amount:   100_000_000,
-		GasPrice: gas,
+		ChainID:      basereq.ChainID,
+		Memo:         basereq.Memo,
+		PubkeyOrName: fromAddr,
+		Amount:       100_000_000,
+		GasPrice:     gas,
 	}
 
 	// http.request
@@ -92,11 +92,11 @@ func TestRESTUnbond(t *testing.T) {
 	// Body
 	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
 	bondReq := bondReq{
-		ChainID:  basereq.ChainID,
-		Memo:     basereq.Memo,
-		Address:  fromAddr,
-		Amount:   100_000_000,
-		GasPrice: gas,
+		ChainID:      basereq.ChainID,
+		Memo:         basereq.Memo,
+		PubkeyOrName: fromAddr,
+		Amount:       100_000_000,
+		GasPrice:     gas,
 	}
 
 	// http.request

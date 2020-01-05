@@ -99,7 +99,7 @@ func TestCreateBlock(t *testing.T) {
 	counterDefineMSG := NewMsgExecute(
 		blockHash,
 		GenesisPubKeyString,
-		GenesisPubKeyString,
+		GenesisPubKey,
 		util.LoadWasmFile(path.Join(contractPath, counterDefineWasm)),
 		[]byte{},
 		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
@@ -120,7 +120,7 @@ func TestCreateBlock(t *testing.T) {
 	counterCallMSG := NewMsgExecute(
 		blockHash,
 		GenesisPubKeyString,
-		GenesisPubKeyString,
+		GenesisPubKey,
 		util.LoadWasmFile(path.Join(contractPath, counterCallWasm)),
 		[]byte{},
 		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
@@ -166,8 +166,8 @@ func TestTransfer(t *testing.T) {
 
 	transferMSG := NewMsgTransfer(
 		GenesisPubKeyString,
-		GenesisPubKeyString,
-		RecipientPubKeyString,
+		GenesisPubKey,
+		RecipientPubKey,
 		util.LoadWasmFile(path.Join(contractPath, transferWasm)),
 		util.MakeArgsTransferToAccount(types.ToPublicKey(RecipientAccountAddress), 100000000),
 		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
@@ -186,13 +186,13 @@ func TestTransfer(t *testing.T) {
 
 	BeginBlocker(input.ctx, nextBlockABCI2, input.elk)
 
-	res, err := input.elk.GetQueryBalanceResultSimple(input.ctx, GenesisPubKeyString)
+	res, err := input.elk.GetQueryBalanceResultSimple(input.ctx, GenesisPubKey)
 	queriedRes, _ := strconv.Atoi(res)
 
 	assert.Equal(t, queriedRes, 100000000)
 	assert.Equal(t, err, nil)
 
-	res2, err := input.elk.GetQueryBalanceResultSimple(input.ctx, GenesisPubKeyString)
+	res2, err := input.elk.GetQueryBalanceResultSimple(input.ctx, GenesisPubKey)
 	queriedRes2, _ := strconv.Atoi(res2)
 	fmt.Println(queriedRes)
 	fmt.Println(queriedRes2)

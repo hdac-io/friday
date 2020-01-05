@@ -11,16 +11,22 @@ import (
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc/transforms"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
+<<<<<<< HEAD
 
 	"github.com/hdac-io/friday/x/auth"
 	"github.com/hdac-io/friday/x/readablename"
 	"github.com/hdac-io/tendermint/crypto"
 
 	"github.com/hdac-io/friday/x/auth"
+=======
+	"github.com/hdac-io/tendermint/crypto"
+>>>>>>> feat: CLI revise accordingly
 
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/auth"
 	"github.com/hdac-io/friday/x/executionlayer/types"
+	"github.com/hdac-io/friday/x/readablename"
 )
 
 type ExecutionLayerKeeper struct {
@@ -120,15 +126,20 @@ func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockHash []byte) []by
 func (k ExecutionLayerKeeper) Transfer(
 	ctx sdk.Context,
 	tokenContractAddress string,
-	fromPubkeyOrName, toPubkeyOrName string,
+	fromPubkey, toPubkey crypto.PubKey,
 	transferCode []byte,
 	transferAbi []byte,
 	paymentCode []byte,
 	paymentAbi []byte,
 	gasPrice uint64) error {
 
+<<<<<<< HEAD
 	k.SetAccountIfNotExists(ctx, toAddress)
 	err := k.Execute(ctx, k.GetCandidateBlockHash(ctx), fromAddress, tokenOwnerAccount, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
+=======
+	k.SetAccountIfNotExists(ctx, toPubkey)
+	err := k.Execute(ctx, k.GetCandidateBlockHash(ctx), fromPubkey, tokenContractAddress, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
+>>>>>>> feat: CLI revise accordingly
 	if err != nil {
 		return err
 	}
@@ -139,8 +150,8 @@ func (k ExecutionLayerKeeper) Transfer(
 // Execute is general execution
 func (k ExecutionLayerKeeper) Execute(ctx sdk.Context,
 	blockHash []byte,
-	execPubkeyOrName string,
-	contractOwnerAccount string,
+	execPubkey crypto.PubKey,
+	contractAddress string,
 	sessionCode []byte,
 	sessionArgs []byte,
 	paymentCode []byte,
@@ -153,13 +164,6 @@ func (k ExecutionLayerKeeper) Execute(ctx sdk.Context,
 	}
 
 	// Parameter preparation
-	execAccountPubKey, err := sdk.GetAccPubKeyBech32(execPubkeyOrName)
-	if err != nil {
-		execAccountPubKey := k.ReadableNameKeeper.GetUnitAccount(ctx, execPubkeyOrName).PubKey
-		if len(execAccountPubKey.Bytes()) == 0 {
-			return fmt.Errorf("Not registered name or malformed public key: %s", execPubkeyOrName)
-		}
-	}
 	unitHash := k.GetUnitHashMap(ctx, copiedBlockhash)
 	protocolVersion := k.MustGetProtocolVersion(ctx)
 
@@ -200,7 +204,7 @@ func (k ExecutionLayerKeeper) Execute(ctx sdk.Context,
 		return err
 =======
 	deploys := util.MakeInitDeploys()
-	deploy := util.MakeDeploy(execAccountPubKey.Bytes(), sessionCode, sessionArgs, paymentCode, paymentArgs, gasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
+	deploy := util.MakeDeploy(execPubkey.Bytes(), sessionCode, sessionArgs, paymentCode, paymentArgs, gasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
 	deploys = util.AddDeploy(deploys, deploy)
 	effects, errGrpc := grpc.Execute(k.client, unitHash.EEState, ctx.BlockTime().Unix(), deploys, &protocolVersion)
 	if errGrpc != "" {
@@ -253,17 +257,10 @@ func (k ExecutionLayerKeeper) GetQueryResultSimple(ctx sdk.Context,
 }
 
 // GetQueryBalanceResult queries with whole parameters
-func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, blockhash []byte, pubkeyOrName string) (string, error) {
+func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, blockhash []byte, pubkey crypto.PubKey) (string, error) {
 	unitHash := k.GetUnitHashMap(ctx, blockhash)
 	protocolVersion := k.MustGetProtocolVersion(ctx)
-	accountPubKey, err := sdk.GetAccPubKeyBech32(pubkeyOrName)
-	if err != nil {
-		accountPubKey := k.ReadableNameKeeper.GetUnitAccount(ctx, pubkeyOrName).PubKey
-		if len(accountPubKey.Bytes()) == 0 {
-			return "", fmt.Errorf("Not registered name or malformed public key: %s", accountPubKey)
-		}
-	}
-	res, grpcErr := grpc.QueryBalance(k.client, unitHash.EEState, accountPubKey.Bytes(), &protocolVersion)
+	res, grpcErr := grpc.QueryBalance(k.client, unitHash.EEState, pubkey.Bytes(), &protocolVersion)
 	if grpcErr != "" {
 		return "", fmt.Errorf(grpcErr)
 	}
@@ -272,8 +269,13 @@ func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, blockhash [
 }
 
 // GetQueryBalanceResultSimple queries with whole parameters
+<<<<<<< HEAD
 func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, address types.PublicKey) (string, error) {
 	res, err := k.GetQueryBalanceResult(ctx, k.GetCandidateBlockHash(ctx), address)
+=======
+func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, pubkey crypto.PubKey) (string, error) {
+	res, err := k.GetQueryBalanceResult(ctx, k.GetCandidateBlockHash(ctx), pubkey)
+>>>>>>> feat: CLI revise accordingly
 	if err != nil {
 		return "", err
 	}
@@ -339,17 +341,9 @@ func (k ExecutionLayerKeeper) SetChainName(ctx sdk.Context, chainName string) {
 }
 
 // SetAccountIfNotExists runs if network has no given account
-func (k ExecutionLayerKeeper) SetAccountIfNotExists(ctx sdk.Context, pubkeyOrName string) {
-	// Check readable name of public key
-	accountPubKey, err := sdk.GetAccPubKeyBech32(pubkeyOrName)
-	if err != nil {
-		// If given string is not public key, theen, it should be thought of as a readable id
-		// And, if readable ID exists, it means that the original address already exists
-		return
-	}
-
+func (k ExecutionLayerKeeper) SetAccountIfNotExists(ctx sdk.Context, pubkey crypto.PubKey) {
 	// Recepient account existence check, if not, create one
-	account := sdk.AccAddress(accountPubKey.Address())
+	account := sdk.AccAddress(pubkey.Address())
 	toAddressAccountObject := k.AccountKeeper.GetAccount(ctx, account)
 	if toAddressAccountObject == nil {
 		toAddressAccountObject = k.AccountKeeper.NewAccountWithAddress(ctx, account)
