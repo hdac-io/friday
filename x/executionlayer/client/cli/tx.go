@@ -8,6 +8,7 @@ import (
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	"github.com/hdac-io/friday/client"
 	"github.com/hdac-io/friday/codec"
+	cliutil "github.com/hdac-io/friday/x/executionlayer/client/util"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 
 	"github.com/hdac-io/friday/client/context"
@@ -28,20 +29,17 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContextWithFrom(args[1]).WithCodec(cdc)
 
-			tokenOwnerAddress, err := sdk.AccAddressFromBech32(args[0])
+			fromPubkey, err := cliutil.GetPubKey(cdc, cliCtx, args[1])
 			if err != nil {
 				return err
 			}
-			fromAddress, err := sdk.AccAddressFromBech32(args[1])
-			if err != nil {
-				return err
-			}
-			toAddress, err := sdk.AccAddressFromBech32(args[2])
+			fromaddr := sdk.AccAddress(fromPubkey.Address().Bytes())
+
+			toPubKey, err := cliutil.GetPubKey(cdc, cliCtx, args[2])
 			if err != nil {
 				return err
 			}
 
-			toPublicKey := types.ToPublicKey(toAddress)
 			amount, err := strconv.ParseUint(args[3], 10, 64)
 			if err != nil {
 				return err
@@ -56,12 +54,12 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 			}
 
 			transferCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm"))
-			transferAbi := util.MakeArgsTransferToAccount(toPublicKey, amount)
+			transferAbi := util.MakeArgsTransferToAccount(toPubKey.Bytes(), amount)
 			paymentCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
 			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgTransfer(tokenOwnerAddress, fromAddress, toAddress, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
+			msg := types.NewMsgTransfer(args[0], fromPubkey, toPubKey, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice, fromaddr)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
@@ -77,15 +75,17 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
+			pubkey, err := cliutil.GetPubKey(cliCtx.Codec, cliCtx, viper.GetString(FlagPubKey))
+			if err != nil {
+				return err
+			}
 			valAddress, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
 
 			amount := viper.GetUint64(FlagAmount)
-
 			fee := viper.GetUint64(FlagFee)
-
 			gasPrice := viper.GetUint64(FlagGasPrice)
 
 			bondingCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/bonding.wasm"))
@@ -94,12 +94,13 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgBond(cliCtx.FromAddress, valAddress, bondingCode, bondingAbi, paymentCode, paymentAbi, gasPrice)
+			msg := types.NewMsgBond(cliCtx.FromAddress.String(), pubkey, valAddress, bondingCode, bondingAbi, paymentCode, paymentAbi, gasPrice, cliCtx.FromAddress)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
-	cmd.Flags().String(client.FlagFrom, "", "The Bech32 address")
+	cmd.Flags().String(client.FlagFrom, "", "Bech32 address")
+	cmd.Flags().String(FlagPubKey, "", "Bech32 address or readable ID")
 	cmd.Flags().String(FlagFee, "", "fee")
 	cmd.Flags().String(FlagGasPrice, "", "gas prices")
 	cmd.Flags().AddFlagSet(fsValidator)
@@ -107,6 +108,7 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 
 	cmd.MarkFlagRequired(client.FlagFrom)
 	cmd.MarkFlagRequired(FlagFee)
+	cmd.MarkFlagRequired(FlagPubKey)
 	cmd.MarkFlagRequired(FlagGasPrice)
 	cmd.MarkFlagRequired(FlagAddressValidator)
 	cmd.MarkFlagRequired(FlagAmount)
@@ -123,15 +125,17 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
+			pubkey, err := cliutil.GetPubKey(cliCtx.Codec, cliCtx, viper.GetString(FlagPubKey))
+			if err != nil {
+				return err
+			}
 			valAddress, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
 
 			amount := viper.GetUint64(FlagAmount)
-
 			fee := viper.GetUint64(FlagFee)
-
 			gasPrice := viper.GetUint64(FlagGasPrice)
 
 			unbondingCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/unbonding.wasm"))
@@ -140,13 +144,14 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgUnBond(cliCtx.FromAddress, valAddress, unbondingCode, unbondingAbi, paymentCode, paymentAbi, gasPrice)
+			msg := types.NewMsgUnBond(cliCtx.FromAddress.String(), pubkey, valAddress, unbondingCode, unbondingAbi, paymentCode, paymentAbi, gasPrice, cliCtx.FromAddress)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 
-	cmd.Flags().String(client.FlagFrom, "", "The Bech32 address")
+	cmd.Flags().String(client.FlagFrom, "", "Bech32 address")
+	cmd.Flags().String(FlagPubKey, "", "Bech32 address or readable ID")
 	cmd.Flags().String(FlagFee, "", "fee")
 	cmd.Flags().String(FlagGasPrice, "", "gas prices")
 	cmd.Flags().AddFlagSet(fsValidator)
@@ -154,6 +159,7 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 
 	cmd.MarkFlagRequired(client.FlagFrom)
 	cmd.MarkFlagRequired(FlagFee)
+	cmd.MarkFlagRequired(FlagPubKey)
 	cmd.MarkFlagRequired(FlagGasPrice)
 	cmd.MarkFlagRequired(FlagAddressValidator)
 	cmd.MarkFlagRequired(FlagAmount)

@@ -7,7 +7,7 @@ import (
 	"github.com/hdac-io/friday/client"
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/codec"
-	sdk "github.com/hdac-io/friday/types"
+	cliutil "github.com/hdac-io/friday/x/executionlayer/client/util"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 
 	"github.com/spf13/cobra"
@@ -39,22 +39,20 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			addr, err := sdk.AccAddressFromBech32(args[0])
+			pubkey, err := cliutil.GetPubKey(cliCtx.Codec, cliCtx, args[0])
 			if err != nil {
-				fmt.Println("Malformed address - ", args[0])
-				fmt.Println(err)
-				return nil
+				fmt.Printf("No balance data or no mapping readable name data - %s \n", args[0])
 			}
 
-			name := types.ToPublicKey(addr)
 			queryData := types.QueryGetBalance{
-				Address: name,
+				PublicKey: pubkey,
 			}
 			bz := cdc.MustMarshalJSON(queryData)
 
 			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalance", types.ModuleName), bz)
 			if err != nil {
 				fmt.Printf("No balance data - %s \n", args[0])
+				fmt.Println(err.Error())
 				return nil
 			}
 
@@ -73,13 +71,6 @@ func GetCmdQueryBalanceWithBlockHash(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			addr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				fmt.Println("Malformed address - ", args[0])
-				fmt.Println(err)
-				return nil
-			}
-			name := types.ToPublicKey(addr)
 			blockHash, err := hex.DecodeString(args[1])
 			if err != nil || len(blockHash) != 32 {
 				fmt.Println("Malformed block hash - ", args[1])
@@ -87,8 +78,9 @@ func GetCmdQueryBalanceWithBlockHash(cdc *codec.Codec) *cobra.Command {
 				return nil
 			}
 
+			pubkey, err := cliutil.GetPubKey(cliCtx.Codec, cliCtx, args[0])
 			queryData := types.QueryGetBalanceDetail{
-				Address:   name,
+				PublicKey: pubkey,
 				StateHash: blockHash,
 			}
 			bz := cdc.MustMarshalJSON(queryData)
