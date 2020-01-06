@@ -37,22 +37,22 @@ func InitGenesis(
 		panic(response.GetResult())
 	}
 
-	if data.Accounts != nil {
-		keeper.SetGenesisAccounts(ctx, data.Accounts)
-	}
-	keeper.SetChainName(ctx, data.ChainName)
 	stateHash, bonds, errStr := grpc.Commit(keeper.client, util.DecodeHexString(util.StrEmptyStateHash), response.GetSuccess().GetEffect().GetTransformMap(), genesisConfig.GetProtocolVersion())
 	if errStr != "" {
 		panic(errStr)
 	}
 
+	if data.Accounts != nil {
+		keeper.SetGenesisAccounts(ctx, data.Accounts)
+	}
+	keeper.SetChainName(ctx, data.ChainName)
+
 	keeper.SetGenesisConf(ctx, data.GenesisConf)
 
-	candidateBlock := types.CandidateBlock{
+	keeper.SetCandidateBlock(ctx, types.CandidateBlock{
 		Hash:  []byte(types.GenesisBlockHashKey),
 		Bonds: bonds,
-	}
-	keeper.SetCandidateBlock(ctx, candidateBlock)
+	})
 	keeper.SetEEState(ctx, []byte(types.GenesisBlockHashKey), stateHash)
 }
 
