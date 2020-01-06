@@ -303,6 +303,11 @@ func (k ExecutionLayerKeeper) GetCandidateBlock(ctx sdk.Context) types.Candidate
 
 func (k ExecutionLayerKeeper) SetCandidateBlock(ctx sdk.Context, candidateBlock types.CandidateBlock) {
 	store := ctx.KVStore(k.HashMapStoreKey)
+
+	// It stores the bonds received from the execution-engine.
+	//Even though they are executed in the same order for each node,
+	//the order of the data is different and the state of the keeper is different.
+	//This is an sort to reflect this.
 	sort.Slice(candidateBlock.Bonds, func(i, j int) bool {
 		return bytes.Compare(candidateBlock.Bonds[i].GetValidatorPublicKey(), candidateBlock.Bonds[j].GetValidatorPublicKey()) > 0
 	})
