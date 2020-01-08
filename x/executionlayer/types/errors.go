@@ -15,6 +15,9 @@ const (
 	CodeInvalidDelegation    sdk.CodeType = 202
 	CodeInvalidInput         sdk.CodeType = 203
 	CodeInvalidAddress		 sdk.CodeType = sdk.CodeInvalidAddress
+	CodeGRpcExecuteMissingParent sdk.CodeType = 301
+	CodeGRpcExecuteDeployGasError sdk.CodeType = 302
+	CodeGRpcExecuteDeployExecError sdk.CodeType = 302
 )
 
 // ErrPublicKeyDecode is an error
@@ -60,4 +63,16 @@ func ErrBadDelegationAddr(codespace sdk.CodespaceType) sdk.Error {
 
 func ErrBadDelegationAmount(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "amount must be > 0")
+}
+
+func ErrGRpcExecuteMissingParent(codespace sdk.CodespaceType, hash string) sdk.Error {
+	return sdk.NewError(codespace, CodeGRpcExecuteMissingParent, "execution engine - missing parent state %s", hash)
+}
+
+func ErrGRpcExecuteDeployGasError(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeGRpcExecuteDeployGasError, "execution engine - deploy error - gas")
+}
+
+func ErrGRpcExecuteDeployExecError(codespace sdk.CodespaceType, msg string) sdk.Error {
+	return sdk.NewError(codespace, CodeGRpcExecuteDeployExecError, "execution engine - deploy error - execute : ", msg)
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc/transforms"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 
 	"github.com/hdac-io/friday/x/auth"
@@ -149,12 +150,39 @@ func (k ExecutionLayerKeeper) Execute(ctx sdk.Context,
 	protocolVersion := k.MustGetProtocolVersion(ctx)
 
 	// Execute
-	deploys := util.MakeInitDeploys()
+	deploys := []*ipc.DeployItem{}
 	deploy := util.MakeDeploy(execAccountPubKey, sessionCode, sessionArgs, paymentCode, paymentArgs, gasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
-	deploys = util.AddDeploy(deploys, deploy)
-	effects, errGrpc := grpc.Execute(k.client, unitHash.EEState, ctx.BlockTime().Unix(), deploys, &protocolVersion)
-	if errGrpc != "" {
-		return fmt.Errorf(errGrpc)
+	deploys = append(deploys, deploy)
+	reqExecute := &ipc.ExecuteRequest{
+		ParentStateHash: unitHash.EEState,
+		BlockTime:       uint64(ctx.BlockTime().Unix()),
+		Deploys:         deploys,
+		ProtocolVersion: &protocolVersion,
+	}
+	resExecute, err := k.client.Execute(ctx.Context(), reqExecute)
+	if err != nil {
+		return err
+	}
+
+	effects := []*transforms.TransformEntry{}
+	switch resExecute.GetResult().(type) {
+	case *ipc.ExecuteResponse_Success:
+		for _, res := range resExecute.GetSuccess().GetDeployResults() {
+			switch res.GetExecutionResult().GetError().GetValue().(type) {
+			case *ipc.DeployError_GasError:
+				err = types.ErrGRpcExecuteDeployGasError(types.DefaultCodespace)
+			case *ipc.DeployError_ExecError:
+				err = types.ErrGRpcExecuteDeployExecError(types.DefaultCodespace, res.GetExecutionResult().GetError().GetExecError().GetMessage())
+			default:
+				effects = append(effects, res.GetExecutionResult().GetEffects().GetTransformMap()...)
+			}
+
+		}
+	case *ipc.ExecuteResponse_MissingParent:
+		err = types.ErrGRpcExecuteMissingParent(types.DefaultCodespace, util.EncodeToHexString(resExecute.GetMissingParent().GetHash()))
+	}
+	if err != nil {
+		return err
 	}
 
 	// Commit
