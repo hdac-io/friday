@@ -10,9 +10,14 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/hdac-io/friday/codec"
+
 	"github.com/hdac-io/tendermint/crypto"
 	cryptoAmino "github.com/hdac-io/tendermint/crypto/encoding/amino"
 
+	eeutil "github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
+
+	tmsecp256k1 "github.com/hdac-io/tendermint/crypto/secp256k1"
 	"github.com/hdac-io/tendermint/libs/bech32"
 )
 
@@ -569,6 +574,68 @@ func (ca ConsAddress) Format(s fmt.State, verb rune) {
 	default:
 		s.Write([]byte(fmt.Sprintf("%X", []byte(ca))))
 	}
+}
+
+// ----------------------------------------------------------------------------
+// EE address
+// ----------------------------------------------------------------------------
+//
+
+// EEAddress length is 32
+type EEAddress [32]byte
+
+// GetEEAddressFromCryptoPubkey converts blake2b 32 byte address from amino-encoded 33 bit secp256k1 public key
+func GetEEAddressFromCryptoPubkey(cryptoPubKey crypto.PubKey) (*EEAddress, error) {
+	cdc := codec.New()
+	cryptoAmino.RegisterAmino(cdc)
+
+	var cont tmsecp256k1.PubKeySecp256k1
+	err := cdc.UnmarshalBinaryBare(cryptoPubKey.Bytes(), &cont)
+	if err != nil {
+		return nil, err
+	}
+
+	var blake2b256PubKey EEAddress
+	// Not able to direct assign by slice ( [:32] )
+	// Should assign by `for` iteration
+	for idx, unitByte := range eeutil.Blake2b256(cont[:]) {
+		blake2b256PubKey[idx] = unitByte
+	}
+
+	return &blake2b256PubKey, nil
+}
+
+// MustGetEEAddressFromCryptoPubkey panics if there is error in parsing
+func MustGetEEAddressFromCryptoPubkey(cryptoPubKey crypto.PubKey) *EEAddress {
+	res, err := GetEEAddressFromCryptoPubkey(cryptoPubKey)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+// GetEEAddressFromBech32 converts from bech32-encoded public key
+func GetEEAddressFromBech32(bech32String string) (*EEAddress, error) {
+	parsedPubKey, err := GetAccPubKeyBech32(bech32String)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := GetEEAddressFromCryptoPubkey(parsedPubKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+// MustGetEEAddressFromBech32 panics if there is error in parsing
+func MustGetEEAddressFromBech32(bech32String string) *EEAddress {
+	res, err := GetEEAddressFromBech32(bech32String)
+	if err != nil {
+		panic(err)
+	}
+	return res
 }
 
 // ----------------------------------------------------------------------------
