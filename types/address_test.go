@@ -346,3 +346,11 @@ func TestCustomAddressVerifier(t *testing.T) {
 	_, err = types.ConsAddressFromBech32(consBech)
 	require.Nil(t, err)
 }
+
+func TestEEAddress(t *testing.T) {
+	bech32Address := "fridaypub1addwnpepqw6vr6728nvg2duwj062y2yx2mfhmqjh66mjtgsyf7jwyq2kx2kaqlkq94l"
+	blake256k1Addr, err := types.GetEEAddressFromBech32(bech32Address)
+
+	require.NotNil(t, blake256k1Addr)
+	require.Nil(t, err)
+}
