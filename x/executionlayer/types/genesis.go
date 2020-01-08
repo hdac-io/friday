@@ -12,13 +12,14 @@ import (
 type GenesisState struct {
 	GenesisConf GenesisConf `json:"genesis_conf"`
 	Accounts    []Account   `json:"accounts"`
-	ChainName string `json:"chain_name"`
+	ChainName   string      `json:"chain_name"`
 }
 
 // GenesisConf : the executionlayer configuration that must be provided at genesis.
 type GenesisConf struct {
-	Genesis   Genesis   `json:"genesis"`
-	WasmCosts WasmCosts `json:"wasm_costs"`
+	Genesis      Genesis      `json:"genesis"`
+	WasmCosts    WasmCosts    `json:"wasm_costs"`
+	DeployConfig DeployConfig `json:"deploy_config"`
 }
 
 // Genesis : Chain Genesis information
@@ -51,9 +52,14 @@ type WasmCosts struct {
 	OpcodesDivisor    uint32 `json:"opcodes_divisor" toml:"opcodes-divisor"`
 }
 
+type DeployConfig struct {
+	MaxTtlMillis    uint32 `json:"max-ttl-millis" toml:"max-ttl-millis"`
+	MaxDependencies uint32 `json:"max-dependencies" toml:"max-dependencies"`
+}
+
 // NewGenesisState creates a new genesis state.
 func NewGenesisState(genesisConf GenesisConf, accounts []Account, chainName string) GenesisState {
-	return GenesisState{GenesisConf: genesisConf, Accounts: accounts, ChainName: chainName,}
+	return GenesisState{GenesisConf: genesisConf, Accounts: accounts, ChainName: chainName}
 }
 
 // DefaultGenesisState returns a default genesis state
@@ -76,6 +82,10 @@ func DefaultGenesisState() GenesisState {
 			MaxStackHeight:    65536,
 			OpcodesMultiplier: 3,
 			OpcodesDivisor:    8,
+		},
+		DeployConfig: DeployConfig{
+			MaxTtlMillis: 86400000,
+			MaxDependencies: 10,
 		},
 	}
 	return NewGenesisState(genesisConf, nil, "friday-devnet")
@@ -111,7 +121,9 @@ func ToChainSpecGenesisConfig(gs GenesisState) (*ipc.ChainSpec_GenesisConfig, er
 		PosInstaller:    config.Genesis.PosWasm,
 		Accounts:        accounts,
 		Costs:           toCostTable(config.WasmCosts),
+		DeployConfig:    toDeployConfig(config.DeployConfig),
 	}
+
 	return &chainSpecConfig, nil
 }
 
@@ -164,6 +176,13 @@ func toCostTable(wasmCosts WasmCosts) *ipc.ChainSpec_CostTable {
 	costTable.Wasm.OpcodesMul = wasmCosts.OpcodesMultiplier
 	costTable.Wasm.OpcodesDiv = wasmCosts.OpcodesDivisor
 	return &costTable
+}
+
+func toDeployConfig(deployConfig DeployConfig) *ipc.ChainSpec_DeployConfig {
+	return &ipc.ChainSpec_DeployConfig{
+		MaxTtlMillis:    deployConfig.MaxTtlMillis,
+		MaxDependencies: deployConfig.MaxDependencies,
+	}
 }
 
 // value validation is performed in ExecutionEngine

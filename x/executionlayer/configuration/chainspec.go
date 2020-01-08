@@ -37,6 +37,16 @@ func ParseGenesisChainSpec(chainSpecPath string) (*types.GenesisConf, error) {
 		return nil, err
 	}
 
+	// Get deploys
+	subTree = tree.Get("deploys").(*toml.Tree)
+	if subTree == nil {
+		return nil, types.ErrTomlParse(types.DefaultCodespace, "deploys")
+	}
+	err = subTree.Unmarshal(&genesisConf.DeployConfig)
+	if err != nil {
+		return nil, err
+	}
+
 	return &genesisConf, nil
 }
 
