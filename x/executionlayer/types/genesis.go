@@ -1,11 +1,13 @@
 package types
 
 import (
+	"os"
 	"strconv"
 	"strings"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 )
 
 // GenesisState : the executionlayer state that must be provided at genesis.
@@ -57,6 +59,11 @@ type DeployConfig struct {
 	MaxDependencies uint32 `json:"max-dependencies" toml:"max-dependencies"`
 }
 
+const (
+	mintCodePath = "$HOME/.nodef/contracts/mint_install.wasm"
+	posCodePath  = "$HOME/.nodef/contracts/pos_install.wasm"
+)
+
 // NewGenesisState creates a new genesis state.
 func NewGenesisState(genesisConf GenesisConf, accounts []Account, chainName string) GenesisState {
 	return GenesisState{GenesisConf: genesisConf, Accounts: accounts, ChainName: chainName}
@@ -67,8 +74,8 @@ func DefaultGenesisState() GenesisState {
 	genesisConf := GenesisConf{
 		Genesis: Genesis{
 			Timestamp:       0,
-			MintWasm:        DefaultMintWasm,
-			PosWasm:         DefaultPosWasm,
+			MintWasm:        util.LoadWasmFile(os.ExpandEnv(mintCodePath)),
+			PosWasm:         util.LoadWasmFile(os.ExpandEnv(posCodePath)),
 			ProtocolVersion: "1.0.0",
 		},
 		WasmCosts: WasmCosts{
@@ -84,7 +91,7 @@ func DefaultGenesisState() GenesisState {
 			OpcodesDivisor:    8,
 		},
 		DeployConfig: DeployConfig{
-			MaxTtlMillis: 86400000,
+			MaxTtlMillis:    86400000,
 			MaxDependencies: 10,
 		},
 	}
