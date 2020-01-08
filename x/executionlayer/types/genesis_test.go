@@ -8,11 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	mintCodePath = "$HOME/.nodef/contracts/mint_install.wasm"
-	posCodePath  = "$HOME/.nodef/contracts/pos_install.wasm"
-)
-
 func TestToProtocolVersion(t *testing.T) {
 	// empty string
 	got, err := ToProtocolVersion("")
