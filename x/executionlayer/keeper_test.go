@@ -26,7 +26,7 @@ import (
 func TestQueryKeyToBytes(t *testing.T) {
 	input := setupTestInput()
 
-	_, err := toBytes("address", "friday1dl2cjlfpmc9hcyd4rxts047tze87s0gxmzqx70", input.elk.ReadableNameKeeper, input.ctx)
+	_, err := toBytes("address", "fridaypub1addwnpepqw6vr6728nvg2duwj062y2yx2mfhmqjh66mjtgsyf7jwyq2kx2kaqlkq94l", input.elk.ReadableNameKeeper, input.ctx)
 	assert.Nil(t, err)
 	_, err = toBytes("address", "invalid address", input.elk.ReadableNameKeeper, input.ctx)
 	assert.NotNil(t, err)
@@ -142,11 +142,12 @@ func TestCreateBlock(t *testing.T) {
 
 	unitHash1 := input.elk.GetUnitHashMap(input.ctx, blockHash1)
 	pv := input.elk.MustGetProtocolVersion(input.ctx)
-	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", types.ToPublicKey(GenesisAccountAddress), arrPath, &pv)
+	fmt.Println(GenesisPubKey.Address())
+	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", GenesisPubKey.Bytes(), arrPath, &pv)
 	assert.Equal(t, int32(0), res1.GetIntValue())
 
 	unitHash2 := input.elk.GetUnitHashMap(input.ctx, blockHash2)
-	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", types.ToPublicKey(GenesisAccountAddress), arrPath, &pv)
+	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", GenesisPubKey.Bytes(), arrPath, &pv)
 	assert.Equal(t, int32(1), res2.GetIntValue())
 }
 

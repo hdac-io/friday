@@ -11,16 +11,8 @@ import (
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc/transforms"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
-<<<<<<< HEAD
 
-	"github.com/hdac-io/friday/x/auth"
-	"github.com/hdac-io/friday/x/readablename"
 	"github.com/hdac-io/tendermint/crypto"
-
-	"github.com/hdac-io/friday/x/auth"
-=======
-	"github.com/hdac-io/tendermint/crypto"
->>>>>>> feat: CLI revise accordingly
 
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
@@ -133,13 +125,8 @@ func (k ExecutionLayerKeeper) Transfer(
 	paymentAbi []byte,
 	gasPrice uint64) error {
 
-<<<<<<< HEAD
-	k.SetAccountIfNotExists(ctx, toAddress)
-	err := k.Execute(ctx, k.GetCandidateBlockHash(ctx), fromAddress, tokenOwnerAccount, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
-=======
 	k.SetAccountIfNotExists(ctx, toPubkey)
 	err := k.Execute(ctx, k.GetCandidateBlockHash(ctx), fromPubkey, tokenContractAddress, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
->>>>>>> feat: CLI revise accordingly
 	if err != nil {
 		return err
 	}
@@ -269,13 +256,8 @@ func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, blockhash [
 }
 
 // GetQueryBalanceResultSimple queries with whole parameters
-<<<<<<< HEAD
-func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, address types.PublicKey) (string, error) {
-	res, err := k.GetQueryBalanceResult(ctx, k.GetCandidateBlockHash(ctx), address)
-=======
 func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, pubkey crypto.PubKey) (string, error) {
 	res, err := k.GetQueryBalanceResult(ctx, k.GetCandidateBlockHash(ctx), pubkey)
->>>>>>> feat: CLI revise accordingly
 	if err != nil {
 		return "", err
 	}
