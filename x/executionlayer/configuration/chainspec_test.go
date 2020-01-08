@@ -35,6 +35,10 @@ func genesisConfigMock() types.GenesisConf {
 			OpcodesMultiplier: 9,
 			OpcodesDivisor:    10,
 		},
+		DeployConfig: types.DeployConfig{
+			MaxTtlMillis:    1,
+			MaxDependencies: 2,
+		},
 	}
 }
 
@@ -50,6 +54,10 @@ func TestParseGenesisChainSpecBasic(t *testing.T) {
 
 	if !reflect.DeepEqual(expected.WasmCosts, got.WasmCosts) {
 		t.Errorf("Bad WasmCosts, expected %v, got %v", expected.WasmCosts, got.WasmCosts)
+	}
+
+	if !reflect.DeepEqual(expected.DeployConfig, got.DeployConfig) {
+		t.Errorf("Bad DeployConfig, expected %v, got %v", expected.DeployConfig, got.DeployConfig)
 	}
 }
 
