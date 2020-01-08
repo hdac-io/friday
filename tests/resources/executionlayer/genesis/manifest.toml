@@ -12,6 +12,11 @@ mint-code-path = "mint_install.wasm"
 # Path (absolute, or relative to the manifest) to the file containing wasm bytecode for installing the PoS system contract.
 pos-code-path = "pos_install.wasm"
 
+[deploys]
+# 1 day
+max-ttl-millis = 1
+max-dependencies = 2
+
 [wasm-costs]
 # Default opcode cost
 regular = 1
