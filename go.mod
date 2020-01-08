@@ -12,7 +12,7 @@ require (
 	github.com/golang/mock v1.3.1
 	github.com/golang/protobuf v1.3.2
 	github.com/gorilla/mux v1.7.3
-	github.com/hdac-io/casperlabs-ee-grpc-go-util v0.0.0-20191204072007-3ca563b18909
+	github.com/hdac-io/casperlabs-ee-grpc-go-util v0.0.0-20200107075212-e3e40973f879
 	github.com/hdac-io/iavl v0.0.0-20191220074654-211e1bd34eef
 	github.com/hdac-io/tendermint v0.0.0-20200102054348-9a58be0e600b
 	github.com/mattn/go-isatty v0.0.8
