@@ -8,7 +8,7 @@ import (
 )
 
 // GetRootCmd handles & routes CLI commands of readable name service
-func GetRootCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetRootCmd(cdc *codec.Codec) *cobra.Command {
 	readablenameRootCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Readable name service subcommands",
