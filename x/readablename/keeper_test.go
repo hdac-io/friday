@@ -14,8 +14,11 @@ func TestStoreAddDuplicate(t *testing.T) {
 	input := setupTestInput()
 	store := input.k
 
-	pubkey := secp256k1.GenPrivKey().PubKey()
-	addr := sdk.AccAddress(pubkey.Address())
+	cryptoPubkey := secp256k1.GenPrivKey().PubKey()
+	var pubkey secp256k1.PubKeySecp256k1
+	input.cdc.MustUnmarshalBinaryBare(cryptoPubkey.Bytes(), &pubkey)
+
+	addr := sdk.AccAddress(cryptoPubkey.Address())
 
 	added := store.SetUnitAccount(input.ctx, "bryanrhee", addr, pubkey)
 	assert.True(added)
@@ -30,12 +33,16 @@ func TestStoreKeyChange(t *testing.T) {
 	input := setupTestInput()
 	store := input.k
 
-	pubkey := secp256k1.GenPrivKey().PubKey()
+	cryptoPubkey := secp256k1.GenPrivKey().PubKey()
+	var pubkey secp256k1.PubKeySecp256k1
+	input.cdc.MustUnmarshalBinaryBare(cryptoPubkey.Bytes(), &pubkey)
 	addr := sdk.AccAddress(pubkey.Address())
 	store.SetUnitAccount(input.ctx, "bryanrhee", addr, pubkey)
 
-	newpubkey := secp256k1.GenPrivKey().PubKey()
-	newaddr := sdk.AccAddress(pubkey.Address())
+	newCryptopubkey := secp256k1.GenPrivKey().PubKey()
+	var newpubkey secp256k1.PubKeySecp256k1
+	input.cdc.MustUnmarshalBinaryBare(newCryptopubkey.Bytes(), &pubkey)
+	newaddr := sdk.AccAddress(newCryptopubkey.Address())
 	changed := store.ChangeKey(input.ctx, "bryanrhee", addr, newaddr, pubkey, newpubkey)
 	assert.True(changed)
 }
@@ -45,7 +52,9 @@ func TestStoreAddrCheck(t *testing.T) {
 	input := setupTestInput()
 	store := input.k
 
-	pubkey := secp256k1.GenPrivKey().PubKey()
+	cryptoPubkey := secp256k1.GenPrivKey().PubKey()
+	var pubkey secp256k1.PubKeySecp256k1
+	input.cdc.MustUnmarshalBinaryBare(cryptoPubkey.Bytes(), &pubkey)
 	addr := sdk.AccAddress(pubkey.Address())
 	store.SetUnitAccount(input.ctx, "bryanrhee", addr, pubkey)
 

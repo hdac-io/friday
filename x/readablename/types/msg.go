@@ -1,8 +1,9 @@
 package types
 
 import (
+	"github.com/hdac-io/tendermint/crypto/secp256k1"
+
 	sdk "github.com/hdac-io/friday/types"
-	"github.com/hdac-io/tendermint/crypto"
 )
 
 // RouterKey is not in sense yet
@@ -14,13 +15,13 @@ const RouterKey = ModuleName
 
 // MsgSetAccount defines a SetAccount message
 type MsgSetAccount struct {
-	Name    Name           `json:"name"`
-	Address sdk.AccAddress `json:"address"`
-	PubKey  crypto.PubKey  `json:"pubkey"`
+	Name    Name                      `json:"name"`
+	Address sdk.AccAddress            `json:"address"`
+	PubKey  secp256k1.PubKeySecp256k1 `json:"pubkey"`
 }
 
 // NewMsgSetAccount is a constructor function for MsgSetName
-func NewMsgSetAccount(name Name, address sdk.AccAddress, pubkey crypto.PubKey) MsgSetAccount {
+func NewMsgSetAccount(name Name, address sdk.AccAddress, pubkey secp256k1.PubKeySecp256k1) MsgSetAccount {
 	return MsgSetAccount{
 		Name:    name,
 		Address: address,
@@ -61,17 +62,17 @@ func (msg MsgSetAccount) GetSigners() []sdk.AccAddress {
 
 // MsgChangeKey defines a ChangeKey message
 type MsgChangeKey struct {
-	ID         string         `json:"ID"`
-	OldAddress sdk.AccAddress `json:"old_address"`
-	NewAddress sdk.AccAddress `json:"new_address"`
-	OldPubKey  crypto.PubKey  `json:"old_pubkey"`
-	NewPubKey  crypto.PubKey  `json:"new_pubkey"`
+	ID         string                    `json:"ID"`
+	OldAddress sdk.AccAddress            `json:"old_address"`
+	NewAddress sdk.AccAddress            `json:"new_address"`
+	OldPubKey  secp256k1.PubKeySecp256k1 `json:"old_pubkey"`
+	NewPubKey  secp256k1.PubKeySecp256k1 `json:"new_pubkey"`
 }
 
 // NewMsgChangeKey is a constructor function for MsgChangeKey
 func NewMsgChangeKey(name string,
 	oldAddress, newAddress sdk.AccAddress,
-	oldPubKey, newPubKey crypto.PubKey) MsgChangeKey {
+	oldPubKey, newPubKey secp256k1.PubKeySecp256k1) MsgChangeKey {
 	return MsgChangeKey{
 		ID:         name,
 		OldAddress: oldAddress,

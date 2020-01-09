@@ -26,21 +26,21 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	}
 
 	nameserviceTxCmd.AddCommand(client.PostCommands(
-		GetCmdSetAccount(cdc),
-		GetCmdChangeKey(cdc),
+		GetCmdSetAccountFromBech32PubKey(cdc),
+		GetCmdChangeKeyFromBech32PubKey(cdc),
 	)...)
 
 	return nameserviceTxCmd
 }
 
-// GetCmdSetAccount is the CLI command for sending a set account Tx
-func GetCmdSetAccount(cdc *codec.Codec) *cobra.Command {
+// GetCmdSetAccountFromBech32PubKey is the CLI command to register public key from bech32 pubkey whose prefix is "fridaypub"
+func GetCmdSetAccountFromBech32PubKey(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "setkey [name] [pubkey]",
+		Use:   "setbybech32 [name] [pubkey_fridaypub]",
 		Short: "",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pubkey, err := sdk.GetAccPubKeyBech32(args[1])
+			pubkey, err := sdk.GetSecp256k1FromBech32AccPubKey(args[1])
 			if err != nil {
 				return err
 			}
@@ -51,7 +51,7 @@ func GetCmdSetAccount(cdc *codec.Codec) *cobra.Command {
 			cliCtx := context.NewCLIContextWithFrom(straddr).WithCodec(cdc)
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
-			msg := types.NewMsgSetAccount(types.NewName(args[0]), addr, pubkey)
+			msg := types.NewMsgSetAccount(types.NewName(args[0]), addr, *pubkey)
 			errValidation := msg.ValidateBasic()
 			if errValidation != nil {
 				return errValidation
@@ -62,21 +62,50 @@ func GetCmdSetAccount(cdc *codec.Codec) *cobra.Command {
 	}
 }
 
-// GetCmdChangeKey is the CLI command for changing key
-func GetCmdChangeKey(cdc *codec.Codec) *cobra.Command {
+// GetCmdSetAccountFromSecp256k1PubKey is the CLI command to register public key from 33-bit raw Secp256k1 public key
+func GetCmdSetAccountFromSecp256k1PubKey(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "changekey [name] [old_public_key] [new_public_key]",
+		Use:   "setpubkey [name] [pubkey_secp256k1]",
+		Short: "",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			pubkey, err := sdk.GetSecp256k1FromRawHexString(args[1])
+			if err != nil {
+				return err
+			}
+			addr := sdk.AccAddress(pubkey.Address())
+			straddr := addr.String()
+			fmt.Println("Register readable name for ", args[0], " -> ", straddr)
+
+			cliCtx := context.NewCLIContextWithFrom(straddr).WithCodec(cdc)
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+
+			msg := types.NewMsgSetAccount(types.NewName(args[0]), addr, *pubkey)
+			errValidation := msg.ValidateBasic()
+			if errValidation != nil {
+				return errValidation
+			}
+
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+}
+
+// GetCmdChangeKeyFromBech32PubKey is the CLI command for changing key
+func GetCmdChangeKeyFromBech32PubKey(cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "changekeybech32 [name] [old_fridaypub] [new_fridaypub]",
 		Short: "",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			oldpubkey, err := sdk.GetAccPubKeyBech32(args[1])
+			oldpubkey, err := sdk.GetSecp256k1FromBech32AccPubKey(args[1])
 			if err != nil {
 				return err
 			}
 			oldaddr := sdk.AccAddress(oldpubkey.Address())
 			oldstraddr := oldaddr.String()
 
-			newpubkey, err := sdk.GetAccPubKeyBech32(args[2])
+			newpubkey, err := sdk.GetSecp256k1FromBech32AccPubKey(args[2])
 			if err != nil {
 				return err
 			}
@@ -88,7 +117,45 @@ func GetCmdChangeKey(cdc *codec.Codec) *cobra.Command {
 			cliCtx := context.NewCLIContextWithFrom(oldstraddr).WithCodec(cdc)
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
-			msg := types.NewMsgChangeKey(args[0], oldaddr, newaddr, oldpubkey, newpubkey)
+			msg := types.NewMsgChangeKey(args[0], oldaddr, newaddr, *oldpubkey, *newpubkey)
+			errValidation := msg.ValidateBasic()
+			if err != nil {
+				return errValidation
+			}
+
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+}
+
+
+// GetCmdChangeKeyFromSecp256k1PubKey is the CLI command for changing key
+func GetCmdChangeKeyFromSecp256k1PubKey(cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "changekey [name] [old_public_key] [new_public_key]",
+		Short: "",
+		Args:  cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			oldpubkey, err := sdk.GetSecp256k1FromRawHexString(args[1])
+			if err != nil {
+				return err
+			}
+			oldaddr := sdk.AccAddress(oldpubkey.Address())
+			oldstraddr := oldaddr.String()
+
+			newpubkey, err := sdk.GetSecp256k1FromRawHexString(args[2])
+			if err != nil {
+				return err
+			}
+			newaddr := sdk.AccAddress(newpubkey.Address())
+			newstraddr := newaddr.String()
+			fmt.Println("Change key for readable name ", args[0])
+			fmt.Println(oldstraddr, " -> ", newstraddr)
+
+			cliCtx := context.NewCLIContextWithFrom(oldstraddr).WithCodec(cdc)
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+
+			msg := types.NewMsgChangeKey(args[0], oldaddr, newaddr, *oldpubkey, *newpubkey)
 			errValidation := msg.ValidateBasic()
 			if err != nil {
 				return errValidation
