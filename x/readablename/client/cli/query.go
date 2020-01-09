@@ -21,13 +21,13 @@ func GetDataQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 	nameserverGetDataQueryCmd.AddCommand(client.GetCommands(
-		GetCmdQueryUnitAccount(storeKey, cdc),
+		GetCmdQueryUnitAccount(cdc),
 	)...)
 	return nameserverGetDataQueryCmd
 }
 
 // GetCmdQueryUnitAccount handles to get accounts list
-func GetCmdQueryUnitAccount(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryUnitAccount(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "getaccount [readable_name]",
 		Short: "Get account information",
@@ -36,11 +36,11 @@ func GetCmdQueryUnitAccount(queryRoute string, cdc *codec.Codec) *cobra.Command 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			queryData := types.QueryReqUnitAccount{
-				Name: args[0],
+				Name: types.NewName(args[0]),
 			}
 			bz := cdc.MustMarshalJSON(queryData)
 
-			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/getaccount", queryRoute), bz)
+			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/getaccount", types.ModuleName), bz)
 			if err != nil {
 				fmt.Printf("could not resolve account - %s \n", args[0])
 				return nil

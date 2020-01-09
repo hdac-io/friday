@@ -4,20 +4,21 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hdac-io/tendermint/crypto/secp256k1"
+
 	sdk "github.com/hdac-io/friday/types"
-	"github.com/hdac-io/tendermint/crypto"
 )
 
 // UnitAccount used to define Unit account structure
 type UnitAccount struct {
-	Name    Name           `json:"id"`
-	Address sdk.AccAddress `json:"address"`
-	PubKey  crypto.PubKey  `json:"pubkey"`
+	Name    Name                      `json:"id"`
+	Address sdk.AccAddress            `json:"address"`
+	PubKey  secp256k1.PubKeySecp256k1 `json:"pubkey"`
 	// To be more appendded..
 }
 
 // NewUnitAccount returns a new UnitAccount
-func NewUnitAccount(name Name, address sdk.AccAddress, pubkey crypto.PubKey) UnitAccount {
+func NewUnitAccount(name Name, address sdk.AccAddress, pubkey secp256k1.PubKeySecp256k1) UnitAccount {
 	return UnitAccount{
 		Name:    name,
 		Address: address,
@@ -29,5 +30,5 @@ func NewUnitAccount(name Name, address sdk.AccAddress, pubkey crypto.PubKey) Uni
 func (w UnitAccount) String() string {
 	return strings.TrimSpace(fmt.Sprintf(`ID: %s
 Public key: %s
-Address: %s`, w.Name.MustToString(), w.PubKey.Address().String(), w.Address))
+Address: %s`, w.Name.MustToString(), w.PubKey.String(), w.Address))
 }

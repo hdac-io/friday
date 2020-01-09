@@ -2,7 +2,7 @@ package readablename
 
 import (
 	"github.com/hdac-io/friday/codec"
-	"github.com/hdac-io/tendermint/crypto"
+	"github.com/hdac-io/tendermint/crypto/secp256k1"
 
 	sdk "github.com/hdac-io/friday/types"
 )
@@ -50,7 +50,7 @@ func (k *ReadableNameKeeper) GetUnitAccount(ctx sdk.Context, name string) UnitAc
 
 // SetUnitAccount adds the given unit account to the database.
 // It returns false if the account is already stored.
-func (k *ReadableNameKeeper) SetUnitAccount(ctx sdk.Context, name string, address sdk.AccAddress, pubkey crypto.PubKey) bool {
+func (k *ReadableNameKeeper) SetUnitAccount(ctx sdk.Context, name string, address sdk.AccAddress, pubkey secp256k1.PubKeySecp256k1) bool {
 	// check if we already have seen it
 	acc := k.GetUnitAccount(ctx, name)
 	if acc.Name.MustToString() != "" {
@@ -71,7 +71,7 @@ func (k *ReadableNameKeeper) SetUnitAccount(ctx sdk.Context, name string, addres
 // ChangeKey updates public key of the account and apply to the database
 func (k *ReadableNameKeeper) ChangeKey(ctx sdk.Context, name string,
 	oldAddr, newAddr sdk.AccAddress,
-	oldpubkey, newpubkey crypto.PubKey) bool {
+	oldpubkey, newpubkey secp256k1.PubKeySecp256k1) bool {
 
 	// check if we already have seen it
 	acc := k.GetUnitAccount(ctx, name)
@@ -100,7 +100,7 @@ func (k *ReadableNameKeeper) AddrCheck(ctx sdk.Context, name string, address sdk
 }
 
 // PubKeyCheck checks account by given public key
-func (k *ReadableNameKeeper) PubKeyCheck(ctx sdk.Context, name string, pubkey crypto.PubKey) bool {
+func (k *ReadableNameKeeper) PubKeyCheck(ctx sdk.Context, name string, pubkey secp256k1.PubKeySecp256k1) bool {
 	acc := k.GetUnitAccount(ctx, name)
 	strName := acc.Name.MustToString()
 	if acc.PubKey.Equals(pubkey) && strName != "" {

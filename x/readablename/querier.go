@@ -30,9 +30,9 @@ func queryUnitAccount(ctx sdk.Context, path []string, req abci.RequestQuery, k R
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, err.Error())
 	}
 
-	value := k.GetUnitAccount(ctx, param.Name)
+	value := k.GetUnitAccount(ctx, param.Name.MustToString())
 	qryvalue := QueryResUnitAccount{
-		Name:    value.Name.MustToString(),
+		Name:    value.Name,
 		Address: value.Address,
 		PubKey:  value.PubKey,
 	}
