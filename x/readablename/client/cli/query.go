@@ -36,7 +36,7 @@ func GetCmdQueryUnitAccount(cdc *codec.Codec) *cobra.Command {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			queryData := types.QueryReqUnitAccount{
-				Name: types.NewName(args[0]),
+				Name: args[0],
 			}
 			bz := cdc.MustMarshalJSON(queryData)
 
