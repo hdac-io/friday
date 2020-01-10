@@ -114,7 +114,7 @@ Password to sign with 'elsa': # input your password
 --from $(clif keys show elsa -a) \
 --validator fridayvaloper19rxdgfn3grqgwc6zhyeljmyas3tsawn64dsges \
 --amount 1000000 \
---fee 10000000 \
+--fee 100000000 \
 --gas-price 30000000
 
 confirm transaction before signing and broadcasting [y/N]: y
@@ -151,7 +151,7 @@ Password to sign with 'elsa':
 --from $(clif keys show elsa -a) \
 --validator fridayvaloper19rxdgfn3grqgwc6zhyeljmyas3tsawn64dsges \
 --amount 1000000 \
---fee 10000000 \
+--fee 100000000 \
 --gas-price 30000000
 
 confirm transaction before signing and broadcasting [y/N]: y
@@ -198,9 +198,10 @@ seeds = "" -> "<genesis node's ID>@<genesis node's IP>:26656"
 ...
 ```
 * replace `~/.nodef/config/genesis.json` to genesis node's one what you saved above.
+* copy `~/.nodef/config/manifest.toml` to manifest node's one what you saved above.
 
 ### Running validator
-* run this on another machine
+* run on this fullly synchronized node
 * create a wallet key
 ```sh
 clif keys add bryan # select password
@@ -240,7 +241,7 @@ clif executionlayer bond \
 --from friday19rxdgfn3grqgwc6zhyeljmyas3tsawn6qe0quc \
 --validator fridayvaloper19rxdgfn3grqgwc6zhyeljmyas3tsawn64dsges \
 --amount 1000000 \
---fee 10000000 \
+--fee 100000000 \
 --gas-price 30000000 \
 ```
 

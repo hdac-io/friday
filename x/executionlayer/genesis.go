@@ -10,7 +10,7 @@ import (
 	"github.com/hdac-io/friday/x/executionlayer/types"
 )
 
-// InitGenesis sets an execution\layer configuration for genesis.
+// InitGenesis sets an executionlayer configuration for genesis.
 func InitGenesis(
 	ctx sdk.Context, keeper ExecutionLayerKeeper, data types.GenesisState) {
 	genesisConfig, err := types.ToChainSpecGenesisConfig(data)
