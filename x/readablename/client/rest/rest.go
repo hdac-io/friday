@@ -271,7 +271,7 @@ func getNameHandler(cliCtx context.CLIContext, storeName string) http.HandlerFun
 		straddr := vars.Get("address")
 
 		param := types.QueryReqUnitAccount{
-			Name: types.NewName(straddr),
+			Name: straddr,
 		}
 		bz, err := types.ModuleCdc.MarshalJSON(param)
 		if err != nil {
