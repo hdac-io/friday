@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 
+	secp256k1 "github.com/hdac-io/tendermint/crypto/secp256k1"
+
 	sdk "github.com/hdac-io/friday/types"
-	"github.com/hdac-io/tendermint/crypto"
 )
 
 // RouterKey is not in sense yet
@@ -13,37 +14,37 @@ const RouterKey = ModuleName
 
 // MsgExecute for sending deploy to execution engine
 type MsgExecute struct {
-	BlockHash            []byte         `json:"block_hash"`
-	ContractAddress string         `json:"contract_address"`
-	ExecPubkey           crypto.PubKey  `json:"exec_pubkey"`
-	SessionCode          []byte         `json:"session_code"`
-	SessionArgs          []byte         `json:"session_args"`
-	PaymentCode          []byte         `json:"payment_code"`
-	PaymentArgs          []byte         `json:"payment_args"`
-	GasPrice             uint64         `json:"gas_price"`
-	Signer               sdk.AccAddress `json:"signer"`
+	BlockHash       []byte                    `json:"block_hash"`
+	ContractAddress string                    `json:"contract_address"`
+	ExecPubkey      secp256k1.PubKeySecp256k1 `json:"exec_pubkey"`
+	SessionCode     []byte                    `json:"session_code"`
+	SessionArgs     []byte                    `json:"session_args"`
+	PaymentCode     []byte                    `json:"payment_code"`
+	PaymentArgs     []byte                    `json:"payment_args"`
+	GasPrice        uint64                    `json:"gas_price"`
+	Signer          sdk.AccAddress            `json:"signer"`
 }
 
 // NewMsgExecute is a constructor function for MsgSetName
 func NewMsgExecute(
 	blockHash []byte,
 	contractAddress string,
-	execPubkey crypto.PubKey,
+	execPubkey secp256k1.PubKeySecp256k1,
 	sessionCode, sessionArgs []byte,
 	paymentCode, paymentArgs []byte,
 	gasPrice uint64,
 	signer sdk.AccAddress,
 ) MsgExecute {
 	return MsgExecute{
-		BlockHash:            blockHash,
-		ExecPubkey:           execPubkey,
+		BlockHash:       blockHash,
+		ExecPubkey:      execPubkey,
 		ContractAddress: contractAddress,
-		SessionCode:          sessionCode,
-		SessionArgs:          sessionArgs,
-		PaymentCode:          paymentCode,
-		PaymentArgs:          paymentArgs,
-		GasPrice:             gasPrice,
-		Signer:               signer,
+		SessionCode:     sessionCode,
+		SessionArgs:     sessionArgs,
+		PaymentCode:     paymentCode,
+		PaymentArgs:     paymentArgs,
+		GasPrice:        gasPrice,
+		Signer:          signer,
 	}
 }
 
@@ -73,21 +74,21 @@ func (msg MsgExecute) GetSigners() []sdk.AccAddress {
 
 // MsgTransfer for sending deploy to execution engine
 type MsgTransfer struct {
-	TokenContractAddress string         `json:"token_contract_address"`
-	FromPubkey           crypto.PubKey  `json:"from_pubkey"`
-	ToPubkey             crypto.PubKey  `json:"to_pubkey"`
-	TransferCode         []byte         `json:"transfer_code"`
-	TransferArgs         []byte         `json:"transfer_args"`
-	PaymentCode          []byte         `json:"payment_code"`
-	PaymentArgs          []byte         `json:"payment_args"`
-	GasPrice             uint64         `json:"gas_price"`
-	Signer               sdk.AccAddress `json:"signer"`
+	TokenContractAddress string                    `json:"token_contract_address"`
+	FromPubkey           secp256k1.PubKeySecp256k1 `json:"from_pubkey"`
+	ToPubkey             secp256k1.PubKeySecp256k1 `json:"to_pubkey"`
+	TransferCode         []byte                    `json:"transfer_code"`
+	TransferArgs         []byte                    `json:"transfer_args"`
+	PaymentCode          []byte                    `json:"payment_code"`
+	PaymentArgs          []byte                    `json:"payment_args"`
+	GasPrice             uint64                    `json:"gas_price"`
+	Signer               sdk.AccAddress            `json:"signer"`
 }
 
 // NewMsgTransfer is a constructor function for MsgSetName
 func NewMsgTransfer(
 	tokenContractAddress string,
-	fromPubkey, toPubkey crypto.PubKey,
+	fromPubkey, toPubkey secp256k1.PubKeySecp256k1,
 	transferCode, transferArgs, paymentCode, paymentArgs []byte,
 	gasPrice uint64,
 	signer sdk.AccAddress,
@@ -132,10 +133,10 @@ func (msg MsgTransfer) GetSigners() []sdk.AccAddress {
 //______________________________________________________________________
 // MsgCreateValidator - struct for bonding transactions
 type MsgCreateValidator struct {
-	Description      Description    `json:"description" yaml:"description"`
-	DelegatorAddress sdk.AccAddress `json:"delegator_address" yaml:"delegator_address"`
-	ValidatorAddress sdk.ValAddress `json:"validator_address" yaml:"validator_address"`
-	PubKey           crypto.PubKey  `json:"pubkey" yaml:"pubkey"`
+	Description      Description               `json:"description" yaml:"description"`
+	DelegatorAddress sdk.AccAddress            `json:"delegator_address" yaml:"delegator_address"`
+	ValidatorAddress sdk.ValAddress            `json:"validator_address" yaml:"validator_address"`
+	PubKey           secp256k1.PubKeySecp256k1 `json:"pubkey" yaml:"pubkey"`
 }
 
 type msgCreateValidatorJSON struct {
@@ -147,7 +148,7 @@ type msgCreateValidatorJSON struct {
 
 // Default way to create validator. Delegator address and validator address are the same
 func NewMsgCreateValidator(
-	valAddr sdk.ValAddress, pubKey crypto.PubKey,
+	valAddr sdk.ValAddress, pubKey secp256k1.PubKeySecp256k1,
 	description Description,
 ) MsgCreateValidator {
 	return MsgCreateValidator{
@@ -197,8 +198,8 @@ func (msg *MsgCreateValidator) UnmarshalJSON(bz []byte) error {
 	msg.Description = msgCreateValJSON.Description
 	msg.DelegatorAddress = msgCreateValJSON.DelegatorAddress
 	msg.ValidatorAddress = msgCreateValJSON.ValidatorAddress
-	var err error
-	msg.PubKey, err = sdk.GetConsPubKeyBech32(msgCreateValJSON.PubKey)
+	ptrPubkey, err := sdk.GetSecp256k1FromRawHexString(msgCreateValJSON.PubKey)
+	msg.PubKey = *ptrPubkey
 	if err != nil {
 		return err
 	}
@@ -233,21 +234,21 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 
 //______________________________________________________________________
 type MsgBond struct {
-	TokenContractAddress string         `json:"token_contract_address"`
-	FromPubkey           crypto.PubKey  `json:"from_pubkey"`
-	ValAddress           sdk.ValAddress `json:"val_address"`
-	SessionCode          []byte         `json:"session_code"`
-	SessionArgs          []byte         `json:"session_args"`
-	PaymentCode          []byte         `json:"payment_code"`
-	PaymentArgs          []byte         `json:"payment_args"`
-	GasPrice             uint64         `json:"gas_price"`
-	Signer               sdk.AccAddress `json:"signer"`
+	TokenContractAddress string                    `json:"token_contract_address"`
+	FromPubkey           secp256k1.PubKeySecp256k1 `json:"from_pubkey"`
+	ValAddress           sdk.ValAddress            `json:"val_address"`
+	SessionCode          []byte                    `json:"session_code"`
+	SessionArgs          []byte                    `json:"session_args"`
+	PaymentCode          []byte                    `json:"payment_code"`
+	PaymentArgs          []byte                    `json:"payment_args"`
+	GasPrice             uint64                    `json:"gas_price"`
+	Signer               sdk.AccAddress            `json:"signer"`
 }
 
 // NewMsgBond is a constructor function for MsgSetName
 func NewMsgBond(
 	tokenContractAddress string,
-	fromPubkey crypto.PubKey, valAddress sdk.ValAddress,
+	fromPubkey secp256k1.PubKeySecp256k1, valAddress sdk.ValAddress,
 	sessionCode []byte, sessionArgs []byte,
 	paymentCode []byte, paymentArgs []byte, gasPrice uint64,
 	signer sdk.AccAddress,
@@ -291,21 +292,21 @@ func (msg MsgBond) GetSigners() []sdk.AccAddress {
 
 //______________________________________________________________________
 type MsgUnBond struct {
-	TokenContractAddress string         `json:"token_contract_address"`
-	FromPubkey           crypto.PubKey  `json:"from_pubkey"`
-	ValAddress           sdk.ValAddress `json:"val_address"`
-	SessionCode          []byte         `json:"session_code"`
-	SessionArgs          []byte         `json:"session_args"`
-	PaymentCode          []byte         `json:"payment_code"`
-	PaymentArgs          []byte         `json:"payment_args"`
-	GasPrice             uint64         `json:"gas_price"`
-	Signer               sdk.AccAddress `json:"signer"`
+	TokenContractAddress string                    `json:"token_contract_address"`
+	FromPubkey           secp256k1.PubKeySecp256k1 `json:"from_pubkey"`
+	ValAddress           sdk.ValAddress            `json:"val_address"`
+	SessionCode          []byte                    `json:"session_code"`
+	SessionArgs          []byte                    `json:"session_args"`
+	PaymentCode          []byte                    `json:"payment_code"`
+	PaymentArgs          []byte                    `json:"payment_args"`
+	GasPrice             uint64                    `json:"gas_price"`
+	Signer               sdk.AccAddress            `json:"signer"`
 }
 
 // NewMsgUnBond is a constructor function for MsgSetName
 func NewMsgUnBond(
 	tokenContractAddress string,
-	fromPubkey crypto.PubKey, valAddress sdk.ValAddress,
+	fromPubkey secp256k1.PubKeySecp256k1, valAddress sdk.ValAddress,
 	sessionCode []byte, sessionArgs []byte,
 	paymentCode []byte, paymentArgs []byte, gasPrice uint64,
 	signer sdk.AccAddress,

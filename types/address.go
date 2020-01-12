@@ -642,6 +642,16 @@ func MustGetEEAddressFromBech32(bech32String string) *EEAddress {
 	return res
 }
 
+// GetEEAddressFromSecp256k1PubKey derives Black2b256-hashed address
+func GetEEAddressFromSecp256k1PubKey(pubkey tmsecp256k1.PubKeySecp256k1) *EEAddress {
+	var res EEAddress
+	for idx, unitByte := range eeutil.Blake2b256(pubkey[:]) {
+		res[idx] = unitByte
+	}
+
+	return &res
+}
+
 // ----------------------------------------------------------------------------
 // auxiliary
 // ----------------------------------------------------------------------------
@@ -817,6 +827,20 @@ func GetSecp256k1FromBech32AccPubKey(bech32str string) (*tmsecp256k1.PubKeySecp2
 	}
 
 	return &res, nil
+}
+
+// MustGetSecp256k1FromCryptoPubKey derives Secp256k1 public key from amino-encoded cypro.Pubkey interface
+func MustGetSecp256k1FromCryptoPubKey(cryptoPubkey crypto.PubKey) *tmsecp256k1.PubKeySecp256k1 {
+	cdc := codec.New()
+	cryptoAmino.RegisterAmino(cdc)
+
+	var res tmsecp256k1.PubKeySecp256k1
+	err := cdc.UnmarshalBinaryBare(cryptoPubkey.Bytes(), &res)
+	if err != nil {
+		panic(err)
+	}
+
+	return &res
 }
 
 // MustGetSecp256k1FromBech32AccPubKey is shorten ver of GetSecp256k1FromBech32AccPubKey

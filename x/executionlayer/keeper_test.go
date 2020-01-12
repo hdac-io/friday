@@ -96,10 +96,11 @@ func TestCreateBlock(t *testing.T) {
 
 	blockHash1 := []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 	blockHash2 := []byte{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
+	pubkey := sdk.MustGetSecp256k1FromBech32AccPubKey(GenesisPubKeyString)
 	counterDefineMSG := NewMsgExecute(
 		blockHash,
 		GenesisPubKeyString,
-		GenesisPubKey,
+		*pubkey,
 		util.LoadWasmFile(path.Join(contractPath, counterDefineWasm)),
 		[]byte{},
 		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
@@ -120,7 +121,7 @@ func TestCreateBlock(t *testing.T) {
 	counterCallMSG := NewMsgExecute(
 		blockHash,
 		GenesisPubKeyString,
-		GenesisPubKey,
+		*pubkey,
 		util.LoadWasmFile(path.Join(contractPath, counterCallWasm)),
 		[]byte{},
 		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
@@ -142,12 +143,13 @@ func TestCreateBlock(t *testing.T) {
 
 	unitHash1 := input.elk.GetUnitHashMap(input.ctx, blockHash1)
 	pv := input.elk.MustGetProtocolVersion(input.ctx)
-	fmt.Println(GenesisPubKey.Address())
-	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", GenesisPubKey.Bytes(), arrPath, &pv)
+
+	genesisAddr := sdk.MustGetEEAddressFromCryptoPubkey(GenesisPubKey)
+	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", genesisAddr.Bytes(), arrPath, &pv)
 	assert.Equal(t, int32(0), res1.GetIntValue())
 
 	unitHash2 := input.elk.GetUnitHashMap(input.ctx, blockHash2)
-	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", GenesisPubKey.Bytes(), arrPath, &pv)
+	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", genesisAddr.Bytes(), arrPath, &pv)
 	assert.Equal(t, int32(1), res2.GetIntValue())
 }
 
@@ -165,10 +167,13 @@ func TestTransfer(t *testing.T) {
 
 	BeginBlocker(input.ctx, nextBlockABCI1, input.elk)
 
+	genpubkey := sdk.MustGetSecp256k1FromBech32AccPubKey(GenesisPubKeyString)
+	receippubkey := sdk.MustGetSecp256k1FromBech32AccPubKey(RecipientPubKeyString)
+
 	transferMSG := NewMsgTransfer(
 		GenesisPubKeyString,
-		GenesisPubKey,
-		RecipientPubKey,
+		*genpubkey,
+		*receippubkey,
 		util.LoadWasmFile(path.Join(contractPath, transferWasm)),
 		util.MakeArgsTransferToAccount(types.ToPublicKey(RecipientAccountAddress), 100000000),
 		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
@@ -187,13 +192,13 @@ func TestTransfer(t *testing.T) {
 
 	BeginBlocker(input.ctx, nextBlockABCI2, input.elk)
 
-	res, err := input.elk.GetQueryBalanceResultSimple(input.ctx, GenesisPubKey)
+	res, err := input.elk.GetQueryBalanceResultSimple(input.ctx, *genpubkey)
 	queriedRes, _ := strconv.Atoi(res)
 
 	assert.Equal(t, queriedRes, 100000000)
 	assert.Equal(t, err, nil)
 
-	res2, err := input.elk.GetQueryBalanceResultSimple(input.ctx, GenesisPubKey)
+	res2, err := input.elk.GetQueryBalanceResultSimple(input.ctx, *genpubkey)
 	queriedRes2, _ := strconv.Atoi(res2)
 	fmt.Println(queriedRes)
 	fmt.Println(queriedRes2)
@@ -230,7 +235,8 @@ func TestGenesisState(t *testing.T) {
 
 	// GenesisAccounts test
 	expected.Accounts = make([]types.Account, 1)
-	expected.Accounts[0].PublicKey = types.PublicKey([]byte("test-pub-key"))
+	pubkey := sdk.MustGetSecp256k1FromBech32AccPubKey(GenesisPubKeyString)
+	expected.Accounts[0].PublicKey = *pubkey
 	expected.Accounts[0].InitialBalance = "2"
 	expected.Accounts[0].InitialBondedAmount = "1"
 
