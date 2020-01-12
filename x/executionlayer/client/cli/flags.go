@@ -1,20 +1,29 @@
 package cli
 
 import (
+	"os"
+
 	flag "github.com/spf13/pflag"
 
+	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 )
 
 // nolint
 const (
-	FlagAddressValidator    = "validator"
-	FlagAddressValidatorSrc = "addr-validator-source"
-	FlagAddressValidatorDst = "addr-validator-dest"
-	FlagPubKey              = "pubkey"
-	FlagAmount              = "amount"
-	FlagFee                 = "fee"
-	FlagGasPrice            = "gas-price"
+	FlagAddressValidator     = "validator"
+	FlagAddressValidatorSrc  = "addr-validator-source"
+	FlagAddressValidatorDst  = "addr-validator-dest"
+	FlagPubKey               = "pubkey"
+	FlagTokenContractAddress = "token-contract-address"
+	FlagBech32PubKey         = sdk.Bech32MainPrefix + "pub"
+	FlagAmount               = "amount"
+	FlagFee                  = "fee"
+	FlagGasPrice             = "gas-price"
+	FlagBlockHash            = "blockhash"
+	FlagToName               = "to-name"
+	FlagToPubkey             = "to-" + FlagPubKey
+	FlagToBech32Pubkey       = "to-" + FlagBech32PubKey
 
 	FlagMoniker  = "moniker"
 	FlagIdentity = "identity"
@@ -35,6 +44,8 @@ var (
 	fsDescriptionCreate = flag.NewFlagSet("", flag.ContinueOnError)
 	fsDescriptionEdit   = flag.NewFlagSet("", flag.ContinueOnError)
 	fsValidator         = flag.NewFlagSet("", flag.ContinueOnError)
+
+	DefaultClientHome = os.ExpandEnv("$HOME/.clif")
 )
 
 func init() {

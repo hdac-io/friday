@@ -2,7 +2,7 @@ package types
 
 import (
 	"fmt"
-	"github.com/hdac-io/tendermint/crypto"
+	secp256k1 "github.com/hdac-io/tendermint/crypto/secp256k1"
 )
 
 // QueryExecutionLayerDetail payload for a EE query
@@ -33,7 +33,7 @@ func (q QueryExecutionLayer) String() string {
 // QueryGetBalanceDetail payload for balance query
 type QueryGetBalanceDetail struct {
 	StateHash []byte
-	PublicKey crypto.PubKey
+	PublicKey secp256k1.PubKeySecp256k1
 }
 
 // implement fmt.Stringer
@@ -43,7 +43,7 @@ func (q QueryGetBalanceDetail) String() string {
 
 // QueryGetBalance payload for balance query in the latest data
 type QueryGetBalance struct {
-	PublicKey crypto.PubKey
+	PublicKey secp256k1.PubKeySecp256k1
 }
 
 // implement fmt.Stringer

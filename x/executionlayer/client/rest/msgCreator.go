@@ -52,19 +52,19 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 	}
 
 	// Parameter touching
-	receipientPubkey, err := util.GetPubKey(cliCtx.Codec, cliCtx, req.RecipientPubkeyOrName)
+	recipientPubkey, err := util.GetPubKey(cliCtx.Codec, cliCtx, req.RecipientPubkeyOrName)
 	if err != nil {
 		return rest.BaseReq{}, nil, fmt.Errorf("wrong public key or no mapping rule in readable ID service: %s", req.RecipientPubkeyOrName)
 	}
 
 	// TODO: Change after WASM store feature merge
 	transferCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm"))
-	transferAbi := grpc.MakeArgsTransferToAccount(receipientPubkey.Bytes(), req.Amount)
+	transferAbi := grpc.MakeArgsTransferToAccount(recipientPubkey.Bytes(), req.Amount)
 	paymentCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
 	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.GasPrice))
 
 	// create the message
-	eeMsg := types.NewMsgTransfer(req.TokenContractAddress, senderPubkey, receipientPubkey, transferCode, transferAbi, paymentCode, paymentAbi, req.GasPrice, senderaddr)
+	eeMsg := types.NewMsgTransfer(req.TokenContractAddress, *senderPubkey, *recipientPubkey, transferCode, transferAbi, paymentCode, paymentAbi, req.GasPrice, senderaddr)
 	err = eeMsg.ValidateBasic()
 	if err != nil {
 		return rest.BaseReq{}, nil, err
@@ -121,7 +121,7 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.GasPrice))
 
 	// create the message
-	msg := types.NewMsgExecute([]byte{0}, req.TokenContractAddress, pubkey, bondingUnbondingCode, bondingUnbondingAbi, paymentCode, paymentAbi, req.GasPrice, addr)
+	msg := types.NewMsgExecute([]byte{0}, req.TokenContractAddress, *pubkey, bondingUnbondingCode, bondingUnbondingAbi, paymentCode, paymentAbi, req.GasPrice, addr)
 	err = msg.ValidateBasic()
 	if err != nil {
 		return rest.BaseReq{}, nil, err
@@ -144,7 +144,7 @@ func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 
 	if blockHashStr == "" {
 		queryData := types.QueryGetBalance{
-			PublicKey: pubkey,
+			PublicKey: *pubkey,
 		}
 		bz = cliCtx.Codec.MustMarshalJSON(queryData)
 		//return bz, nil
@@ -154,7 +154,7 @@ func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 			return nil, err
 		}
 		queryData := types.QueryGetBalanceDetail{
-			PublicKey: pubkey,
+			PublicKey: *pubkey,
 			StateHash: blockHash,
 		}
 		bz = cliCtx.Codec.MustMarshalJSON(queryData)

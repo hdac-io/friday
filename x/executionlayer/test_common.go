@@ -83,8 +83,9 @@ func setupTestInput() testInput {
 	gs := types.DefaultGenesisState()
 	gs.ChainName = chainID
 	gs.Accounts = make([]types.Account, 1)
+	pubkey := sdk.MustGetSecp256k1FromBech32AccPubKey(GenesisPubKeyString)
 	gs.Accounts[0] = types.Account{
-		PublicKey:           types.ToPublicKey(GenesisAccountAddress),
+		PublicKey:           *pubkey,
 		InitialBalance:      "500000000",
 		InitialBondedAmount: "1000000",
 	}
@@ -124,8 +125,9 @@ func counterDefine(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	cntDefCode := util.LoadWasmFile(path.Join(contractPath, counterDefineWasm))
 	standardPaymentCode := util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm))
 	protocolVersion := input.elk.MustGetProtocolVersion(input.ctx)
+	genesisAddr := sdk.MustGetEEAddressFromCryptoPubkey(input.elk.GetGenesisAccounts(input.ctx)[0].PublicKey)
 
-	deploy := util.MakeDeploy(input.elk.GetGenesisAccounts(input.ctx)[0].PublicKey, cntDefCode, []byte{},
+	deploy := util.MakeDeploy(genesisAddr.Bytes(), cntDefCode, []byte{},
 		standardPaymentCode, paymentAbi, uint64(10), timestamp, input.elk.GetChainName(input.ctx))
 
 	deploys := util.MakeInitDeploys()
@@ -152,9 +154,10 @@ func counterCall(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	cntCallCode := util.LoadWasmFile(path.Join(contractPath, counterCallWasm))
 	standardPaymentCode := util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm))
 	protocolVersion := input.elk.MustGetProtocolVersion(input.ctx)
+	genesisAddr := sdk.MustGetEEAddressFromCryptoPubkey(input.elk.GetGenesisAccounts(input.ctx)[0].PublicKey)
 
 	timestamp = time.Now().Unix()
-	deploy := util.MakeDeploy(input.elk.GetGenesisAccounts(input.ctx)[0].PublicKey, cntCallCode,
+	deploy := util.MakeDeploy(genesisAddr.Bytes(), cntCallCode,
 		[]byte{}, standardPaymentCode, paymentAbi, uint64(10), timestamp, input.elk.GetChainName(input.ctx))
 	deploys := util.MakeInitDeploys()
 	deploys = util.AddDeploy(deploys, deploy)

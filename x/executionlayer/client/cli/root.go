@@ -25,9 +25,7 @@ func GetExecutionLayerCmd(cdc *codec.Codec) *cobra.Command {
 
 		// Query
 		GetCmdQueryBalance(cdc),
-		GetCmdQueryBalanceWithBlockHash(cdc),
 		GetCmdQuery(cdc),
-		GetCmdQueryWithHash(cdc),
 	)...)
 	return executionlayerTxCmd
 }

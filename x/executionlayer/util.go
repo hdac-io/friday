@@ -16,14 +16,18 @@ func toBytes(keyType string, key string,
 
 	switch keyType {
 	case "address":
-		pubkeybytes, err := sdk.GetAccPubKeyBech32(key)
+		pubkeybytes, err := sdk.GetSecp256k1FromRawHexString(key)
 		if err != nil {
-			pubkeybytes = k.GetUnitAccount(ctx, key).PubKey
-			return nil, err
+			*pubkeybytes = k.GetUnitAccount(ctx, key).PubKey
+			if len(*pubkeybytes) == 0 {
+				return nil, fmt.Errorf("no readable ID mapping of %s", key)
+			}
 		}
-		bytes = pubkeybytes.Bytes()
+		bytes = sdk.MustGetEEAddressFromCryptoPubkey(pubkeybytes).Bytes()
+
 	case "uref", "local", "hash":
 		bytes, err = hex.DecodeString(key)
+
 	default:
 		err = fmt.Errorf("Unknown QueryKey type: %v", keyType)
 	}
