@@ -155,12 +155,11 @@ func (k ExecutionLayerKeeper) Execute(ctx sdk.Context,
 	unitHash := k.GetUnitHashMap(ctx, copiedBlockhash)
 	protocolVersion := k.MustGetProtocolVersion(ctx)
 
-	exexAddr := sdk.MustGetEEAddressFromCryptoPubkey(execPubkey)
+	exexAddr := sdk.GetEEAddressFromSecp256k1PubKey(execPubkey)
 
 	// Execute
-<<<<<<< HEAD
 	deploys := []*ipc.DeployItem{}
-	deploy := util.MakeDeploy(execAccountPubKey, sessionCode, sessionArgs, paymentCode, paymentArgs, gasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
+	deploy := util.MakeDeploy(exexAddr.Bytes(), sessionCode, sessionArgs, paymentCode, paymentArgs, gasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
 	deploys = append(deploys, deploy)
 	reqExecute := &ipc.ExecuteRequest{
 		ParentStateHash: unitHash.EEState,
@@ -192,14 +191,6 @@ func (k ExecutionLayerKeeper) Execute(ctx sdk.Context,
 	}
 	if err != nil {
 		return err
-=======
-	deploys := util.MakeInitDeploys()
-	deploy := util.MakeDeploy(exexAddr.Bytes(), sessionCode, sessionArgs, paymentCode, paymentArgs, gasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
-	deploys = util.AddDeploy(deploys, deploy)
-	effects, errGrpc := grpc.Execute(k.client, unitHash.EEState, ctx.BlockTime().Unix(), deploys, &protocolVersion)
-	if errGrpc != "" {
-		return fmt.Errorf(errGrpc)
->>>>>>> feat: revised as pubkey based ID in keeper of EE layer
 	}
 
 	// Commit

@@ -854,13 +854,11 @@ func MustGetSecp256k1FromBech32AccPubKey(bech32str string) *tmsecp256k1.PubKeySe
 
 // GetSecp256k1FromRawHexString derives Secp256k1 public key from raw string
 func GetSecp256k1FromRawHexString(rawHexString string) (*tmsecp256k1.PubKeySecp256k1, error) {
-	if len(rawHexString) != 33 {
-		return nil, fmt.Errorf("length of Secp256K1 public key is 33. Given: %d", len(rawHexString))
-	}
-
 	byteForm, err := hex.DecodeString(rawHexString)
 	if err != nil {
 		return nil, err
+	} else if len(byteForm) != 33 {
+		return nil, fmt.Errorf("length of Secp256K1 public key is 33. Given: %d", len(byteForm))
 	}
 
 	var res tmsecp256k1.PubKeySecp256k1

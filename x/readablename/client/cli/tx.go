@@ -36,8 +36,8 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 // GetCmdSetAccountFromBech32PubKey is the CLI command to register public key from bech32 pubkey whose prefix is "fridaypub"
 func GetCmdSetAccountFromBech32PubKey(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "setbybech32 [name] [pubkey_fridaypub]",
-		Short: "",
+		Use:   fmt.Sprintf("setbybech32pubkey [name] [pubkey_%[1]spub \"%[1]spubxxxxxxxx....\"]", sdk.Bech32MainPrefix),
+		Short: fmt.Sprintf("Set readable ID by bech32 (%[1]spubxxxxxx...)", sdk.Bech32MainPrefix),
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			pubkey, err := sdk.GetSecp256k1FromBech32AccPubKey(args[1])
@@ -65,8 +65,8 @@ func GetCmdSetAccountFromBech32PubKey(cdc *codec.Codec) *cobra.Command {
 // GetCmdSetAccountFromSecp256k1PubKey is the CLI command to register public key from 33-bit raw Secp256k1 public key
 func GetCmdSetAccountFromSecp256k1PubKey(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "setpubkey [name] [pubkey_secp256k1]",
-		Short: "",
+		Use:   "setbypubkey [name] [pubkey_secp256k1]",
+		Short: "Set readable ID by secp256k1 public key",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			pubkey, err := sdk.GetSecp256k1FromRawHexString(args[1])
@@ -94,8 +94,8 @@ func GetCmdSetAccountFromSecp256k1PubKey(cdc *codec.Codec) *cobra.Command {
 // GetCmdChangeKeyFromBech32PubKey is the CLI command for changing key
 func GetCmdChangeKeyFromBech32PubKey(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "changekeybech32 [name] [old_fridaypub] [new_fridaypub]",
-		Short: "",
+		Use:   fmt.Sprintf("changekeybech32 [name] [old_%[1]spub] [new_%[1]spub]", sdk.Bech32MainPrefix),
+		Short: fmt.Sprintf("Change public key mapping of given readable ID by bech32 (%[1]spubxxxxxx...)", sdk.Bech32MainPrefix),
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			oldpubkey, err := sdk.GetSecp256k1FromBech32AccPubKey(args[1])
@@ -128,12 +128,11 @@ func GetCmdChangeKeyFromBech32PubKey(cdc *codec.Codec) *cobra.Command {
 	}
 }
 
-
 // GetCmdChangeKeyFromSecp256k1PubKey is the CLI command for changing key
 func GetCmdChangeKeyFromSecp256k1PubKey(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "changekey [name] [old_public_key] [new_public_key]",
-		Short: "",
+		Short: "Change public key mapping of given readable ID by secp256k1 public key",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			oldpubkey, err := sdk.GetSecp256k1FromRawHexString(args[1])

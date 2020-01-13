@@ -18,10 +18,11 @@ func toBytes(keyType string, key string,
 	case "address":
 		pubkeybytes, err := sdk.GetSecp256k1FromRawHexString(key)
 		if err != nil {
-			*pubkeybytes = k.GetUnitAccount(ctx, key).PubKey
-			if len(*pubkeybytes) == 0 {
+			acc := k.GetUnitAccount(ctx, key)
+			if acc.Name.MustToString() == "" {
 				return nil, fmt.Errorf("no readable ID mapping of %s", key)
 			}
+			*pubkeybytes = acc.PubKey
 		}
 		bytes = sdk.MustGetEEAddressFromCryptoPubkey(pubkeybytes).Bytes()
 

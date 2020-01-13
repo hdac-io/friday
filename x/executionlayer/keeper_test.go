@@ -26,7 +26,7 @@ import (
 func TestQueryKeyToBytes(t *testing.T) {
 	input := setupTestInput()
 
-	_, err := toBytes("address", "fridaypub1addwnpepqw6vr6728nvg2duwj062y2yx2mfhmqjh66mjtgsyf7jwyq2kx2kaqlkq94l", input.elk.ReadableNameKeeper, input.ctx)
+	_, err := toBytes("address", "02014a87d1ec490005f85bb4296596ed741411f673a35317543439971c7c7731bb", input.elk.ReadableNameKeeper, input.ctx)
 	assert.Nil(t, err)
 	_, err = toBytes("address", "invalid address", input.elk.ReadableNameKeeper, input.ctx)
 	assert.NotNil(t, err)
@@ -175,7 +175,7 @@ func TestTransfer(t *testing.T) {
 		*genpubkey,
 		*receippubkey,
 		util.LoadWasmFile(path.Join(contractPath, transferWasm)),
-		util.MakeArgsTransferToAccount(types.ToPublicKey(RecipientAccountAddress), 100000000),
+		util.MakeArgsTransferToAccount(sdk.MustGetEEAddressFromBech32(RecipientPubKeyString).Bytes(), 100000000),
 		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
 		util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000)),
 		uint64(200000000),
@@ -192,7 +192,7 @@ func TestTransfer(t *testing.T) {
 
 	BeginBlocker(input.ctx, nextBlockABCI2, input.elk)
 
-	res, err := input.elk.GetQueryBalanceResultSimple(input.ctx, *genpubkey)
+	res, err := input.elk.GetQueryBalanceResultSimple(input.ctx, *receippubkey)
 	queriedRes, _ := strconv.Atoi(res)
 
 	assert.Equal(t, queriedRes, 100000000)

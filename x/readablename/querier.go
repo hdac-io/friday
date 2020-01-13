@@ -3,6 +3,7 @@ package readablename
 import (
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/readablename/types"
 	abci "github.com/hdac-io/tendermint/abci/types"
 )
 
@@ -27,10 +28,14 @@ func queryUnitAccount(ctx sdk.Context, path []string, req abci.RequestQuery, k R
 	var param QueryReqUnitAccount
 	err := ModuleCdc.UnmarshalJSON(req.Data, &param)
 	if err != nil {
-		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, err.Error())
+		return nil, types.ErrBadQueryRequest(ModuleName)
 	}
 
 	value := k.GetUnitAccount(ctx, param.Name)
+	if value.Name.MustToString() == "" {
+		return nil, types.ErrNoRegisteredReadableID(ModuleName, param.Name)
+	}
+
 	qryvalue := QueryResUnitAccount{
 		Name:    value.Name.MustToString(),
 		Address: value.Address,
