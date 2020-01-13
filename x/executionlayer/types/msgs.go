@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 
+	"github.com/hdac-io/tendermint/crypto"
 	secp256k1 "github.com/hdac-io/tendermint/crypto/secp256k1"
 
 	sdk "github.com/hdac-io/friday/types"
@@ -133,10 +134,10 @@ func (msg MsgTransfer) GetSigners() []sdk.AccAddress {
 //______________________________________________________________________
 // MsgCreateValidator - struct for bonding transactions
 type MsgCreateValidator struct {
-	Description      Description               `json:"description" yaml:"description"`
-	DelegatorAddress sdk.AccAddress            `json:"delegator_address" yaml:"delegator_address"`
-	ValidatorAddress sdk.ValAddress            `json:"validator_address" yaml:"validator_address"`
-	PubKey           secp256k1.PubKeySecp256k1 `json:"pubkey" yaml:"pubkey"`
+	Description      Description    `json:"description" yaml:"description"`
+	DelegatorAddress sdk.AccAddress `json:"delegator_address" yaml:"delegator_address"`
+	ValidatorAddress sdk.ValAddress `json:"validator_address" yaml:"validator_address"`
+	PubKey           crypto.PubKey  `json:"pubkey" yaml:"pubkey"`
 }
 
 type msgCreateValidatorJSON struct {
@@ -148,7 +149,7 @@ type msgCreateValidatorJSON struct {
 
 // Default way to create validator. Delegator address and validator address are the same
 func NewMsgCreateValidator(
-	valAddr sdk.ValAddress, pubKey secp256k1.PubKeySecp256k1,
+	valAddr sdk.ValAddress, pubKey crypto.PubKey,
 	description Description,
 ) MsgCreateValidator {
 	return MsgCreateValidator{
@@ -198,8 +199,8 @@ func (msg *MsgCreateValidator) UnmarshalJSON(bz []byte) error {
 	msg.Description = msgCreateValJSON.Description
 	msg.DelegatorAddress = msgCreateValJSON.DelegatorAddress
 	msg.ValidatorAddress = msgCreateValJSON.ValidatorAddress
-	ptrPubkey, err := sdk.GetSecp256k1FromRawHexString(msgCreateValJSON.PubKey)
-	msg.PubKey = *ptrPubkey
+	var err error
+	msg.PubKey, err = sdk.GetConsPubKeyBech32(msgCreateValJSON.PubKey)
 	if err != nil {
 		return err
 	}

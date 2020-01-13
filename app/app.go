@@ -172,7 +172,9 @@ func NewFridayApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest
 		app.cdc,
 		keys[executionlayer.HashMapStoreKey],
 		os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"),
-		app.accountKeeper)
+		app.accountKeeper,
+		app.readablenameKeeper,
+	)
 
 	// register the proposal types
 	govRouter := gov.NewRouter()

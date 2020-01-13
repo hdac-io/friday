@@ -7,13 +7,10 @@ import (
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
-<<<<<<< HEAD
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
-=======
 	secp256k1 "github.com/hdac-io/tendermint/crypto/secp256k1"
 
 	sdk "github.com/hdac-io/friday/types"
->>>>>>> feat: rewrited for supporting secp256k1 pubkey
 )
 
 // GenesisState : the executionlayer state that must be provided at genesis.

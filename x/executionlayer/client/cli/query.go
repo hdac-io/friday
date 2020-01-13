@@ -58,14 +58,14 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 					return err
 				}
 				pubkey = *pubkeyPtr
-			} else if rawPubkey := viper.GetString(client.FlagName); rawPubkey != "" {
+			} else if rawPubkey := viper.GetString(FlagPubKey); rawPubkey != "" {
 				// --pubkey: from raw secp256k1 public key
 				pubkeyPtr, err := sdk.GetSecp256k1FromRawHexString(rawPubkey)
 				if err != nil {
 					return err
 				}
 				pubkey = *pubkeyPtr
-			} else if bech32Pubkey := viper.GetString(client.FlagName); bech32Pubkey != "" {
+			} else if bech32Pubkey := viper.GetString(FlagBech32PubKey); bech32Pubkey != "" {
 				// --[bech32_prefix]pub: from bech32 public key (fridaypubxxxxxx...)
 				rawPubkey, err := sdk.GetSecp256k1FromBech32AccPubKey(bech32Pubkey)
 				if err != nil {

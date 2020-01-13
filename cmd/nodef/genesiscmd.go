@@ -28,7 +28,7 @@ func AddElGenesisAccountCmd(
 ) *cobra.Command {
 
 	cmd := &cobra.Command{
-		Use:   `add-el-genesis-account [bech32 string] [initial_balance] [initial_bonded_amount]`,
+		Use:   `add-el-genesis-account [fridaypub bech32 pubkey] [initial_balance] [initial_bonded_amount]`,
 		Short: "Add a genesis account to genesis.json",
 		Long: `Add a genesis account to genesis.json. The provided account must specify
 the base64 encoded publickey and a list of initial coins.`,
@@ -37,7 +37,7 @@ the base64 encoded publickey and a list of initial coins.`,
 			config := ctx.Config
 			config.SetRoot(viper.GetString(cli.HomeFlag))
 
-			accAddr, err := sdk.AccAddressFromBech32(args[0])
+			pubkey, err := sdk.GetSecp256k1FromBech32AccPubKey(args[0])
 			if err != nil {
 				kb, err := keys.NewKeyBaseFromDir(viper.GetString(flagClientHome))
 				if err != nil {
@@ -49,13 +49,13 @@ the base64 encoded publickey and a list of initial coins.`,
 					return err
 				}
 
-				accAddr = info.GetAddress()
+				pubkey = sdk.MustGetSecp256k1FromCryptoPubKey(info.GetPubKey())
 			}
 
 			// Use sdk.AccAddress as public key for PoC.
 			// It should be replaced with a raw public key later.
 			account := eltypes.Account{
-				PublicKey:           eltypes.ToPublicKey(accAddr),
+				PublicKey:           *pubkey,
 				InitialBalance:      args[1],
 				InitialBondedAmount: args[2],
 			}
@@ -75,7 +75,7 @@ the base64 encoded publickey and a list of initial coins.`,
 
 			// check already existing address
 			for _, v := range genesisState.Accounts {
-				if bytes.Compare([]byte(v.PublicKey), []byte(account.PublicKey)) == 0 {
+				if bytes.Compare([]byte(v.PublicKey.Bytes()), []byte(account.PublicKey.Bytes())) == 0 {
 					return fmt.Errorf("already existing address: %v", args[0])
 				}
 			}

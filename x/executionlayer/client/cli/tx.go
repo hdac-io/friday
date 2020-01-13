@@ -269,21 +269,6 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			// --from: get key info from local wallet DB
-			//         DO NOT GET PARAMETER AS ADDRESS, PUBKEY DIRECTLY. Only from the local-stored wallet
-			// Get secp256k1 pubkey from local wallet key descriptor "--from"
-			kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
-			if err != nil {
-				return err
-			}
-
-			key, err := kb.Get(viper.GetString(client.FlagFrom))
-			if err != nil {
-				return err
-			}
-
-			cliCtx = cliCtx.WithFromAddress(key.GetAddress())
-
 			msg, err := BuildCreateValidatorMsg(cliCtx)
 			if err != nil {
 				return err
@@ -306,13 +291,13 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 }
 
 func BuildCreateValidatorMsg(cliCtx context.CLIContext) (sdk.Msg, error) {
+	valAddr := cliCtx.GetFromAddress()
 	pkStr := viper.GetString(FlagPubKey)
+
 	pk, err := sdk.GetConsPubKeyBech32(pkStr)
 	if err != nil {
 		return types.MsgCreateValidator{}, err
 	}
-
-	secp256k1Pubkey := sdk.MustGetSecp256k1FromCryptoPubKey(pk)
 
 	description := types.NewDescription(
 		viper.GetString(FlagMoniker),
@@ -321,7 +306,7 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext) (sdk.Msg, error) {
 		viper.GetString(FlagDetails),
 	)
 
-	msg := types.NewMsgCreateValidator(sdk.ValAddress(pk.Address()), *secp256k1Pubkey, description)
+	msg := types.NewMsgCreateValidator(sdk.ValAddress(valAddr), pk, description)
 
 	return msg, nil
 }
