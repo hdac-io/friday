@@ -348,9 +348,35 @@ func TestCustomAddressVerifier(t *testing.T) {
 }
 
 func TestEEAddress(t *testing.T) {
-	bech32Address := "fridaypub1addwnpepqw6vr6728nvg2duwj062y2yx2mfhmqjh66mjtgsyf7jwyq2kx2kaqlkq94l"
-	blake256k1Addr, err := types.GetEEAddressFromBech32(bech32Address)
+	// from crypto.PubKey
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	blake256k1Addr := types.MustGetEEAddressFromCryptoPubkey(pubkey)
 
 	require.NotNil(t, blake256k1Addr)
-	require.Nil(t, err)
+
+	// from bech32
+	bech32pubkey := types.MustBech32ifyAccPub(pubkey)
+	blake256k1Addr = types.MustGetEEAddressFromBech32(bech32pubkey)
+
+	require.NotNil(t, blake256k1Addr)
+}
+
+func TestSecp256k1Conversion(t *testing.T) {
+	// from crypto.PubKey
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	secp256k1pubkey := types.MustGetSecp256k1FromCryptoPubKey(pubkey)
+
+	require.Equal(t, len(secp256k1pubkey), 33)
+
+	// from bech32
+	bech32pubkey := types.MustBech32ifyAccPub(pubkey)
+	secp256k1pubkey = types.MustGetSecp256k1FromBech32AccPubKey(bech32pubkey)
+
+	require.Equal(t, len(secp256k1pubkey), 33)
+
+	// from hex string
+	hexstr := "03c676be88d995c130f9a1bbe43fac18ab1db3b1173e6681bf4741bb8fb9f2bbbf"
+	secp256k1pubkey = types.MustGetSecp256k1FromRawHexString(hexstr)
+
+	require.Equal(t, len(secp256k1pubkey), 33)
 }

@@ -165,7 +165,7 @@ clif executionlayer getbalance --fridaypub $(clif keys show elsa -a)
 ```
 
 * transfer (send)
-  * usage: `clif executionlayer transfer [--token_contract_address] [--from local_wallet_alias] [--to-name readable_id or --to-pubkey secp256k1 pubkey or --to-fridaypub bech32 pubkey] [--amount] [--fee] [--gas_price]`
+  * usage: `clif executionlayer transfer [--token_contract_address] [--from local_wallet_alias] [--to-name readable_id or --to-pubkey secp256k1 pubkey or --to-fridaypub bech32 pubkey] [--amount] [--fee] [--gas-price]`
   * Flag `--token_contract_address` is currently dummy. You may input as same as `from_address`
 ```bash
 clif executionlayer transfer --from elsa --to-name sisteranna 1000000 100000000 20000000
