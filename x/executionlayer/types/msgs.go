@@ -311,8 +311,8 @@ func NewMsgUnBond(
 	sessionCode []byte, sessionArgs []byte,
 	paymentCode []byte, paymentArgs []byte, gasPrice uint64,
 	signer sdk.AccAddress,
-) MsgBond {
-	return MsgBond{
+) MsgUnBond {
+	return MsgUnBond{
 		TokenContractAddress: tokenContractAddress,
 		FromPubkey:           fromPubkey,
 		ValAddress:           valAddress,
