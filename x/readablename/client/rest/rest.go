@@ -22,6 +22,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 	r.HandleFunc(fmt.Sprintf("/%s/newname/bech32", restName), newNameWithBech32Handler(cliCtx)).Methods("POST")             // New account
 	r.HandleFunc(fmt.Sprintf("/%s/newname/secp256k1", restName), newNameWithSecp256k1PubkeyHandler(cliCtx)).Methods("POST") // New account
 	r.HandleFunc(fmt.Sprintf("/%s/change/bech32", restName), changeKeyByBech32Handler(cliCtx)).Methods("PUT")               // Change Key
+	r.HandleFunc(fmt.Sprintf("/%s/change/secp256k1", restName), changeKeyBySecp256k1Handler(cliCtx)).Methods("PUT")         // Change Key
 	r.HandleFunc(fmt.Sprintf("/%s/names", restName), getNameHandler(cliCtx, storeName)).Methods("GET")                      // Get UnitAccount
 }
 
@@ -30,7 +31,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 
 type newNameWithBech32Req struct {
 	ChainID      string `json:"chain_id"`
-	GasPrice     uint64 `json:"gas_price"`
+	GasPrice     uint64 `json:"gas"`
 	Memo         string `json:"memo"`
 	Name         string `json:"name"`
 	PubKeyBech32 string `json:"pubkey_fridaypub"`
@@ -85,7 +86,7 @@ func newNameWithBech32Handler(cliCtx context.CLIContext) http.HandlerFunc {
 
 type newNameWithRawPubkeyReq struct {
 	ChainID         string `json:"chain_id"`
-	GasPrice        uint64 `json:"gas_price"`
+	GasPrice        uint64 `json:"gas"`
 	Memo            string `json:"memo"`
 	Name            string `json:"name"`
 	PubKeySecp256k1 string `json:"pubkey"`
@@ -140,7 +141,7 @@ func newNameWithSecp256k1PubkeyHandler(cliCtx context.CLIContext) http.HandlerFu
 
 type changeKeyByBech32Req struct {
 	ChainID         string `json:"chain_id"`
-	GasPrice        uint64 `json:"gas_price"`
+	GasPrice        uint64 `json:"gas"`
 	Memo            string `json:"memo"`
 	Name            string `json:"name"`
 	OldPubKeyBech32 string `json:"old_pubkey_fridaypub"`
@@ -202,7 +203,7 @@ func changeKeyByBech32Handler(cliCtx context.CLIContext) http.HandlerFunc {
 
 type changeKeyBySecp256k1Req struct {
 	ChainID            string `json:"chain_id"`
-	GasPrice           uint64 `json:"gas_price"`
+	GasPrice           uint64 `json:"gas"`
 	Memo               string `json:"memo"`
 	Name               string `json:"name"`
 	OldPubKeySecp256k1 string `json:"old_pubkey"`
