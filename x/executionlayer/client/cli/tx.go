@@ -166,7 +166,6 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 			pubkey := sdk.MustGetSecp256k1FromCryptoPubKey(key.GetPubKey())
 			addr := key.GetAddress()
 			cliCtx = cliCtx.WithFromAddress(addr)
-			valAddress := sdk.ValAddress(key.GetPubKey().Address())
 
 			amount := viper.GetUint64(FlagAmount)
 			fee := viper.GetUint64(FlagFee)
@@ -178,7 +177,7 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgBond(cliCtx.FromAddress.String(), *pubkey, valAddress, bondingCode, bondingAbi, paymentCode, paymentAbi, gasPrice, addr)
+			msg := types.NewMsgBond(cliCtx.FromAddress.String(), *pubkey, bondingCode, bondingAbi, paymentCode, paymentAbi, gasPrice, addr)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
@@ -228,7 +227,6 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 			pubkey := sdk.MustGetSecp256k1FromCryptoPubKey(key.GetPubKey())
 			addr := key.GetAddress()
 			cliCtx = cliCtx.WithFromAddress(addr)
-			valAddress := sdk.ValAddress(key.GetPubKey().Address())
 
 			amount := viper.GetUint64(FlagAmount)
 			fee := viper.GetUint64(FlagFee)
@@ -240,7 +238,7 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgUnBond(cliCtx.FromAddress.String(), *pubkey, valAddress, unbondingCode, unbondingAbi, paymentCode, paymentAbi, gasPrice, addr)
+			msg := types.NewMsgUnBond(cliCtx.FromAddress.String(), *pubkey, unbondingCode, unbondingAbi, paymentCode, paymentAbi, gasPrice, addr)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
@@ -279,7 +277,7 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().String(client.FlagHome, DefaultClientHome, "flag for custom local path of client's home dir")
-	cmd.Flags().String(client.FlagFrom, "", "from address")
+	cmd.Flags().String(client.FlagFrom, "", "Bech32 address")
 	cmd.Flags().AddFlagSet(fsDescriptionCreate)
 	cmd.Flags().AddFlagSet(FsPk)
 
@@ -291,10 +289,17 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 }
 
 func BuildCreateValidatorMsg(cliCtx context.CLIContext) (sdk.Msg, error) {
-	valAddr := cliCtx.GetFromAddress()
-	pkStr := viper.GetString(FlagPubKey)
+	kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+	if err != nil {
+		return types.MsgCreateValidator{}, err
+	}
 
-	pk, err := sdk.GetConsPubKeyBech32(pkStr)
+	key, err := kb.Get(viper.GetString(client.FlagFrom))
+	valPubKey := sdk.MustGetSecp256k1FromCryptoPubKey(key.GetPubKey())
+	valAddr := cliCtx.GetFromAddress()
+
+	consPubKeyStr := viper.GetString(FlagPubKey)
+	consPubKey, err := sdk.GetConsPubKeyBech32(consPubKeyStr)
 	if err != nil {
 		return types.MsgCreateValidator{}, err
 	}
@@ -306,7 +311,7 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext) (sdk.Msg, error) {
 		viper.GetString(FlagDetails),
 	)
 
-	msg := types.NewMsgCreateValidator(sdk.ValAddress(valAddr), pk, description)
+	msg := types.NewMsgCreateValidator(sdk.ValAddress(valAddr), valPubKey, consPubKey, description)
 
 	return msg, nil
 }

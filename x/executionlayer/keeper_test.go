@@ -256,28 +256,28 @@ func TestGenesisState(t *testing.T) {
 func TestValidator(t *testing.T) {
 	input := setupTestInput()
 
-	accAddr := "friday19rxdgfn3grqgwc6zhyeljmyas3tsawn6qe0quc"
-	acc, _ := sdk.AccAddressFromBech32(accAddr)
-	valAddr := sdk.ValAddress(acc)
+	valPubKeyStr := "fridayvaloperpub1addwnpepqfaxrvy4f95duln3t6vvtd0qd0sdpwfsn3fh9snpnq06w25qualj6vczad0"
+	valPubKey, _ := sdk.GetValPubKeyBech32(valPubKeyStr)
+	valAddr, _ := sdk.GetEEAddressFromCryptoPubkey(valPubKey)
 
-	valPubKey, _ := sdk.GetConsPubKeyBech32("fridayvalconspub16jrl8jvqq98x7jjxfcm8252pwd4nv6fetpzk6nzx2ddyc3fn0p2rz4mwf44nqjtfga5k5at4xad82sjhx9r9zdfcwuc5uvt90934jjr4d4xk242909rxks28v9erv3jvwfcx2wp4fe8h54fsddu9zar5v3tyknrs8pykk2mw2p29j4n6w455c7j2d3x4ykft9akx6s24gsu8ys2nvayrykqst965z")
-	val := types.NewValidator(valAddr, valPubKey, types.Description{
+	consPubKey, _ := sdk.GetConsPubKeyBech32("fridayvalconspub16jrl8jvqq98x7jjxfcm8252pwd4nv6fetpzk6nzx2ddyc3fn0p2rz4mwf44nqjtfga5k5at4xad82sjhx9r9zdfcwuc5uvt90934jjr4d4xk242909rxks28v9erv3jvwfcx2wp4fe8h54fsddu9zar5v3tyknrs8pykk2mw2p29j4n6w455c7j2d3x4ykft9akx6s24gsu8ys2nvayrykqst965z")
+	val := types.NewValidator(valAddr, consPubKey, types.Description{
 		Website: "https://validator.friday",
 		Details: "Test validator",
 	}, "0")
 
-	input.elk.SetValidator(input.ctx, acc, val)
+	input.elk.SetValidator(input.ctx, valAddr, val)
 
-	resVal, _ := input.elk.GetValidator(input.ctx, acc)
+	resVal, _ := input.elk.GetValidator(input.ctx, valAddr)
 
 	assert.Equal(t, valAddr, resVal.OperatorAddress)
-	assert.Equal(t, valPubKey, resVal.ConsPubKey)
+	assert.Equal(t, consPubKey, resVal.ConsPubKey)
 	assert.Equal(t, val.Description.Website, resVal.Description.Website)
 	assert.Equal(t, val.Description.Details, resVal.Description.Details)
 
 	val.Description.Moniker = "friday"
-	input.elk.SetValidatorDescription(input.ctx, acc, val.Description)
-	assert.Equal(t, "friday", input.elk.GetValidatorDescription(input.ctx, acc).Moniker)
+	input.elk.SetValidatorDescription(input.ctx, valAddr, val.Description)
+	assert.Equal(t, "friday", input.elk.GetValidatorDescription(input.ctx, valAddr).Moniker)
 
 	validators := input.elk.GetAllValidators(input.ctx)
 	assert.Equal(t, 1, len(validators))
