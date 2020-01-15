@@ -24,6 +24,10 @@ const (
 	FlagToName               = "to-name"
 	FlagToPubkey             = "to-" + FlagPubKey
 	FlagToBech32Pubkey       = "to-" + FlagBech32PubKey
+	FlagConsPubKey           = "cons-" + FlagPubKey
+	FlagConsBech32PubKey     = "cons-" + FlagBech32PubKey
+	FlagValPubkey            = "val-" + FlagPubKey
+	FlagValBech32PubKey      = "val-" + FlagBech32PubKey
 
 	FlagMoniker  = "moniker"
 	FlagIdentity = "identity"

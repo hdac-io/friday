@@ -582,14 +582,22 @@ func (ca ConsAddress) Format(s fmt.State, verb rune) {
 //
 
 // EEAddress length is 32
-type EEAddress [32]byte
+type EEAddress []byte
 
 func (ee EEAddress) Bytes() []byte {
-	return ee[:]
+	return ee
+}
+
+func verifyEEAddress(src []byte) error {
+	if len(src) != 32 {
+		return errors.New("Incorrect address length")
+	}
+
+	return nil
 }
 
 // GetEEAddressFromCryptoPubkey converts blake2b 32 byte address from amino-encoded 33 bit secp256k1 public key
-func GetEEAddressFromCryptoPubkey(cryptoPubKey crypto.PubKey) (*EEAddress, error) {
+func GetEEAddressFromCryptoPubkey(cryptoPubKey crypto.PubKey) (EEAddress, error) {
 	cdc := codec.New()
 	cryptoAmino.RegisterAmino(cdc)
 
@@ -599,18 +607,18 @@ func GetEEAddressFromCryptoPubkey(cryptoPubKey crypto.PubKey) (*EEAddress, error
 		return nil, err
 	}
 
-	var blake2b256PubKey EEAddress
-	// Not able to direct assign by slice ( [:32] )
-	// Should assign by `for` iteration
-	for idx, unitByte := range eeutil.Blake2b256(cont[:]) {
-		blake2b256PubKey[idx] = unitByte
+	eeAddress := eeutil.Blake2b256(cont.Bytes())
+
+	err = verifyEEAddress(eeAddress)
+	if err != nil {
+		return nil, err
 	}
 
-	return &blake2b256PubKey, nil
+	return eeAddress, nil
 }
 
 // MustGetEEAddressFromCryptoPubkey panics if there is error in parsing
-func MustGetEEAddressFromCryptoPubkey(cryptoPubKey crypto.PubKey) *EEAddress {
+func MustGetEEAddressFromCryptoPubkey(cryptoPubKey crypto.PubKey) EEAddress {
 	res, err := GetEEAddressFromCryptoPubkey(cryptoPubKey)
 	if err != nil {
 		panic(err)
@@ -619,7 +627,7 @@ func MustGetEEAddressFromCryptoPubkey(cryptoPubKey crypto.PubKey) *EEAddress {
 }
 
 // GetEEAddressFromBech32 converts from bech32-encoded public key
-func GetEEAddressFromBech32(bech32String string) (*EEAddress, error) {
+func GetEEAddressFromBech32(bech32String string) (EEAddress, error) {
 	parsedPubKey, err := GetAccPubKeyBech32(bech32String)
 	if err != nil {
 		return nil, err
@@ -634,7 +642,7 @@ func GetEEAddressFromBech32(bech32String string) (*EEAddress, error) {
 }
 
 // MustGetEEAddressFromBech32 panics if there is error in parsing
-func MustGetEEAddressFromBech32(bech32String string) *EEAddress {
+func MustGetEEAddressFromBech32(bech32String string) EEAddress {
 	res, err := GetEEAddressFromBech32(bech32String)
 	if err != nil {
 		panic(err)
@@ -643,13 +651,8 @@ func MustGetEEAddressFromBech32(bech32String string) *EEAddress {
 }
 
 // GetEEAddressFromSecp256k1PubKey derives Black2b256-hashed address
-func GetEEAddressFromSecp256k1PubKey(pubkey tmsecp256k1.PubKeySecp256k1) *EEAddress {
-	var res EEAddress
-	for idx, unitByte := range eeutil.Blake2b256(pubkey[:]) {
-		res[idx] = unitByte
-	}
-
-	return &res
+func GetEEAddressFromSecp256k1PubKey(pubkey tmsecp256k1.PubKeySecp256k1) EEAddress {
+	return eeutil.Blake2b256(pubkey.Bytes())
 }
 
 // ----------------------------------------------------------------------------

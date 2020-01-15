@@ -296,43 +296,21 @@ seeds = "" -> "<genesis node's ID>@<genesis node's IP>:26656"
 ```sh
 clif keys add bryan # select password
 ```
-* show AccAddress & ValAddress
-```sh
-# AccAddress
-clif keys show bryan --bech acc
 
-{
-  "name": "bryan",
-  "type": "local",
-  "address": "friday19rxdgfn3grqgwc6zhyeljmyas3tsawn6qe0quc",
-  "pubkey": "fridaypub1addwnpepqfaxrvy4f95duln3t6vvtd0qd0sdpwfsn3fh9snpnq06w25qualj6rxm04t"
-}
-
-# ValAddress
-clif keys show bryan --bech val
-
-{
-  "name": "bryan",
-  "type": "local",
-  "address": "fridayvaloper19rxdgfn3grqgwc6zhyeljmyas3tsawn64dsges",
-  "pubkey": "fridayvaloperpub1addwnpepqfaxrvy4f95duln3t6vvtd0qd0sdpwfsn3fh9snpnq06w25qualj6vczad0"
-}
-```
 * create validator
 ```sh
  clif executionlayer create-validator \
---from=friday19rxdgfn3grqgwc6zhyeljmyas3tsawn6qe0quc \
---pubkey=$(nodef tendermint show-validator) \
---moniker=bryan
+--from bryan \
+--pubkey $(nodef tendermint show-validator) \
+--moniker valiator-bryan
 ```
 * bonding amount
 ```sh
 clif executionlayer bond \
---from friday19rxdgfn3grqgwc6zhyeljmyas3tsawn6qe0quc \
---validator fridayvaloper19rxdgfn3grqgwc6zhyeljmyas3tsawn64dsges \
+--from bryan \
 --amount 1000000 \
 --fee 100000000 \
---gas-price 30000000 \
+--gas-price 30000000
 ```
 
 ## Test
