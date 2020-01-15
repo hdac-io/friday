@@ -66,7 +66,7 @@ clif status | grep \"id\"
 ### Clif usage
 #### Readable ID service
 
-Hdac main supports readable ID for better usage. You may organize up to **20 letters** with 0-9, a-z, '-', '.', and '_' .
+Hdac mainnet supports readable ID for better usage. You may organize up to **20 letters** with 0-9, a-z, '-', '.', and '_' .
 With this feature, you don't have to memo recipient's complex hashed address. Just remember easy address and send token!
 Of course, you can also use previous hashed address system. This is optional for your availability.
 
@@ -157,7 +157,7 @@ friday1y2dx0evs5k6hxuhfrfdmm7wcwsrqr073htghpv  ->  friday15evpva2u57vv6l5czehyk6
   * Usage: `clif executionlayer getbalance [--name or --pubkey or --fridaypub]`
 ```bash
 clif executionlayer getbalance --name princesselsa
-clif executionlayer getbalance --fridaypub $(clif keys show elsa -a)
+clif executionlayer getbalance --fridaypub $(clif keys show elsa -p)
 
 {
    "value": "5000000000000"
