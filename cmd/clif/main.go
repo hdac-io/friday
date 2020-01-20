@@ -17,6 +17,7 @@ import (
 	"github.com/hdac-io/friday/x/bank"
 	bankcmd "github.com/hdac-io/friday/x/bank/client/cli"
 	eecmd "github.com/hdac-io/friday/x/executionlayer/client/cli"
+	readablenamecmd "github.com/hdac-io/friday/x/readablename/client/cli"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -60,6 +61,7 @@ func main() {
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
 		eecmd.GetExecutionLayerCmd(cdc),
+		readablenamecmd.GetRootCmd(cdc),
 		client.ConfigCmd(app.DefaultCLIHome),
 		queryCmd(cdc),
 		txCmd(cdc),

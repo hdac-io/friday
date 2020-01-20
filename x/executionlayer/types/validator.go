@@ -1,7 +1,6 @@
 package types
 
 import (
-	"bytes"
 	"fmt"
 
 	"github.com/hdac-io/friday/codec"
@@ -20,19 +19,19 @@ const (
 
 // Validator - save a validater information
 type Validator struct {
-	OperatorAddress sdk.ValAddress `json:"operator_address" yaml:"operator_address"` // address of the validator's operator; bech encoded in JSON
-	ConsPubKey      crypto.PubKey  `json:"consensus_pubkey" yaml:"consensus_pubkey"` // the consensus public key of the validator; bech encoded in JSON
-	Description     Description    `json:"description" yaml:"description"`           // description terms for the validator
-	Stake			string		   `json:"stake" yaml: "stake"`
+	OperatorAddress sdk.EEAddress `json:"operator_address" yaml:"operator_address"` // address of the validator's operator; bech encoded in JSON
+	ConsPubKey      crypto.PubKey `json:"consensus_pubkey" yaml:"consensus_pubkey"` // the consensus public key of the validator; bech encoded in JSON
+	Description     Description   `json:"description" yaml:"description"`           // description terms for the validator
+	Stake           string        `json:"stake" yaml: "stake"`
 }
 
 // NewValidator - initialize a new validator
-func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Description, stake string) Validator {
+func NewValidator(operator sdk.EEAddress, pubKey crypto.PubKey, description Description, stake string) Validator {
 	return Validator{
 		OperatorAddress: operator,
 		ConsPubKey:      pubKey,
 		Description:     description,
-		Stake: 			 stake,
+		Stake:           stake,
 	}
 }
 
@@ -134,10 +133,9 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 
 // this is a helper struct used for JSON de- and encoding only
 type bechValidator struct {
-	OperatorAddress sdk.ValAddress `json:"operator_address" yaml:"operator_address"` // the bech32 address of the validator's operator
-	ConsPubKey      string         `json:"consensus_pubkey" yaml:"consensus_pubkey"` // the bech32 consensus public key of the validator
-	Description     Description    `json:"description" yaml:"description"`           // description terms for the validator
-	Stake			string		   `json:"stake" yaml:"stake"`
+	ConsPubKey  string      `json:"consensus_pubkey" yaml:"consensus_pubkey"` // the bech32 consensus public key of the validator
+	Description Description `json:"description" yaml:"description"`           // description terms for the validator
+	Stake       string      `json:"stake" yaml:"stake"`
 }
 
 // MarshalJSON marshals the validator to JSON using Bech32
@@ -148,10 +146,9 @@ func (v Validator) MarshalJSON() ([]byte, error) {
 	}
 
 	return codec.Cdc.MarshalJSON(bechValidator{
-		OperatorAddress: v.OperatorAddress,
-		ConsPubKey:      bechConsPubKey,
-		Description:     v.Description,
-		Stake:			 v.Stake,
+		ConsPubKey:  bechConsPubKey,
+		Description: v.Description,
+		Stake:       v.Stake,
 	})
 }
 
@@ -166,10 +163,9 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*v = Validator{
-		OperatorAddress: bv.OperatorAddress,
-		ConsPubKey:      consPubKey,
-		Description:     bv.Description,
-		Stake:			 bv.Stake,
+		ConsPubKey:  consPubKey,
+		Description: bv.Description,
+		Stake:       bv.Stake,
 	}
 	return nil
 }
@@ -177,7 +173,6 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 // only the vitals
 func (v Validator) TestEquivalent(v2 Validator) bool {
 	return v.ConsPubKey.Equals(v2.ConsPubKey) &&
-		bytes.Equal(v.OperatorAddress, v2.OperatorAddress) &&
 		v.Description == v2.Description &&
 		v.Stake == v2.Stake
 }

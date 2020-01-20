@@ -14,19 +14,20 @@ import (
 	"github.com/hdac-io/friday/types/rest"
 	"github.com/stretchr/testify/require"
 
+	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 )
 
 func prepare() (fromAddr, receipAddr string, w http.ResponseWriter, clictx context.CLIContext, basereq rest.BaseReq) {
-	fromAddr = "friday1cq0sxam6x4l0sv9yz3a2vlqhdhvt2k6juajjrx"
-	receipAddr = "friday1y2dx0evs5k6hxuhfrfdmm7wcwsrqr073htghpv"
+	fromAddr = "02014a87d1ec490005f85bb4296596ed741411f673a35317543439971c7c7731bb"
+	receipAddr = "0216cde7d343c4bb6f8236c85b6f6a541e2d13ce8a306664714384bf53fd9d14e5"
 
 	w = httptest.NewRecorder()
 	cdc := codec.New()
 	clictx = context.NewCLIContext().WithCodec(cdc)
 
 	basereq = rest.BaseReq{
-		From:    fromAddr,
+		From:    sdk.AccAddress(sdk.MustGetSecp256k1FromRawHexString(fromAddr).Address()).String(),
 		ChainID: "monday-0001",
 		Gas:     fmt.Sprint(60_000_000),
 		Memo:    "",
@@ -41,14 +42,14 @@ func TestRESTTransfer(t *testing.T) {
 	// Body
 	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
 	transReq := transferReq{
-		ChainID:           basereq.ChainID,
-		Memo:              basereq.Memo,
-		TokenOwnerAddress: fromAddr,
-		SenderAddress:     fromAddr,
-		RecipientAddress:  receipAddr,
-		Amount:            20_000_000,
-		GasPrice:          gas,
-		Fee:               10_000_000,
+		ChainID:               basereq.ChainID,
+		Memo:                  basereq.Memo,
+		TokenContractAddress:  fromAddr,
+		SenderPubkeyOrName:    fromAddr,
+		RecipientPubkeyOrName: receipAddr,
+		Amount:                20_000_000,
+		GasPrice:              gas,
+		Fee:                   10_000_000,
 	}
 
 	// http.request
@@ -68,11 +69,11 @@ func TestRESTBond(t *testing.T) {
 	// Body
 	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
 	bondReq := bondReq{
-		ChainID:  basereq.ChainID,
-		Memo:     basereq.Memo,
-		Address:  fromAddr,
-		Amount:   100_000_000,
-		GasPrice: gas,
+		ChainID:      basereq.ChainID,
+		Memo:         basereq.Memo,
+		PubkeyOrName: fromAddr,
+		Amount:       100_000_000,
+		GasPrice:     gas,
 	}
 
 	// http.request
@@ -92,11 +93,11 @@ func TestRESTUnbond(t *testing.T) {
 	// Body
 	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
 	bondReq := bondReq{
-		ChainID:  basereq.ChainID,
-		Memo:     basereq.Memo,
-		Address:  fromAddr,
-		Amount:   100_000_000,
-		GasPrice: gas,
+		ChainID:      basereq.ChainID,
+		Memo:         basereq.Memo,
+		PubkeyOrName: fromAddr,
+		Amount:       100_000_000,
+		GasPrice:     gas,
 	}
 
 	// http.request

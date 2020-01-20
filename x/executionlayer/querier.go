@@ -81,7 +81,7 @@ func queryBalanceDetail(ctx sdk.Context, path []string, req abci.RequestQuery, k
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
-	val, err := keeper.GetQueryBalanceResult(ctx, param.StateHash, param.Address)
+	val, err := keeper.GetQueryBalanceResult(ctx, param.StateHash, param.PublicKey)
 	if err != nil {
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, err.Error())
 	}
@@ -101,7 +101,7 @@ func queryBalance(ctx sdk.Context, path []string, req abci.RequestQuery, keeper 
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
-	val, err := keeper.GetQueryBalanceResultSimple(ctx, param.Address)
+	val, err := keeper.GetQueryBalanceResultSimple(ctx, param.PublicKey)
 	if err != nil {
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, err.Error())
 	}

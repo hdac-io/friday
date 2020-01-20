@@ -10,9 +10,14 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/hdac-io/friday/codec"
+
 	"github.com/hdac-io/tendermint/crypto"
 	cryptoAmino "github.com/hdac-io/tendermint/crypto/encoding/amino"
 
+	eeutil "github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
+
+	tmsecp256k1 "github.com/hdac-io/tendermint/crypto/secp256k1"
 	"github.com/hdac-io/tendermint/libs/bech32"
 )
 
@@ -572,6 +577,85 @@ func (ca ConsAddress) Format(s fmt.State, verb rune) {
 }
 
 // ----------------------------------------------------------------------------
+// EE address
+// ----------------------------------------------------------------------------
+//
+
+// EEAddress length is 32
+type EEAddress []byte
+
+func (ee EEAddress) Bytes() []byte {
+	return ee
+}
+
+func verifyEEAddress(src []byte) error {
+	if len(src) != 32 {
+		return errors.New("Incorrect address length")
+	}
+
+	return nil
+}
+
+// GetEEAddressFromCryptoPubkey converts blake2b 32 byte address from amino-encoded 33 bit secp256k1 public key
+func GetEEAddressFromCryptoPubkey(cryptoPubKey crypto.PubKey) (EEAddress, error) {
+	cdc := codec.New()
+	cryptoAmino.RegisterAmino(cdc)
+
+	var cont tmsecp256k1.PubKeySecp256k1
+	err := cdc.UnmarshalBinaryBare(cryptoPubKey.Bytes(), &cont)
+	if err != nil {
+		return nil, err
+	}
+
+	eeAddress := eeutil.Blake2b256(cont.Bytes())
+
+	err = verifyEEAddress(eeAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	return eeAddress, nil
+}
+
+// MustGetEEAddressFromCryptoPubkey panics if there is error in parsing
+func MustGetEEAddressFromCryptoPubkey(cryptoPubKey crypto.PubKey) EEAddress {
+	res, err := GetEEAddressFromCryptoPubkey(cryptoPubKey)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+// GetEEAddressFromBech32 converts from bech32-encoded public key
+func GetEEAddressFromBech32(bech32String string) (EEAddress, error) {
+	parsedPubKey, err := GetAccPubKeyBech32(bech32String)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := GetEEAddressFromCryptoPubkey(parsedPubKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+// MustGetEEAddressFromBech32 panics if there is error in parsing
+func MustGetEEAddressFromBech32(bech32String string) EEAddress {
+	res, err := GetEEAddressFromBech32(bech32String)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+// GetEEAddressFromSecp256k1PubKey derives Black2b256-hashed address
+func GetEEAddressFromSecp256k1PubKey(pubkey tmsecp256k1.PubKeySecp256k1) EEAddress {
+	return eeutil.Blake2b256(pubkey.Bytes())
+}
+
+// ----------------------------------------------------------------------------
 // auxiliary
 // ----------------------------------------------------------------------------
 
@@ -727,4 +811,72 @@ func GetFromBech32(bech32str, prefix string) ([]byte, error) {
 	}
 
 	return bz, nil
+}
+
+// GetSecp256k1FromBech32AccPubKey derives Secp256k1 public key from bech32 address
+func GetSecp256k1FromBech32AccPubKey(bech32str string) (*tmsecp256k1.PubKeySecp256k1, error) {
+	cryptoPubkey, err := GetAccPubKeyBech32(bech32str)
+	if err != nil {
+		return nil, err
+	}
+
+	cdc := codec.New()
+	cryptoAmino.RegisterAmino(cdc)
+
+	var res tmsecp256k1.PubKeySecp256k1
+	err = cdc.UnmarshalBinaryBare(cryptoPubkey.Bytes(), &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
+// MustGetSecp256k1FromCryptoPubKey derives Secp256k1 public key from amino-encoded cypro.Pubkey interface
+func MustGetSecp256k1FromCryptoPubKey(cryptoPubkey crypto.PubKey) *tmsecp256k1.PubKeySecp256k1 {
+	cdc := codec.New()
+	cryptoAmino.RegisterAmino(cdc)
+
+	var res tmsecp256k1.PubKeySecp256k1
+	err := cdc.UnmarshalBinaryBare(cryptoPubkey.Bytes(), &res)
+	if err != nil {
+		panic(err)
+	}
+
+	return &res
+}
+
+// MustGetSecp256k1FromBech32AccPubKey is shorten ver of GetSecp256k1FromBech32AccPubKey
+func MustGetSecp256k1FromBech32AccPubKey(bech32str string) *tmsecp256k1.PubKeySecp256k1 {
+	res, err := GetSecp256k1FromBech32AccPubKey(bech32str)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+// GetSecp256k1FromRawHexString derives Secp256k1 public key from raw string
+func GetSecp256k1FromRawHexString(rawHexString string) (*tmsecp256k1.PubKeySecp256k1, error) {
+	byteForm, err := hex.DecodeString(rawHexString)
+	if err != nil {
+		return nil, err
+	} else if len(byteForm) != 33 {
+		return nil, fmt.Errorf("length of Secp256K1 public key is 33. Given: %d", len(byteForm))
+	}
+
+	var res tmsecp256k1.PubKeySecp256k1
+	for idx, item := range byteForm {
+		res[idx] = item
+	}
+
+	return &res, nil
+}
+
+// MustGetSecp256k1FromRawHexString shorten ver of GetSecp256k1FromRawHexString
+func MustGetSecp256k1FromRawHexString(rawHexString string) *tmsecp256k1.PubKeySecp256k1 {
+	res, err := GetSecp256k1FromRawHexString(rawHexString)
+	if err != nil {
+		panic(err)
+	}
+	return res
 }

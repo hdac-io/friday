@@ -4,7 +4,7 @@
 # generator used in execution engine for computing genesis post-state.
 timestamp = 0
 
-# semver.
+# Later will be replaced by semver.
 protocol-version = "1.0.0"
 
 # Path (absolute, or relative to the manifest) to the file containing wasm bytecode for installing the mint system contract.
@@ -12,6 +12,11 @@ mint-code-path = "../contracts/mint_install.wasm"
 
 # Path (absolute, or relative to the manifest) to the file containing wasm bytecode for installing the PoS system contract.
 pos-code-path = "../contracts/pos_install.wasm"
+
+[deploys]
+# 1 day
+max-ttl-millis = 86400000
+max-dependencies = 10
 
 [wasm-costs]
 # Default opcode cost

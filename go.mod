@@ -12,7 +12,7 @@ require (
 	github.com/golang/mock v1.3.1
 	github.com/golang/protobuf v1.3.2
 	github.com/gorilla/mux v1.7.3
-	github.com/hdac-io/casperlabs-ee-grpc-go-util v0.0.0-20191204072007-3ca563b18909
+	github.com/hdac-io/casperlabs-ee-grpc-go-util v0.0.0-20200107075212-e3e40973f879
 	github.com/hdac-io/iavl v0.0.0-20191220074654-211e1bd34eef
 	github.com/hdac-io/tendermint v0.0.0-20200102054348-9a58be0e600b
 	github.com/mattn/go-isatty v0.0.8
@@ -30,16 +30,16 @@ require (
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
-	github.com/spf13/pflag v1.0.3
-	github.com/spf13/viper v1.4.0
+	github.com/spf13/pflag v1.0.5
+	github.com/spf13/viper v1.6.1
 	github.com/stretchr/testify v1.4.0
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20180820045704-3764759f34a5
 	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/tm-db v0.2.0
 	golang.org/x/net v0.0.0-20190724013045-ca1201d0de80 // indirect
-	golang.org/x/sys v0.0.0-20190804053845-51ab0e2deafa // indirect
+	golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a // indirect
 	golang.org/x/text v0.3.2 // indirect
-	google.golang.org/genproto v0.0.0-20190701230453-710ae3a149df // indirect
-	gopkg.in/yaml.v2 v2.2.2
+	google.golang.org/grpc v1.25.1 // indirect
+	gopkg.in/yaml.v2 v2.2.7
 )

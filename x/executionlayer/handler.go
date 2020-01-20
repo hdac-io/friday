@@ -38,7 +38,7 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 
 // Handle MsgExecute
 func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTransfer) sdk.Result {
-	err := k.Transfer(ctx, msg.TokenOwnerAccount, msg.FromAccount, msg.ToAccount, msg.TransferCode, msg.TransferArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
+	err := k.Transfer(ctx, msg.TokenContractAddress, msg.FromPubkey, msg.ToPubkey, msg.TransferCode, msg.TransferArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
 	if err != nil {
 		return getResult(false, msg)
 	}
@@ -47,7 +47,7 @@ func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTr
 
 // Handle MsgExecute
 func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) sdk.Result {
-	err := k.Execute(ctx, msg.BlockHash, msg.ExecAccount, msg.ContractOwnerAccount,
+	err := k.Execute(ctx, msg.BlockHash, msg.ExecPubkey, msg.ContractAddress,
 		msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
 	if err != nil {
 		return getResult(false, msg)
@@ -56,25 +56,28 @@ func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExe
 }
 
 func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgCreateValidator) sdk.Result {
-	validator, found := k.GetValidator(ctx, msg.DelegatorAddress)
+	eeAddress, err := sdk.GetEEAddressFromCryptoPubkey(msg.ValidatorPubKey)
+	if err != nil {
+		return getResult(false, msg)
+	}
+
+	validator, found := k.GetValidator(ctx, eeAddress)
 	if !found {
 		validator = types.Validator{}
 	}
 
-	validator.OperatorAddress = msg.ValidatorAddress
-	validator.ConsPubKey = msg.PubKey
+	validator.OperatorAddress = eeAddress
+	validator.ConsPubKey = msg.ConsPubKey
 	validator.Description = msg.Description
 	validator.Stake = ""
 
-	k.SetValidator(ctx, msg.DelegatorAddress, validator)
+	k.SetValidator(ctx, eeAddress, validator)
 
 	return getResult(true, msg)
 }
 
 func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) sdk.Result {
-	accAddress := sdk.AccAddress(msg.ValAddress)
-
-	err := k.Execute(ctx, []byte{0}, accAddress, accAddress, msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
+	err := k.Execute(ctx, []byte{0}, msg.FromPubkey, msg.TokenContractAddress, msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
 	if err != nil {
 		return getResult(false, msg)
 	}
@@ -82,9 +85,7 @@ func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) 
 }
 
 func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBond) sdk.Result {
-	accAddress := sdk.AccAddress(msg.ValAddress)
-
-	err := k.Execute(ctx, []byte{0}, accAddress, accAddress, msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
+	err := k.Execute(ctx, []byte{0}, msg.FromPubkey, msg.TokenContractAddress, msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
 	if err != nil {
 		return getResult(false, msg)
 	}
@@ -105,7 +106,7 @@ func EndBloker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
 
 	var power string
 	for _, validator := range validators {
-		resultBond, found := resultBondsMap[string(types.ToPublicKey(validator.OperatorAddress))]
+		resultBond, found := resultBondsMap[string(validator.OperatorAddress.Bytes())]
 		if found {
 			if validator.Stake == resultBond.GetStake().GetValue() {
 				continue
@@ -118,7 +119,6 @@ func EndBloker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
 				validator.Stake = ""
 			}
 		}
-		// TODO : There is a GasLimit error when the bonding value is greater than 7_000_000.
 		coin, err := strconv.ParseInt(power, 10, 64)
 		if err != nil {
 			continue

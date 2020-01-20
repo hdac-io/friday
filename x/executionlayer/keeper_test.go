@@ -24,24 +24,26 @@ import (
 //-------------------------------------------
 
 func TestQueryKeyToBytes(t *testing.T) {
-	_, err := toBytes("address", "friday1dl2cjlfpmc9hcyd4rxts047tze87s0gxmzqx70")
+	input := setupTestInput()
+
+	_, err := toBytes("address", "02014a87d1ec490005f85bb4296596ed741411f673a35317543439971c7c7731bb", input.elk.ReadableNameKeeper, input.ctx)
 	assert.Nil(t, err)
-	_, err = toBytes("address", "invalid address")
+	_, err = toBytes("address", "invalid address", input.elk.ReadableNameKeeper, input.ctx)
 	assert.NotNil(t, err)
 
 	expected := []byte("test-data")
 
-	got, err := toBytes("uref", hex.EncodeToString(expected))
+	got, err := toBytes("uref", hex.EncodeToString(expected), input.elk.ReadableNameKeeper, input.ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, expected, got)
-	_, err = toBytes("hash", hex.EncodeToString(expected))
+	_, err = toBytes("hash", hex.EncodeToString(expected), input.elk.ReadableNameKeeper, input.ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, expected, got)
-	_, err = toBytes("local", hex.EncodeToString(expected))
+	_, err = toBytes("local", hex.EncodeToString(expected), input.elk.ReadableNameKeeper, input.ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, expected, got)
 
-	_, err = toBytes("invalid key type", "")
+	_, err = toBytes("invalid key type", "", input.elk.ReadableNameKeeper, input.ctx)
 	assert.True(t, strings.Contains(err.Error(), "Unknown QueryKey type:"))
 }
 
@@ -94,15 +96,17 @@ func TestCreateBlock(t *testing.T) {
 
 	blockHash1 := []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 	blockHash2 := []byte{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
+	pubkey := sdk.MustGetSecp256k1FromBech32AccPubKey(GenesisPubKeyString)
 	counterDefineMSG := NewMsgExecute(
 		blockHash,
-		GenesisAccountAddress,
-		GenesisAccountAddress,
+		GenesisPubKeyString,
+		*pubkey,
 		util.LoadWasmFile(path.Join(contractPath, counterDefineWasm)),
 		[]byte{},
 		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
 		util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000)),
 		uint64(10),
+		GenesisAccountAddress,
 	)
 
 	handlerMsgExecute(input.ctx, input.elk, counterDefineMSG)
@@ -116,13 +120,14 @@ func TestCreateBlock(t *testing.T) {
 
 	counterCallMSG := NewMsgExecute(
 		blockHash,
-		GenesisAccountAddress,
-		GenesisAccountAddress,
+		GenesisPubKeyString,
+		*pubkey,
 		util.LoadWasmFile(path.Join(contractPath, counterCallWasm)),
 		[]byte{},
 		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
 		util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000)),
 		uint64(10),
+		GenesisAccountAddress,
 	)
 
 	handlerMsgExecute(input.ctx, input.elk, counterCallMSG)
@@ -138,11 +143,13 @@ func TestCreateBlock(t *testing.T) {
 
 	unitHash1 := input.elk.GetUnitHashMap(input.ctx, blockHash1)
 	pv := input.elk.MustGetProtocolVersion(input.ctx)
-	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", types.ToPublicKey(GenesisAccountAddress), arrPath, &pv)
+
+	genesisAddr := sdk.MustGetEEAddressFromCryptoPubkey(GenesisPubKey)
+	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", genesisAddr.Bytes(), arrPath, &pv)
 	assert.Equal(t, int32(0), res1.GetIntValue())
 
 	unitHash2 := input.elk.GetUnitHashMap(input.ctx, blockHash2)
-	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", types.ToPublicKey(GenesisAccountAddress), arrPath, &pv)
+	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", genesisAddr.Bytes(), arrPath, &pv)
 	assert.Equal(t, int32(1), res2.GetIntValue())
 }
 
@@ -160,15 +167,19 @@ func TestTransfer(t *testing.T) {
 
 	BeginBlocker(input.ctx, nextBlockABCI1, input.elk)
 
+	genpubkey := sdk.MustGetSecp256k1FromBech32AccPubKey(GenesisPubKeyString)
+	receippubkey := sdk.MustGetSecp256k1FromBech32AccPubKey(RecipientPubKeyString)
+
 	transferMSG := NewMsgTransfer(
-		GenesisAccountAddress,
-		GenesisAccountAddress,
-		RecipientAccountAddress,
+		GenesisPubKeyString,
+		*genpubkey,
+		*receippubkey,
 		util.LoadWasmFile(path.Join(contractPath, transferWasm)),
-		util.MakeArgsTransferToAccount(types.ToPublicKey(RecipientAccountAddress), 100000000),
+		util.MakeArgsTransferToAccount(sdk.MustGetEEAddressFromBech32(RecipientPubKeyString).Bytes(), 100000000),
 		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
 		util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000)),
 		uint64(200000000),
+		GenesisAccountAddress,
 	)
 
 	handlerMsgTransfer(input.ctx, input.elk, transferMSG)
@@ -181,13 +192,13 @@ func TestTransfer(t *testing.T) {
 
 	BeginBlocker(input.ctx, nextBlockABCI2, input.elk)
 
-	res, err := input.elk.GetQueryBalanceResultSimple(input.ctx, types.ToPublicKey(RecipientAccountAddress))
+	res, err := input.elk.GetQueryBalanceResultSimple(input.ctx, *receippubkey)
 	queriedRes, _ := strconv.Atoi(res)
 
 	assert.Equal(t, queriedRes, 100000000)
 	assert.Equal(t, err, nil)
 
-	res2, err := input.elk.GetQueryBalanceResultSimple(input.ctx, types.ToPublicKey(GenesisAccountAddress))
+	res2, err := input.elk.GetQueryBalanceResultSimple(input.ctx, *genpubkey)
 	queriedRes2, _ := strconv.Atoi(res2)
 	fmt.Println(queriedRes)
 	fmt.Println(queriedRes2)
@@ -224,7 +235,8 @@ func TestGenesisState(t *testing.T) {
 
 	// GenesisAccounts test
 	expected.Accounts = make([]types.Account, 1)
-	expected.Accounts[0].PublicKey = types.PublicKey([]byte("test-pub-key"))
+	pubkey := sdk.MustGetSecp256k1FromBech32AccPubKey(GenesisPubKeyString)
+	expected.Accounts[0].PublicKey = *pubkey
 	expected.Accounts[0].InitialBalance = "2"
 	expected.Accounts[0].InitialBondedAmount = "1"
 
@@ -244,28 +256,28 @@ func TestGenesisState(t *testing.T) {
 func TestValidator(t *testing.T) {
 	input := setupTestInput()
 
-	accAddr := "friday19rxdgfn3grqgwc6zhyeljmyas3tsawn6qe0quc"
-	acc, _ := sdk.AccAddressFromBech32(accAddr)
-	valAddr := sdk.ValAddress(acc)
+	valPubKeyStr := "fridayvaloperpub1addwnpepqfaxrvy4f95duln3t6vvtd0qd0sdpwfsn3fh9snpnq06w25qualj6vczad0"
+	valPubKey, _ := sdk.GetValPubKeyBech32(valPubKeyStr)
+	valAddr, _ := sdk.GetEEAddressFromCryptoPubkey(valPubKey)
 
-	valPubKey, _ := sdk.GetConsPubKeyBech32("fridayvalconspub16jrl8jvqq98x7jjxfcm8252pwd4nv6fetpzk6nzx2ddyc3fn0p2rz4mwf44nqjtfga5k5at4xad82sjhx9r9zdfcwuc5uvt90934jjr4d4xk242909rxks28v9erv3jvwfcx2wp4fe8h54fsddu9zar5v3tyknrs8pykk2mw2p29j4n6w455c7j2d3x4ykft9akx6s24gsu8ys2nvayrykqst965z")
-	val := types.NewValidator(valAddr, valPubKey, types.Description{
+	consPubKey, _ := sdk.GetConsPubKeyBech32("fridayvalconspub16jrl8jvqq98x7jjxfcm8252pwd4nv6fetpzk6nzx2ddyc3fn0p2rz4mwf44nqjtfga5k5at4xad82sjhx9r9zdfcwuc5uvt90934jjr4d4xk242909rxks28v9erv3jvwfcx2wp4fe8h54fsddu9zar5v3tyknrs8pykk2mw2p29j4n6w455c7j2d3x4ykft9akx6s24gsu8ys2nvayrykqst965z")
+	val := types.NewValidator(valAddr, consPubKey, types.Description{
 		Website: "https://validator.friday",
 		Details: "Test validator",
 	}, "0")
 
-	input.elk.SetValidator(input.ctx, acc, val)
+	input.elk.SetValidator(input.ctx, valAddr, val)
 
-	resVal, _ := input.elk.GetValidator(input.ctx, acc)
+	resVal, _ := input.elk.GetValidator(input.ctx, valAddr)
 
 	assert.Equal(t, valAddr, resVal.OperatorAddress)
-	assert.Equal(t, valPubKey, resVal.ConsPubKey)
+	assert.Equal(t, consPubKey, resVal.ConsPubKey)
 	assert.Equal(t, val.Description.Website, resVal.Description.Website)
 	assert.Equal(t, val.Description.Details, resVal.Description.Details)
 
 	val.Description.Moniker = "friday"
-	input.elk.SetValidatorDescription(input.ctx, acc, val.Description)
-	assert.Equal(t, "friday", input.elk.GetValidatorDescription(input.ctx, acc).Moniker)
+	input.elk.SetValidatorDescription(input.ctx, valAddr, val.Description)
+	assert.Equal(t, "friday", input.elk.GetValidatorDescription(input.ctx, valAddr).Moniker)
 
 	validators := input.elk.GetAllValidators(input.ctx)
 	assert.Equal(t, 1, len(validators))

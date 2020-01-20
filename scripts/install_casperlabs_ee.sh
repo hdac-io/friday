@@ -7,7 +7,7 @@ if [ ${PWD##*/} != "friday" ]; then
   exit 1
 fi
 
-CASPERLABS_TARGET_TAG="v0.9.0"
+CASPERLABS_TARGET_TAG="v0.10.0"
 if [ ! -d "CasperLabs/.git" ]; then
   git clone --single-branch --branch $CASPERLABS_TARGET_TAG https://github.com/CasperLabs/CasperLabs.git
 fi

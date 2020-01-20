@@ -7,10 +7,14 @@ import (
 	"github.com/hdac-io/friday/client"
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/codec"
+	cliutil "github.com/hdac-io/friday/x/executionlayer/client/util"
+	"github.com/hdac-io/tendermint/crypto/secp256k1"
+
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // GetExecutionLayerQueryCmd controls GET type CLI controller
@@ -24,92 +28,107 @@ func GetExecutionLayerQueryCmd(cdc *codec.Codec) *cobra.Command {
 	}
 	executionlayerQueryCmd.AddCommand(client.GetCommands(
 		GetCmdQueryBalance(cdc),
-		GetCmdQueryBalanceWithBlockHash(cdc),
 		GetCmdQuery(cdc),
-		GetCmdQueryWithHash(cdc),
 	)...)
 	return executionlayerQueryCmd
 }
 
 // GetCmdQueryBalance is a getter of the balance of the address
 func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
-		Use:   "getbalance [address]",
+	cmd := &cobra.Command{
+		Use:   fmt.Sprintf("getbalance [--name \"readable_id\" or --pubkey \"secp256k1_pubkey\" or --%spub \"bech32\"] [--blockhash]", sdk.Bech32MainPrefix),
 		Short: "Get balance of address",
-		Args:  cobra.ExactArgs(1),
+		Long: fmt.Sprintf("Get balance of address.\nIt needs at least one of \"--name\", \"--pubkey\", or \"--%[1]spub\" parameter.\n"+
+			"\t--name: readabld ID\n"+
+			"\t--pubkey: Compressed Secp256k1 public key\n"+
+			"\t--%[1]spub: Bech32 encoded public key starting from '%[1]s'\n"+
+			"If you need the value of specific time, use \"--blockhash\" option.\n"+
+			"\t--blockhash: Hex blockhash value which represents of the specific time. (Default: the latest state)", sdk.Bech32MainPrefix),
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			addr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				fmt.Println("Malformed address - ", args[0])
-				fmt.Println(err)
-				return nil
-			}
 
-			name := types.ToPublicKey(addr)
-			queryData := types.QueryGetBalance{
-				Address: name,
-			}
-			bz := cdc.MustMarshalJSON(queryData)
+			// Get public key with 3 different types
+			var pubkey secp256k1.PubKeySecp256k1
 
-			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalance", types.ModuleName), bz)
-			if err != nil {
-				fmt.Printf("No balance data - %s \n", args[0])
-				return nil
+			if name := viper.GetString(client.FlagName); name != "" {
+				// --name: from readable id
+				pubkeyPtr, err := cliutil.GetPubKey(cdc, cliCtx, name)
+				if err != nil {
+					return err
+				}
+				pubkey = *pubkeyPtr
+			} else if rawPubkey := viper.GetString(FlagPubKey); rawPubkey != "" {
+				// --pubkey: from raw secp256k1 public key
+				pubkeyPtr, err := sdk.GetSecp256k1FromRawHexString(rawPubkey)
+				if err != nil {
+					return err
+				}
+				pubkey = *pubkeyPtr
+			} else if bech32Pubkey := viper.GetString(FlagBech32PubKey); bech32Pubkey != "" {
+				// --[bech32_prefix]pub: from bech32 public key (fridaypubxxxxxx...)
+				rawPubkey, err := sdk.GetSecp256k1FromBech32AccPubKey(bech32Pubkey)
+				if err != nil {
+					return err
+				}
+				pubkey = *rawPubkey
+			} else {
+				return fmt.Errorf("at least one of --name, --pubkey, or --%[1]spub is essential", sdk.Bech32MainPrefix)
 			}
 
 			var out types.QueryExecutionLayerResp
-			cdc.MustUnmarshalJSON(res, &out)
+			if blockhashstr := viper.GetString(FlagBlockHash); blockhashstr != "" {
+				blockHash, err := hex.DecodeString(blockhashstr)
+				if err != nil || len(blockHash) != 32 {
+					fmt.Println("Malformed block hash - ", blockhashstr)
+					fmt.Println(err)
+					return nil
+				}
+
+				queryData := types.QueryGetBalanceDetail{
+					PublicKey: pubkey,
+					StateHash: blockHash,
+				}
+				bz := cdc.MustMarshalJSON(queryData)
+
+				res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalancedetail", types.ModuleName), bz)
+				if err != nil {
+					fmt.Printf("No balance data of input")
+					return nil
+				}
+				cdc.MustUnmarshalJSON(res, &out)
+
+			} else {
+				queryData := types.QueryGetBalance{
+					PublicKey: pubkey,
+				}
+				bz := cdc.MustMarshalJSON(queryData)
+
+				res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalance", types.ModuleName), bz)
+				if err != nil {
+					fmt.Printf("No balance data of input")
+					fmt.Println(err.Error())
+					return nil
+				}
+				cdc.MustUnmarshalJSON(res, &out)
+			}
+
 			return cliCtx.PrintOutput(out)
 		},
 	}
-}
 
-// GetCmdQueryBalanceWithBlockHash is a getter of the balance of the address
-func GetCmdQueryBalanceWithBlockHash(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
-		Use:   "getbalancewithhash [address] [block_hash]",
-		Short: "Get balance of address with block hash",
-		Args:  cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			addr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				fmt.Println("Malformed address - ", args[0])
-				fmt.Println(err)
-				return nil
-			}
-			name := types.ToPublicKey(addr)
-			blockHash, err := hex.DecodeString(args[1])
-			if err != nil || len(blockHash) != 32 {
-				fmt.Println("Malformed block hash - ", args[1])
-				fmt.Println(err)
-				return nil
-			}
+	cmd.Flags().String(client.FlagName, "", "flag for readable name input")
+	cmd.Flags().String(FlagPubKey, "", "flag for secp256k1 public key input")
+	cmd.Flags().String(FlagBech32PubKey, "", "flag for bech32 public key input")
+	cmd.Flags().String(FlagBlockHash, "", "flag for block hash input")
 
-			queryData := types.QueryGetBalanceDetail{
-				Address:   name,
-				StateHash: blockHash,
-			}
-			bz := cdc.MustMarshalJSON(queryData)
-
-			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalancedetail", types.ModuleName), bz)
-			if err != nil {
-				fmt.Printf("No balance data - %s \n", args[0])
-				return nil
-			}
-
-			var out types.QueryExecutionLayerResp
-			cdc.MustUnmarshalJSON(res, &out)
-			return cliCtx.PrintOutput(out)
-		},
-	}
+	return cmd
 }
 
 // GetCmdQuery is a EE query getter
 func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
-		Use:   "query [type:=address,uref,hash,local] [data] [path]",
+	cmd := &cobra.Command{
+		Use:   "query [type:=address,uref,hash,local] [data] [path] [--blockhash]",
 		Short: "Get query of the data",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -118,61 +137,49 @@ func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
 			data := args[1]
 			path := args[2]
 
-			queryData := types.QueryExecutionLayer{
-				KeyType: dataType,
-				KeyData: data,
-				Path:    path,
-			}
-			bz := cdc.MustMarshalJSON(queryData)
-
-			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/query", types.ModuleName), bz)
-			if err != nil {
-				fmt.Printf("could not resolve data - %s %s %s\n", dataType, data, path)
-				return nil
-			}
-
 			var out types.QueryExecutionLayerResp
-			cdc.MustUnmarshalJSON(res, &out)
+			if blockhashstr := viper.GetString(FlagBlockHash); blockhashstr != "" {
+				blockhash, err := hex.DecodeString(blockhashstr)
+				if err != nil || len(blockhash) != 32 {
+					fmt.Println("Malformed block hash - ", blockhashstr)
+					fmt.Println(err)
+					return nil
+				}
+				queryData := types.QueryExecutionLayerDetail{
+					KeyType:   dataType,
+					KeyData:   data,
+					Path:      path,
+					StateHash: blockhash,
+				}
+				bz := cdc.MustMarshalJSON(queryData)
+
+				res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querydetail", types.ModuleName), bz)
+				if err != nil {
+					fmt.Printf("could not resolve data - %s %s %s\n", dataType, data, path)
+					return nil
+				}
+
+				cdc.MustUnmarshalJSON(res, &out)
+			} else {
+				queryData := types.QueryExecutionLayer{
+					KeyType: dataType,
+					KeyData: data,
+					Path:    path,
+				}
+				bz := cdc.MustMarshalJSON(queryData)
+
+				res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/query", types.ModuleName), bz)
+				if err != nil {
+					fmt.Printf("could not resolve data - %s %s %s\n", dataType, data, path)
+					return nil
+				}
+
+				cdc.MustUnmarshalJSON(res, &out)
+			}
 			return cliCtx.PrintOutput(out)
 		},
 	}
-}
 
-// GetCmdQueryWithHash is a EE query getter with block hash
-func GetCmdQueryWithHash(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
-		Use:   "querywithhash [type:=address,uref,hash,local] [data] [path] [block_hash]",
-		Short: "Get query of the data with block hash",
-		Args:  cobra.ExactArgs(4),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			dataType := args[0]
-			data := args[1]
-			path := args[2]
-			blockHash, err := hex.DecodeString(args[3])
-			if err != nil || len(blockHash) != 32 {
-				fmt.Println("Malformed block hash - ", args[3])
-				fmt.Println(err)
-				return nil
-			}
-
-			queryData := types.QueryExecutionLayerDetail{
-				KeyType:   dataType,
-				KeyData:   data,
-				Path:      path,
-				StateHash: blockHash,
-			}
-			bz := cdc.MustMarshalJSON(queryData)
-
-			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querydetail", types.ModuleName), bz)
-			if err != nil {
-				fmt.Printf("could not resolve data - %s %s %s\n", dataType, data, path)
-				return nil
-			}
-
-			var out types.QueryExecutionLayerResp
-			cdc.MustUnmarshalJSON(res, &out)
-			return cliCtx.PrintOutput(out)
-		},
-	}
+	cmd.Flags().String(FlagBlockHash, "", "flag for block hash input")
+	return cmd
 }

@@ -1,24 +1,30 @@
 package types
 
 import (
+	"os"
 	"strconv"
 	"strings"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
+	secp256k1 "github.com/hdac-io/tendermint/crypto/secp256k1"
+
+	sdk "github.com/hdac-io/friday/types"
 )
 
 // GenesisState : the executionlayer state that must be provided at genesis.
 type GenesisState struct {
 	GenesisConf GenesisConf `json:"genesis_conf"`
 	Accounts    []Account   `json:"accounts"`
-	ChainName string `json:"chain_name"`
+	ChainName   string      `json:"chain_name"`
 }
 
 // GenesisConf : the executionlayer configuration that must be provided at genesis.
 type GenesisConf struct {
-	Genesis   Genesis   `json:"genesis"`
-	WasmCosts WasmCosts `json:"wasm_costs"`
+	Genesis      Genesis      `json:"genesis"`
+	WasmCosts    WasmCosts    `json:"wasm_costs"`
+	DeployConfig DeployConfig `json:"deploy_config"`
 }
 
 // Genesis : Chain Genesis information
@@ -32,9 +38,9 @@ type Genesis struct {
 // Account : Genesis Account Information.
 type Account struct {
 	// PublicKey : base64 encoded public key string
-	PublicKey           PublicKey `json:"public_key"`
-	InitialBalance      string    `json:"initial_balance"`
-	InitialBondedAmount string    `json:"initial_bonded_amount"`
+	PublicKey           secp256k1.PubKeySecp256k1 `json:"public_key"`
+	InitialBalance      string                    `json:"initial_balance"`
+	InitialBondedAmount string                    `json:"initial_bonded_amount"`
 }
 
 // WasmCosts : CasperLabs EE Wasm Cost table
@@ -51,9 +57,19 @@ type WasmCosts struct {
 	OpcodesDivisor    uint32 `json:"opcodes_divisor" toml:"opcodes-divisor"`
 }
 
+type DeployConfig struct {
+	MaxTtlMillis    uint32 `json:"max-ttl-millis" toml:"max-ttl-millis"`
+	MaxDependencies uint32 `json:"max-dependencies" toml:"max-dependencies"`
+}
+
+const (
+	mintCodePath = "$HOME/.nodef/contracts/mint_install.wasm"
+	posCodePath  = "$HOME/.nodef/contracts/pos_install.wasm"
+)
+
 // NewGenesisState creates a new genesis state.
 func NewGenesisState(genesisConf GenesisConf, accounts []Account, chainName string) GenesisState {
-	return GenesisState{GenesisConf: genesisConf, Accounts: accounts, ChainName: chainName,}
+	return GenesisState{GenesisConf: genesisConf, Accounts: accounts, ChainName: chainName}
 }
 
 // DefaultGenesisState returns a default genesis state
@@ -61,8 +77,8 @@ func DefaultGenesisState() GenesisState {
 	genesisConf := GenesisConf{
 		Genesis: Genesis{
 			Timestamp:       0,
-			MintWasm:        DefaultMintWasm,
-			PosWasm:         DefaultPosWasm,
+			MintWasm:        util.LoadWasmFile(os.ExpandEnv(mintCodePath)),
+			PosWasm:         util.LoadWasmFile(os.ExpandEnv(posCodePath)),
 			ProtocolVersion: "1.0.0",
 		},
 		WasmCosts: WasmCosts{
@@ -76,6 +92,10 @@ func DefaultGenesisState() GenesisState {
 			MaxStackHeight:    65536,
 			OpcodesMultiplier: 3,
 			OpcodesDivisor:    8,
+		},
+		DeployConfig: DeployConfig{
+			MaxTtlMillis:    86400000,
+			MaxDependencies: 10,
 		},
 	}
 	return NewGenesisState(genesisConf, nil, "friday-devnet")
@@ -111,7 +131,9 @@ func ToChainSpecGenesisConfig(gs GenesisState) (*ipc.ChainSpec_GenesisConfig, er
 		PosInstaller:    config.Genesis.PosWasm,
 		Accounts:        accounts,
 		Costs:           toCostTable(config.WasmCosts),
+		DeployConfig:    toDeployConfig(config.DeployConfig),
 	}
+
 	return &chainSpecConfig, nil
 }
 
@@ -143,7 +165,9 @@ func toChainSpecGenesisAccount(account Account) ipc.ChainSpec_GenesisAccount {
 	bondedAmount := toBigInt(account.InitialBondedAmount)
 
 	genesisAccount := ipc.ChainSpec_GenesisAccount{}
-	genesisAccount.PublicKey = account.PublicKey
+
+	//cryptoamino.FromPubkey -> EEAddress
+	genesisAccount.PublicKey = sdk.GetEEAddressFromSecp256k1PubKey(account.PublicKey).Bytes()
 	genesisAccount.Balance = &balance
 	genesisAccount.BondedAmount = &bondedAmount
 
@@ -164,6 +188,13 @@ func toCostTable(wasmCosts WasmCosts) *ipc.ChainSpec_CostTable {
 	costTable.Wasm.OpcodesMul = wasmCosts.OpcodesMultiplier
 	costTable.Wasm.OpcodesDiv = wasmCosts.OpcodesDivisor
 	return &costTable
+}
+
+func toDeployConfig(deployConfig DeployConfig) *ipc.ChainSpec_DeployConfig {
+	return &ipc.ChainSpec_DeployConfig{
+		MaxTtlMillis:    deployConfig.MaxTtlMillis,
+		MaxDependencies: deployConfig.MaxDependencies,
+	}
 }
 
 // value validation is performed in ExecutionEngine
