@@ -31,7 +31,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 
 type newNameWithBech32Req struct {
 	ChainID      string `json:"chain_id"`
-	GasPrice     uint64 `json:"gas"`
+	GasPrice     uint64 `json:"gas_price"`
 	Memo         string `json:"memo"`
 	Name         string `json:"name"`
 	PubKeyBech32 string `json:"pubkey_fridaypub"`
@@ -86,7 +86,7 @@ func newNameWithBech32Handler(cliCtx context.CLIContext) http.HandlerFunc {
 
 type newNameWithRawPubkeyReq struct {
 	ChainID         string `json:"chain_id"`
-	GasPrice        uint64 `json:"gas"`
+	GasPrice        uint64 `json:"gas_price"`
 	Memo            string `json:"memo"`
 	Name            string `json:"name"`
 	PubKeySecp256k1 string `json:"pubkey"`
@@ -141,7 +141,7 @@ func newNameWithSecp256k1PubkeyHandler(cliCtx context.CLIContext) http.HandlerFu
 
 type changeKeyByBech32Req struct {
 	ChainID         string `json:"chain_id"`
-	GasPrice        uint64 `json:"gas"`
+	GasPrice        uint64 `json:"gas_price"`
 	Memo            string `json:"memo"`
 	Name            string `json:"name"`
 	OldPubKeyBech32 string `json:"old_pubkey_fridaypub"`
@@ -203,7 +203,7 @@ func changeKeyByBech32Handler(cliCtx context.CLIContext) http.HandlerFunc {
 
 type changeKeyBySecp256k1Req struct {
 	ChainID            string `json:"chain_id"`
-	GasPrice           uint64 `json:"gas"`
+	GasPrice           uint64 `json:"gas_price"`
 	Memo               string `json:"memo"`
 	Name               string `json:"name"`
 	OldPubKeySecp256k1 string `json:"old_pubkey"`
