@@ -79,6 +79,7 @@ type bondReq struct {
 	PubkeyOrName         string `json:"pubkey_or_name"`
 	Amount               uint64 `json:"amount"`
 	GasPrice             uint64 `json:"gas_price"`
+	Fee                  uint64 `json:"fee"`
 	Memo                 string `json:"memo"`
 }
 
@@ -118,7 +119,7 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 		bondingUnbondingAbi = grpc.MakeArgsUnBonding(req.Amount)
 	}
 	paymentCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
-	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.GasPrice))
+	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.Fee))
 
 	// create the message
 	msg := types.NewMsgExecute([]byte{0}, req.TokenContractAddress, *pubkey, bondingUnbondingCode, bondingUnbondingAbi, paymentCode, paymentAbi, req.GasPrice, addr)
