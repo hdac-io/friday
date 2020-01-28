@@ -311,7 +311,7 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext) (sdk.Msg, error) {
 		viper.GetString(FlagDetails),
 	)
 
-	msg := types.NewMsgCreateValidator(sdk.ValAddress(valAddr), valPubKey, consPubKey, description)
+	msg := types.NewMsgCreateValidator(sdk.AccAddress(valAddr), valPubKey, consPubKey, description)
 
 	return msg, nil
 }

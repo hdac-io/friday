@@ -14,7 +14,7 @@ func TestNewPublicKeyFromAddress(t *testing.T) {
 	byteAddr, err := sdk.GetFromBech32(bech32ValAddr, "fridayvaloper")
 	require.Nil(t, err)
 
-	valAddr := sdk.ValAddress(byteAddr)
+	valAddr := sdk.AccAddress(byteAddr)
 	pubkey := ToPublicKey(valAddr)
 	require.Equal(t, len(pubkey), 32)
 }
