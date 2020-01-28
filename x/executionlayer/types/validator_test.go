@@ -8,11 +8,6 @@ import (
 )
 
 func TestValidatorTestEquivalent(t *testing.T) {
-	accAddr := "friday19rxdgfn3grqgwc6zhyeljmyas3tsawn6qe0quc"
-	acc, _ := sdk.AccAddressFromBech32(accAddr)
-	valAddr := sdk.ValAddress(acc)
-
-	require.Equal(t, "fridayvaloper19rxdgfn3grqgwc6zhyeljmyas3tsawn64dsges", valAddr.String())
 	valPubKey, _ := sdk.GetValPubKeyBech32("fridayvaloperpub1addwnpepqfaxrvy4f95duln3t6vvtd0qd0sdpwfsn3fh9snpnq06w25qualj6vczad0")
 	eeAddress, _ := sdk.GetEEAddressFromCryptoPubkey(valPubKey)
 

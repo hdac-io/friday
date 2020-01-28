@@ -135,14 +135,14 @@ func (msg MsgTransfer) GetSigners() []sdk.AccAddress {
 //______________________________________________________________________
 // MsgCreateValidator - struct for bonding transactions
 type MsgCreateValidator struct {
-	ValidatorAddress sdk.ValAddress `json:"validator_address" yaml:"validator_address"`
+	ValidatorAddress sdk.AccAddress `json:"validator_address" yaml:"validator_address"`
 	ValidatorPubKey  crypto.PubKey  `json:"validator_pubkey" yaml:"validator_pubkey"`
 	ConsPubKey       crypto.PubKey  `json:"cons_pubkey" yaml:"cons_pubkey"`
 	Description      Description    `json:"description" yaml:"description"`
 }
 
 type msgCreateValidatorJSON struct {
-	ValidatorAddress sdk.ValAddress `json:"validator_address" yaml:"validator_address"`
+	ValidatorAddress sdk.AccAddress `json:"validator_address" yaml:"validator_address"`
 	ValidatorPubKey  string         `json:"validator_pubkey" yaml:"validator_pubkey"`
 	ConsPubKey       string         `json:"cons_pubkey" yaml:"cons_pubkey"`
 	Description      Description    `json:"description" yaml:"description"`
@@ -150,7 +150,7 @@ type msgCreateValidatorJSON struct {
 
 // Default way to create validator. Delegator address and validator address are the same
 func NewMsgCreateValidator(
-	valAddress sdk.ValAddress,
+	valAddress sdk.AccAddress,
 	valPubKey crypto.PubKey,
 	consPubKey crypto.PubKey,
 	description Description,
