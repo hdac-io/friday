@@ -21,38 +21,40 @@ but please do not over-use it. We try to keep all data structured
 and standard additions here would be better just to add to the Context struct
 */
 type Context struct {
-	ctx           context.Context
-	ms            MultiStore
-	header        abci.Header
-	chainID       string
-	txBytes       []byte
-	logger        log.Logger
-	voteInfo      []abci.VoteInfo
-	gasMeter      GasMeter
-	blockGasMeter GasMeter
-	checkTx       bool
-	minGasPrice   DecCoins
-	consParams    *abci.ConsensusParams
-	eventManager  *EventManager
+	ctx            context.Context
+	ms             MultiStore
+	header         abci.Header
+	chainID        string
+	txBytes        []byte
+	logger         log.Logger
+	voteInfo       []abci.VoteInfo
+	gasMeter       GasMeter
+	blockGasMeter  GasMeter
+	checkTx        bool
+	minGasPrice    DecCoins
+	consParams     *abci.ConsensusParams
+	eventManager   *EventManager
+	candidateBlock *CandidateBlock
 }
 
 // Proposed rename, not done to avoid API breakage
 type Request = Context
 
 // Read-only accessors
-func (c Context) Context() context.Context    { return c.ctx }
-func (c Context) MultiStore() MultiStore      { return c.ms }
-func (c Context) BlockHeight() int64          { return c.header.Height }
-func (c Context) BlockTime() time.Time        { return c.header.Time }
-func (c Context) ChainID() string             { return c.chainID }
-func (c Context) TxBytes() []byte             { return c.txBytes }
-func (c Context) Logger() log.Logger          { return c.logger }
-func (c Context) VoteInfos() []abci.VoteInfo  { return c.voteInfo }
-func (c Context) GasMeter() GasMeter          { return c.gasMeter }
-func (c Context) BlockGasMeter() GasMeter     { return c.blockGasMeter }
-func (c Context) IsCheckTx() bool             { return c.checkTx }
-func (c Context) MinGasPrices() DecCoins      { return c.minGasPrice }
-func (c Context) EventManager() *EventManager { return c.eventManager }
+func (c Context) Context() context.Context        { return c.ctx }
+func (c Context) MultiStore() MultiStore          { return c.ms }
+func (c Context) BlockHeight() int64              { return c.header.Height }
+func (c Context) BlockTime() time.Time            { return c.header.Time }
+func (c Context) ChainID() string                 { return c.chainID }
+func (c Context) TxBytes() []byte                 { return c.txBytes }
+func (c Context) Logger() log.Logger              { return c.logger }
+func (c Context) VoteInfos() []abci.VoteInfo      { return c.voteInfo }
+func (c Context) GasMeter() GasMeter              { return c.gasMeter }
+func (c Context) BlockGasMeter() GasMeter         { return c.blockGasMeter }
+func (c Context) IsCheckTx() bool                 { return c.checkTx }
+func (c Context) MinGasPrices() DecCoins          { return c.minGasPrice }
+func (c Context) EventManager() *EventManager     { return c.eventManager }
+func (c Context) CandidateBlock() *CandidateBlock { return c.candidateBlock }
 
 // clone the header before returning
 func (c Context) BlockHeader() abci.Header {
@@ -69,15 +71,16 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Lo
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
 	return Context{
-		ctx:          context.Background(),
-		ms:           ms,
-		header:       header,
-		chainID:      header.ChainID,
-		checkTx:      isCheckTx,
-		logger:       logger,
-		gasMeter:     stypes.NewInfiniteGasMeter(),
-		minGasPrice:  DecCoins{},
-		eventManager: NewEventManager(),
+		ctx:            context.Background(),
+		ms:             ms,
+		header:         header,
+		chainID:        header.ChainID,
+		checkTx:        isCheckTx,
+		logger:         logger,
+		gasMeter:       stypes.NewInfiniteGasMeter(),
+		minGasPrice:    DecCoins{},
+		eventManager:   NewEventManager(),
+		candidateBlock: &CandidateBlock{},
 	}
 }
 
@@ -164,6 +167,11 @@ func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
 
 func (c Context) WithEventManager(em *EventManager) Context {
 	c.eventManager = em
+	return c
+}
+
+func (c Context) WithCandidateBlock(cb *CandidateBlock) Context {
+	c.candidateBlock = cb
 	return c
 }
 

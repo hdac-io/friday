@@ -47,7 +47,7 @@ func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTr
 
 // Handle MsgExecute
 func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) sdk.Result {
-	err := k.Execute(ctx, msg.BlockHash, msg.ExecPubkey, msg.ContractAddress,
+	err := k.Execute(ctx, msg.ExecPubkey, msg.ContractAddress,
 		msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
 	if err != nil {
 		return getResult(false, msg)
@@ -77,7 +77,7 @@ func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg type
 }
 
 func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) sdk.Result {
-	err := k.Execute(ctx, []byte{0}, msg.FromPubkey, msg.TokenContractAddress, msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
+	err := k.Execute(ctx, msg.FromPubkey, msg.TokenContractAddress, msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
 	if err != nil {
 		return getResult(false, msg)
 	}
@@ -85,7 +85,7 @@ func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) 
 }
 
 func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBond) sdk.Result {
-	err := k.Execute(ctx, []byte{0}, msg.FromPubkey, msg.TokenContractAddress, msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
+	err := k.Execute(ctx, msg.FromPubkey, msg.TokenContractAddress, msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
 	if err != nil {
 		return getResult(false, msg)
 	}
@@ -97,8 +97,11 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, elk ExecutionLaye
 	preHash := req.Header.LastBlockId.Hash
 	unitHash := elk.GetUnitHashMap(ctx, preHash)
 
-	elk.SetCandidateBlockHash(ctx, req.Hash)
-	elk.SetUnitHashMap(ctx, req.Hash, unitHash)
+	candidateBlock := ctx.CandidateBlock()
+	candidateBlock.Hash = req.GetHash()
+	candidateBlock.State = unitHash.EEState
+
+	ctx = ctx.WithCandidateBlock(candidateBlock)
 }
 
 func EndBloker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
@@ -106,38 +109,42 @@ func EndBloker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
 
 	validators := k.GetAllValidators(ctx)
 
-	resultbonds := k.GetCandidateBlockBond(ctx)
+	resultbonds := ctx.CandidateBlock().Bonds
 	resultBondsMap := make(map[string]*ipc.Bond)
 	for _, bond := range resultbonds {
 		resultBondsMap[string(bond.GetValidatorPublicKey())] = bond
 	}
 
-	var power string
-	for _, validator := range validators {
-		resultBond, found := resultBondsMap[string(validator.OperatorAddress.Bytes())]
-		if found {
-			if validator.Stake == resultBond.GetStake().GetValue() {
+	if len(resultbonds) > 0 {
+		var power string
+		for _, validator := range validators {
+			resultBond, found := resultBondsMap[string(validator.OperatorAddress.Bytes())]
+			if found {
+				if validator.Stake == resultBond.GetStake().GetValue() {
+					continue
+				}
+				power = resultBond.GetStake().GetValue()
+				validator.Stake = resultBond.GetStake().GetValue()
+			} else {
+				if validator.Stake != "" {
+					power = "0"
+					validator.Stake = ""
+				}
+			}
+			coin, err := strconv.ParseInt(power, 10, 64)
+			if err != nil {
 				continue
 			}
-			power = resultBond.GetStake().GetValue()
-			validator.Stake = resultBond.GetStake().GetValue()
-		} else {
-			if validator.Stake != "" {
-				power = "0"
-				validator.Stake = ""
+			validatorUpdate := abci.ValidatorUpdate{
+				PubKey: tmtypes.TM2PB.PubKey(validator.ConsPubKey),
+				Power:  coin,
 			}
+			validatorUpdates = append(validatorUpdates, validatorUpdate)
+			k.SetValidator(ctx, validator.OperatorAddress, validator)
 		}
-		coin, err := strconv.ParseInt(power, 10, 64)
-		if err != nil {
-			continue
-		}
-		validatorUpdate := abci.ValidatorUpdate{
-			PubKey: tmtypes.TM2PB.PubKey(validator.ConsPubKey),
-			Power:  coin,
-		}
-		validatorUpdates = append(validatorUpdates, validatorUpdate)
-		k.SetValidator(ctx, validator.OperatorAddress, validator)
 	}
+
+	k.SetEEState(ctx, ctx.CandidateBlock().Hash, ctx.CandidateBlock().State)
 
 	return validatorUpdates
 }

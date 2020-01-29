@@ -3,7 +3,6 @@ package executionlayer
 import (
 	"bytes"
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
@@ -127,7 +126,7 @@ func (k ExecutionLayerKeeper) Transfer(
 	gasPrice uint64) error {
 
 	k.SetAccountIfNotExists(ctx, toPubkey)
-	err := k.Execute(ctx, k.GetCandidateBlockHash(ctx), fromPubkey, tokenContractAddress, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
+	err := k.Execute(ctx, fromPubkey, tokenContractAddress, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
 	if err != nil {
 		return err
 	}
@@ -137,7 +136,6 @@ func (k ExecutionLayerKeeper) Transfer(
 
 // Execute is general execution
 func (k ExecutionLayerKeeper) Execute(ctx sdk.Context,
-	blockHash []byte,
 	execPubkey secp256k1.PubKeySecp256k1,
 	contractAddress string,
 	sessionCode []byte,
@@ -146,13 +144,8 @@ func (k ExecutionLayerKeeper) Execute(ctx sdk.Context,
 	paymentArgs []byte,
 	gasPrice uint64) error {
 
-	copiedBlockhash := blockHash
-	if bytes.Equal(copiedBlockhash, []byte{0}) {
-		copiedBlockhash = k.GetCandidateBlockHash(ctx)
-	}
-
 	// Parameter preparation
-	unitHash := k.GetUnitHashMap(ctx, copiedBlockhash)
+	stateHash := ctx.CandidateBlock().State
 	protocolVersion := k.MustGetProtocolVersion(ctx)
 
 	exexAddr := sdk.GetEEAddressFromSecp256k1PubKey(execPubkey)
@@ -162,7 +155,7 @@ func (k ExecutionLayerKeeper) Execute(ctx sdk.Context,
 	deploy := util.MakeDeploy(exexAddr.Bytes(), sessionCode, sessionArgs, paymentCode, paymentArgs, gasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
 	deploys = append(deploys, deploy)
 	reqExecute := &ipc.ExecuteRequest{
-		ParentStateHash: unitHash.EEState,
+		ParentStateHash: stateHash,
 		BlockTime:       uint64(ctx.BlockTime().Unix()),
 		Deploys:         deploys,
 		ProtocolVersion: &protocolVersion,
@@ -195,13 +188,15 @@ func (k ExecutionLayerKeeper) Execute(ctx sdk.Context,
 	}
 
 	// Commit
-	postStateHash, bonds, errGrpc := grpc.Commit(k.client, unitHash.EEState, effects, &protocolVersion)
+	postStateHash, bonds, errGrpc := grpc.Commit(k.client, stateHash, effects, &protocolVersion)
 	if errGrpc != "" {
 		return fmt.Errorf(errGrpc)
 	}
 
-	k.SetEEState(ctx, copiedBlockhash, postStateHash)
-	k.SetCandidateBlockBond(ctx, bonds)
+	candidateBlock := ctx.CandidateBlock()
+	candidateBlock.State = postStateHash
+	candidateBlock.Bonds = bonds
+	ctx = ctx.WithCandidateBlock(candidateBlock)
 
 	return nil
 }
@@ -229,7 +224,7 @@ func (k ExecutionLayerKeeper) GetQueryResult(ctx sdk.Context,
 // State hash comes from Tendermint block state - EE state mapping DB
 func (k ExecutionLayerKeeper) GetQueryResultSimple(ctx sdk.Context,
 	keyType string, keyData string, path string) (state.Value, error) {
-	currBlock := k.GetCandidateBlockHash(ctx)
+	currBlock := ctx.BlockHeader().LastBlockId.Hash
 	res, err := k.GetQueryResult(ctx, currBlock, keyType, keyData, path)
 	if err != nil {
 		return state.Value{}, err
@@ -257,7 +252,7 @@ func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, blockhash [
 
 // GetQueryBalanceResultSimple queries with whole parameters
 func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, pubkey secp256k1.PubKeySecp256k1) (string, error) {
-	res, err := k.GetQueryBalanceResult(ctx, k.GetCandidateBlockHash(ctx), pubkey)
+	res, err := k.GetQueryBalanceResult(ctx, ctx.BlockHeader().LastBlockId.Hash, pubkey)
 	if err != nil {
 		return "", err
 	}
@@ -331,56 +326,6 @@ func (k ExecutionLayerKeeper) SetAccountIfNotExists(ctx sdk.Context, pubkey secp
 		toAddressAccountObject = k.AccountKeeper.NewAccountWithAddress(ctx, account)
 		k.AccountKeeper.SetAccount(ctx, toAddressAccountObject)
 	}
-}
-
-// -----------------------------------------------------------------------------------------------------------
-// GetCandidateBlock returns current block hash
-func (k ExecutionLayerKeeper) GetCandidateBlock(ctx sdk.Context) types.CandidateBlock {
-	store := ctx.KVStore(k.HashMapStoreKey)
-	candidateBlockBytes := store.Get([]byte(types.CandidateBlockKey))
-	var candidateBlock types.CandidateBlock
-	k.cdc.UnmarshalBinaryBare(candidateBlockBytes, &candidateBlock)
-
-	return candidateBlock
-}
-
-func (k ExecutionLayerKeeper) SetCandidateBlock(ctx sdk.Context, candidateBlock types.CandidateBlock) {
-	store := ctx.KVStore(k.HashMapStoreKey)
-
-	// It stores the bonds received from the execution-engine.
-	//Even though they are executed in the same order for each node,
-	//the order of the data is different and the state of the keeper is different.
-	//This is an sort to reflect this.
-	sort.Slice(candidateBlock.Bonds, func(i, j int) bool {
-		return bytes.Compare(candidateBlock.Bonds[i].GetValidatorPublicKey(), candidateBlock.Bonds[j].GetValidatorPublicKey()) > 0
-	})
-	candidateBlockBytes := k.cdc.MustMarshalBinaryBare(candidateBlock)
-	store.Set([]byte(types.CandidateBlockKey), candidateBlockBytes)
-}
-
-// GetCandidateBlockHash returns current block hash
-func (k ExecutionLayerKeeper) GetCandidateBlockHash(ctx sdk.Context) []byte {
-	candidateBlock := k.GetCandidateBlock(ctx)
-
-	return candidateBlock.Hash
-}
-
-// SetCandidateBlockHash saves current block hash
-func (k ExecutionLayerKeeper) SetCandidateBlockHash(ctx sdk.Context, blockHash []byte) {
-	candidateBlock := k.GetCandidateBlock(ctx)
-	candidateBlock.Hash = blockHash
-	k.SetCandidateBlock(ctx, candidateBlock)
-}
-
-func (k ExecutionLayerKeeper) GetCandidateBlockBond(ctx sdk.Context) []*ipc.Bond {
-	candidateBlock := k.GetCandidateBlock(ctx)
-	return candidateBlock.Bonds
-}
-
-func (k ExecutionLayerKeeper) SetCandidateBlockBond(ctx sdk.Context, bonds []*ipc.Bond) {
-	candidateBlock := k.GetCandidateBlock(ctx)
-	candidateBlock.Bonds = bonds
-	k.SetCandidateBlock(ctx, candidateBlock)
 }
 
 // -----------------------------------------------------------------------------------------------------------
