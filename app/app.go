@@ -24,9 +24,9 @@ import (
 	"github.com/hdac-io/friday/x/genutil"
 	"github.com/hdac-io/friday/x/gov"
 	"github.com/hdac-io/friday/x/mint"
+	"github.com/hdac-io/friday/x/nickname"
 	"github.com/hdac-io/friday/x/params"
 	paramsclient "github.com/hdac-io/friday/x/params/client"
-	"github.com/hdac-io/friday/x/readablename"
 	"github.com/hdac-io/friday/x/slashing"
 	"github.com/hdac-io/friday/x/staking"
 	"github.com/hdac-io/friday/x/supply"
@@ -57,7 +57,7 @@ var (
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
 		supply.AppModuleBasic{},
-		readablename.AppModuleBasic{},
+		nickname.AppModuleBasic{},
 		executionlayer.AppModuleBasic{},
 	)
 
@@ -106,7 +106,7 @@ type FridayApp struct {
 	govKeeper            gov.Keeper
 	crisisKeeper         crisis.Keeper
 	paramsKeeper         params.Keeper
-	readablenameKeeper   readablename.ReadableNameKeeper
+	nicknameKeeper       nickname.NicknameKeeper
 	executionLayerKeeper executionlayer.ExecutionLayerKeeper
 
 	// the module manager
@@ -127,7 +127,7 @@ func NewFridayApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest
 		bam.MainStoreKey, auth.StoreKey, staking.StoreKey,
 		supply.StoreKey, mint.StoreKey, distr.StoreKey, slashing.StoreKey,
 		gov.StoreKey, params.StoreKey,
-		readablename.StoreKey,
+		nickname.StoreKey,
 		executionlayer.HashMapStoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(staking.TStoreKey, params.TStoreKey)
@@ -167,13 +167,13 @@ func NewFridayApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest
 	)
 	app.crisisKeeper = crisis.NewKeeper(crisisSubspace, invCheckPeriod, app.supplyKeeper, auth.FeeCollectorName)
 	// TODO - Need to change default value(socket path, protocol version)
-	app.readablenameKeeper = readablename.NewReadableNameKeeper(keys[readablename.StoreKey], app.cdc)
+	app.nicknameKeeper = nickname.NewNicknameKeeper(keys[nickname.StoreKey], app.cdc, app.accountKeeper)
 	app.executionLayerKeeper = executionlayer.NewExecutionLayerKeeper(
 		app.cdc,
 		keys[executionlayer.HashMapStoreKey],
 		os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"),
 		app.accountKeeper,
-		app.readablenameKeeper,
+		app.nicknameKeeper,
 	)
 
 	// register the proposal types
@@ -206,7 +206,7 @@ func NewFridayApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest
 		mint.NewAppModule(app.mintKeeper),
 		slashing.NewAppModule(app.slashingKeeper, app.stakingKeeper),
 		staking.NewAppModule(app.stakingKeeper, app.distrKeeper, app.accountKeeper, app.supplyKeeper),
-		readablename.NewAppModule(app.readablenameKeeper),
+		nickname.NewAppModule(app.nicknameKeeper),
 		executionlayer.NewAppModule(app.executionLayerKeeper),
 	)
 
@@ -223,7 +223,7 @@ func NewFridayApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest
 		genaccounts.ModuleName, distr.ModuleName, staking.ModuleName,
 		auth.ModuleName, bank.ModuleName, slashing.ModuleName, gov.ModuleName,
 		mint.ModuleName, supply.ModuleName, crisis.ModuleName, genutil.ModuleName,
-		readablename.ModuleName,
+		nickname.ModuleName,
 		executionlayer.ModuleName,
 	)
 

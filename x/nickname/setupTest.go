@@ -1,4 +1,4 @@
-package readablename
+package nickname
 
 import (
 	"github.com/hdac-io/friday/codec"
@@ -15,7 +15,7 @@ import (
 type testInput struct {
 	cdc *codec.Codec
 	ctx sdk.Context
-	k   ReadableNameKeeper
+	k   NicknameKeeper
 	ak  auth.AccountKeeper
 	pk  params.Keeper
 }
@@ -48,7 +48,7 @@ func setupTestInput() testInput {
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
 
 	ak.SetParams(ctx, auth.DefaultParams())
-	storeKeeper := NewReadableNameKeeper(storekey, cdc)
+	storeKeeper := NewNicknameKeeper(storekey, cdc, ak)
 
 	return testInput{cdc: cdc, ctx: ctx, k: storeKeeper, ak: ak, pk: pk}
 }

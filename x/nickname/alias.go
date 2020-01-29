@@ -1,7 +1,7 @@
-package readablename
+package nickname
 
 import (
-	"github.com/hdac-io/friday/x/readablename/types"
+	"github.com/hdac-io/friday/x/nickname/types"
 )
 
 const (
@@ -11,7 +11,7 @@ const (
 )
 
 var (
-	NewMsgSetAccount = types.NewMsgSetAccount
+	NewMsgSetAccount = types.NewMsgSetNickname
 	NewMsgChangeKey  = types.NewMsgChangeKey
 	ModuleCdc        = types.ModuleCdc
 	RegisterCodec    = types.RegisterCodec
@@ -20,7 +20,7 @@ var (
 )
 
 type (
-	MsgSetAccount       = types.MsgSetAccount
+	MsgSetAccount       = types.MsgSetNickname
 	MsgChangeKey        = types.MsgChangeKey
 	QueryResUnitAccount = types.QueryResUnitAccount
 	UnitAccount         = types.UnitAccount
