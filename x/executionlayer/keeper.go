@@ -184,10 +184,11 @@ func (k ExecutionLayerKeeper) Execute(ctx sdk.Context,
 			default:
 				effects = append(effects, res.GetExecutionResult().GetEffects().GetTransformMap()...)
 			}
-
 		}
 	case *ipc.ExecuteResponse_MissingParent:
 		err = types.ErrGRpcExecuteMissingParent(types.DefaultCodespace, util.EncodeToHexString(resExecute.GetMissingParent().GetHash()))
+	default:
+		err = fmt.Errorf("Unknown result : %s", resExecute.String())
 	}
 	if err != nil {
 		return err
