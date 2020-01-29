@@ -93,6 +93,14 @@ func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBo
 	return getResult(true, msg)
 }
 
+func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, elk ExecutionLayerKeeper) {
+	preHash := req.Header.LastBlockId.Hash
+	unitHash := elk.GetUnitHashMap(ctx, preHash)
+
+	elk.SetCandidateBlockHash(ctx, req.Hash)
+	elk.SetUnitHashMap(ctx, req.Hash, unitHash)
+}
+
 func EndBloker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
 	var validatorUpdates []abci.ValidatorUpdate
 
