@@ -1,4 +1,4 @@
-package readablename
+package nickname
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 )
 
 // NewHandler returns a handler for "nameservice" type messages.
-func NewHandler(k ReadableNameKeeper) sdk.Handler {
+func NewHandler(k NicknameKeeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
 		case MsgSetAccount:
@@ -46,13 +46,13 @@ func getResult(ok bool, msg sdk.Msg) sdk.Result {
 }
 
 // Handle a message to set name
-func handleMsgSetAccount(ctx sdk.Context, k ReadableNameKeeper, msg MsgSetAccount) sdk.Result {
-	res := k.SetUnitAccount(ctx, msg.Name.MustToString(), msg.Address, msg.PubKey)
+func handleMsgSetAccount(ctx sdk.Context, k NicknameKeeper, msg MsgSetAccount) sdk.Result {
+	res := k.SetNickname(ctx, msg.Nickname.MustToString(), msg.Address)
 	return getResult(res, msg)
 }
 
 // Handle a message to change key
-func handleMsgChangeKey(ctx sdk.Context, k ReadableNameKeeper, msg MsgChangeKey) sdk.Result {
-	res := k.ChangeKey(ctx, msg.ID, msg.OldAddress, msg.NewAddress, msg.OldPubKey, msg.NewPubKey)
+func handleMsgChangeKey(ctx sdk.Context, k NicknameKeeper, msg MsgChangeKey) sdk.Result {
+	res := k.ChangeKey(ctx, msg.Nickname, msg.OldAddress, msg.NewAddress)
 	return getResult(res, msg)
 }

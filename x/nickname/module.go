@@ -1,4 +1,4 @@
-package readablename
+package nickname
 
 import (
 	"encoding/json"
@@ -8,8 +8,8 @@ import (
 
 	"github.com/hdac-io/friday/codec"
 	"github.com/hdac-io/friday/types/module"
-	"github.com/hdac-io/friday/x/readablename/client/cli"
-	"github.com/hdac-io/friday/x/readablename/client/rest"
+	"github.com/hdac-io/friday/x/nickname/client/cli"
+	"github.com/hdac-io/friday/x/nickname/client/rest"
 
 	"github.com/hdac-io/friday/client/context"
 	sdk "github.com/hdac-io/friday/types"
@@ -65,11 +65,11 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 
 type AppModule struct {
 	AppModuleBasic
-	keeper ReadableNameKeeper
+	keeper NicknameKeeper
 }
 
 // NewAppModule creates a new AppModule Object
-func NewAppModule(k ReadableNameKeeper) AppModule {
+func NewAppModule(k NicknameKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         k,

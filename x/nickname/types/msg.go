@@ -1,8 +1,6 @@
 package types
 
 import (
-	"github.com/hdac-io/tendermint/crypto/secp256k1"
-
 	sdk "github.com/hdac-io/friday/types"
 )
 
@@ -14,45 +12,43 @@ const RouterKey = ModuleName
 ////////////////////////////
 
 // MsgSetAccount defines a SetAccount message
-type MsgSetAccount struct {
-	Name    Name                      `json:"name"`
-	Address sdk.AccAddress            `json:"address"`
-	PubKey  secp256k1.PubKeySecp256k1 `json:"pubkey"`
+type MsgSetNickname struct {
+	Nickname Name           `json:"nickname"`
+	Address  sdk.AccAddress `json:"address"`
 }
 
-// NewMsgSetAccount is a constructor function for MsgSetName
-func NewMsgSetAccount(name Name, address sdk.AccAddress, pubkey secp256k1.PubKeySecp256k1) MsgSetAccount {
-	return MsgSetAccount{
-		Name:    name,
-		Address: address,
-		PubKey:  pubkey,
+// NewMsgSetNickname is a constructor function for MsgSetName
+func NewMsgSetNickname(name Name, address sdk.AccAddress) MsgSetNickname {
+	return MsgSetNickname{
+		Nickname: name,
+		Address:  address,
 	}
 }
 
 // Route should return the name of the module
-func (msg MsgSetAccount) Route() string { return RouterKey }
+func (msg MsgSetNickname) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg MsgSetAccount) Type() string { return "newaccount" }
+func (msg MsgSetNickname) Type() string { return "newaccount" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgSetAccount) ValidateBasic() sdk.Error {
-	if msg.PubKey.Address().String() == "" {
+func (msg MsgSetNickname) ValidateBasic() sdk.Error {
+	if msg.Address.String() == "" {
 		return sdk.ErrUnknownRequest("Address cannot be empty")
 	}
-	if msg.Name.Equal(NewName("")) {
+	if msg.Nickname.Equal(NewName("")) {
 		return sdk.ErrUnknownRequest("ID cannot be empty")
 	}
 	return nil
 }
 
 // GetSignBytes encodes the message for signing
-func (msg MsgSetAccount) GetSignBytes() []byte {
+func (msg MsgSetNickname) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners defines whose signature is required
-func (msg MsgSetAccount) GetSigners() []sdk.AccAddress {
+func (msg MsgSetNickname) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Address}
 }
 
@@ -62,23 +58,19 @@ func (msg MsgSetAccount) GetSigners() []sdk.AccAddress {
 
 // MsgChangeKey defines a ChangeKey message
 type MsgChangeKey struct {
-	ID         string                    `json:"ID"`
-	OldAddress sdk.AccAddress            `json:"old_address"`
-	NewAddress sdk.AccAddress            `json:"new_address"`
-	OldPubKey  secp256k1.PubKeySecp256k1 `json:"old_pubkey"`
-	NewPubKey  secp256k1.PubKeySecp256k1 `json:"new_pubkey"`
+	Nickname   string         `json:"nickname"`
+	OldAddress sdk.AccAddress `json:"old_address"`
+	NewAddress sdk.AccAddress `json:"new_address"`
 }
 
 // NewMsgChangeKey is a constructor function for MsgChangeKey
 func NewMsgChangeKey(name string,
 	oldAddress, newAddress sdk.AccAddress,
-	oldPubKey, newPubKey secp256k1.PubKeySecp256k1) MsgChangeKey {
+) MsgChangeKey {
 	return MsgChangeKey{
-		ID:         name,
+		Nickname:   name,
 		OldAddress: oldAddress,
 		NewAddress: newAddress,
-		OldPubKey:  oldPubKey,
-		NewPubKey:  newPubKey,
 	}
 }
 
@@ -90,10 +82,10 @@ func (msg MsgChangeKey) Type() string { return "changekey" }
 
 // ValidateBasic runs stateless checks on the message
 func (msg MsgChangeKey) ValidateBasic() sdk.Error {
-	if len(msg.OldPubKey.Bytes()) == 0 || len(msg.NewPubKey.Bytes()) == 0 {
-		return sdk.ErrUnknownRequest("PubKey cannot be empty")
+	if len(msg.OldAddress.Bytes()) == 0 || len(msg.NewAddress.Bytes()) == 0 {
+		return sdk.ErrUnknownRequest("Address cannot be empty")
 	}
-	if len(msg.ID) == 0 {
+	if len(msg.Nickname) == 0 {
 		return sdk.ErrUnknownRequest("ID cannot be empty")
 	}
 	return nil
