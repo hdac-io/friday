@@ -32,7 +32,6 @@ type (
 	MsgCreateValidator        = types.MsgCreateValidator
 	QueryExecutionLayer       = types.QueryExecutionLayer
 	UnitHashMap               = types.UnitHashMap
-	CandidateBlock            = types.CandidateBlock
 	QueryExecutionLayerResp   = types.QueryExecutionLayerResp
 	QueryExecutionLayerDetail = types.QueryExecutionLayerDetail
 	QueryGetBalance           = types.QueryGetBalance

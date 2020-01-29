@@ -4,18 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
 	sdk "github.com/hdac-io/friday/types"
 )
 
 // UnitHashMap used to define Unit account structure
 type UnitHashMap struct {
 	EEState []byte `json:"ee_state"`
-}
-
-type CandidateBlock struct {
-	Hash  []byte      `json:"hash"`
-	Bonds []*ipc.Bond `json:"bonds"`
 }
 
 // NewUnitHashMap returns a new UnitAccount

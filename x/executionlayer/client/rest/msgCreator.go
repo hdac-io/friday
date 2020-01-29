@@ -121,7 +121,7 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.GasPrice))
 
 	// create the message
-	msg := types.NewMsgExecute([]byte{0}, req.TokenContractAddress, *pubkey, bondingUnbondingCode, bondingUnbondingAbi, paymentCode, paymentAbi, req.GasPrice, addr)
+	msg := types.NewMsgExecute(req.TokenContractAddress, *pubkey, bondingUnbondingCode, bondingUnbondingAbi, paymentCode, paymentAbi, req.GasPrice, addr)
 	err = msg.ValidateBasic()
 	if err != nil {
 		return rest.BaseReq{}, nil, err

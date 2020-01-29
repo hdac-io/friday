@@ -39,11 +39,13 @@ func InitGenesis(
 
 	keeper.SetGenesisConf(ctx, data.GenesisConf)
 
-	keeper.SetCandidateBlock(ctx, types.CandidateBlock{
-		Hash:  []byte(types.GenesisBlockHashKey),
-		Bonds: bonds,
-	})
 	keeper.SetEEState(ctx, []byte(types.GenesisBlockHashKey), stateHash)
+
+	candidateBlock := ctx.CandidateBlock()
+	candidateBlock.Hash = []byte(types.GenesisBlockHashKey)
+	candidateBlock.State = stateHash
+	candidateBlock.Bonds = bonds
+	ctx = ctx.WithCandidateBlock(candidateBlock)
 }
 
 // ExportGenesis : exports an executionlayer configuration for genesis

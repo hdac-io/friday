@@ -16,7 +16,6 @@ const RouterKey = ModuleName
 
 // MsgExecute for sending deploy to execution engine
 type MsgExecute struct {
-	BlockHash       []byte                    `json:"block_hash"`
 	ContractAddress string                    `json:"contract_address"`
 	ExecPubkey      secp256k1.PubKeySecp256k1 `json:"exec_pubkey"`
 	SessionCode     []byte                    `json:"session_code"`
@@ -29,7 +28,6 @@ type MsgExecute struct {
 
 // NewMsgExecute is a constructor function for MsgSetName
 func NewMsgExecute(
-	blockHash []byte,
 	contractAddress string,
 	execPubkey secp256k1.PubKeySecp256k1,
 	sessionCode, sessionArgs []byte,
@@ -38,7 +36,6 @@ func NewMsgExecute(
 	signer sdk.AccAddress,
 ) MsgExecute {
 	return MsgExecute{
-		BlockHash:       blockHash,
 		ExecPubkey:      execPubkey,
 		ContractAddress: contractAddress,
 		SessionCode:     sessionCode,
