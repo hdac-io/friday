@@ -30,8 +30,8 @@ func EndBloker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
 	}
 
 	if len(resultbonds) > 0 {
-		var power string
 		for _, validator := range validators {
+			var power string
 			resultBond, found := resultBondsMap[string(validator.OperatorAddress.Bytes())]
 			if found {
 				if validator.Stake == resultBond.GetStake().GetValue() {
@@ -43,6 +43,8 @@ func EndBloker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
 				if validator.Stake != "" {
 					power = "0"
 					validator.Stake = ""
+				} else {
+					continue
 				}
 			}
 			coin, err := strconv.ParseInt(power, 10, 64)
