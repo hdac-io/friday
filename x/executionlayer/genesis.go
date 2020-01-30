@@ -45,7 +45,6 @@ func InitGenesis(
 	candidateBlock.Hash = []byte(types.GenesisBlockHashKey)
 	candidateBlock.State = stateHash
 	candidateBlock.Bonds = bonds
-	ctx = ctx.WithCandidateBlock(candidateBlock)
 }
 
 // ExportGenesis : exports an executionlayer configuration for genesis

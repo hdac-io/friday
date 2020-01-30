@@ -196,7 +196,6 @@ func (k ExecutionLayerKeeper) Execute(ctx sdk.Context,
 	candidateBlock := ctx.CandidateBlock()
 	candidateBlock.State = postStateHash
 	candidateBlock.Bonds = bonds
-	ctx = ctx.WithCandidateBlock(candidateBlock)
 
 	return nil
 }

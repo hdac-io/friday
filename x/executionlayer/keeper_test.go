@@ -89,16 +89,19 @@ func TestMustGetProtocolVersion(t *testing.T) {
 
 func TestCreateBlock(t *testing.T) {
 	input := setupTestInput()
-	parentHash := genesis(input.elk)
-	blockHash := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
-	input.elk.SetEEState(input.ctx, blockHash, parentHash)
-	queryPath := "counter/count"
+	genesis(input)
 
-	blockHash1 := []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
-	blockHash2 := []byte{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
 	pubkey := sdk.MustGetSecp256k1FromBech32AccPubKey(GenesisPubKeyString)
+
+	// Block #1
+	blockHash1 := []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+	beginBlockABCI1 := abci.RequestBeginBlock{
+		Hash:   blockHash1,
+		Header: abci.Header{LastBlockId: abci.BlockID{Hash: input.ctx.CandidateBlock().Hash}},
+	}
+	BeginBlocker(input.ctx, beginBlockABCI1, input.elk)
+
 	counterDefineMSG := NewMsgExecute(
-		blockHash,
 		GenesisPubKeyString,
 		*pubkey,
 		util.LoadWasmFile(path.Join(contractPath, counterDefineWasm)),
@@ -108,18 +111,18 @@ func TestCreateBlock(t *testing.T) {
 		uint64(10),
 		GenesisAccountAddress,
 	)
-
 	handlerMsgExecute(input.ctx, input.elk, counterDefineMSG)
+	EndBloker(input.ctx, input.elk)
 
-	nextBlockABCI1 := abci.RequestBeginBlock{
-		Hash:   blockHash1,
-		Header: abci.Header{LastBlockId: abci.BlockID{Hash: blockHash}},
+	// Block #2
+	blockHash2 := []byte{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
+	nextBlockABCI2 := abci.RequestBeginBlock{
+		Hash:   blockHash2,
+		Header: abci.Header{LastBlockId: abci.BlockID{Hash: blockHash1}},
 	}
-
-	BeginBlocker(input.ctx, nextBlockABCI1, input.elk)
+	BeginBlocker(input.ctx, nextBlockABCI2, input.elk)
 
 	counterCallMSG := NewMsgExecute(
-		blockHash,
 		GenesisPubKeyString,
 		*pubkey,
 		util.LoadWasmFile(path.Join(contractPath, counterCallWasm)),
@@ -129,16 +132,10 @@ func TestCreateBlock(t *testing.T) {
 		uint64(10),
 		GenesisAccountAddress,
 	)
-
 	handlerMsgExecute(input.ctx, input.elk, counterCallMSG)
+	EndBloker(input.ctx, input.elk)
 
-	nextBlockABCI2 := abci.RequestBeginBlock{
-		Hash:   blockHash2,
-		Header: abci.Header{LastBlockId: abci.BlockID{Hash: blockHash}},
-	}
-
-	BeginBlocker(input.ctx, nextBlockABCI2, input.elk)
-
+	queryPath := "counter/count"
 	arrPath := strings.Split(queryPath, "/")
 
 	unitHash1 := input.elk.GetUnitHashMap(input.ctx, blockHash1)
@@ -155,20 +152,18 @@ func TestCreateBlock(t *testing.T) {
 
 func TestTransfer(t *testing.T) {
 	input := setupTestInput()
-	parentHash := genesis(input.elk)
-	blockHash := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
-	input.elk.SetEEState(input.ctx, blockHash, parentHash)
-
-	blockHash1 := []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
-	nextBlockABCI1 := abci.RequestBeginBlock{
-		Hash:   blockHash1,
-		Header: abci.Header{LastBlockId: abci.BlockID{Hash: blockHash}},
-	}
-
-	BeginBlocker(input.ctx, nextBlockABCI1, input.elk)
+	genesis(input)
 
 	genpubkey := sdk.MustGetSecp256k1FromBech32AccPubKey(GenesisPubKeyString)
 	receippubkey := sdk.MustGetSecp256k1FromBech32AccPubKey(RecipientPubKeyString)
+
+	// Block #1
+	blockHash1 := []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+	nextBlockABCI1 := abci.RequestBeginBlock{
+		Hash:   blockHash1,
+		Header: abci.Header{LastBlockId: abci.BlockID{Hash: input.ctx.CandidateBlock().Hash}},
+	}
+	BeginBlocker(input.ctx, nextBlockABCI1, input.elk)
 
 	transferMSG := NewMsgTransfer(
 		GenesisPubKeyString,
@@ -181,16 +176,18 @@ func TestTransfer(t *testing.T) {
 		uint64(200000000),
 		GenesisAccountAddress,
 	)
-
 	handlerMsgTransfer(input.ctx, input.elk, transferMSG)
+	EndBloker(input.ctx, input.elk)
 
+	// Block #2
 	blockHash2 := []byte{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
 	nextBlockABCI2 := abci.RequestBeginBlock{
 		Hash:   blockHash2,
 		Header: abci.Header{LastBlockId: abci.BlockID{Hash: blockHash1}},
 	}
-
 	BeginBlocker(input.ctx, nextBlockABCI2, input.elk)
+	input.ctx = input.ctx.WithBlockHeader(nextBlockABCI2.Header)
+	EndBloker(input.ctx, input.elk)
 
 	res, err := input.elk.GetQueryBalanceResultSimple(input.ctx, *receippubkey)
 	queriedRes, _ := strconv.Atoi(res)

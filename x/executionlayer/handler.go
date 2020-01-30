@@ -100,8 +100,6 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, elk ExecutionLaye
 	candidateBlock := ctx.CandidateBlock()
 	candidateBlock.Hash = req.GetHash()
 	candidateBlock.State = unitHash.EEState
-
-	ctx = ctx.WithCandidateBlock(candidateBlock)
 }
 
 func EndBloker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
