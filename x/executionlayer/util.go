@@ -5,26 +5,27 @@ import (
 	"fmt"
 
 	sdk "github.com/hdac-io/friday/types"
-	"github.com/hdac-io/friday/x/readablename"
+	"github.com/hdac-io/friday/x/nickname"
 )
 
 // TODO: change KeyType from string to typed enum.
 func toBytes(keyType string, key string,
-	k readablename.ReadableNameKeeper, ctx sdk.Context) ([]byte, error) {
+	k nickname.NicknameKeeper, ctx sdk.Context) ([]byte, error) {
 	var bytes []byte
 	var err error = nil
 
 	switch keyType {
 	case "address":
-		pubkeybytes, err := sdk.GetSecp256k1FromRawHexString(key)
+		var addr sdk.AccAddress
+		addr, err := sdk.AccAddressFromBech32(key)
 		if err != nil {
 			acc := k.GetUnitAccount(ctx, key)
-			if acc.Name.MustToString() == "" {
+			if acc.Nickname.MustToString() == "" {
 				return nil, fmt.Errorf("no readable ID mapping of %s", key)
 			}
-			*pubkeybytes = acc.PubKey
+			addr = acc.Address
 		}
-		bytes = sdk.MustGetEEAddressFromCryptoPubkey(pubkeybytes).Bytes()
+		bytes = addr.ToEEAddress().Bytes()
 
 	case "uref", "local", "hash":
 		bytes, err = hex.DecodeString(key)

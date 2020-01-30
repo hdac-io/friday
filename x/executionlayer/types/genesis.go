@@ -8,7 +8,6 @@ import (
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
-	secp256k1 "github.com/hdac-io/tendermint/crypto/secp256k1"
 
 	sdk "github.com/hdac-io/friday/types"
 )
@@ -37,10 +36,9 @@ type Genesis struct {
 
 // Account : Genesis Account Information.
 type Account struct {
-	// PublicKey : base64 encoded public key string
-	PublicKey           secp256k1.PubKeySecp256k1 `json:"public_key"`
-	InitialBalance      string                    `json:"initial_balance"`
-	InitialBondedAmount string                    `json:"initial_bonded_amount"`
+	Address             sdk.AccAddress `json:"address"`
+	InitialBalance      string         `json:"initial_balance"`
+	InitialBondedAmount string         `json:"initial_bonded_amount"`
 }
 
 // WasmCosts : CasperLabs EE Wasm Cost table
@@ -166,8 +164,7 @@ func toChainSpecGenesisAccount(account Account) ipc.ChainSpec_GenesisAccount {
 
 	genesisAccount := ipc.ChainSpec_GenesisAccount{}
 
-	//cryptoamino.FromPubkey -> EEAddress
-	genesisAccount.PublicKey = sdk.GetEEAddressFromSecp256k1PubKey(account.PublicKey).Bytes()
+	genesisAccount.PublicKey = account.Address.ToEEAddress().Bytes()
 	genesisAccount.Balance = &balance
 	genesisAccount.BondedAmount = &bondedAmount
 

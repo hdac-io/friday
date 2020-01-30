@@ -25,7 +25,6 @@ var (
 )
 
 type (
-	PublicKey                 = types.PublicKey
 	MsgExecute                = types.MsgExecute
 	MsgBond                   = types.MsgBond
 	MsgUnBond                 = types.MsgUnBond

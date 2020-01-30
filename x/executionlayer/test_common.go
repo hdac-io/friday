@@ -15,8 +15,8 @@ import (
 	"github.com/hdac-io/friday/x/auth"
 	authtypes "github.com/hdac-io/friday/x/auth/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
+	"github.com/hdac-io/friday/x/nickname"
 	"github.com/hdac-io/friday/x/params/subspace"
-	"github.com/hdac-io/friday/x/readablename"
 	abci "github.com/hdac-io/tendermint/abci/types"
 	"github.com/hdac-io/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -27,12 +27,9 @@ const (
 )
 
 var (
+	ContractAddress            = "friday15evpva2u57vv6l5czehyk1111111111111"
 	GenesisAccountAddress, _   = sdk.AccAddressFromBech32("friday15evpva2u57vv6l5czehyk69s0wnq9hrkqulwfz")
-	GenesisPubKeyString        = "fridaypub1addwnpepqw6vr6728nvg2duwj062y2yx2mfhmqjh66mjtgsyf7jwyq2kx2kaqlkq94l"
-	GenesisPubKey              = sdk.MustGetAccPubKeyBech32(GenesisPubKeyString)
 	RecipientAccountAddress, _ = sdk.AccAddressFromBech32("friday1y2dx0evs5k6hxuhfrfdmm7wcwsrqr073htghpv")
-	RecipientPubKeyString      = "fridaypub1addwnpepqg3xvg45h4j0wsj6dng0wcze2vwvnc7hse696xjvy0cwk347zm0lvhcskq7"
-	RecipientPubKey            = sdk.MustGetAccPubKeyBech32(RecipientPubKeyString)
 
 	contractPath        = os.ExpandEnv("$HOME/.nodef/contracts")
 	mintInstallWasm     = "mint_install.wasm"
@@ -60,7 +57,7 @@ func setupTestInput() testInput {
 
 	authCapKey := sdk.NewKVStoreKey("authCapKey")
 	keyParams := sdk.NewKVStoreKey("subspace")
-	readablenameStoreKey := sdk.NewKVStoreKey("readablename")
+	nicknameStoreKey := sdk.NewKVStoreKey("nickname")
 	tkeyParams := sdk.NewTransientStoreKey("transient_subspace")
 
 	ps := subspace.NewSubspace(cdc, keyParams, tkeyParams, authtypes.DefaultParamspace)
@@ -68,24 +65,23 @@ func setupTestInput() testInput {
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(authCapKey, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(readablenameStoreKey, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(nicknameStoreKey, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	ms.MountStoreWithDB(hashMapStoreKey, sdk.StoreTypeIAVL, db)
 	ms.LoadLatestVersion()
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: chainID}, false, log.NewNopLogger())
 	accountKeeper := auth.NewAccountKeeper(cdc, authCapKey, ps, auth.ProtoBaseAccount)
-	readablenameKeeper := readablename.NewReadableNameKeeper(readablenameStoreKey, cdc)
+	nicknameKeeper := nickname.NewNicknameKeeper(nicknameStoreKey, cdc, accountKeeper)
 
 	elk := NewExecutionLayerKeeper(cdc, hashMapStoreKey, os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"),
-		accountKeeper, readablenameKeeper)
+		accountKeeper, nicknameKeeper)
 
 	gs := types.DefaultGenesisState()
 	gs.ChainName = chainID
 	gs.Accounts = make([]types.Account, 1)
-	pubkey := sdk.MustGetSecp256k1FromBech32AccPubKey(GenesisPubKeyString)
 	gs.Accounts[0] = types.Account{
-		PublicKey:           *pubkey,
+		Address:             GenesisAccountAddress,
 		InitialBalance:      "500000000",
 		InitialBondedAmount: "1000000",
 	}
@@ -130,9 +126,9 @@ func counterDefine(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	cntDefCode := util.LoadWasmFile(path.Join(contractPath, counterDefineWasm))
 	standardPaymentCode := util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm))
 	protocolVersion := input.elk.MustGetProtocolVersion(input.ctx)
-	genesisAddr := sdk.MustGetEEAddressFromCryptoPubkey(input.elk.GetGenesisAccounts(input.ctx)[0].PublicKey)
+	genesisAddr := input.elk.GetGenesisAccounts(input.ctx)[0]
 
-	deploy := util.MakeDeploy(genesisAddr.Bytes(), cntDefCode, []byte{},
+	deploy := util.MakeDeploy(genesisAddr.Address.ToEEAddress(), cntDefCode, []byte{},
 		standardPaymentCode, paymentAbi, uint64(10), timestamp, input.elk.GetChainName(input.ctx))
 
 	deploys := util.MakeInitDeploys()
@@ -159,10 +155,10 @@ func counterCall(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	cntCallCode := util.LoadWasmFile(path.Join(contractPath, counterCallWasm))
 	standardPaymentCode := util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm))
 	protocolVersion := input.elk.MustGetProtocolVersion(input.ctx)
-	genesisAddr := sdk.MustGetEEAddressFromCryptoPubkey(input.elk.GetGenesisAccounts(input.ctx)[0].PublicKey)
+	genesisAddr := input.elk.GetGenesisAccounts(input.ctx)[0]
 
 	timestamp = time.Now().Unix()
-	deploy := util.MakeDeploy(genesisAddr.Bytes(), cntCallCode,
+	deploy := util.MakeDeploy(genesisAddr.Address.ToEEAddress(), cntCallCode,
 		[]byte{}, standardPaymentCode, paymentAbi, uint64(10), timestamp, input.elk.GetChainName(input.ctx))
 	deploys := util.MakeInitDeploys()
 	deploys = util.AddDeploy(deploys, deploy)
