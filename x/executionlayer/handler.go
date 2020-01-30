@@ -2,8 +2,9 @@ package executionlayer
 
 import (
 	"fmt"
-	"reflect"
 
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 )
@@ -32,28 +33,27 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 }
 
 // Handle MsgExecute
+// Transfer function executes "Execute" of Execution layer, that is specialized for transfer
+// Difference of general execution
+//   1) Raw account is needed for checking address existence
+//   2) Fixed transfer & payemtn WASMs are needed
 func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTransfer) sdk.Result {
-	err := k.Transfer(ctx, msg.TokenContractAddress, msg.FromPubkey, msg.ToPubkey, msg.TransferCode, msg.TransferArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
-	if err != nil {
-		return getResult(false, msg)
-	}
-	return getResult(true, msg)
+	k.SetAccountIfNotExists(ctx, msg.ToPubkey)
+	result, log := execute(ctx, k, msg.MsgExecute)
+
+	return getResult(result, log)
 }
 
 // Handle MsgExecute
 func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) sdk.Result {
-	err := k.Execute(ctx, msg.ExecPubkey, msg.ContractAddress,
-		msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
-	if err != nil {
-		return getResult(false, msg)
-	}
-	return getResult(true, msg)
+	result, log := execute(ctx, k, msg)
+	return getResult(result, log)
 }
 
 func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgCreateValidator) sdk.Result {
 	eeAddress, err := sdk.GetEEAddressFromCryptoPubkey(msg.ValidatorPubKey)
 	if err != nil {
-		return getResult(false, msg)
+		return getResult(false, err.Error())
 	}
 
 	validator, found := k.GetValidator(ctx, eeAddress)
@@ -68,45 +68,78 @@ func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg type
 
 	k.SetValidator(ctx, eeAddress, validator)
 
-	return getResult(true, msg)
+	return getResult(true, "")
 }
 
 func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) sdk.Result {
-	err := k.Execute(ctx, msg.FromPubkey, msg.TokenContractAddress, msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
-	if err != nil {
-		return getResult(false, msg)
-	}
-	return getResult(true, msg)
+	result, log := execute(ctx, k, msg.MsgExecute)
+	return getResult(result, log)
 }
 
 func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBond) sdk.Result {
-	err := k.Execute(ctx, msg.FromPubkey, msg.TokenContractAddress, msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
-	if err != nil {
-		return getResult(false, msg)
-	}
+	result, log := execute(ctx, k, msg.MsgExecute)
 
-	return getResult(true, msg)
+	return getResult(result, log)
 }
 
-func getResult(ok bool, msg sdk.Msg) sdk.Result {
+func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) (bool, string) {
+
+	// Parameter preparation
+	stateHash := ctx.CandidateBlock().State
+	protocolVersion := k.MustGetProtocolVersion(ctx)
+	exexAddr := sdk.GetEEAddressFromSecp256k1PubKey(msg.ExecPubkey)
+	log := ""
+
+	// Execute
+	deploys := []*ipc.DeployItem{}
+	deploy := util.MakeDeploy(exexAddr.Bytes(), msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
+	deploys = append(deploys, deploy)
+	reqExecute := &ipc.ExecuteRequest{
+		ParentStateHash: stateHash,
+		BlockTime:       uint64(ctx.BlockTime().Unix()),
+		Deploys:         deploys,
+		ProtocolVersion: &protocolVersion,
+	}
+	resExecute, err := k.client.Execute(ctx.Context(), reqExecute)
+	if err != nil {
+		return false, err.Error()
+	}
+
+	candidateBlock := ctx.CandidateBlock()
+	switch resExecute.GetResult().(type) {
+	case *ipc.ExecuteResponse_Success:
+		for _, res := range resExecute.GetSuccess().GetDeployResults() {
+			switch res.GetExecutionResult().GetError().GetValue().(type) {
+			case *ipc.DeployError_GasError:
+				err = types.ErrGRpcExecuteDeployGasError(types.DefaultCodespace)
+			case *ipc.DeployError_ExecError:
+				err = types.ErrGRpcExecuteDeployExecError(types.DefaultCodespace, res.GetExecutionResult().GetError().GetExecError().GetMessage())
+			}
+
+			candidateBlock.Effects = append(candidateBlock.Effects, res.GetExecutionResult().GetEffects().GetTransformMap()...)
+			if err != nil {
+				log = fmt.Sprintf(log, err.Error())
+			}
+		}
+	case *ipc.ExecuteResponse_MissingParent:
+		err = types.ErrGRpcExecuteMissingParent(types.DefaultCodespace, util.EncodeToHexString(resExecute.GetMissingParent().GetHash()))
+		return false, err.Error()
+	default:
+		err = fmt.Errorf("Unknown result : %s", resExecute.String())
+		return false, err.Error()
+	}
+
+	return true, log
+}
+
+func getResult(ok bool, log string) sdk.Result {
 	res := sdk.Result{}
 	if ok {
 		res.Code = sdk.CodeOK
 	} else {
 		res.Code = sdk.CodeUnknownRequest
 	}
-
-	events := sdk.EmptyEvents()
-	event := sdk.Event{}
-	v := reflect.ValueOf(msg)
-	typeOfV := v.Type()
-	for i := 0; i < v.NumField(); i++ {
-		event.AppendAttributes(
-			sdk.NewAttribute(typeOfV.Field(i).Name, fmt.Sprintf("%v", v.Field(i).Interface())),
-		)
-	}
-	events.AppendEvent(event)
-	res.Events = events
+	res.Log = log
 
 	return res
 }

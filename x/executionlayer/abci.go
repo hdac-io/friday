@@ -3,6 +3,7 @@ package executionlayer
 import (
 	"strconv"
 
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
 	sdk "github.com/hdac-io/friday/types"
 	abci "github.com/hdac-io/tendermint/abci/types"
@@ -23,7 +24,12 @@ func EndBloker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
 
 	validators := k.GetAllValidators(ctx)
 
-	resultbonds := ctx.CandidateBlock().Bonds
+	protocolVersion := k.MustGetProtocolVersion(ctx)
+	stateHash, resultbonds, errMessage := grpc.Commit(k.client, ctx.CandidateBlock().State, ctx.CandidateBlock().Effects, &protocolVersion)
+	if errMessage != "" {
+		return validatorUpdates
+	}
+
 	resultBondsMap := make(map[string]*ipc.Bond)
 	for _, bond := range resultbonds {
 		resultBondsMap[string(bond.GetValidatorPublicKey())] = bond
@@ -58,7 +64,7 @@ func EndBloker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
 		}
 	}
 
-	k.SetEEState(ctx, ctx.CandidateBlock().Hash, ctx.CandidateBlock().State)
+	k.SetEEState(ctx, ctx.CandidateBlock().Hash, stateHash)
 
 	return validatorUpdates
 }

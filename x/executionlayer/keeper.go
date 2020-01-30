@@ -8,8 +8,6 @@ import (
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc/transforms"
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 
 	"github.com/hdac-io/tendermint/crypto"
 	secp256k1 "github.com/hdac-io/tendermint/crypto/secp256k1"
@@ -111,94 +109,7 @@ func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockHash []byte) []by
 	return unit.EEState
 }
 
-// Transfer function executes "Execute" of Execution layer, that is specialized for transfer
-// Difference of general execution
-//   1) Raw account is needed for checking address existence
-//   2) Fixed transfer & payemtn WASMs are needed
-func (k ExecutionLayerKeeper) Transfer(
-	ctx sdk.Context,
-	tokenContractAddress string,
-	fromPubkey, toPubkey secp256k1.PubKeySecp256k1,
-	transferCode []byte,
-	transferAbi []byte,
-	paymentCode []byte,
-	paymentAbi []byte,
-	gasPrice uint64) error {
-
-	k.SetAccountIfNotExists(ctx, toPubkey)
-	err := k.Execute(ctx, fromPubkey, tokenContractAddress, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Execute is general execution
-func (k ExecutionLayerKeeper) Execute(ctx sdk.Context,
-	execPubkey secp256k1.PubKeySecp256k1,
-	contractAddress string,
-	sessionCode []byte,
-	sessionArgs []byte,
-	paymentCode []byte,
-	paymentArgs []byte,
-	gasPrice uint64) error {
-
-	// Parameter preparation
-	stateHash := ctx.CandidateBlock().State
-	protocolVersion := k.MustGetProtocolVersion(ctx)
-
-	exexAddr := sdk.GetEEAddressFromSecp256k1PubKey(execPubkey)
-
-	// Execute
-	deploys := []*ipc.DeployItem{}
-	deploy := util.MakeDeploy(exexAddr.Bytes(), sessionCode, sessionArgs, paymentCode, paymentArgs, gasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
-	deploys = append(deploys, deploy)
-	reqExecute := &ipc.ExecuteRequest{
-		ParentStateHash: stateHash,
-		BlockTime:       uint64(ctx.BlockTime().Unix()),
-		Deploys:         deploys,
-		ProtocolVersion: &protocolVersion,
-	}
-	resExecute, err := k.client.Execute(ctx.Context(), reqExecute)
-	if err != nil {
-		return err
-	}
-
-	effects := []*transforms.TransformEntry{}
-	switch resExecute.GetResult().(type) {
-	case *ipc.ExecuteResponse_Success:
-		for _, res := range resExecute.GetSuccess().GetDeployResults() {
-			switch res.GetExecutionResult().GetError().GetValue().(type) {
-			case *ipc.DeployError_GasError:
-				err = types.ErrGRpcExecuteDeployGasError(types.DefaultCodespace)
-			case *ipc.DeployError_ExecError:
-				err = types.ErrGRpcExecuteDeployExecError(types.DefaultCodespace, res.GetExecutionResult().GetError().GetExecError().GetMessage())
-			default:
-				effects = append(effects, res.GetExecutionResult().GetEffects().GetTransformMap()...)
-			}
-		}
-	case *ipc.ExecuteResponse_MissingParent:
-		err = types.ErrGRpcExecuteMissingParent(types.DefaultCodespace, util.EncodeToHexString(resExecute.GetMissingParent().GetHash()))
-	default:
-		err = fmt.Errorf("Unknown result : %s", resExecute.String())
-	}
-	if err != nil {
-		return err
-	}
-
-	// Commit
-	postStateHash, bonds, errGrpc := grpc.Commit(k.client, stateHash, effects, &protocolVersion)
-	if errGrpc != "" {
-		return fmt.Errorf(errGrpc)
-	}
-
-	candidateBlock := ctx.CandidateBlock()
-	candidateBlock.State = postStateHash
-	candidateBlock.Bonds = bonds
-
-	return nil
-}
+// -----------------------------------------------------------------------------------------------------------
 
 // GetQueryResult queries with whole parameters
 func (k ExecutionLayerKeeper) GetQueryResult(ctx sdk.Context,

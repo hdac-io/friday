@@ -3,9 +3,7 @@ package executionlayer
 import (
 	"reflect"
 
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 )
@@ -27,11 +25,6 @@ func InitGenesis(
 		panic(response.GetResult())
 	}
 
-	stateHash, bonds, errStr := grpc.Commit(keeper.client, util.DecodeHexString(util.StrEmptyStateHash), response.GetSuccess().GetEffect().GetTransformMap(), genesisConfig.GetProtocolVersion())
-	if errStr != "" {
-		panic(errStr)
-	}
-
 	if data.Accounts != nil {
 		keeper.SetGenesisAccounts(ctx, data.Accounts)
 	}
@@ -39,12 +32,7 @@ func InitGenesis(
 
 	keeper.SetGenesisConf(ctx, data.GenesisConf)
 
-	keeper.SetEEState(ctx, []byte(types.GenesisBlockHashKey), stateHash)
-
-	candidateBlock := ctx.CandidateBlock()
-	candidateBlock.Hash = []byte(types.GenesisBlockHashKey)
-	candidateBlock.State = stateHash
-	candidateBlock.Bonds = bonds
+	keeper.SetEEState(ctx, []byte(types.GenesisBlockHashKey), response.GetSuccess().GetPoststateHash())
 }
 
 // ExportGenesis : exports an executionlayer configuration for genesis
