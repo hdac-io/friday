@@ -8,7 +8,6 @@ import (
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/codec"
 	cliutil "github.com/hdac-io/friday/x/executionlayer/client/util"
-	"github.com/hdac-io/tendermint/crypto/secp256k1"
 
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
@@ -36,45 +35,42 @@ func GetExecutionLayerQueryCmd(cdc *codec.Codec) *cobra.Command {
 // GetCmdQueryBalance is a getter of the balance of the address
 func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   fmt.Sprintf("getbalance [--name \"readable_id\" or --pubkey \"secp256k1_pubkey\" or --%spub \"bech32\"] [--blockhash]", sdk.Bech32MainPrefix),
+		Use:   "getbalance [--wallet, --address, or --nickname] [--blockhash]",
 		Short: "Get balance of address",
-		Long: fmt.Sprintf("Get balance of address.\nIt needs at least one of \"--name\", \"--pubkey\", or \"--%[1]spub\" parameter.\n"+
-			"\t--name: readabld ID\n"+
-			"\t--pubkey: Compressed Secp256k1 public key\n"+
-			"\t--%[1]spub: Bech32 encoded public key starting from '%[1]s'\n"+
-			"If you need the value of specific time, use \"--blockhash\" option.\n"+
-			"\t--blockhash: Hex blockhash value which represents of the specific time. (Default: the latest state)", sdk.Bech32MainPrefix),
-		Args: cobra.NoArgs,
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			// Get public key with 3 different types
-			var pubkey secp256k1.PubKeySecp256k1
+			var addr sdk.AccAddress
+			var err error
 
-			if name := viper.GetString(client.FlagName); name != "" {
-				// --name: from readable id
-				pubkeyPtr, err := cliutil.GetPubKey(cdc, cliCtx, name)
+			// Extract "from" from flags
+			if walletname := viper.GetString(FlagWallet); walletname != "" {
+				kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
 				if err != nil {
 					return err
 				}
-				pubkey = *pubkeyPtr
-			} else if rawPubkey := viper.GetString(FlagPubKey); rawPubkey != "" {
-				// --pubkey: from raw secp256k1 public key
-				pubkeyPtr, err := sdk.GetSecp256k1FromRawHexString(rawPubkey)
+
+				key, err := kb.Get(walletname)
 				if err != nil {
 					return err
 				}
-				pubkey = *pubkeyPtr
-			} else if bech32Pubkey := viper.GetString(FlagBech32PubKey); bech32Pubkey != "" {
-				// --[bech32_prefix]pub: from bech32 public key (fridaypubxxxxxx...)
-				rawPubkey, err := sdk.GetSecp256k1FromBech32AccPubKey(bech32Pubkey)
+
+				addr = key.GetAddress()
+			} else if straddr := viper.GetString(FlagAddress); straddr != "" {
+				addr, err = sdk.AccAddressFromBech32(straddr)
 				if err != nil {
-					return err
+					return fmt.Errorf("Malformed address in --address: %s\n%s", straddr, err.Error())
 				}
-				pubkey = *rawPubkey
+			} else if nickname := viper.GetString(FlagNickname); nickname != "" {
+				addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, nickname)
+				if err != nil {
+					return fmt.Errorf("No registered address of the given nickname '%s'", nickname)
+				}
 			} else {
-				return fmt.Errorf("at least one of --name, --pubkey, or --%[1]spub is essential", sdk.Bech32MainPrefix)
+				return fmt.Errorf("One of --address, --wallet, --nickname is essential")
 			}
+			cliCtx = cliCtx.WithFromAddress(addr)
 
 			var out types.QueryExecutionLayerResp
 			if blockhashstr := viper.GetString(FlagBlockHash); blockhashstr != "" {
@@ -86,7 +82,7 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 				}
 
 				queryData := types.QueryGetBalanceDetail{
-					PublicKey: pubkey,
+					Address:   addr,
 					StateHash: blockHash,
 				}
 				bz := cdc.MustMarshalJSON(queryData)
@@ -100,7 +96,7 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 
 			} else {
 				queryData := types.QueryGetBalance{
-					PublicKey: pubkey,
+					Address: addr,
 				}
 				bz := cdc.MustMarshalJSON(queryData)
 
@@ -117,9 +113,10 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(client.FlagName, "", "flag for readable name input")
-	cmd.Flags().String(FlagPubKey, "", "flag for secp256k1 public key input")
-	cmd.Flags().String(FlagBech32PubKey, "", "flag for bech32 public key input")
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "flag for custom local path of client's home dir")
+	cmd.Flags().String(FlagAddress, "", "flag for address")
+	cmd.Flags().String(FlagWallet, "", "flag for wallet alias")
+	cmd.Flags().String(FlagNickname, "", "flag for nickname")
 	cmd.Flags().String(FlagBlockHash, "", "flag for block hash input")
 
 	return cmd

@@ -6,7 +6,7 @@ import (
 
 const (
 	// ModuleName uses for schema name in key-value store
-	ModuleName = "executionlayer"
+	ModuleName = "contract"
 
 	// StoreKey sets schema name from ModuleName
 	HashMapStoreKey = ModuleName + "_hashmap"

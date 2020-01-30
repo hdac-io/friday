@@ -33,7 +33,7 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 
 // Handle MsgExecute
 func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTransfer) sdk.Result {
-	err := k.Transfer(ctx, msg.TokenContractAddress, msg.FromPubkey, msg.ToPubkey, msg.TransferCode, msg.TransferArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
+	err := k.Transfer(ctx, msg.TokenContractAddress, msg.FromAddress, msg.ToAddress, msg.TransferCode, msg.TransferArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
 	if err != nil {
 		return getResult(false, msg)
 	}
@@ -42,7 +42,7 @@ func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTr
 
 // Handle MsgExecute
 func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) sdk.Result {
-	err := k.Execute(ctx, msg.ExecPubkey, msg.ContractAddress,
+	err := k.Execute(ctx, msg.ExecAddress, msg.ContractAddress,
 		msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
 	if err != nil {
 		return getResult(false, msg)
@@ -51,11 +51,7 @@ func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExe
 }
 
 func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgCreateValidator) sdk.Result {
-	eeAddress, err := sdk.GetEEAddressFromCryptoPubkey(msg.ValidatorPubKey)
-	if err != nil {
-		return getResult(false, msg)
-	}
-
+	eeAddress := sdk.AccAddress(msg.ValidatorPubKey.Address()).ToEEAddress()
 	validator, found := k.GetValidator(ctx, eeAddress)
 	if !found {
 		validator = types.Validator{}
@@ -72,7 +68,7 @@ func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg type
 }
 
 func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) sdk.Result {
-	err := k.Execute(ctx, msg.FromPubkey, msg.TokenContractAddress, msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
+	err := k.Execute(ctx, msg.BonderAddress, msg.TokenContractAddress, msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
 	if err != nil {
 		return getResult(false, msg)
 	}
@@ -80,7 +76,7 @@ func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) 
 }
 
 func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBond) sdk.Result {
-	err := k.Execute(ctx, msg.FromPubkey, msg.TokenContractAddress, msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
+	err := k.Execute(ctx, msg.UnbonderAddress, msg.TokenContractAddress, msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
 	if err != nil {
 		return getResult(false, msg)
 	}

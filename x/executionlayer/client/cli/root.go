@@ -3,20 +3,20 @@ package cli
 import (
 	"github.com/hdac-io/friday/client"
 	"github.com/hdac-io/friday/codec"
-	"github.com/hdac-io/friday/x/executionlayer/types"
 	"github.com/spf13/cobra"
 )
 
-// GetExecutionLayerCmd controls Tx request of CLI interface
-func GetExecutionLayerCmd(cdc *codec.Codec) *cobra.Command {
-	executionlayerTxCmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      "Commands for execution layer",
+// GetHdacCustomCmd implements custom command especially for Hdac-related contract
+func GetHdacCustomCmd(cdc *codec.Codec) *cobra.Command {
+	// TODO: Replace as alias of general contract execution
+	hdacCustomTxCmd := &cobra.Command{
+		Use:                        "hdac",
+		Short:                      "Commands for Hdac internal control",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-	executionlayerTxCmd.AddCommand(client.GetCommands(
+	hdacCustomTxCmd.AddCommand(client.GetCommands(
 		// Tx
 		GetCmdTransfer(cdc),
 		GetCmdBonding(cdc),
@@ -27,5 +27,5 @@ func GetExecutionLayerCmd(cdc *codec.Codec) *cobra.Command {
 		GetCmdQueryBalance(cdc),
 		GetCmdQuery(cdc),
 	)...)
-	return executionlayerTxCmd
+	return hdacCustomTxCmd
 }

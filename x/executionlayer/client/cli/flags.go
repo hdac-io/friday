@@ -21,13 +21,14 @@ const (
 	FlagFee                  = "fee"
 	FlagGasPrice             = "gas-price"
 	FlagBlockHash            = "blockhash"
-	FlagToName               = "to-name"
-	FlagToPubkey             = "to-" + FlagPubKey
-	FlagToBech32Pubkey       = "to-" + FlagBech32PubKey
 	FlagConsPubKey           = "cons-" + FlagPubKey
 	FlagConsBech32PubKey     = "cons-" + FlagBech32PubKey
 	FlagValPubkey            = "val-" + FlagPubKey
 	FlagValBech32PubKey      = "val-" + FlagBech32PubKey
+
+	FlagWallet   = "wallet"
+	FlagAddress  = "address"
+	FlagNickname = "nickname"
 
 	FlagMoniker  = "moniker"
 	FlagIdentity = "identity"

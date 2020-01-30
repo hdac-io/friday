@@ -11,19 +11,19 @@ import (
 	"github.com/hdac-io/friday/client/context"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/types/rest"
-	"github.com/hdac-io/friday/x/executionlayer/client/util"
+	cliutil "github.com/hdac-io/friday/x/executionlayer/client/util"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 )
 
 type transferReq struct {
-	ChainID               string `json:"chain_id"`
-	TokenContractAddress  string `json:"token_contract_address"`
-	SenderPubkeyOrName    string `json:"sender_pubkey_or_name"`
-	RecipientPubkeyOrName string `json:"recipient_pubkey_or_name"`
-	Amount                uint64 `json:"amount"`
-	Fee                   uint64 `json:"fee"`
-	GasPrice              uint64 `json:"gas_price"`
-	Memo                  string `json:"memo"`
+	ChainID                    string `json:"chain_id"`
+	TokenContractAddress       string `json:"token_contract_address"`
+	SenderAddressOrNickname    string `json:"sender_address_or_nickname"`
+	RecipientAddressOrNickname string `json:"recipient_address_or_nickname"`
+	Amount                     uint64 `json:"amount"`
+	Fee                        uint64 `json:"fee"`
+	GasPrice                   uint64 `json:"gas_price"`
+	Memo                       string `json:"memo"`
 }
 
 func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
@@ -34,14 +34,17 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse request")
 	}
 
-	senderPubkey, err := util.GetPubKey(cliCtx.Codec, cliCtx, req.SenderPubkeyOrName)
+	var senderAddr sdk.AccAddress
+	senderAddr, err := sdk.AccAddressFromBech32(req.SenderAddressOrNickname)
 	if err != nil {
-		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse sender public key or name: %s", req.SenderPubkeyOrName)
+		senderAddr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, req.SenderAddressOrNickname)
+		if err != nil {
+			return rest.BaseReq{}, nil, fmt.Errorf("failed to parse sender address or name: %s", req.SenderAddressOrNickname)
+		}
 	}
-	senderaddr := sdk.AccAddress(senderPubkey.Address().Bytes())
 
 	baseReq := rest.BaseReq{
-		From:    senderaddr.String(),
+		From:    senderAddr.String(),
 		ChainID: req.ChainID,
 		Gas:     fmt.Sprint(req.GasPrice),
 		Memo:    req.Memo,
@@ -52,19 +55,23 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 	}
 
 	// Parameter touching
-	recipientPubkey, err := util.GetPubKey(cliCtx.Codec, cliCtx, req.RecipientPubkeyOrName)
+	var recipientAddr sdk.AccAddress
+	recipientAddr, err = sdk.AccAddressFromBech32(req.RecipientAddressOrNickname)
 	if err != nil {
-		return rest.BaseReq{}, nil, fmt.Errorf("wrong public key or no mapping rule in readable ID service: %s", req.RecipientPubkeyOrName)
+		recipientAddr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, req.RecipientAddressOrNickname)
+		if err != nil {
+			return rest.BaseReq{}, nil, fmt.Errorf("failed to parse recipient address or name: %s", req.RecipientAddressOrNickname)
+		}
 	}
 
 	// TODO: Change after WASM store feature merge
 	transferCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm"))
-	transferAbi := grpc.MakeArgsTransferToAccount(recipientPubkey.Bytes(), req.Amount)
+	transferAbi := grpc.MakeArgsTransferToAccount(recipientAddr.ToEEAddress(), req.Amount)
 	paymentCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
 	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.GasPrice))
 
 	// create the message
-	eeMsg := types.NewMsgTransfer(req.TokenContractAddress, *senderPubkey, *recipientPubkey, transferCode, transferAbi, paymentCode, paymentAbi, req.GasPrice, senderaddr)
+	eeMsg := types.NewMsgTransfer(req.TokenContractAddress, senderAddr, recipientAddr, transferCode, transferAbi, paymentCode, paymentAbi, req.GasPrice)
 	err = eeMsg.ValidateBasic()
 	if err != nil {
 		return rest.BaseReq{}, nil, err
@@ -76,7 +83,7 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 type bondReq struct {
 	ChainID              string `json:"chain_id"`
 	TokenContractAddress string `json:"token_contract_address"`
-	PubkeyOrName         string `json:"pubkey_or_name"`
+	AddressOrNickname    string `json:"address_or_nickname"`
 	Amount               uint64 `json:"amount"`
 	GasPrice             uint64 `json:"gas_price"`
 	Memo                 string `json:"memo"`
@@ -90,11 +97,15 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse request")
 	}
 
-	pubkey, err := util.GetPubKey(cliCtx.Codec, cliCtx, req.PubkeyOrName)
+	// Parameter touching
+	var addr sdk.AccAddress
+	addr, err := sdk.AccAddressFromBech32(req.AddressOrNickname)
 	if err != nil {
-		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse sender public key or name: %s", req.PubkeyOrName)
+		addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, req.AddressOrNickname)
+		if err != nil {
+			return rest.BaseReq{}, nil, fmt.Errorf("failed to parse address or name: %s", req.AddressOrNickname)
+		}
 	}
-	addr := sdk.AccAddress(pubkey.Address().Bytes())
 
 	baseReq := rest.BaseReq{
 		From:    addr.String(),
@@ -121,7 +132,7 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.GasPrice))
 
 	// create the message
-	msg := types.NewMsgExecute(req.TokenContractAddress, *pubkey, bondingUnbondingCode, bondingUnbondingAbi, paymentCode, paymentAbi, req.GasPrice, addr)
+	msg := types.NewMsgExecute(req.TokenContractAddress, addr, bondingUnbondingCode, bondingUnbondingAbi, paymentCode, paymentAbi, req.GasPrice)
 	err = msg.ValidateBasic()
 	if err != nil {
 		return rest.BaseReq{}, nil, err
@@ -135,7 +146,7 @@ func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 	straddr := vars.Get("address")
 	blockHashStr := vars.Get("block")
 
-	pubkey, err := util.GetPubKey(cliCtx.Codec, cliCtx, straddr)
+	addr, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, straddr)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +155,7 @@ func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 
 	if blockHashStr == "" {
 		queryData := types.QueryGetBalance{
-			PublicKey: *pubkey,
+			Address: addr,
 		}
 		bz = cliCtx.Codec.MustMarshalJSON(queryData)
 		//return bz, nil
@@ -154,7 +165,7 @@ func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 			return nil, err
 		}
 		queryData := types.QueryGetBalanceDetail{
-			PublicKey: *pubkey,
+			Address:   addr,
 			StateHash: blockHash,
 		}
 		bz = cliCtx.Codec.MustMarshalJSON(queryData)

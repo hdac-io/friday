@@ -12,34 +12,33 @@ import (
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 
 	"github.com/hdac-io/tendermint/crypto"
-	secp256k1 "github.com/hdac-io/tendermint/crypto/secp256k1"
 
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/auth"
 	"github.com/hdac-io/friday/x/executionlayer/types"
-	"github.com/hdac-io/friday/x/readablename"
+	"github.com/hdac-io/friday/x/nickname"
 )
 
 type ExecutionLayerKeeper struct {
-	HashMapStoreKey    sdk.StoreKey
-	client             ipc.ExecutionEngineServiceClient
-	AccountKeeper      auth.AccountKeeper
-	ReadableNameKeeper readablename.ReadableNameKeeper
-	cdc                *codec.Codec
+	HashMapStoreKey sdk.StoreKey
+	client          ipc.ExecutionEngineServiceClient
+	AccountKeeper   auth.AccountKeeper
+	NicknameKeeper  nickname.NicknameKeeper
+	cdc             *codec.Codec
 }
 
 func NewExecutionLayerKeeper(
 	cdc *codec.Codec, hashMapStoreKey sdk.StoreKey, path string,
 	accountKeeper auth.AccountKeeper,
-	reaablenameKeeper readablename.ReadableNameKeeper) ExecutionLayerKeeper {
+	nicknameKeeper nickname.NicknameKeeper) ExecutionLayerKeeper {
 
 	return ExecutionLayerKeeper{
-		HashMapStoreKey:    hashMapStoreKey,
-		client:             grpc.Connect(path),
-		AccountKeeper:      accountKeeper,
-		ReadableNameKeeper: reaablenameKeeper,
-		cdc:                cdc,
+		HashMapStoreKey: hashMapStoreKey,
+		client:          grpc.Connect(path),
+		AccountKeeper:   accountKeeper,
+		NicknameKeeper:  nicknameKeeper,
+		cdc:             cdc,
 	}
 }
 
@@ -118,15 +117,15 @@ func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockHash []byte) []by
 func (k ExecutionLayerKeeper) Transfer(
 	ctx sdk.Context,
 	tokenContractAddress string,
-	fromPubkey, toPubkey secp256k1.PubKeySecp256k1,
+	fromAddress, toAddress sdk.AccAddress,
 	transferCode []byte,
 	transferAbi []byte,
 	paymentCode []byte,
 	paymentAbi []byte,
 	gasPrice uint64) error {
 
-	k.SetAccountIfNotExists(ctx, toPubkey)
-	err := k.Execute(ctx, fromPubkey, tokenContractAddress, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
+	k.SetAccountIfNotExists(ctx, toAddress)
+	err := k.Execute(ctx, fromAddress, tokenContractAddress, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
 	if err != nil {
 		return err
 	}
@@ -136,7 +135,7 @@ func (k ExecutionLayerKeeper) Transfer(
 
 // Execute is general execution
 func (k ExecutionLayerKeeper) Execute(ctx sdk.Context,
-	execPubkey secp256k1.PubKeySecp256k1,
+	execAddress sdk.AccAddress,
 	contractAddress string,
 	sessionCode []byte,
 	sessionArgs []byte,
@@ -148,11 +147,9 @@ func (k ExecutionLayerKeeper) Execute(ctx sdk.Context,
 	stateHash := ctx.CandidateBlock().State
 	protocolVersion := k.MustGetProtocolVersion(ctx)
 
-	exexAddr := sdk.GetEEAddressFromSecp256k1PubKey(execPubkey)
-
 	// Execute
 	deploys := []*ipc.DeployItem{}
-	deploy := util.MakeDeploy(exexAddr.Bytes(), sessionCode, sessionArgs, paymentCode, paymentArgs, gasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
+	deploy := util.MakeDeploy(execAddress.ToEEAddress(), sessionCode, sessionArgs, paymentCode, paymentArgs, gasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
 	deploys = append(deploys, deploy)
 	reqExecute := &ipc.ExecuteRequest{
 		ParentStateHash: stateHash,
@@ -207,7 +204,7 @@ func (k ExecutionLayerKeeper) GetQueryResult(ctx sdk.Context,
 
 	protocolVersion := k.MustGetProtocolVersion(ctx)
 	unitHash := k.GetUnitHashMap(ctx, blockhash)
-	keyDataBytes, err := toBytes(keyType, keyData, k.ReadableNameKeeper, ctx)
+	keyDataBytes, err := toBytes(keyType, keyData, k.NicknameKeeper, ctx)
 	if err != nil {
 		return state.Value{}, err
 	}
@@ -233,15 +230,11 @@ func (k ExecutionLayerKeeper) GetQueryResultSimple(ctx sdk.Context,
 }
 
 // GetQueryBalanceResult queries with whole parameters
-func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, blockhash []byte, pubkey secp256k1.PubKeySecp256k1) (string, error) {
+func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, blockhash []byte, addr sdk.AccAddress) (string, error) {
 	unitHash := k.GetUnitHashMap(ctx, blockhash)
 	protocolVersion := k.MustGetProtocolVersion(ctx)
-	addr, err := sdk.GetEEAddressFromCryptoPubkey(pubkey)
-	if err != nil {
-		return "", err
-	}
 
-	res, grpcErr := grpc.QueryBalance(k.client, unitHash.EEState, addr.Bytes(), &protocolVersion)
+	res, grpcErr := grpc.QueryBalance(k.client, unitHash.EEState, addr.ToEEAddress(), &protocolVersion)
 	if grpcErr != "" {
 		return "", fmt.Errorf(grpcErr)
 	}
@@ -250,8 +243,8 @@ func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, blockhash [
 }
 
 // GetQueryBalanceResultSimple queries with whole parameters
-func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, pubkey secp256k1.PubKeySecp256k1) (string, error) {
-	res, err := k.GetQueryBalanceResult(ctx, ctx.BlockHeader().LastBlockId.Hash, pubkey)
+func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, addr sdk.AccAddress) (string, error) {
+	res, err := k.GetQueryBalanceResult(ctx, ctx.BlockHeader().LastBlockId.Hash, addr)
 	if err != nil {
 		return "", err
 	}
@@ -317,12 +310,11 @@ func (k ExecutionLayerKeeper) SetChainName(ctx sdk.Context, chainName string) {
 }
 
 // SetAccountIfNotExists runs if network has no given account
-func (k ExecutionLayerKeeper) SetAccountIfNotExists(ctx sdk.Context, pubkey secp256k1.PubKeySecp256k1) {
+func (k ExecutionLayerKeeper) SetAccountIfNotExists(ctx sdk.Context, addr sdk.AccAddress) {
 	// Recepient account existence check, if not, create one
-	account := sdk.AccAddress(pubkey.Address())
-	toAddressAccountObject := k.AccountKeeper.GetAccount(ctx, account)
+	toAddressAccountObject := k.AccountKeeper.GetAccount(ctx, addr)
 	if toAddressAccountObject == nil {
-		toAddressAccountObject = k.AccountKeeper.NewAccountWithAddress(ctx, account)
+		toAddressAccountObject = k.AccountKeeper.NewAccountWithAddress(ctx, addr)
 		k.AccountKeeper.SetAccount(ctx, toAddressAccountObject)
 	}
 }

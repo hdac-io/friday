@@ -434,6 +434,11 @@ func (va ValAddress) Format(s fmt.State, verb rune) {
 	}
 }
 
+// ToEEAddress converts AccAddress to EEAddress
+func (va ValAddress) ToEEAddress() EEAddress {
+	return EEAddress(append([]byte("fridaybegins"), va...))
+}
+
 // ----------------------------------------------------------------------------
 // consensus node
 // ----------------------------------------------------------------------------

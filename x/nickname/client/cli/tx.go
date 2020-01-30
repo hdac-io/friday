@@ -45,26 +45,32 @@ func GetCmdSetNickname(cdc *codec.Codec) *cobra.Command {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
 			var addr sdk.AccAddress
+			var err error
+
+			kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+			if err != nil {
+				return err
+			}
 
 			if straddr := viper.GetString(FlagAddress); straddr != "" {
-				addr, err := sdk.AccAddressFromBech32(straddr)
-				if err != nil {
-					return err
-				}
-				cliCtx = cliCtx.WithFromAddress(addr)
-			} else if walletkeyname := viper.GetString(FlagWallet); walletkeyname != "" {
-				kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+				addr, err = sdk.AccAddressFromBech32(straddr)
 				if err != nil {
 					return err
 				}
 
+				key, err := kb.GetByAddress(addr)
+				if err != nil {
+					return err
+				}
+				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
+			} else if walletkeyname := viper.GetString(FlagWallet); walletkeyname != "" {
 				key, err := kb.Get(walletkeyname)
 				if err != nil {
 					return err
 				}
 
 				addr = key.GetAddress()
-				cliCtx = cliCtx.WithFromAddress(addr)
+				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
 			} else {
 				return fmt.Errorf("One of --address or --wallet is necessary")
 			}
@@ -72,7 +78,7 @@ func GetCmdSetNickname(cdc *codec.Codec) *cobra.Command {
 			fmt.Println("Register readable name for ", args[0], " -> ", addr.String())
 
 			msg := types.NewMsgSetNickname(types.NewName(args[0]), addr)
-			err := msg.ValidateBasic()
+			err = msg.ValidateBasic()
 			if err != nil {
 				return err
 			}
@@ -99,26 +105,31 @@ func GetCmdChangeKey(cdc *codec.Codec) *cobra.Command {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
 			var oldaddr sdk.AccAddress
+			var err error
+
+			kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+			if err != nil {
+				return err
+			}
 
 			if straddr := viper.GetString(FlagAddress); straddr != "" {
-				oldaddr, err := sdk.AccAddressFromBech32(straddr)
+				oldaddr, err = sdk.AccAddressFromBech32(straddr)
 				if err != nil {
 					return err
 				}
-				cliCtx = cliCtx.WithFromAddress(oldaddr)
+				key, err := kb.GetByAddress(oldaddr)
+				if err != nil {
+					return err
+				}
+				cliCtx = cliCtx.WithFromAddress(oldaddr).WithFromName(key.GetName())
 			} else if walletkeyname := viper.GetString(FlagWallet); walletkeyname != "" {
-				kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
-				if err != nil {
-					return err
-				}
-
 				key, err := kb.Get(walletkeyname)
 				if err != nil {
 					return err
 				}
 
 				oldaddr = key.GetAddress()
-				cliCtx = cliCtx.WithFromAddress(oldaddr)
+				cliCtx = cliCtx.WithFromAddress(oldaddr).WithFromName(key.GetName())
 			} else {
 				return fmt.Errorf("One of --address or --wallet is necessary")
 			}
@@ -128,9 +139,9 @@ func GetCmdChangeKey(cdc *codec.Codec) *cobra.Command {
 			}
 
 			msg := types.NewMsgChangeKey(args[0], oldaddr, newaddr)
-			errValidation := msg.ValidateBasic()
+			err = msg.ValidateBasic()
 			if err != nil {
-				return errValidation
+				return err
 			}
 
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
