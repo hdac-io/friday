@@ -99,8 +99,7 @@ func setupTestInput() testInput {
 	}
 }
 
-func genesis(keeper ExecutionLayerKeeper) []byte {
-	input := setupTestInput()
+func genesis(input testInput) []byte {
 	genesisState := types.GenesisState{
 		GenesisConf: input.elk.GetGenesisConf(input.ctx),
 		Accounts:    input.elk.GetGenesisAccounts(input.ctx),
@@ -109,11 +108,17 @@ func genesis(keeper ExecutionLayerKeeper) []byte {
 	if err != nil {
 		panic(err)
 	}
-	response, err := grpc.RunGenesis(keeper.client, genesisConfig)
+	response, err := grpc.RunGenesis(input.elk.client, genesisConfig)
 
 	if err != nil {
 		panic(err)
 	}
+
+	input.elk.SetEEState(input.ctx, []byte{}, response.GetSuccess().PoststateHash)
+
+	candidateBlock := input.ctx.CandidateBlock()
+	candidateBlock.Hash = []byte{}
+	candidateBlock.State = response.GetSuccess().PoststateHash
 
 	return response.GetSuccess().PoststateHash
 }
