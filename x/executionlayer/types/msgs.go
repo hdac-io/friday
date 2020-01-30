@@ -68,14 +68,7 @@ func (msg MsgExecute) GetSigners() []sdk.AccAddress {
 
 // MsgTransfer for sending deploy to execution engine
 type MsgTransfer struct {
-	TokenContractAddress string         `json:"token_contract_address"`
-	FromAddress          sdk.AccAddress `json:"from_address"`
-	ToAddress            sdk.AccAddress `json:"to_address"`
-	TransferCode         []byte         `json:"transfer_code"`
-	TransferArgs         []byte         `json:"transfer_args"`
-	PaymentCode          []byte         `json:"payment_code"`
-	PaymentArgs          []byte         `json:"payment_args"`
-	GasPrice             uint64         `json:"gas_price"`
+	MsgExecute MsgExecute `json:"msg_execute"`
 }
 
 // NewMsgTransfer is a constructor function for MsgSetName
@@ -86,14 +79,15 @@ func NewMsgTransfer(
 	gasPrice uint64,
 ) MsgTransfer {
 	return MsgTransfer{
-		TokenContractAddress: tokenContractAddress,
-		FromAddress:          fromAddress,
-		ToAddress:            toAddress,
-		TransferCode:         transferCode,
-		TransferArgs:         transferArgs,
-		PaymentCode:          paymentCode,
-		PaymentArgs:          paymentArgs,
-		GasPrice:             gasPrice,
+		MsgExecute: MsgExecute{
+			ContractAddress: tokenContractAddress,
+			ExecAddress:     fromAddress,
+			SessionCode:     transferCode,
+			SessionArgs:     transferArgs,
+			PaymentCode:     paymentCode,
+			PaymentArgs:     paymentArgs,
+			GasPrice:        gasPrice,
+		},
 	}
 }
 
@@ -105,7 +99,7 @@ func (msg MsgTransfer) Type() string { return "executionengine" }
 
 // ValidateBasic runs stateless checks on the message
 func (msg MsgTransfer) ValidateBasic() sdk.Error {
-	if msg.FromAddress.Equals(sdk.AccAddress("")) {
+	if msg.MsgExecute.ExecAddress.Equals(sdk.AccAddress("")) {
 		return sdk.ErrUnknownRequest("Address cannot be empty")
 	}
 	return nil
@@ -118,7 +112,7 @@ func (msg MsgTransfer) GetSignBytes() []byte {
 
 // GetSigners defines whose signature is required
 func (msg MsgTransfer) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.FromAddress}
+	return []sdk.AccAddress{msg.MsgExecute.ExecAddress}
 }
 
 //______________________________________________________________________
@@ -225,13 +219,7 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 
 //______________________________________________________________________
 type MsgBond struct {
-	TokenContractAddress string         `json:"token_contract_address"`
-	BonderAddress        sdk.AccAddress `json:"bonder_address"`
-	SessionCode          []byte         `json:"session_code"`
-	SessionArgs          []byte         `json:"session_args"`
-	PaymentCode          []byte         `json:"payment_code"`
-	PaymentArgs          []byte         `json:"payment_args"`
-	GasPrice             uint64         `json:"gas_price"`
+	MsgExecute MsgExecute `json:"msg_execute"`
 }
 
 // NewMsgBond is a constructor function for MsgSetName
@@ -242,13 +230,15 @@ func NewMsgBond(
 	paymentCode []byte, paymentArgs []byte, gasPrice uint64,
 ) MsgBond {
 	return MsgBond{
-		TokenContractAddress: tokenContractAddress,
-		BonderAddress:        bonderAddress,
-		SessionCode:          sessionCode,
-		SessionArgs:          sessionArgs,
-		PaymentCode:          paymentCode,
-		PaymentArgs:          paymentArgs,
-		GasPrice:             gasPrice,
+		MsgExecute: MsgExecute{
+			ContractAddress: tokenContractAddress,
+			ExecAddress:     bonderAddress,
+			SessionCode:     sessionCode,
+			SessionArgs:     sessionArgs,
+			PaymentCode:     paymentCode,
+			PaymentArgs:     paymentArgs,
+			GasPrice:        gasPrice,
+		},
 	}
 }
 
@@ -260,7 +250,7 @@ func (msg MsgBond) Type() string { return "executionengine" }
 
 // ValidateBasic runs stateless checks on the message
 func (msg MsgBond) ValidateBasic() sdk.Error {
-	if msg.BonderAddress.Equals(sdk.AccAddress("")) {
+	if msg.MsgExecute.ExecAddress.Equals(sdk.AccAddress("")) {
 		return sdk.ErrUnknownRequest("Address cannot be empty")
 	}
 	return nil
@@ -273,18 +263,12 @@ func (msg MsgBond) GetSignBytes() []byte {
 
 // GetSigners defines whose signature is required
 func (msg MsgBond) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.BonderAddress}
+	return []sdk.AccAddress{msg.MsgExecute.ExecAddress}
 }
 
 //______________________________________________________________________
 type MsgUnBond struct {
-	TokenContractAddress string         `json:"token_contract_address"`
-	UnbonderAddress      sdk.AccAddress `json:"unbonder_address"`
-	SessionCode          []byte         `json:"session_code"`
-	SessionArgs          []byte         `json:"session_args"`
-	PaymentCode          []byte         `json:"payment_code"`
-	PaymentArgs          []byte         `json:"payment_args"`
-	GasPrice             uint64         `json:"gas_price"`
+	MsgExecute MsgExecute `json:"msg_execute"`
 }
 
 // NewMsgUnBond is a constructor function for MsgSetName
@@ -295,13 +279,15 @@ func NewMsgUnBond(
 	paymentCode []byte, paymentArgs []byte, gasPrice uint64,
 ) MsgUnBond {
 	return MsgUnBond{
-		TokenContractAddress: tokenContractAddress,
-		UnbonderAddress:      unbonderAddress,
-		SessionCode:          sessionCode,
-		SessionArgs:          sessionArgs,
-		PaymentCode:          paymentCode,
-		PaymentArgs:          paymentArgs,
-		GasPrice:             gasPrice,
+		MsgExecute: MsgExecute{
+			ContractAddress: tokenContractAddress,
+			ExecAddress:     unbonderAddress,
+			SessionCode:     sessionCode,
+			SessionArgs:     sessionArgs,
+			PaymentCode:     paymentCode,
+			PaymentArgs:     paymentArgs,
+			GasPrice:        gasPrice,
+		},
 	}
 }
 
@@ -313,7 +299,7 @@ func (msg MsgUnBond) Type() string { return "executionengine" }
 
 // ValidateBasic runs stateless checks on the message
 func (msg MsgUnBond) ValidateBasic() sdk.Error {
-	if msg.UnbonderAddress.Equals(sdk.AccAddress("")) {
+	if msg.MsgExecute.ExecAddress.Equals(sdk.AccAddress("")) {
 		return sdk.ErrUnknownRequest("Address cannot be empty")
 	}
 	return nil
@@ -326,5 +312,5 @@ func (msg MsgUnBond) GetSignBytes() []byte {
 
 // GetSigners defines whose signature is required
 func (msg MsgUnBond) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.UnbonderAddress}
+	return []sdk.AccAddress{msg.MsgExecute.ExecAddress}
 }
