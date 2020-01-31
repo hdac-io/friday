@@ -87,13 +87,12 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) (boo
 	// Parameter preparation
 	stateHash := ctx.CandidateBlock().State
 	protocolVersion := k.MustGetProtocolVersion(ctx)
-	exexAddr := sdk.GetEEAddressFromSecp256k1PubKey(msg.ExecPubkey)
+	execAddr := sdk.GetEEAddressFromSecp256k1PubKey(msg.ExecPubkey)
 	log := ""
 
 	// Execute
-	deploys := []*ipc.DeployItem{}
-	deploy := util.MakeDeploy(exexAddr.Bytes(), msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
-	deploys = append(deploys, deploy)
+	deploys := []*ipc.DeployItem{
+		util.MakeDeploy(execAddr.Bytes(), msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())}
 	reqExecute := &ipc.ExecuteRequest{
 		ParentStateHash: stateHash,
 		BlockTime:       uint64(ctx.BlockTime().Unix()),

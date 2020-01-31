@@ -7,5 +7,5 @@ import (
 type CandidateBlock struct {
 	Hash    []byte                       `json:"hash"`
 	State   []byte                       `json:"state"`
-	Effects []*transforms.TransformEntry `json:"effects`
+	Effects []*transforms.TransformEntry `json:"effects"`
 }
