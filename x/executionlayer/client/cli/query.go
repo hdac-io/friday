@@ -35,7 +35,7 @@ func GetExecutionLayerQueryCmd(cdc *codec.Codec) *cobra.Command {
 // GetCmdQueryBalance is a getter of the balance of the address
 func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "getbalance [--wallet, --address, or --nickname] [--blockhash]",
+		Use:   "getbalance --wallet|--address|--nickname <from> [--blockhash <blockhash_since>]",
 		Short: "Get balance of address",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -60,15 +60,15 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 			} else if straddr := viper.GetString(FlagAddress); straddr != "" {
 				addr, err = sdk.AccAddressFromBech32(straddr)
 				if err != nil {
-					return fmt.Errorf("Malformed address in --address: %s\n%s", straddr, err.Error())
+					return fmt.Errorf("malformed address in --address: %s\n%s", straddr, err.Error())
 				}
 			} else if nickname := viper.GetString(FlagNickname); nickname != "" {
 				addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, nickname)
 				if err != nil {
-					return fmt.Errorf("No registered address of the given nickname '%s'", nickname)
+					return fmt.Errorf("no registered address of the given nickname '%s'", nickname)
 				}
 			} else {
-				return fmt.Errorf("One of --address, --wallet, --nickname is essential")
+				return fmt.Errorf("one of --address, --wallet, --nickname is essential")
 			}
 			cliCtx = cliCtx.WithFromAddress(addr)
 
@@ -76,7 +76,7 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 			if blockhashstr := viper.GetString(FlagBlockHash); blockhashstr != "" {
 				blockHash, err := hex.DecodeString(blockhashstr)
 				if err != nil || len(blockHash) != 32 {
-					fmt.Println("Malformed block hash - ", blockhashstr)
+					fmt.Println("malformed block hash - ", blockhashstr)
 					fmt.Println(err)
 					return nil
 				}
@@ -89,7 +89,7 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 
 				res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalancedetail", types.ModuleName), bz)
 				if err != nil {
-					fmt.Printf("No balance data of input")
+					fmt.Printf("no balance data of input")
 					return nil
 				}
 				cdc.MustUnmarshalJSON(res, &out)
@@ -102,7 +102,7 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 
 				res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalance", types.ModuleName), bz)
 				if err != nil {
-					fmt.Printf("No balance data of input")
+					fmt.Printf("no balance data of input")
 					fmt.Println(err.Error())
 					return nil
 				}
@@ -113,11 +113,11 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(client.FlagHome, DefaultClientHome, "flag for custom local path of client's home dir")
-	cmd.Flags().String(FlagAddress, "", "flag for address")
-	cmd.Flags().String(FlagWallet, "", "flag for wallet alias")
-	cmd.Flags().String(FlagNickname, "", "flag for nickname")
-	cmd.Flags().String(FlagBlockHash, "", "flag for block hash input")
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(FlagAddress, "", "Bech32 endocded address (fridayxxxxxx..)")
+	cmd.Flags().String(FlagWallet, "", "Wallet alias in local")
+	cmd.Flags().String(FlagNickname, "", "Nickname (Readable ID)")
+	cmd.Flags().String(FlagBlockHash, "", "Block hash at the moment")
 
 	return cmd
 }
@@ -125,7 +125,7 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 // GetCmdQuery is a EE query getter
 func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "query [type:=address,uref,hash,local] [data] [path] [--blockhash]",
+		Use:   "query address|uref|hash|local <data> <path> [--blockhash <blockhash_since>]",
 		Short: "Get query of the data",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -138,7 +138,7 @@ func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
 			if blockhashstr := viper.GetString(FlagBlockHash); blockhashstr != "" {
 				blockhash, err := hex.DecodeString(blockhashstr)
 				if err != nil || len(blockhash) != 32 {
-					fmt.Println("Malformed block hash - ", blockhashstr)
+					fmt.Println("malformed block hash - ", blockhashstr)
 					fmt.Println(err)
 					return nil
 				}
@@ -177,6 +177,6 @@ func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(FlagBlockHash, "", "flag for block hash input")
+	cmd.Flags().String(FlagBlockHash, "", "Block hash at the moment")
 	return cmd
 }

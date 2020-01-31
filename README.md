@@ -153,7 +153,7 @@ friday1y2dx0evs5k6hxuhfrfdmm7wcwsrqr073htghpv  ->  friday15evpva2u57vv6l5czehyk6
 *TODO: Currently described only Hdac custom CLI. Need to add for general cases*
 
 * Query
-  * Usage: `clif hdac getbalance [--wallet, --nickname, --address]`
+  * Usage: `clif hdac getbalance --wallet|--nickname|--address <owner>`
 ```bash
 clif hdac getbalance --wallet walletelsa
 clif hdac getbalance --nickname princesselsa
@@ -165,7 +165,7 @@ clif hdac getbalance --address friday1y2dx0evs5k6hxuhfrfdmm7wcwsrqr073htghpv
 ```
 
 * transfer (send)
-  * usage: `clif hdac transfer-to [recipient address or nickname] [amount] [fee] [gas-price] [from --address, --wallet, or --nickname]`
+  * usage: `clif hdac transfer-to <recipient_address_or_nickname> <amount> <fee> <gas-price> --address|--wallet|--nickname <from>`
 ```bash
 clif hdac transfer-to sisteranna 1000000 100000000 20000000 --wallet walletelsa
 clif hdac transfer-to sisteranna 1000000 100000000 20000000 --nickname princesselsa
@@ -199,7 +199,7 @@ Password to sign with 'walletelsa': # input your password
 }
 ```
 * bond
-  * usage: `clif hdac bond [--wallet, --address, or --nickname] [amount] [fee] [gas-price]`
+  * usage: `clif hdac bond --wallet|--address|--nickname <owner> <amount> <fee> <gas-price>`
 ```sh
 clif hdac bond --wallet walletelsa 1000000 100000000 30000000
 clif hdac bond --nickname princesselsa 1000000 100000000 30000000
@@ -233,7 +233,7 @@ Password to sign with 'walletelsa':
 ```
 
 * unbond
-  * usage: `clif hdac unbond [--wallet, --address, or --nickname] [amount] [fee] [gas-price]`
+  * usage: `clif hdac unbond --wallet|--address|--nickname <owner> <amount> <fee> <gas-price>`
 ```sh
 clif hdac unbond --wallet walletelsa 1000000 100000000 30000000
 clif hdac unbond --nickname princesselsa 1000000 100000000 30000000
@@ -297,7 +297,7 @@ clif keys add bryan # select password
 nodef tendermint show-validator
 # fridayvalconspub16jrl8jvqq929y3r2dem455nptpd9g3mn0929q5eswaay6365vdtrx6j42dkrxtek24n5ycmpfax9s4mp9apkgkpe2vux64e0xe3xz5f09ucrje6e25cxwe3tf3kxjc6gfesnyv308p382ujc24snqn2kwfq45j60gc6nqs6wvfp8xen3d3ersnjnxfmrv6jv8pjxsmjtv3kxcapc09y5w5sa9v92q
 
- clif executionlayer create-validator \
+ clif hdac create-validator \
 --from bryan \
 --pubkey fridayvalconspub16jrl8jvqq929y3r2dem455nptpd9g3mn0929q5eswaay6365vdtrx6j42dkrxtek24n5ycmpfax9s4mp9apkgkpe2vux64e0xe3xz5f09ucrje6e25cxwe3tf3kxjc6gfesnyv308p382ujc24snqn2kwfq45j60gc6nqs6wvfp8xen3d3ersnjnxfmrv6jv8pjxsmjtv3kxcapc09y5w5sa9v92q \
 --moniker valiator-bryan
