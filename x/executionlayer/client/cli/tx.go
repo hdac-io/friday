@@ -23,7 +23,7 @@ import (
 // GetCmdTransfer is the CLI command for transfer
 func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "transfer-to [recipient nickname or address] [amount] [fee] [gas_price] [--wallet, --address, or --nickname]",
+		Use:   "transfer-to <recipient_nickname>|<address> <amount> <fee> <gas_price> --wallet|--address|--nickname <from>",
 		Short: "Transfer Hdac token",
 		Long: "Transfer Hdac token\n" +
 			"It needs at least one of '--wallet', '--address', or '--nickname' flag.",
@@ -38,7 +38,7 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 			if err != nil {
 				recipentAddr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, args[0])
 				if err != nil {
-					return fmt.Errorf("No nickname mapping of %s", args[0])
+					return fmt.Errorf("no nickname mapping of %s", args[0])
 				}
 			}
 
@@ -75,7 +75,7 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 			} else if straddr := viper.GetString(FlagAddress); straddr != "" {
 				fromAddr, err = sdk.AccAddressFromBech32(straddr)
 				if err != nil {
-					return fmt.Errorf("Malformed address in --address: %s\n%s", straddr, err.Error())
+					return fmt.Errorf("malformed address in --address: %s\n%s", straddr, err.Error())
 				}
 
 				key, err := kb.GetByAddress(fromAddr)
@@ -87,7 +87,7 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 			} else if nickname := viper.GetString(FlagNickname); nickname != "" {
 				fromAddr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, nickname)
 				if err != nil {
-					return fmt.Errorf("No registered address of the given nickname '%s'", nickname)
+					return fmt.Errorf("no registered address of the given nickname '%s'", nickname)
 				}
 
 				key, err := kb.GetByAddress(fromAddr)
@@ -96,7 +96,7 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 				}
 				cliCtx = cliCtx.WithFromAddress(fromAddr).WithFromName(key.GetName())
 			} else {
-				return fmt.Errorf("One of --address, --wallet, --nickname is essential")
+				return fmt.Errorf("one of --address, --wallet, --nickname is essential")
 			}
 
 			// organize ABIs
@@ -113,10 +113,10 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(client.FlagHome, DefaultClientHome, "flag for custom local path of client's home dir")
-	cmd.Flags().String(FlagAddress, "", "flag for address")
-	cmd.Flags().String(FlagWallet, "", "flag for wallet alias")
-	cmd.Flags().String(FlagNickname, "", "flag for nickname")
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(FlagAddress, "", "Bech32 endocded address (fridayxxxxxx..)")
+	cmd.Flags().String(FlagWallet, "", "Wallet alias")
+	cmd.Flags().String(FlagNickname, "", "Nickname")
 
 	return cmd
 }
@@ -124,7 +124,7 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 // GetCmdBonding is the CLI command for bonding
 func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "bond [--wallet, --address, or --nickname] [amount] [fee] [gas-price]",
+		Use:   "bond --wallet|--address|--nickname <from> <amount> <fee> <gas-price>",
 		Short: "Bond token",
 		Long:  "Bond token for useful activity",
 		Args:  cobra.ExactArgs(3),
@@ -152,7 +152,7 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 			} else if straddr := viper.GetString(FlagAddress); straddr != "" {
 				addr, err = sdk.AccAddressFromBech32(straddr)
 				if err != nil {
-					return fmt.Errorf("Malformed address in --address: %s\n%s", straddr, err.Error())
+					return fmt.Errorf("malformed address in --address: %s\n%s", straddr, err.Error())
 				}
 
 				key, err := kb.GetByAddress(addr)
@@ -163,7 +163,7 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 			} else if nickname := viper.GetString(FlagNickname); nickname != "" {
 				addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, nickname)
 				if err != nil {
-					return fmt.Errorf("No registered address of the given nickname '%s'", nickname)
+					return fmt.Errorf("no registered address of the given nickname '%s'", nickname)
 				}
 				key, err := kb.GetByAddress(addr)
 				if err != nil {
@@ -171,7 +171,7 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 				}
 				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
 			} else {
-				return fmt.Errorf("One of --address, --wallet, --nickname is essential")
+				return fmt.Errorf("one of --address, --wallet, --nickname is essential")
 			}
 
 			// Numbers parsing
@@ -201,10 +201,10 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(client.FlagHome, DefaultClientHome, "flag for custom local path of client's home dir")
-	cmd.Flags().String(FlagAddress, "", "flag for address")
-	cmd.Flags().String(FlagWallet, "", "flag for wallet alias")
-	cmd.Flags().String(FlagNickname, "", "flag for nickname")
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(FlagAddress, "", "Bech32 endocded address (fridayxxxxxx..)")
+	cmd.Flags().String(FlagWallet, "", "Wallet alias")
+	cmd.Flags().String(FlagNickname, "", "Nickname")
 
 	return cmd
 }
@@ -212,7 +212,7 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 // GetCmdUnbonding is the CLI command for unbonding
 func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unbond [--wallet, --address, or --nickname] [amount] [fee] [gas-price]",
+		Use:   "unbond --wallet|--address|--nickname <from> <amount> <fee> <gas-price>",
 		Short: "Unbond token",
 		Long:  "Unbond token for converts tokens as a freedom",
 		Args:  cobra.ExactArgs(3),
@@ -240,7 +240,7 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 			} else if straddr := viper.GetString(FlagAddress); straddr != "" {
 				addr, err = sdk.AccAddressFromBech32(straddr)
 				if err != nil {
-					return fmt.Errorf("Malformed address in --address: %s\n%s", straddr, err.Error())
+					return fmt.Errorf("malformed address in --address: %s\n%s", straddr, err.Error())
 				}
 
 				key, err := kb.GetByAddress(addr)
@@ -251,7 +251,7 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 			} else if nickname := viper.GetString(FlagNickname); nickname != "" {
 				addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, nickname)
 				if err != nil {
-					return fmt.Errorf("No registered address of the given nickname '%s'", nickname)
+					return fmt.Errorf("no registered address of the given nickname '%s'", nickname)
 				}
 
 				key, err := kb.GetByAddress(addr)
@@ -260,7 +260,7 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 				}
 				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
 			} else {
-				return fmt.Errorf("One of --address, --wallet, --nickname is essential")
+				return fmt.Errorf("one of --address, --wallet, --nickname is essential")
 			}
 
 			// Numbers parsing
@@ -291,10 +291,10 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(client.FlagHome, DefaultClientHome, "flag for custom local path of client's home dir")
-	cmd.Flags().String(FlagAddress, "", "flag for address")
-	cmd.Flags().String(FlagWallet, "", "flag for wallet alias")
-	cmd.Flags().String(FlagNickname, "", "flag for nickname")
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(FlagAddress, "", "Bech32 endocded address (fridayxxxxxx..)")
+	cmd.Flags().String(FlagWallet, "", "Wallet alias")
+	cmd.Flags().String(FlagNickname, "", "Nickname")
 
 	return cmd
 }
@@ -302,7 +302,8 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 // GetCmdCreateValidator implements the create validator command handler.
 func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-validator [--from] [--pubkey] [--moniker] [--identity] [--website] [--details]",
+		Use: "create-validator --from <from> --pubkey <validator_cons_pubkey> " +
+			"[--moniker <moniker>] [--identity <identity>] [--website <site_address>] [--details <detail_description>]",
 		Short: "create new validator initialized with a self-delegation to it",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
@@ -317,8 +318,8 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(client.FlagHome, DefaultClientHome, "flag for custom local path of client's home dir")
-	cmd.Flags().String(client.FlagFrom, "", "Bech32 address")
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(client.FlagFrom, "", "Bech32 encoded address (fridayxxxxxx...)")
 	cmd.Flags().AddFlagSet(fsDescriptionCreate)
 	cmd.Flags().AddFlagSet(FsPk)
 

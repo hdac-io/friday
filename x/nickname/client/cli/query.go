@@ -30,7 +30,7 @@ func GetDataQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 // GetCmdQueryAddress handles to get accounts list
 func GetCmdQueryAddress(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "get-address [nickname]",
+		Use:   "get-address <nickname>",
 		Short: "Get address of given nickname",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

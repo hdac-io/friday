@@ -37,7 +37,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 // GetCmdSetNickname is the CLI command to register nickname from address
 func GetCmdSetNickname(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "set [nickname] [--address or --wallet]",
+		Use:   "set <nickname> --address|--wallet <owner>",
 		Short: fmt.Sprintf("Set nickname by address (%sxxxxxx...)", sdk.Bech32MainPrefix),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -72,7 +72,7 @@ func GetCmdSetNickname(cdc *codec.Codec) *cobra.Command {
 				addr = key.GetAddress()
 				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
 			} else {
-				return fmt.Errorf("One of --address or --wallet is necessary")
+				return fmt.Errorf("one of --address or --wallet is necessary")
 			}
 
 			fmt.Println("Register readable name for ", args[0], " -> ", addr.String())
@@ -87,9 +87,9 @@ func GetCmdSetNickname(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(client.FlagHome, DefaultClientHome, "flag for custom local path of client's home dir")
-	cmd.Flags().String(FlagAddress, "", "flag for address")
-	cmd.Flags().String(FlagWallet, "", "flag for wallet alias")
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(FlagAddress, "", "Bech32 endocded address (fridayxxxxxx..)")
+	cmd.Flags().String(FlagWallet, "", "Wallet alias")
 
 	return cmd
 }
@@ -97,7 +97,7 @@ func GetCmdSetNickname(cdc *codec.Codec) *cobra.Command {
 // GetCmdChangeKey is the CLI command for changing key
 func GetCmdChangeKey(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "change-to [nickname] [new_address] [--address or --wallet]",
+		Use:   "change-to <nickname> <new_address> --address|--wallet <old_address_related>",
 		Short: "Change public key mapping of given nickname to address",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -131,7 +131,7 @@ func GetCmdChangeKey(cdc *codec.Codec) *cobra.Command {
 				oldaddr = key.GetAddress()
 				cliCtx = cliCtx.WithFromAddress(oldaddr).WithFromName(key.GetName())
 			} else {
-				return fmt.Errorf("One of --address or --wallet is necessary")
+				return fmt.Errorf("one of --address or --wallet is necessary")
 			}
 			newaddr, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
@@ -148,9 +148,9 @@ func GetCmdChangeKey(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(client.FlagHome, DefaultClientHome, "flag for custom local path of client's home dir")
-	cmd.Flags().String(FlagAddress, "", "flag for address")
-	cmd.Flags().String(FlagWallet, "", "flag for wallet alias")
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(FlagAddress, "", "Bech32 endocded address (fridayxxxxxx..)")
+	cmd.Flags().String(FlagWallet, "", "Wallet alias")
 
 	return cmd
 }

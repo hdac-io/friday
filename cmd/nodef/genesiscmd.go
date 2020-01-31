@@ -28,7 +28,7 @@ func AddElGenesisAccountCmd(
 ) *cobra.Command {
 
 	cmd := &cobra.Command{
-		Use:   `add-el-genesis-account [address] [initial_balance] [initial_bonded_amount]`,
+		Use:   `add-el-genesis-account <address> <initial_balance> <initial_bonded_amount>`,
 		Short: "Add a genesis account to genesis.json",
 		Long: `Add a genesis account to genesis.json. The provided account must specify
 the base64 encoded publickey and a list of initial coins.`,
@@ -98,8 +98,8 @@ the base64 encoded publickey and a list of initial coins.`,
 		},
 	}
 
-	cmd.Flags().String(cli.HomeFlag, defaultNodeHome, "node's home directory")
-	cmd.Flags().String(flagClientHome, defaultClientHome, "client's home directory")
+	cmd.Flags().String(cli.HomeFlag, defaultNodeHome, "Node's home directory")
+	cmd.Flags().String(flagClientHome, defaultClientHome, "Client's home directory")
 
 	return cmd
 }
@@ -109,7 +109,7 @@ func LoadChainspecCmd(
 	ctx *server.Context, cdc *codec.Codec, defaultNodeHome, defaultClientHome string,
 ) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   `load-chainspec [chainspec toml file path]`,
+		Use:   `load-chainspec <filepath_of_manifest.toml>`,
 		Short: "Load a executionlayer genesis config to genesis.json",
 		Long:  ``,
 		Args:  cobra.ExactArgs(1),
@@ -156,8 +156,8 @@ func LoadChainspecCmd(
 		},
 	}
 
-	cmd.Flags().String(cli.HomeFlag, defaultNodeHome, "node's home directory")
-	cmd.Flags().String(flagClientHome, defaultClientHome, "client's home directory")
+	cmd.Flags().String(cli.HomeFlag, defaultNodeHome, "Node's home directory")
+	cmd.Flags().String(flagClientHome, defaultClientHome, "Client's home directory")
 
 	return cmd
 }
