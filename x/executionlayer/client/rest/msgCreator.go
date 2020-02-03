@@ -68,7 +68,7 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 	transferCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm"))
 	transferAbi := grpc.MakeArgsTransferToAccount(recipientAddr.ToEEAddress(), req.Amount)
 	paymentCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
-	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.GasPrice))
+	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.Fee))
 
 	// create the message
 	eeMsg := types.NewMsgTransfer(req.TokenContractAddress, senderAddr, recipientAddr, transferCode, transferAbi, paymentCode, paymentAbi, req.GasPrice)
@@ -86,6 +86,7 @@ type bondReq struct {
 	AddressOrNickname    string `json:"address_or_nickname"`
 	Amount               uint64 `json:"amount"`
 	GasPrice             uint64 `json:"gas_price"`
+	Fee                  uint64 `json:"fee"`
 	Memo                 string `json:"memo"`
 }
 
@@ -129,7 +130,7 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 		bondingUnbondingAbi = grpc.MakeArgsUnBonding(req.Amount)
 	}
 	paymentCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
-	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.GasPrice))
+	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.Fee))
 
 	// create the message
 	msg := types.NewMsgExecute(req.TokenContractAddress, addr, bondingUnbondingCode, bondingUnbondingAbi, paymentCode, paymentAbi, req.GasPrice)
