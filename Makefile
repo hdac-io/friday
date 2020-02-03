@@ -9,7 +9,7 @@ ldflags = -X github.com/hdac-io/friday/version.Name=friday \
 	  -X github.com/hdac-io/friday/version.Commit=$(COMMIT) \
 	  -X "github.com/hdac-io/friday/version.BuildTags=$(BUILDTAGS)"
 
-.PHONY: install test
+.PHONY: install test integration-tests
 
 all: install
 
@@ -24,3 +24,6 @@ go.sum: go.mod
 
 test:
 	bash ./scripts/tests_with_cover.sh
+
+integration-tests:
+	cd integration_tests && python3 -m pytest -s
