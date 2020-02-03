@@ -72,6 +72,7 @@ func TestRESTBond(t *testing.T) {
 		Memo:              basereq.Memo,
 		AddressOrNickname: fromAddr,
 		Amount:            100_000_000,
+		Fee:               10_000_000,
 		GasPrice:          gas,
 	}
 
@@ -96,6 +97,7 @@ func TestRESTUnbond(t *testing.T) {
 		Memo:              basereq.Memo,
 		AddressOrNickname: fromAddr,
 		Amount:            100_000_000,
+		Fee:               10_000_000,
 		GasPrice:          gas,
 	}
 

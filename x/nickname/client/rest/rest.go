@@ -30,7 +30,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 
 type newNickname struct {
 	ChainID  string `json:"chain_id"`
-	GasPrice uint64 `json:"gas"`
+	GasPrice uint64 `json:"gas_price"`
 	Memo     string `json:"memo"`
 
 	Nickname string `json:"nickname"`
@@ -83,7 +83,7 @@ func newNicknameHandler(cliCtx context.CLIContext) http.HandlerFunc {
 
 type changeKey struct {
 	ChainID  string `json:"chain_id"`
-	GasPrice uint64 `json:"gas"`
+	GasPrice uint64 `json:"gas_price"`
 	Memo     string `json:"memo"`
 
 	Nickname   string `json:"nickname"`
