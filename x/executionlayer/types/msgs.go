@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 
-	"github.com/hdac-io/tendermint/crypto"
-
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/tendermint/crypto"
 )
 
 // RouterKey is not in sense yet
@@ -14,28 +14,34 @@ const RouterKey = ModuleName
 
 // MsgExecute for sending deploy to execution engine
 type MsgExecute struct {
-	ContractAddress string         `json:"contract_address"`
-	ExecAddress     sdk.AccAddress `json:"exec_address"`
-	SessionCode     []byte         `json:"session_code"`
-	SessionArgs     []byte         `json:"session_args"`
-	PaymentCode     []byte         `json:"payment_code"`
-	PaymentArgs     []byte         `json:"payment_args"`
-	GasPrice        uint64         `json:"gas_price"`
+	ContractAddress string            `json:"contract_address"`
+	ExecAddress     sdk.AccAddress    `json:"exec_address"`
+	SessionType     util.ContractType `json:"session_type"`
+	SessionCode     []byte            `json:"session_code"`
+	SessionArgs     []byte            `json:"session_args"`
+	PaymentType     util.ContractType `json:"payment_type"`
+	PaymentCode     []byte            `json:"payment_code"`
+	PaymentArgs     []byte            `json:"payment_args"`
+	GasPrice        uint64            `json:"gas_price"`
 }
 
 // NewMsgExecute is a constructor function for MsgSetName
 func NewMsgExecute(
 	contractAddress string,
 	execAddress sdk.AccAddress,
+	sessionType util.ContractType,
 	sessionCode, sessionArgs []byte,
+	paymentType util.ContractType,
 	paymentCode, paymentArgs []byte,
 	gasPrice uint64,
 ) MsgExecute {
 	return MsgExecute{
 		ExecAddress:     execAddress,
 		ContractAddress: contractAddress,
+		SessionType:     sessionType,
 		SessionCode:     sessionCode,
 		SessionArgs:     sessionArgs,
+		PaymentType:     paymentType,
 		PaymentCode:     paymentCode,
 		PaymentArgs:     paymentArgs,
 		GasPrice:        gasPrice,
