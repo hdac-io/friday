@@ -128,18 +128,18 @@ func counterDefine(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	protocolVersion := input.elk.MustGetProtocolVersion(input.ctx)
 	genesisAddr := input.elk.GetGenesisAccounts(input.ctx)[0]
 
-	deploy := util.MakeDeploy(genesisAddr.Address.ToEEAddress(), cntDefCode, []byte{},
-		standardPaymentCode, paymentAbi, uint64(10), timestamp, input.elk.GetChainName(input.ctx))
+	deploy := util.MakeDeploy(genesisAddr.Address.ToEEAddress(), util.WASM, cntDefCode, []byte{},
+		util.WASM, standardPaymentCode, paymentAbi, uint64(10), timestamp, input.elk.GetChainName(input.ctx))
 
 	deploys := util.MakeInitDeploys()
 	deploys = util.AddDeploy(deploys, deploy)
 
-	effects2, grpcErr := grpc.Execute(keeper.client, parentStateHash, timestamp, deploys, &protocolVersion)
-	if grpcErr != "" {
-		panic(fmt.Sprintf("counter define execute: %s", grpcErr))
+	res, err := grpc.Execute(keeper.client, parentStateHash, timestamp, deploys, &protocolVersion)
+	if err != nil {
+		panic(fmt.Sprintf("counter define execute: %s", err.Error()))
 	}
 
-	postStateHash, _, grpcErr := grpc.Commit(keeper.client, parentStateHash, effects2, &protocolVersion)
+	postStateHash, _, grpcErr := grpc.Commit(keeper.client, parentStateHash, res.GetSuccess().GetDeployResults()[0].GetExecutionResult().GetEffects().GetTransformMap(), &protocolVersion)
 	if grpcErr != "" {
 		panic(fmt.Sprintf("counter define commmit: %s", grpcErr))
 	}
@@ -158,17 +158,17 @@ func counterCall(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	genesisAddr := input.elk.GetGenesisAccounts(input.ctx)[0]
 
 	timestamp = time.Now().Unix()
-	deploy := util.MakeDeploy(genesisAddr.Address.ToEEAddress(), cntCallCode,
-		[]byte{}, standardPaymentCode, paymentAbi, uint64(10), timestamp, input.elk.GetChainName(input.ctx))
+	deploy := util.MakeDeploy(genesisAddr.Address.ToEEAddress(), util.WASM, cntCallCode,
+		[]byte{}, util.WASM, standardPaymentCode, paymentAbi, uint64(10), timestamp, input.elk.GetChainName(input.ctx))
 	deploys := util.MakeInitDeploys()
 	deploys = util.AddDeploy(deploys, deploy)
 
-	effects3, grpcErr := grpc.Execute(keeper.client, parentStateHash, timestamp, deploys, &protocolVersion)
-	if grpcErr != "" {
-		panic(fmt.Sprintf("counter call execute: %s", grpcErr))
+	res, err := grpc.Execute(keeper.client, parentStateHash, timestamp, deploys, &protocolVersion)
+	if err != nil {
+		panic(fmt.Sprintf("counter call execute: %s", err.Error()))
 	}
 
-	postStateHash, _, grpcErr := grpc.Commit(keeper.client, parentStateHash, effects3, &protocolVersion)
+	postStateHash, _, grpcErr := grpc.Commit(keeper.client, parentStateHash, res.GetSuccess().GetDeployResults()[0].GetExecutionResult().GetEffects().GetTransformMap(), &protocolVersion)
 	if grpcErr != "" {
 		panic(fmt.Sprintf("counter call commit: %s", grpcErr))
 	}

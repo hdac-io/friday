@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/nickname"
 )
@@ -38,4 +39,19 @@ func toBytes(keyType string, key string,
 		return nil, err
 	}
 	return bytes, nil
+}
+
+func GetContractType(strContractType string) util.ContractType {
+	var contractType util.ContractType
+	switch strContractType {
+	case "wasm":
+		contractType = util.WASM
+	case "uref":
+		contractType = util.UREF
+	case "hash":
+		contractType = util.HASH
+	case "name":
+		contractType = util.NAME
+	}
+	return contractType
 }

@@ -42,15 +42,18 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 //   1) Raw account is needed for checking address existence
 //   2) Fixed transfer & payment WASMs are needed
 func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTransfer) sdk.Result {
-	msgExecute := types.MsgExecute{
-		ContractAddress: msg.ContractAddress,
-		ExecAddress:     msg.FromAddress,
+	msgExecute := NewMsgExecute(
+		msg.ContractAddress,
+		msg.FromAddress,
 		// TODO Will be change store contract call
-		SessionCode: util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm")),
-		SessionArgs: util.MakeArgsTransferToAccount(msg.ToAddress.ToEEAddress(), msg.Amount),
-		PaymentCode: util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm")),
-		PaymentArgs: util.MakeArgsStandardPayment(new(big.Int).SetUint64(msg.Fee)),
-	}
+		util.WASM,
+		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm")),
+		util.MakeArgsTransferToAccount(msg.ToAddress.ToEEAddress(), msg.Amount),
+		util.WASM,
+		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm")),
+		util.MakeArgsStandardPayment(new(big.Int).SetUint64(msg.Fee)),
+		msg.GasPrice,
+	)
 	result, log := execute(ctx, k, msgExecute)
 	if result == true {
 		k.SetAccountIfNotExists(ctx, msg.ToAddress)
@@ -87,8 +90,10 @@ func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) 
 		msg.ContractAddress,
 		msg.FromAddress,
 		// TODO Will be change store contract call
+		util.WASM,
 		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/bonding.wasm")),
 		util.MakeArgsBonding(msg.Amount),
+		util.WASM,
 		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm")),
 		util.MakeArgsStandardPayment(new(big.Int).SetUint64(msg.Fee)),
 		msg.GasPrice,
@@ -102,8 +107,10 @@ func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBo
 		msg.ContractAddress,
 		msg.FromAddress,
 		// TODO Will be change store contract call
+		util.WASM,
 		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/unbonding.wasm")),
 		util.MakeArgsUnBonding(msg.Amount),
+		util.WASM,
 		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm")),
 		util.MakeArgsStandardPayment(new(big.Int).SetUint64(msg.Fee)),
 		msg.GasPrice,
@@ -122,7 +129,7 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) (boo
 
 	// Execute
 	deploys := []*ipc.DeployItem{}
-	deploy := util.MakeDeploy(msg.ExecAddress.ToEEAddress(), msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
+	deploy := util.MakeDeploy(msg.ExecAddress.ToEEAddress(), msg.SessionType, msg.SessionCode, msg.SessionArgs, msg.PaymentType, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
 	deploys = append(deploys, deploy)
 	reqExecute := &ipc.ExecuteRequest{
 		ParentStateHash: stateHash,
