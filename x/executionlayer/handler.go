@@ -2,6 +2,8 @@ package executionlayer
 
 import (
 	"fmt"
+	"math/big"
+	"os"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
@@ -40,9 +42,19 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 //   1) Raw account is needed for checking address existence
 //   2) Fixed transfer & payment WASMs are needed
 func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTransfer) sdk.Result {
-	k.SetAccountIfNotExists(ctx, msg.MsgExecute.ExecAddress)
-	result, log := execute(ctx, k, msg.MsgExecute)
-
+	msgExecute := types.MsgExecute{
+		ContractAddress: msg.ContractAddress,
+		ExecAddress:     msg.FromAddress,
+		// TODO Will be change store contract call
+		SessionCode: util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm")),
+		SessionArgs: util.MakeArgsTransferToAccount(msg.ToAddress.ToEEAddress(), msg.Amount),
+		PaymentCode: util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm")),
+		PaymentArgs: util.MakeArgsStandardPayment(new(big.Int).SetUint64(msg.Fee)),
+	}
+	result, log := execute(ctx, k, msgExecute)
+	if result == true {
+		k.SetAccountIfNotExists(ctx, msg.ToAddress)
+	}
 	return getResult(result, log)
 }
 
@@ -71,12 +83,32 @@ func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg type
 }
 
 func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) sdk.Result {
-	result, log := execute(ctx, k, msg.MsgExecute)
+	msgExecute := NewMsgExecute(
+		msg.ContractAddress,
+		msg.FromAddress,
+		// TODO Will be change store contract call
+		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/bonding.wasm")),
+		util.MakeArgsBonding(msg.Amount),
+		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm")),
+		util.MakeArgsStandardPayment(new(big.Int).SetUint64(msg.Fee)),
+		msg.GasPrice,
+	)
+	result, log := execute(ctx, k, msgExecute)
 	return getResult(result, log)
 }
 
 func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBond) sdk.Result {
-	result, log := execute(ctx, k, msg.MsgExecute)
+	msgExecute := NewMsgExecute(
+		msg.ContractAddress,
+		msg.FromAddress,
+		// TODO Will be change store contract call
+		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/unbonding.wasm")),
+		util.MakeArgsUnBonding(msg.Amount),
+		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm")),
+		util.MakeArgsStandardPayment(new(big.Int).SetUint64(msg.Fee)),
+		msg.GasPrice,
+	)
+	result, log := execute(ctx, k, msgExecute)
 
 	return getResult(result, log)
 }

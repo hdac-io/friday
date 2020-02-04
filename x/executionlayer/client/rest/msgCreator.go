@@ -3,11 +3,8 @@ package rest
 import (
 	"encoding/hex"
 	"fmt"
-	"math/big"
 	"net/http"
-	"os"
 
-	grpc "github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	"github.com/hdac-io/friday/client/context"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/types/rest"
@@ -64,14 +61,8 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 		}
 	}
 
-	// TODO: Change after WASM store feature merge
-	transferCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm"))
-	transferAbi := grpc.MakeArgsTransferToAccount(recipientAddr.ToEEAddress(), req.Amount)
-	paymentCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
-	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.Fee))
-
 	// create the message
-	eeMsg := types.NewMsgTransfer(req.TokenContractAddress, senderAddr, recipientAddr, transferCode, transferAbi, paymentCode, paymentAbi, req.GasPrice)
+	eeMsg := types.NewMsgTransfer(req.TokenContractAddress, senderAddr, recipientAddr, req.Amount, req.Fee, req.GasPrice)
 	err = eeMsg.ValidateBasic()
 	if err != nil {
 		return rest.BaseReq{}, nil, err
@@ -119,21 +110,14 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse base request")
 	}
 
-	// TODO: Change after WASM store feature merge
-	var bondingUnbondingCode []byte
-	var bondingUnbondingAbi []byte
+	var msg sdk.Msg
 	if bondIsTrue == true {
-		bondingUnbondingCode = grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/bonding.wasm"))
-		bondingUnbondingAbi = grpc.MakeArgsBonding(req.Amount)
+		msg = types.NewMsgBond(req.TokenContractAddress, addr, req.Amount, req.Fee, req.GasPrice)
 	} else {
-		bondingUnbondingCode = grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/unbonding.wasm"))
-		bondingUnbondingAbi = grpc.MakeArgsUnBonding(req.Amount)
+		msg = types.NewMsgUnBond(req.TokenContractAddress, addr, req.Amount, req.Fee, req.GasPrice)
 	}
-	paymentCode := grpc.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
-	paymentAbi := grpc.MakeArgsStandardPayment(new(big.Int).SetUint64(req.Fee))
 
 	// create the message
-	msg := types.NewMsgExecute(req.TokenContractAddress, addr, bondingUnbondingCode, bondingUnbondingAbi, paymentCode, paymentAbi, req.GasPrice)
 	err = msg.ValidateBasic()
 	if err != nil {
 		return rest.BaseReq{}, nil, err
