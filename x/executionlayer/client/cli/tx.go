@@ -2,11 +2,8 @@ package cli
 
 import (
 	"fmt"
-	"math/big"
-	"os"
 	"strconv"
 
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	"github.com/hdac-io/friday/client"
 	"github.com/hdac-io/friday/codec"
 	cliutil "github.com/hdac-io/friday/x/executionlayer/client/util"
@@ -99,15 +96,9 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 				return fmt.Errorf("one of --address, --wallet, --nickname is essential")
 			}
 
-			// organize ABIs
-			transferCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm"))
-			transferAbi := util.MakeArgsTransferToAccount(recipentAddr.ToEEAddress(), amount)
-			paymentCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
-			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
-
 			// build and sign the transaction, then broadcast to Tendermint
 			// TODO: Currently implementation of contract address is dummy
-			msg := types.NewMsgTransfer("dummyAddress", fromAddr, recipentAddr, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice)
+			msg := types.NewMsgTransfer("dummyAddress", fromAddr, recipentAddr, amount, fee, gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
@@ -188,14 +179,9 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			bondingCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/bonding.wasm"))
-			bondingAbi := util.MakeArgsBonding(amount)
-			paymentCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
-			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
-
 			// build and sign the transaction, then broadcast to Tendermint
 			// TODO: Currently implementation of contract address is dummy
-			msg := types.NewMsgBond("dummyAddress", addr, bondingCode, bondingAbi, paymentCode, paymentAbi, gasPrice)
+			msg := types.NewMsgBond("dummyAddress", addr, amount, fee, gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
@@ -279,13 +265,8 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 
 			cliCtx = cliCtx.WithFromAddress(addr)
 
-			unbondingCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/unbonding.wasm"))
-			unbondingAbi := util.MakeArgsUnBonding(amount)
-			paymentCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
-			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
-
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgUnBond(cliCtx.FromAddress.String(), addr, unbondingCode, unbondingAbi, paymentCode, paymentAbi, gasPrice)
+			msg := types.NewMsgUnBond(cliCtx.FromAddress.String(), addr, amount, fee, gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
