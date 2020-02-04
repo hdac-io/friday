@@ -38,7 +38,7 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 // Transfer function executes "Execute" of Execution layer, that is specialized for transfer
 // Difference of general execution
 //   1) Raw account is needed for checking address existence
-//   2) Fixed transfer & payemtn WASMs are needed
+//   2) Fixed transfer & payment WASMs are needed
 func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTransfer) sdk.Result {
 	k.SetAccountIfNotExists(ctx, msg.MsgExecute.ExecAddress)
 	result, log := execute(ctx, k, msg.MsgExecute)
