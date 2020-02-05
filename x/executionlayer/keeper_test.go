@@ -100,8 +100,10 @@ func TestCreateBlock(t *testing.T) {
 	counterDefineMSG := NewMsgExecute(
 		ContractAddress,
 		GenesisAccountAddress,
+		util.WASM,
 		util.LoadWasmFile(path.Join(contractPath, counterDefineWasm)),
 		[]byte{},
+		util.WASM,
 		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
 		util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000)),
 		uint64(10),
@@ -120,8 +122,10 @@ func TestCreateBlock(t *testing.T) {
 	counterCallMSG := NewMsgExecute(
 		ContractAddress,
 		GenesisAccountAddress,
+		util.WASM,
 		util.LoadWasmFile(path.Join(contractPath, counterCallWasm)),
 		[]byte{},
+		util.WASM,
 		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
 		util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000)),
 		uint64(10),
@@ -159,11 +163,9 @@ func TestTransfer(t *testing.T) {
 		ContractAddress,
 		GenesisAccountAddress,
 		RecipientAccountAddress,
-		util.LoadWasmFile(path.Join(contractPath, transferWasm)),
-		util.MakeArgsTransferToAccount(RecipientAccountAddress.ToEEAddress(), 100000000),
-		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
-		util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000)),
-		uint64(200000000),
+		100000000,
+		200000000,
+		200000000,
 	)
 	handlerMsgTransfer(input.ctx, input.elk, transferMSG)
 	EndBloker(input.ctx, input.elk)
