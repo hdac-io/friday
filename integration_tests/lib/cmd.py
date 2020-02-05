@@ -29,10 +29,13 @@ def _tx_executor(cmd: str, passphrase, *args):
         _ = child.read_nonblocking(10000, timeout=1)
         _ = child.sendline(passphrase)
         
-        print(child.read())
+        outs = child.read().decode('utf-8')
+        tx_hash = re.search(r'"txhash": "([A-Z0-9]+)"', outs).group(1)
 
-    except pexpect.TIMEOUT as err:
+    except pexpect.TIMEOUT:
         raise FinishedWithError
+
+    return tx_hash
 
 
 #################
@@ -228,27 +231,40 @@ def whole_cleanup():
         shutil.rmtree(path, ignore_errors=True)
 
 
+def query_tx(tx_hash):
+    res = _process_executor("clif query tx {}", tx_hash, need_output=True)
+    return res
+
+
+def is_tx_ok(tx_hash):
+    res = query_tx(tx_hash)
+    is_success = res['logs'][0]['success']
+    if is_success == False:
+        print(res['logs'])
+    return res['logs'][0]['success']
+
+
 #################
 ## Nickname CLI
 #################
 
 def set_nickname_by_address(passphrase: str, nickname: str, address: str):
-    _tx_executor("clif nickname set {} --address {}", passphrase, nickname, address)
+    return _tx_executor("clif nickname set {} --address {}", passphrase, nickname, address)
 
 
 def set_nickname_by_wallet_alias(passphrase: str, nickname: str, wallet_alias: str):
-    _tx_executor("clif nickname set {} --wallet {}", passphrase, nickname, wallet_alias)
+    return _tx_executor("clif nickname set {} --wallet {}", passphrase, nickname, wallet_alias)
 
 
 def change_to_by_address(passphrase: str, nickname: str, new_address: str, old_address: str):
-    _tx_executor("clif nickname change-to {} {} --address {}", passphrase, nickname, new_address, old_address)
+    return _tx_executor("clif nickname change-to {} {} --address {}", passphrase, nickname, new_address, old_address)
     
 
 def change_to_by_wallet(passphrase: str, nickname: str, new_address: str, wallet_alias: str):
-    _tx_executor("clif nickname change-to {} {} --wallet {}", passphrase, nickname, new_address, wallet_alias)
+    return _tx_executor("clif nickname change-to {} {} --wallet {}", passphrase, nickname, new_address, wallet_alias)
 
 
-def get_address(passphrase: str, nickname: str):
+def get_address(nickname: str):
     res = _process_executor("clif nickname get-address {}", nickname, need_output=True)
     return res
 
@@ -258,15 +274,15 @@ def get_address(passphrase: str, nickname: str):
 ##################
 
 def transfer_to(passphrase: str, recipient: str, amount: int, fee: int, gas_price: int, from_type: str, from_value: str):
-    _tx_executor("clif hdac transfer-to {} {} {} {} --{} {}", passphrase, recipient, amount, fee, gas_price, from_type, from_value)
+    return _tx_executor("clif hdac transfer-to {} {} {} {} --{} {}", passphrase, recipient, amount, fee, gas_price, from_type, from_value)
 
 
 def bond(passphrase: str, amount: int, fee: int, gas_price: int, from_type: str, from_value: str):
-    _tx_executor("clif hdac bond {} {} {} --{} {}", passphrase, amount, fee, gas_price, from_type, from_value)
+    return _tx_executor("clif hdac bond {} {} {} --{} {}", passphrase, amount, fee, gas_price, from_type, from_value)
 
 
 def unbond(passphrase: str, amount: int, fee: int, gas_price: int, from_type: str, from_value: str):
-    _tx_executor("clif hdac unbond {} {} {} --{} {}", passphrase, amount, fee, gas_price, from_type, from_value)
+    return _tx_executor("clif hdac unbond {} {} {} --{} {}", passphrase, amount, fee, gas_price, from_type, from_value)
 
 
 def get_balance(from_type: str, from_value: str):
@@ -275,5 +291,5 @@ def get_balance(from_type: str, from_value: str):
 
 
 def create_validator(passphrase: str, from_value: str, pubkey: str, moniker: str, identity: str='""', website: str='""', details: str='""'):
-    _tx_executor("clif hdac create-validator --from {} --pubkey {} --moniker {} --identity {} --website {} --details {}",
+    return _tx_executor("clif hdac create-validator --from {} --pubkey {} --moniker {} --identity {} --website {} --details {}",
                       passphrase, from_value, pubkey, moniker, identity, website, details)
