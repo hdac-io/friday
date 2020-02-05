@@ -61,6 +61,7 @@ func main() {
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
 		eecmd.GetHdacCustomCmd(cdc),
+		eecmd.GetContractCmd(cdc),
 		nicknamecmd.GetRootCmd(cdc),
 		client.ConfigCmd(app.DefaultCLIHome),
 		queryCmd(cdc),

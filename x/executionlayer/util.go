@@ -1,10 +1,10 @@
 package executionlayer
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/nickname"
 )
@@ -41,17 +41,14 @@ func toBytes(keyType string, key string,
 	return bytes, nil
 }
 
-func GetContractType(strContractType string) util.ContractType {
-	var contractType util.ContractType
-	switch strContractType {
-	case "wasm":
-		contractType = util.WASM
-	case "uref":
-		contractType = util.UREF
-	case "hash":
-		contractType = util.HASH
-	case "name":
-		contractType = util.NAME
+func isEmptyBytes(src []byte) bool {
+	return bytes.Equal([]byte{}, src)
+}
+
+func ProtobufSafeEncodeBytes(src []byte) []byte {
+	if bytes.Equal(src, []byte("empty")) {
+		src = []byte{}
 	}
-	return contractType
+
+	return src
 }

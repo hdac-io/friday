@@ -2,8 +2,11 @@ package cli
 
 import (
 	"fmt"
+	"math/big"
+	"os"
 	"strconv"
 
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	"github.com/hdac-io/friday/client"
 	"github.com/hdac-io/friday/codec"
 	cliutil "github.com/hdac-io/friday/x/executionlayer/client/util"
@@ -16,6 +19,114 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
+
+func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "run <type> <wasm-path>|<uref>|<name>|<hash> <argument> <fee> <gas_price> --wallet|--address|--nickname <from>",
+		Short: "Run contract",
+		Long: "Run contract\n" +
+			"There are 4 types of contract run. ('wasm', 'uref', 'name', 'hash)",
+		Args: cobra.ExactArgs(5),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			// Extract "from" from flags
+			var fromAddr sdk.AccAddress
+
+			kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+			if err != nil {
+				return err
+			}
+
+			if walletname := viper.GetString(FlagWallet); walletname != "" {
+				key, err := kb.Get(walletname)
+				if err != nil {
+					return err
+				}
+
+				fromAddr = key.GetAddress()
+				cliCtx = cliCtx.WithFromAddress(fromAddr).WithFromName(key.GetName())
+			} else if straddr := viper.GetString(FlagAddress); straddr != "" {
+				fromAddr, err = sdk.AccAddressFromBech32(straddr)
+				if err != nil {
+					return fmt.Errorf("malformed address in --address: %s\n%s", straddr, err.Error())
+				}
+
+				key, err := kb.GetByAddress(fromAddr)
+				if err != nil {
+					return err
+				}
+
+				cliCtx = cliCtx.WithFromAddress(fromAddr).WithFromName(key.GetName())
+			} else if nickname := viper.GetString(FlagNickname); nickname != "" {
+				fromAddr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, nickname)
+				if err != nil {
+					return fmt.Errorf("no registered address of the given nickname '%s'", nickname)
+				}
+
+				key, err := kb.GetByAddress(fromAddr)
+				if err != nil {
+					return err
+				}
+				cliCtx = cliCtx.WithFromAddress(fromAddr).WithFromName(key.GetName())
+			} else {
+				return fmt.Errorf("one of --address, --wallet, --nickname is essential")
+			}
+
+			sessionType := cliutil.GetContractType(args[0])
+			var sessionCode []byte
+			switch sessionType {
+			case util.WASM:
+				sessionCode = util.LoadWasmFile(args[1])
+			case util.HASH:
+			case util.UREF:
+				sessionCode = util.DecodeHexString(args[1])
+			case util.NAME:
+				sessionCode = []byte(args[1])
+			default:
+				return fmt.Errorf("type must be one of wasm, name, uref, or hash")
+			}
+
+			sessionArgs, err := cliutil.ProtobufSafeDecodeingHexString(args[2])
+			if err != nil {
+				return err
+			}
+
+			fee, err := strconv.ParseUint(args[3], 10, 64)
+			if err != nil {
+				return err
+			}
+			gasPrice, err := strconv.ParseUint(args[4], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			// build and sign the transaction, then broadcast to Tendermint
+			// TODO: Currently implementation of contract address is dummy
+			msg := types.NewMsgExecute(
+				"dummyAddress",
+				fromAddr,
+				sessionType,
+				sessionCode,
+				sessionArgs,
+				util.WASM,
+				util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm")),
+				util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee)),
+				gasPrice,
+			)
+			txBldr = txBldr.WithGas(gasPrice)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(FlagAddress, "", "Bech32 endocded address (fridayxxxxxx..)")
+	cmd.Flags().String(FlagWallet, "", "Wallet alias")
+	cmd.Flags().String(FlagNickname, "", "Nickname")
+
+	return cmd
+}
 
 // GetCmdTransfer is the CLI command for transfer
 func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
@@ -266,7 +377,8 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 			cliCtx = cliCtx.WithFromAddress(addr)
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgUnBond(cliCtx.FromAddress.String(), addr, amount, fee, gasPrice)
+			// TODO: Currently implementation of contract address is dummy
+			msg := types.NewMsgUnBond("dummyAddress", addr, amount, fee, gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
