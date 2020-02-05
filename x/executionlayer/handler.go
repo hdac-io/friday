@@ -129,7 +129,11 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) (boo
 
 	// Execute
 	deploys := []*ipc.DeployItem{}
-	deploy := util.MakeDeploy(msg.ExecAddress.ToEEAddress(), msg.SessionType, msg.SessionCode, msg.SessionArgs, msg.PaymentType, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
+	deploy := util.MakeDeploy(
+		ProtobufSafeEncodeBytes(msg.ExecAddress.ToEEAddress()),
+		msg.SessionType, ProtobufSafeEncodeBytes(msg.SessionCode), ProtobufSafeEncodeBytes(msg.SessionArgs),
+		msg.PaymentType, ProtobufSafeEncodeBytes(msg.PaymentCode), ProtobufSafeEncodeBytes(msg.PaymentArgs),
+		msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
 	deploys = append(deploys, deploy)
 	reqExecute := &ipc.ExecuteRequest{
 		ParentStateHash: stateHash,

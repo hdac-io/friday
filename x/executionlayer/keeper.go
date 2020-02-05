@@ -1,7 +1,6 @@
 package executionlayer
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
 
@@ -53,10 +52,10 @@ func (k ExecutionLayerKeeper) MustGetProtocolVersion(ctx sdk.Context) state.Prot
 
 // SetUnitHashMap map unitHash to blockHash
 func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockHash []byte, unitHash UnitHashMap) bool {
-	if k.isEmptyHash(blockHash) {
+	if isEmptyBytes(blockHash) {
 		blockHash = []byte(types.GenesisBlockHashKey)
 	}
-	if k.isEmptyHash(unitHash.EEState) || len(unitHash.EEState) != 32 {
+	if isEmptyBytes(unitHash.EEState) || len(unitHash.EEState) != 32 {
 		return false
 	}
 
@@ -73,7 +72,7 @@ func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockHash []byte, 
 
 // GetUnitHashMap returns a UnitHashMap for blockHash
 func (k ExecutionLayerKeeper) GetUnitHashMap(ctx sdk.Context, blockHash []byte) UnitHashMap {
-	if k.isEmptyHash(blockHash) {
+	if isEmptyBytes(blockHash) {
 		blockHash = []byte(types.GenesisBlockHashKey)
 	}
 	store := ctx.KVStore(k.HashMapStoreKey)
@@ -85,10 +84,10 @@ func (k ExecutionLayerKeeper) GetUnitHashMap(ctx sdk.Context, blockHash []byte) 
 
 // SetEEState map eeState to blockHash
 func (k ExecutionLayerKeeper) SetEEState(ctx sdk.Context, blockHash []byte, eeState []byte) bool {
-	if k.isEmptyHash(blockHash) {
+	if isEmptyBytes(blockHash) {
 		blockHash = []byte(types.GenesisBlockHashKey)
 	}
-	if k.isEmptyHash(eeState) || len(eeState) != 32 {
+	if isEmptyBytes(eeState) || len(eeState) != 32 {
 		return false
 	}
 
@@ -101,7 +100,7 @@ func (k ExecutionLayerKeeper) SetEEState(ctx sdk.Context, blockHash []byte, eeSt
 
 // GetEEState returns a eeState for blockHash
 func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockHash []byte) []byte {
-	if k.isEmptyHash(blockHash) {
+	if isEmptyBytes(blockHash) {
 		blockHash = []byte(types.GenesisBlockHashKey)
 	}
 	unit := k.GetUnitHashMap(ctx, blockHash)
@@ -299,7 +298,3 @@ func (k ExecutionLayerKeeper) GetAllValidators(ctx sdk.Context) (validators []ty
 }
 
 // -----------------------------------------------------------------------------------------------------------
-
-func (k ExecutionLayerKeeper) isEmptyHash(src []byte) bool {
-	return bytes.Equal([]byte{}, src)
-}

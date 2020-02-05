@@ -29,3 +29,20 @@ func GetHdacCustomCmd(cdc *codec.Codec) *cobra.Command {
 	)...)
 	return hdacCustomTxCmd
 }
+
+// GetContractCmd implements custom command especially for contract
+func GetContractCmd(cdc *codec.Codec) *cobra.Command {
+	contractTxCmd := &cobra.Command{
+		Use:                        "contract",
+		Short:                      "Commands for contract",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       client.ValidateCmd,
+	}
+	contractTxCmd.AddCommand(client.GetCommands(
+		// Tx
+		GetCmdContractRun(cdc),
+	)...)
+
+	return contractTxCmd
+}
