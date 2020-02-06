@@ -27,6 +27,6 @@ func GetEEStateKey(eeState []byte) []byte {
 	return append(EEStateKey, eeState...)
 }
 
-func GetValidatorKey(operatorAddr sdk.EEAddress) []byte {
+func GetValidatorKey(operatorAddr sdk.AccAddress) []byte {
 	return append(ValidatorKey, operatorAddr.Bytes()...)
 }

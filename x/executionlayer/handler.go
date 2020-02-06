@@ -25,6 +25,8 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 			return handlerMsgTransfer(ctx, k, msg)
 		case types.MsgCreateValidator:
 			return handlerMsgCreateValidator(ctx, k, msg)
+		case types.MsgEditValidator:
+			return handlerMsgEditValidator(ctx, k, msg)
 		case types.MsgBond:
 			return handlerMsgBond(ctx, k, msg)
 		case types.MsgUnBond:
@@ -68,20 +70,37 @@ func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExe
 }
 
 func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgCreateValidator) sdk.Result {
-	eeAddress := sdk.AccAddress(msg.ValidatorPubKey.Address()).ToEEAddress()
-
-	validator, found := k.GetValidator(ctx, eeAddress)
+	validator, found := k.GetValidator(ctx, msg.ValidatorAddress)
 	if !found {
 		validator = types.Validator{}
 	}
 
-	validator.OperatorAddress = eeAddress
+	validator.OperatorAddress = msg.ValidatorAddress
 	validator.ConsPubKey = msg.ConsPubKey
 	validator.Description = msg.Description
 	validator.Stake = ""
 
-	k.SetValidator(ctx, eeAddress, validator)
+	k.SetValidator(ctx, msg.ValidatorAddress, validator)
 
+	return getResult(true, "")
+}
+
+func handlerMsgEditValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgEditValidator) sdk.Result {
+	// validator must already be registered
+	validator, found := k.GetValidator(ctx, msg.ValidatorAddress)
+	if !found {
+		return getResult(false, "validator does not exist for that address")
+	}
+
+	// replace all editable fields (clients should autofill existing values)
+	description, err := validator.Description.UpdateDescription(msg.Description)
+	if err != nil {
+		return getResult(false, err.Error())
+	}
+
+	validator.Description = description
+
+	k.SetValidator(ctx, msg.ValidatorAddress, validator)
 	return getResult(true, "")
 }
 

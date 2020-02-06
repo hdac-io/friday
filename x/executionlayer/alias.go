@@ -29,6 +29,7 @@ type (
 	MsgBond                   = types.MsgBond
 	MsgUnBond                 = types.MsgUnBond
 	MsgCreateValidator        = types.MsgCreateValidator
+	MsgEditValidator          = types.MsgEditValidator
 	QueryExecutionLayer       = types.QueryExecutionLayer
 	UnitHashMap               = types.UnitHashMap
 	QueryExecutionLayerResp   = types.QueryExecutionLayerResp
