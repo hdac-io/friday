@@ -24,15 +24,15 @@ func EndBloker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
 	validators := k.GetAllValidators(ctx)
 
 	resultbonds := ctx.CandidateBlock().Bonds
-	resultBondsMap := make(map[string]*ipc.Bond)
-	for _, bond := range resultbonds {
-		resultBondsMap[string(bond.GetValidatorPublicKey())] = bond
-	}
-
 	if len(resultbonds) > 0 {
+		resultBondsMap := make(map[string]*ipc.Bond)
+		for _, bond := range resultbonds {
+			resultBondsMap[string(bond.GetValidatorPublicKey())] = bond
+		}
+
 		for _, validator := range validators {
 			var power string
-			resultBond, found := resultBondsMap[string(validator.OperatorAddress.Bytes())]
+			resultBond, found := resultBondsMap[string(validator.OperatorAddress.ToEEAddress())]
 			if found {
 				if validator.Stake == resultBond.GetStake().GetValue() {
 					continue

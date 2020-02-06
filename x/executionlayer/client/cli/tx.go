@@ -423,6 +423,39 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
+// GetCmdEditValidator implements the create edit validator command.
+func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "edit-validator",
+		Short: "edit an existing validator account",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			valAddr := cliCtx.GetFromAddress()
+			description := types.Description{
+				Moniker:  viper.GetString(FlagMoniker),
+				Identity: viper.GetString(FlagIdentity),
+				Website:  viper.GetString(FlagWebsite),
+				Details:  viper.GetString(FlagDetails),
+			}
+
+			msg := types.NewMsgEditValidator(valAddr, description)
+
+			// build and sign the transaction, then broadcast to Tendermint
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(client.FlagFrom, "", "Bech32 encoded address (fridayxxxxxx...)")
+	cmd.Flags().AddFlagSet(fsDescriptionEdit)
+
+	cmd.MarkFlagRequired(client.FlagFrom)
+
+	return cmd
+}
+
 // BuildCreateValidatorMsg implements for adding validator module spec
 func BuildCreateValidatorMsg(cliCtx context.CLIContext) (sdk.Msg, error) {
 	kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
@@ -447,7 +480,7 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext) (sdk.Msg, error) {
 		viper.GetString(FlagDetails),
 	)
 
-	msg := types.NewMsgCreateValidator(sdk.AccAddress(valAddr), valPubKey, consPubKey, description)
+	msg := types.NewMsgCreateValidator(valAddr, valPubKey, consPubKey, description)
 
 	return msg, nil
 }

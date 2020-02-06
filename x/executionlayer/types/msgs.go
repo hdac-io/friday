@@ -228,6 +228,45 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 }
 
 //______________________________________________________________________
+// MsgEditValidator - struct for editing a validator
+type MsgEditValidator struct {
+	ValidatorAddress sdk.AccAddress `json:"address" yaml:"address"`
+	Description
+}
+
+func NewMsgEditValidator(valAddr sdk.AccAddress, description Description) MsgEditValidator {
+	return MsgEditValidator{
+		ValidatorAddress: valAddr,
+		Description:      description,
+	}
+}
+
+//nolint
+func (msg MsgEditValidator) Route() string { return RouterKey }
+func (msg MsgEditValidator) Type() string  { return "edit_validator" }
+func (msg MsgEditValidator) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.ValidatorAddress}
+}
+
+// get the bytes for the message signer to sign on
+func (msg MsgEditValidator) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// quick validity check
+func (msg MsgEditValidator) ValidateBasic() sdk.Error {
+	if msg.ValidatorAddress.Empty() {
+		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "nil validator address")
+	}
+
+	if msg.Description == (Description{}) {
+		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "transaction must include some information to modify")
+	}
+	return nil
+}
+
+//______________________________________________________________________
 type MsgBond struct {
 	ContractAddress string         `json:"contract_address" yaml:"contract_address"`
 	FromAddress     sdk.AccAddress `json:"from_address" yaml:"from_address"`
