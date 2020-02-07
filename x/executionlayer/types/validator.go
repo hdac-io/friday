@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
@@ -180,4 +181,14 @@ func (v Validator) TestEquivalent(v2 Validator) bool {
 // return the TM validator address
 func (v Validator) ConsAddress() sdk.ConsAddress {
 	return sdk.ConsAddress(v.ConsPubKey.Address())
+}
+
+// Validators is a collection of Validator
+type Validators []Validator
+
+func (v Validators) String() (out string) {
+	for _, val := range v {
+		out += val.String() + "\n"
+	}
+	return strings.TrimSpace(out)
 }

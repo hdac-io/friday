@@ -180,3 +180,93 @@ func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().String(FlagBlockHash, "", "Block hash at the moment")
 	return cmd
 }
+
+// GetCmdQueryValidator implements the validator query command.
+func GetCmdQueryValidator(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "validator --wallet|--address|--nickname <from>",
+		Short: "Query a validator",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			var addr sdk.AccAddress
+			var err error
+
+			// Extract "from" from flags
+			if walletname := viper.GetString(FlagWallet); walletname != "" {
+				kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+				if err != nil {
+					return err
+				}
+
+				key, err := kb.Get(walletname)
+				if err != nil {
+					return err
+				}
+
+				addr = key.GetAddress()
+			} else if straddr := viper.GetString(FlagAddress); straddr != "" {
+				addr, err = sdk.AccAddressFromBech32(straddr)
+				if err != nil {
+					return fmt.Errorf("malformed address in --address: %s\n%s", straddr, err.Error())
+				}
+			} else if nickname := viper.GetString(FlagNickname); nickname != "" {
+				addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, nickname)
+				if err != nil {
+					return fmt.Errorf("no registered address of the given nickname '%s'", nickname)
+				}
+			} else {
+				return fmt.Errorf("one of --address, --wallet, --nickname is essential")
+			}
+
+			queryData := types.NewQueryValidatorParams(addr)
+			bz := cdc.MustMarshalJSON(queryData)
+
+			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/queryvalidator", types.ModuleName), bz)
+			if err != nil {
+				fmt.Printf("could not resolve data - %s\n", addr.String())
+				return nil
+			}
+
+			if len(res) == 0 {
+				return fmt.Errorf("No validator found with address %s", addr)
+			}
+
+			var out types.Validator
+			cdc.MustUnmarshalJSON(res, &out)
+
+			return cliCtx.PrintOutput(out)
+		},
+	}
+
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(FlagAddress, "", "Bech32 endocded address (fridayxxxxxx..)")
+	cmd.Flags().String(FlagWallet, "", "Wallet alias in local")
+	cmd.Flags().String(FlagNickname, "", "Nickname (Readable ID)")
+
+	return cmd
+}
+
+// // GetCmdQueryValidators implements the query all validators command.
+func GetCmdQueryValidators(cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "validators",
+		Short: "Query for all validators",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			res, _, err := cliCtx.Query(fmt.Sprintf("custom/%s/queryallvalidator", types.ModuleName))
+			if err != nil {
+				fmt.Printf("could not resolve")
+				return nil
+			}
+
+			var out types.Validators
+			cdc.MustUnmarshalJSON(res, &out)
+
+			return cliCtx.PrintOutput(out)
+		},
+	}
+}
