@@ -158,3 +158,25 @@ func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 
 	return bz, nil
 }
+
+func getValidatorQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) ([]byte, error) {
+	vars := r.URL.Query()
+	strAddr := vars.Get("address")
+
+	if strAddr == "" {
+		return []byte{}, nil
+	}
+
+	addr, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, strAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	queryData := types.QueryValidatorParams{
+		ValidatorAddr: addr,
+	}
+
+	bz := cliCtx.Codec.MustMarshalJSON(queryData)
+
+	return bz, nil
+}

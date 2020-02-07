@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/types/rest"
 	"github.com/hdac-io/friday/x/auth/client/utils"
+	"github.com/hdac-io/friday/x/executionlayer/types"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
@@ -17,6 +19,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 	r.HandleFunc(fmt.Sprintf("/%s/bond", storeName), bondHandler(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/%s/unbond", storeName), unbondHandler(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/%s/balance", storeName), getBalanceHandler(cliCtx, storeName)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/%s/validator", storeName), validatorHandler(cliCtx, storeName)).Methods("GET")
 }
 
 func transferHandler(cliCtx context.CLIContext) http.HandlerFunc {
@@ -61,6 +64,29 @@ func getBalanceHandler(cliCtx context.CLIContext, storeName string) http.Handler
 		}
 
 		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalance", storeName), bz)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		rest.PostProcessResponseBare(w, cliCtx, res)
+	}
+}
+
+func validatorHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		bz, err := getValidatorQuerying(w, cliCtx, r)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		var res []byte
+		if bytes.Equal(bz, []byte{}) {
+			res, _, err = cliCtx.Query(fmt.Sprintf("custom/%s/queryallvalidator", storeName))
+		} else {
+			res, _, err = cliCtx.QueryWithData(fmt.Sprintf("custom/%s/queryvalidator", types.ModuleName), bz)
+		}
+
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
