@@ -395,12 +395,57 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 // GetCmdCreateValidator implements the create validator command handler.
 func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "create-validator --from <from> --pubkey <validator_cons_pubkey> " +
+		Use: "create-validator --wallet|--address|--nickname <from> --pubkey <validator_cons_pubkey> " +
 			"[--moniker <moniker>] [--identity <identity>] [--website <site_address>] [--details <detail_description>]",
 		Short: "create new validator initialized with a self-delegation to it",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			var addr sdk.AccAddress
+			var err error
+
+			kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+			if err != nil {
+				return err
+			}
+
+			// Extract "from" from flags
+			if walletname := viper.GetString(FlagWallet); walletname != "" {
+				key, err := kb.Get(walletname)
+				if err != nil {
+					return err
+				}
+
+				addr = key.GetAddress()
+				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
+			} else if straddr := viper.GetString(FlagAddress); straddr != "" {
+				addr, err = sdk.AccAddressFromBech32(straddr)
+				if err != nil {
+					return fmt.Errorf("malformed address in --address: %s\n%s", straddr, err.Error())
+				}
+
+				key, err := kb.GetByAddress(addr)
+				if err != nil {
+					return err
+				}
+				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
+			} else if nickname := viper.GetString(FlagNickname); nickname != "" {
+				addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, nickname)
+				if err != nil {
+					return fmt.Errorf("no registered address of the given nickname '%s'", nickname)
+				}
+
+				key, err := kb.GetByAddress(addr)
+				if err != nil {
+					return err
+				}
+				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
+			} else {
+				return fmt.Errorf("one of --address, --wallet, --nickname is essential")
+			}
+
+			cliCtx = cliCtx.WithFromAddress(addr)
 
 			msg, err := BuildCreateValidatorMsg(cliCtx)
 			if err != nil {
@@ -412,11 +457,12 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
-	cmd.Flags().String(client.FlagFrom, "", "Bech32 encoded address (fridayxxxxxx...)")
+	cmd.Flags().String(FlagAddress, "", "Bech32 endocded address (fridayxxxxxx..)")
+	cmd.Flags().String(FlagWallet, "", "Wallet alias")
+	cmd.Flags().String(FlagNickname, "", "Nickname")
 	cmd.Flags().AddFlagSet(fsDescriptionCreate)
 	cmd.Flags().AddFlagSet(FsPk)
 
-	cmd.MarkFlagRequired(client.FlagFrom)
 	cmd.MarkFlagRequired(FlagPubKey)
 	cmd.MarkFlagRequired(FlagMoniker)
 
@@ -458,13 +504,6 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 
 // BuildCreateValidatorMsg implements for adding validator module spec
 func BuildCreateValidatorMsg(cliCtx context.CLIContext) (sdk.Msg, error) {
-	kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
-	if err != nil {
-		return types.MsgCreateValidator{}, err
-	}
-
-	key, err := kb.Get(viper.GetString(client.FlagFrom))
-	valPubKey := key.GetPubKey()
 	valAddr := cliCtx.GetFromAddress()
 
 	consPubKeyStr := viper.GetString(FlagPubKey)
@@ -480,7 +519,7 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext) (sdk.Msg, error) {
 		viper.GetString(FlagDetails),
 	)
 
-	msg := types.NewMsgCreateValidator(valAddr, valPubKey, consPubKey, description)
+	msg := types.NewMsgCreateValidator(valAddr, consPubKey, description)
 
 	return msg, nil
 }
