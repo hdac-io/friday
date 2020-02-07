@@ -13,6 +13,9 @@ const (
 	QueryEEDetail        = "querydetail"
 	QueryEEBalance       = "querybalance"
 	QueryEEBalanceDetail = "querybalancedetail"
+
+	QueryValidator    = "queryvalidator"
+	QueryAllValidator = "queryallvalidator"
 )
 
 // NewQuerier is the module level router for state queries
@@ -27,7 +30,10 @@ func NewQuerier(keeper ExecutionLayerKeeper) sdk.Querier {
 			return queryBalance(ctx, path[1:], req, keeper)
 		case QueryEEBalanceDetail:
 			return queryBalanceDetail(ctx, path[1:], req, keeper)
-
+		case QueryValidator:
+			return queryValidator(ctx, req, keeper)
+		case QueryAllValidator:
+			return queryAllValidator(ctx, keeper)
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown ee query")
 		}
@@ -111,5 +117,36 @@ func queryBalance(ctx sdk.Context, path []string, req abci.RequestQuery, keeper 
 	}
 
 	res, _ := codec.MarshalJSONIndent(keeper.cdc, queryvalue)
+	return res, nil
+}
+
+func queryValidator(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
+	var param QueryValidatorParams
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &param)
+	if err != nil {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
+	}
+
+	validator, found := keeper.GetValidator(ctx, param.ValidatorAddr)
+	if !found {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, err.Error())
+	}
+
+	res, err := codec.MarshalJSONIndent(types.ModuleCdc, validator)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+	}
+
+	return res, nil
+}
+
+func queryAllValidator(ctx sdk.Context, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
+	validators := keeper.GetAllValidators(ctx)
+
+	res, err := codec.MarshalJSONIndent(types.ModuleCdc, validators)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+	}
+
 	return res, nil
 }

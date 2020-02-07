@@ -61,3 +61,15 @@ type QueryExecutionLayerResp struct {
 func (q QueryExecutionLayerResp) String() string {
 	return fmt.Sprintf("Value: %s", q.Value)
 }
+
+// defines the params for the following queries:
+// - 'custom/%s/validator'
+type QueryValidatorParams struct {
+	ValidatorAddr sdk.AccAddress
+}
+
+func NewQueryValidatorParams(validatorAddr sdk.AccAddress) QueryValidatorParams {
+	return QueryValidatorParams{
+		ValidatorAddr: validatorAddr,
+	}
+}

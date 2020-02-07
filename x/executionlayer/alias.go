@@ -36,4 +36,5 @@ type (
 	QueryExecutionLayerDetail = types.QueryExecutionLayerDetail
 	QueryGetBalance           = types.QueryGetBalance
 	QueryGetBalanceDetail     = types.QueryGetBalanceDetail
+	QueryValidatorParams      = types.QueryValidatorParams
 )
