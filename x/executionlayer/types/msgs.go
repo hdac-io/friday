@@ -1,7 +1,6 @@
 package types
 
 import (
-	"bytes"
 	"encoding/json"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
@@ -129,14 +128,12 @@ func (msg MsgTransfer) GetSigners() []sdk.AccAddress {
 // MsgCreateValidator - struct for bonding transactions
 type MsgCreateValidator struct {
 	ValidatorAddress sdk.AccAddress `json:"validator_address" yaml:"validator_address"`
-	ValidatorPubKey  crypto.PubKey  `json:"validator_pubkey" yaml:"validator_pubkey"`
 	ConsPubKey       crypto.PubKey  `json:"cons_pubkey" yaml:"cons_pubkey"`
 	Description      Description    `json:"description" yaml:"description"`
 }
 
 type msgCreateValidatorJSON struct {
 	ValidatorAddress sdk.AccAddress `json:"validator_address" yaml:"validator_address"`
-	ValidatorPubKey  string         `json:"validator_pubkey" yaml:"validator_pubkey"`
 	ConsPubKey       string         `json:"cons_pubkey" yaml:"cons_pubkey"`
 	Description      Description    `json:"description" yaml:"description"`
 }
@@ -144,13 +141,11 @@ type msgCreateValidatorJSON struct {
 // Default way to create validator. Delegator address and validator address are the same
 func NewMsgCreateValidator(
 	valAddress sdk.AccAddress,
-	valPubKey crypto.PubKey,
 	consPubKey crypto.PubKey,
 	description Description,
 ) MsgCreateValidator {
 	return MsgCreateValidator{
 		ValidatorAddress: valAddress,
-		ValidatorPubKey:  valPubKey,
 		ConsPubKey:       consPubKey,
 		Description:      description,
 	}
@@ -163,11 +158,8 @@ func (msg MsgCreateValidator) Type() string  { return "create_validator" }
 // Return address(es) that must sign over msg.GetSignBytes()
 func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
 	// delegator is first signer so delegator pays fees
-	addrs := []sdk.AccAddress{sdk.AccAddress(msg.ValidatorAddress)}
+	addrs := []sdk.AccAddress{msg.ValidatorAddress}
 
-	if !bytes.Equal(msg.ValidatorAddress.Bytes(), msg.ValidatorPubKey.Address().Bytes()) {
-		// TODO : support to delegate we need to change valAddress.
-	}
 	return addrs
 }
 
@@ -176,7 +168,6 @@ func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
 func (msg MsgCreateValidator) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msgCreateValidatorJSON{
 		ValidatorAddress: msg.ValidatorAddress,
-		ValidatorPubKey:  sdk.MustBech32ifyValPub(msg.ValidatorPubKey),
 		ConsPubKey:       sdk.MustBech32ifyConsPub(msg.ConsPubKey),
 		Description:      msg.Description,
 	})
@@ -193,10 +184,6 @@ func (msg *MsgCreateValidator) UnmarshalJSON(bz []byte) error {
 	msg.Description = msgCreateValJSON.Description
 	msg.ValidatorAddress = msgCreateValJSON.ValidatorAddress
 	var err error
-	msg.ValidatorPubKey, err = sdk.GetValPubKeyBech32(msgCreateValJSON.ValidatorPubKey)
-	if err != nil {
-		return err
-	}
 	msg.ConsPubKey, err = sdk.GetConsPubKeyBech32(msgCreateValJSON.ConsPubKey)
 	if err != nil {
 		return err
@@ -216,9 +203,6 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	// note that unmarshaling from bech32 ensures either empty or valid
 	if msg.ValidatorAddress.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
-	}
-	if !bytes.Equal(msg.ValidatorAddress.Bytes(), msg.ValidatorPubKey.Address().Bytes()) {
-		return ErrBadValidatorAddr(DefaultCodespace)
 	}
 	if msg.Description == (Description{}) {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "description must be included")
