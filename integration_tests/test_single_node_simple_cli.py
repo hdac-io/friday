@@ -22,9 +22,9 @@ class TestClass():
     basic_coin = 5000000000000
     basic_stake = 100000000
 
-    basic_bond = 100000000000
-    bonding_fee = 10000000000
-    bonding_gas = 500000000
+    basic_bond = 10000000000
+    bonding_fee = 1000000000
+    bonding_gas = 50000000
 
     transfer_amount = 1000000000000
     transfer_fee = 100000000
@@ -50,6 +50,8 @@ class TestClass():
         """
         Make genesis.json and keys
         """
+        print("*********************Test class preparation*********************")
+
         print("Cleanup double check")
         cmd.whole_cleanup()
 
@@ -83,7 +85,7 @@ class TestClass():
         print("Validate genesis")
         cmd.validate_genesis()
 
-        print("Setup class done.")
+        print("*********************Setup class done*********************")
 
 
     def teardown_class(self):
@@ -119,7 +121,7 @@ class TestClass():
 
 
     def test00_get_balance(self):
-        print("Start test00_get_balance")
+        print("======================Start test00_get_balance======================")
 
         res = cmd.get_balance("wallet", "anna")
         print("Output: ", res)
@@ -127,11 +129,11 @@ class TestClass():
 
         res = cmd.get_balance("wallet", "elsa")
         assert(int(res["value"]) == self.basic_coin)
-        print("Done test00_get_balance")
+        print("======================Done test00_get_balance======================")
 
 
     def test01_transfer_to(self):
-        print("Start test01_transfer_to")
+        print("======================Start test01_transfer_to======================")
 
         print("Transfer token from elsa to anna")
         tx_hash = cmd.transfer_to(self.wallet_password, self.info_anna['address'], self.transfer_amount,
@@ -152,12 +154,12 @@ class TestClass():
         res = cmd.get_balance("wallet", "elsa")
         assert(int(res["value"]) < self.basic_coin - self.transfer_amount)
 
-        print("Done test01_transfer_to")
+        print("======================Done test01_transfer_to======================")
 
 
     @pytest.mark.skip(reason="Bond/Unbond tx itself works, but not effective now")
     def test02_bond_and_unbond(self):
-        print("Start test02_bond")
+        print("======================Start test02_bond_and_unbond======================")
 
         print("Bonding token")
         bond_tx_hash = cmd.bond(self.wallet_password, self.basic_bond, self.bonding_fee, self.bonding_gas, "wallet", "anna")
@@ -215,37 +217,79 @@ class TestClass():
         # Reason: Just enough value to ensure that tx become invalid
         assert(int(res_after_after["value"]) == self.basic_coin + int(res_before['value']) - self.basic_bond)
 
+        print("======================Done test02_bond_and_unbond======================")
 
-    def test03_simple_register_nickname(self):
-        print("Start test03_simple_register_nickname")
 
+    @pytest.mark.skip(reason="Stable local, will unmark skip and check the err message after master branch merge")
+    def test02_1_simple_bond_unbond(self):
+        print("======================Start test02_1_simple_bond_unbond======================")
+
+        print("Bonding token")
+        bond_tx_hash = cmd.bond(self.wallet_password, self.basic_bond, self.bonding_fee, self.bonding_gas, "wallet", "anna")
+        print("Tx sent. Waiting for validation")
+
+        time.sleep(self.tx_confirm_delay)
+
+        print("Check whether tx is ok or not")
+        is_ok = cmd.is_tx_ok(bond_tx_hash)
+        assert(is_ok == True)
+
+        print("Unbonding token")
+        tx_hash_unbond = cmd.unbond(self.wallet_password, self.basic_bond, self.bonding_fee, self.bonding_gas, "wallet", "anna")
+        print("Tx sent. Waiting for validation")
+
+        time.sleep(self.tx_confirm_delay)
+
+        print("Check whether tx is ok or not")
+        is_ok = cmd.is_tx_ok(tx_hash_unbond)
+        assert(is_ok == True)
+
+        print("======================Done test02_1_simple_bond_unbond======================")
+
+
+    def _register_nickname(self):
+        print("Set nickname")
         tx_hash_nickname = cmd.set_nickname_by_address(self.wallet_password, "anna", self.info_anna['address'])
 
         print("Tx sent. Waiting for validation")
         time.sleep(self.tx_confirm_delay)
 
+        print("Check whether the Tx is OK or not")
         is_ok = cmd.is_tx_ok(tx_hash_nickname)
         assert(is_ok == True)
 
+        print("Get registered address and compare to the info from the wallet")
         res_info = cmd.get_address("anna")
         assert(res_info['address'] == self.info_anna['address'])
 
+        print("Well registered!")
+
+
+    def test03_simple_register_nickname(self):
+        print("======================Start test03_simple_register_nickname======================")
+        self._register_nickname()
+        print("======================Done test03_simple_register_nickname======================")
+
 
     def test04_transfer_to_by_nickname(self):
-        print("Start test04_transfer_to_by_nickname")
+        print("======================Start test04_transfer_to_by_nickname======================")
 
-        self.test03_simple_register_nickname()
+        self._register_nickname()
 
+        print("Try to transfer to nickname recipient")
         tx_hash_transfer = cmd.transfer_to(self.wallet_password, "anna", self.transfer_amount,
                                            self.transfer_fee, self.transfer_gas, "wallet", "elsa")
 
         print("Tx sent. Waiting for validation")
         time.sleep(self.tx_confirm_delay)
 
+        print("Check Tx OK or not")
         is_ok = cmd.is_tx_ok(tx_hash_transfer)
         assert(is_ok == True)
 
         print("Check wallet by address. Should be match with wallet info")
         res_transfer = cmd.get_balance("address", self.info_anna['address'])
         assert(int(res_transfer['value']) == int(self.basic_coin + self.transfer_amount))
+
+        print("======================Done test04_transfer_to_by_nickname======================")
         
