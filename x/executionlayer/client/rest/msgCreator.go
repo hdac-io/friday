@@ -159,6 +159,111 @@ func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 	return bz, nil
 }
 
+type createValidatorReq struct {
+	ChainID                    string `json:"chain_id"`
+	ValidatorAddressOrNickName string `json:"validator_address_or_nickname"`
+	ConsPubKey                 string `json:"cons_pub_key"`
+	Moniker                    string `json:"moniker"`
+	Identity                   string `json:"identity"`
+	Website                    string `json:"website"`
+	Details                    string `json:"details"`
+	Gas                        uint64 `json:"gas"`
+	Memo                       string `json:"memo"`
+}
+
+func createValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
+	var req createValidatorReq
+
+	// Get body parameters
+	if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse request")
+	}
+
+	var valAddr sdk.AccAddress
+	valAddr, err := sdk.AccAddressFromBech32(req.ValidatorAddressOrNickName)
+	if err != nil {
+		valAddr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, req.ValidatorAddressOrNickName)
+		if err != nil {
+			return rest.BaseReq{}, nil, fmt.Errorf("failed to parse sender address or name: %s", req.ValidatorAddressOrNickName)
+		}
+	}
+
+	baseReq := rest.BaseReq{
+		From:    valAddr.String(),
+		ChainID: req.ChainID,
+		Gas:     fmt.Sprint(req.Gas),
+		Memo:    req.Memo,
+	}
+
+	if !baseReq.ValidateBasic(w) {
+		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse base request")
+	}
+
+	// Parameter touching
+	consPubKey, err := sdk.GetConsPubKeyBech32(req.ConsPubKey)
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	// create the message
+	msg := types.NewMsgCreateValidator(valAddr, consPubKey, types.NewDescription(req.Moniker, req.Identity, req.Website, req.Details))
+	err = msg.ValidateBasic()
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	return baseReq, []sdk.Msg{msg}, nil
+}
+
+type editValidatorReq struct {
+	ChainID                    string `json:"chain_id"`
+	ValidatorAddressOrNickName string `json:"validator_address_or_nickname"`
+	Moniker                    string `json:"moniker"`
+	Identity                   string `json:"identity"`
+	Website                    string `json:"website"`
+	Details                    string `json:"details"`
+	Gas                        uint64 `json:"gas"`
+	Memo                       string `json:"memo"`
+}
+
+func editValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
+	var req editValidatorReq
+
+	// Get body parameters
+	if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse request")
+	}
+
+	var valAddr sdk.AccAddress
+	valAddr, err := sdk.AccAddressFromBech32(req.ValidatorAddressOrNickName)
+	if err != nil {
+		valAddr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, req.ValidatorAddressOrNickName)
+		if err != nil {
+			return rest.BaseReq{}, nil, fmt.Errorf("failed to parse sender address or name: %s", req.ValidatorAddressOrNickName)
+		}
+	}
+
+	baseReq := rest.BaseReq{
+		From:    valAddr.String(),
+		ChainID: req.ChainID,
+		Gas:     fmt.Sprint(req.Gas),
+		Memo:    req.Memo,
+	}
+
+	if !baseReq.ValidateBasic(w) {
+		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse base request")
+	}
+
+	// create the message
+	msg := types.NewMsgEditValidator(valAddr, types.NewDescription(req.Moniker, req.Identity, req.Website, req.Details))
+	err = msg.ValidateBasic()
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	return baseReq, []sdk.Msg{msg}, nil
+}
+
 func getValidatorQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) ([]byte, error) {
 	vars := r.URL.Query()
 	strAddr := vars.Get("address")

@@ -19,7 +19,9 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 	r.HandleFunc(fmt.Sprintf("/%s/bond", storeName), bondHandler(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/%s/unbond", storeName), unbondHandler(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/%s/balance", storeName), getBalanceHandler(cliCtx, storeName)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/%s/validator", storeName), validatorHandler(cliCtx, storeName)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/%s/validator", storeName), getValidatorHandler(cliCtx, storeName)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/%s/validator", storeName), createValidatorHandler(cliCtx)).Methods("PUT")
+	r.HandleFunc(fmt.Sprintf("/%s/validator", storeName), editValidatorHandler(cliCtx)).Methods("POST")
 }
 
 func transferHandler(cliCtx context.CLIContext) http.HandlerFunc {
@@ -72,7 +74,29 @@ func getBalanceHandler(cliCtx context.CLIContext, storeName string) http.Handler
 	}
 }
 
-func validatorHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func createValidatorHandler(cliCtx context.CLIContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		baseReq, msgs, err := createValidatorMsgCreator(w, cliCtx, r)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		utils.WriteGenerateStdTxResponse(w, cliCtx, baseReq, msgs)
+	}
+}
+
+func editValidatorHandler(cliCtx context.CLIContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		baseReq, msgs, err := editValidatorMsgCreator(w, cliCtx, r)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		utils.WriteGenerateStdTxResponse(w, cliCtx, baseReq, msgs)
+	}
+}
+
+func getValidatorHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		bz, err := getValidatorQuerying(w, cliCtx, r)
 		if err != nil {
