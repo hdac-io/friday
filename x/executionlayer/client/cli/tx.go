@@ -472,11 +472,57 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 // GetCmdEditValidator implements the create edit validator command.
 func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "edit-validator",
+		Use: "edit-validator --wallet|--address|--nickname <from> " +
+			"[--moniker <moniker>] [--identity <identity>] [--website <site_address>] [--details <detail_description>]",
 		Short: "edit an existing validator account",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			var addr sdk.AccAddress
+			var err error
+
+			kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+			if err != nil {
+				return err
+			}
+
+			// Extract "from" from flags
+			if walletname := viper.GetString(FlagWallet); walletname != "" {
+				key, err := kb.Get(walletname)
+				if err != nil {
+					return err
+				}
+
+				addr = key.GetAddress()
+				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
+			} else if straddr := viper.GetString(FlagAddress); straddr != "" {
+				addr, err = sdk.AccAddressFromBech32(straddr)
+				if err != nil {
+					return fmt.Errorf("malformed address in --address: %s\n%s", straddr, err.Error())
+				}
+
+				key, err := kb.GetByAddress(addr)
+				if err != nil {
+					return err
+				}
+				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
+			} else if nickname := viper.GetString(FlagNickname); nickname != "" {
+				addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, nickname)
+				if err != nil {
+					return fmt.Errorf("no registered address of the given nickname '%s'", nickname)
+				}
+
+				key, err := kb.GetByAddress(addr)
+				if err != nil {
+					return err
+				}
+				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
+			} else {
+				return fmt.Errorf("one of --address, --wallet, --nickname is essential")
+			}
+
+			cliCtx = cliCtx.WithFromAddress(addr)
 
 			valAddr := cliCtx.GetFromAddress()
 			description := types.Description{
@@ -494,7 +540,10 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
-	cmd.Flags().String(client.FlagFrom, "", "Bech32 encoded address (fridayxxxxxx...)")
+	cmd.Flags().String(FlagAddress, "", "Bech32 endocded address (fridayxxxxxx..)")
+	cmd.Flags().String(FlagWallet, "", "Wallet alias")
+	cmd.Flags().String(FlagNickname, "", "Nickname")
+
 	cmd.Flags().AddFlagSet(fsDescriptionEdit)
 
 	cmd.MarkFlagRequired(client.FlagFrom)
