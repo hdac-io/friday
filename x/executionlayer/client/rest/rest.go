@@ -20,8 +20,8 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 	r.HandleFunc(fmt.Sprintf("/%s/unbond", storeName), unbondHandler(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/%s/balance", storeName), getBalanceHandler(cliCtx, storeName)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/%s/validator", storeName), getValidatorHandler(cliCtx, storeName)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/%s/validator", storeName), createValidatorHandler(cliCtx)).Methods("PUT")
-	r.HandleFunc(fmt.Sprintf("/%s/validator", storeName), editValidatorHandler(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/%s/validator", storeName), createValidatorHandler(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/%s/validator", storeName), editValidatorHandler(cliCtx)).Methods("PUT")
 }
 
 func transferHandler(cliCtx context.CLIContext) http.HandlerFunc {
