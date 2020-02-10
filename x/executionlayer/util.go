@@ -41,10 +41,6 @@ func toBytes(keyType string, key string,
 	return bytes, nil
 }
 
-func isEmptyBytes(src []byte) bool {
-	return bytes.Equal([]byte{}, src)
-}
-
 func ProtobufSafeEncodeBytes(src []byte) []byte {
 	if bytes.Equal(src, []byte("empty")) {
 		src = []byte{}

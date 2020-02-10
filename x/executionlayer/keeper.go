@@ -52,10 +52,10 @@ func (k ExecutionLayerKeeper) MustGetProtocolVersion(ctx sdk.Context) state.Prot
 
 // SetUnitHashMap map unitHash to blockHash
 func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockHash []byte, unitHash UnitHashMap) bool {
-	if isEmptyBytes(blockHash) {
+	if len(blockHash) == 0 {
 		blockHash = []byte(types.GenesisBlockHashKey)
 	}
-	if isEmptyBytes(unitHash.EEState) || len(unitHash.EEState) != 32 {
+	if len(unitHash.EEState) == 0 || len(unitHash.EEState) != 32 {
 		return false
 	}
 
@@ -72,7 +72,7 @@ func (k ExecutionLayerKeeper) SetUnitHashMap(ctx sdk.Context, blockHash []byte, 
 
 // GetUnitHashMap returns a UnitHashMap for blockHash
 func (k ExecutionLayerKeeper) GetUnitHashMap(ctx sdk.Context, blockHash []byte) UnitHashMap {
-	if isEmptyBytes(blockHash) {
+	if len(blockHash) == 0 {
 		blockHash = []byte(types.GenesisBlockHashKey)
 	}
 	store := ctx.KVStore(k.HashMapStoreKey)
@@ -84,10 +84,10 @@ func (k ExecutionLayerKeeper) GetUnitHashMap(ctx sdk.Context, blockHash []byte) 
 
 // SetEEState map eeState to blockHash
 func (k ExecutionLayerKeeper) SetEEState(ctx sdk.Context, blockHash []byte, eeState []byte) bool {
-	if isEmptyBytes(blockHash) {
+	if len(blockHash) == 0 {
 		blockHash = []byte(types.GenesisBlockHashKey)
 	}
-	if isEmptyBytes(eeState) || len(eeState) != 32 {
+	if len(eeState) == 0 || len(eeState) != 32 {
 		return false
 	}
 
@@ -100,7 +100,7 @@ func (k ExecutionLayerKeeper) SetEEState(ctx sdk.Context, blockHash []byte, eeSt
 
 // GetEEState returns a eeState for blockHash
 func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockHash []byte) []byte {
-	if isEmptyBytes(blockHash) {
+	if len(blockHash) == 0 {
 		blockHash = []byte(types.GenesisBlockHashKey)
 	}
 	unit := k.GetUnitHashMap(ctx, blockHash)
