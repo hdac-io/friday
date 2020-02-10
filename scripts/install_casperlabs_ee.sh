@@ -16,6 +16,7 @@ cd CasperLabs
 git fetch origin refs/tags/$CASPERLABS_TARGET_TAG:refs/tags/$CASPERLABS_TARGET_TAG
 git checkout $CASPERLABS_TARGET_TAG
 
+source $HOME/.cargo/env
 cd execution-engine
 make setup
 cargo build --release # build execution engine
