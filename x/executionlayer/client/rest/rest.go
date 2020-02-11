@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 
@@ -19,9 +18,9 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 	r.HandleFunc(fmt.Sprintf("/%s/bond", storeName), bondHandler(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/%s/unbond", storeName), unbondHandler(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/%s/balance", storeName), getBalanceHandler(cliCtx, storeName)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/%s/validator", storeName), getValidatorHandler(cliCtx, storeName)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/%s/validator", storeName), createValidatorHandler(cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/%s/validator", storeName), editValidatorHandler(cliCtx)).Methods("PUT")
+	r.HandleFunc(fmt.Sprintf("/%s/validators", storeName), getValidatorHandler(cliCtx, storeName)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/%s/validators", storeName), createValidatorHandler(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/%s/validators", storeName), editValidatorHandler(cliCtx)).Methods("PUT")
 }
 
 func transferHandler(cliCtx context.CLIContext) http.HandlerFunc {
@@ -105,7 +104,7 @@ func getValidatorHandler(cliCtx context.CLIContext, storeName string) http.Handl
 		}
 
 		var res []byte
-		if bytes.Equal(bz, []byte{}) {
+		if len(bz) == 0 {
 			res, _, err = cliCtx.Query(fmt.Sprintf("custom/%s/queryallvalidator", storeName))
 		} else {
 			res, _, err = cliCtx.QueryWithData(fmt.Sprintf("custom/%s/queryvalidator", types.ModuleName), bz)
