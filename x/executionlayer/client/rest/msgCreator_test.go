@@ -121,6 +121,78 @@ func TestRESTBalance(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 }
+
+func TestRESTGetValidator(t *testing.T) {
+	fromAddr, _, writer, clictx, _ := prepare()
+
+	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/validator?address=%s", types.ModuleName, fromAddr), nil)
+	res, err := getValidatorQuerying(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
+func TestRESTGetValidators(t *testing.T) {
+	_, _, writer, clictx, _ := prepare()
+
+	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/validator", types.ModuleName), nil)
+	res, err := getValidatorQuerying(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
+func TestRESTCreateValidator(t *testing.T) {
+	fromAddr, _, writer, clictx, basereq := prepare()
+
+	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
+	createValidatorReq := createValidatorReq{
+		ChainID:                    basereq.ChainID,
+		ValidatorAddressOrNickName: fromAddr,
+		ConsPubKey:                 "fridayvalconspub16jrl8jvqq9k957nfd43n2dnyxc6nsazpgf5yuwtzfe6kku63ga6nvtmcdeg92vj4gy4kkd62vd69vvnhx935w5zpw9ex7733tft8we6evemzke66xv4ks56gfdvx66ndfye5x5z9fs6j74z6g3u4zdzd0p8hw6mr24k8wjzx0ghhz5z8vdm92vjs2e8xwdn5xpvxu56fvejnj7t6wsens5gwxlen9",
+		Moniker:                    "moniker",
+		Identity:                   "identity",
+		Website:                    "https://test.io",
+		Details:                    "details",
+		Gas:                        gas,
+		Memo:                       basereq.Memo,
+	}
+
+	body := clictx.Codec.MustMarshalJSON(createValidatorReq)
+	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/validator", types.ModuleName), bytes.NewReader((body)))
+
+	outputCreateValidatorReq, msgs, err := createValidatorMsgCreator(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.Equal(t, outputCreateValidatorReq, basereq)
+	require.NotNil(t, msgs)
+}
+
+func TestRESTEditValidator(t *testing.T) {
+	fromAddr, _, writer, clictx, basereq := prepare()
+
+	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
+	editValidatorReq := editValidatorReq{
+		ChainID:                    basereq.ChainID,
+		ValidatorAddressOrNickName: fromAddr,
+		Moniker:                    "edit-moniker",
+		Identity:                   "edit-identity",
+		Website:                    "https://edit.test.io",
+		Details:                    "edit",
+		Gas:                        gas,
+		Memo:                       basereq.Memo,
+	}
+
+	body := clictx.Codec.MustMarshalJSON(editValidatorReq)
+	req := mustNewRequest(t, "PUT", fmt.Sprintf("/%s/validator", types.ModuleName), bytes.NewReader((body)))
+
+	outputEditValidatorReq, msgs, err := editValidatorMsgCreator(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.Equal(t, outputEditValidatorReq, basereq)
+	require.NotNil(t, msgs)
+}
+
 func mustNewRequest(t *testing.T, method, url string, body io.Reader) *http.Request {
 	req, err := http.NewRequest(method, url, body)
 	require.NoError(t, err)
