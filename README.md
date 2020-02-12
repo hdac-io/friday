@@ -49,7 +49,7 @@ You should launch execution engine grpc server first.
 
 ```sh
 cd friday
-./CasperLabs/execution-engine/target/release/casperlabs-engine-grpc-server $HOME/.casperlabs/.casper-node.sock$
+./CasperLabs/execution-engine/target/release/casperlabs-engine-grpc-server $HOME/.casperlabs/.casper-node.sock&
 ```
 
 And simply make it again!
