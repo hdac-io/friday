@@ -160,15 +160,12 @@ func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 }
 
 type createValidatorReq struct {
-	ChainID                    string `json:"chain_id"`
-	ValidatorAddressOrNickName string `json:"validator_address_or_nickname"`
-	ConsPubKey                 string `json:"cons_pub_key"`
-	Moniker                    string `json:"moniker"`
-	Identity                   string `json:"identity"`
-	Website                    string `json:"website"`
-	Details                    string `json:"details"`
-	Gas                        uint64 `json:"gas"`
-	Memo                       string `json:"memo"`
+	ChainID                    string            `json:"chain_id"`
+	ValidatorAddressOrNickName string            `json:"validator_address_or_nickname"`
+	ConsPubKey                 string            `json:"cons_pub_key"`
+	Description                types.Description `json:"description"`
+	Gas                        uint64            `json:"gas"`
+	Memo                       string            `json:"memo"`
 }
 
 func createValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
@@ -206,7 +203,7 @@ func createValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext,
 	}
 
 	// create the message
-	msg := types.NewMsgCreateValidator(valAddr, consPubKey, types.NewDescription(req.Moniker, req.Identity, req.Website, req.Details))
+	msg := types.NewMsgCreateValidator(valAddr, consPubKey, req.Description)
 	err = msg.ValidateBasic()
 	if err != nil {
 		return rest.BaseReq{}, nil, err
@@ -216,14 +213,11 @@ func createValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext,
 }
 
 type editValidatorReq struct {
-	ChainID                    string `json:"chain_id"`
-	ValidatorAddressOrNickName string `json:"validator_address_or_nickname"`
-	Moniker                    string `json:"moniker"`
-	Identity                   string `json:"identity"`
-	Website                    string `json:"website"`
-	Details                    string `json:"details"`
-	Gas                        uint64 `json:"gas"`
-	Memo                       string `json:"memo"`
+	ChainID                    string            `json:"chain_id"`
+	ValidatorAddressOrNickName string            `json:"validator_address_or_nickname"`
+	Description                types.Description `json:"description"`
+	Gas                        uint64            `json:"gas"`
+	Memo                       string            `json:"memo"`
 }
 
 func editValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
@@ -255,7 +249,7 @@ func editValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r
 	}
 
 	// create the message
-	msg := types.NewMsgEditValidator(valAddr, types.NewDescription(req.Moniker, req.Identity, req.Website, req.Details))
+	msg := types.NewMsgEditValidator(valAddr, req.Description)
 	err = msg.ValidateBasic()
 	if err != nil {
 		return rest.BaseReq{}, nil, err
