@@ -132,6 +132,14 @@ def create_wallet(wallet_alias: str, passphrase: str):
     return res
 
 
+def get_wallet_info(wallet_alias: str):
+    """
+    clif keys show <wallet_alias>
+    """
+    res = _process_executor("clif keys show {}", wallet_alias, need_output=True)
+    return res
+
+
 def delete_wallet(wallet_alias: str, passphrase: str):
     """
     clif key delete <wallet_alias>
