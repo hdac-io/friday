@@ -16,7 +16,6 @@ import (
 type transferReq struct {
 	BaseReq                    rest.BaseReq `json:"base_req"`
 	TokenContractAddress       string       `json:"token_contract_address"`
-	SenderAddressOrNickname    string       `json:"sender_address_or_nickname"`
 	RecipientAddressOrNickname string       `json:"recipient_address_or_nickname"`
 	Amount                     uint64       `json:"amount"`
 	Fee                        uint64       `json:"fee"`
@@ -31,11 +30,11 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 	}
 
 	var senderAddr sdk.AccAddress
-	senderAddr, err := sdk.AccAddressFromBech32(req.SenderAddressOrNickname)
+	senderAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
 	if err != nil {
-		senderAddr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, req.SenderAddressOrNickname)
+		senderAddr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, req.BaseReq.From)
 		if err != nil {
-			return rest.BaseReq{}, nil, fmt.Errorf("failed to parse sender address or name: %s", req.SenderAddressOrNickname)
+			return rest.BaseReq{}, nil, fmt.Errorf("failed to parse sender address or name: %s", req.BaseReq.From)
 		}
 	}
 
@@ -72,7 +71,6 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 type bondReq struct {
 	BaseReq              rest.BaseReq `json:"base_req"`
 	TokenContractAddress string       `json:"token_contract_address"`
-	AddressOrNickname    string       `json:"address_or_nickname"`
 	Amount               uint64       `json:"amount"`
 	Fee                  uint64       `json:"fee"`
 }
@@ -87,11 +85,11 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 
 	// Parameter touching
 	var addr sdk.AccAddress
-	addr, err := sdk.AccAddressFromBech32(req.AddressOrNickname)
+	addr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
 	if err != nil {
-		addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, req.AddressOrNickname)
+		addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, req.BaseReq.From)
 		if err != nil {
-			return rest.BaseReq{}, nil, fmt.Errorf("failed to parse address or name: %s", req.AddressOrNickname)
+			return rest.BaseReq{}, nil, fmt.Errorf("failed to parse address or name: %s", req.BaseReq.From)
 		}
 	}
 
@@ -155,10 +153,9 @@ func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 }
 
 type createValidatorReq struct {
-	BaseReq                    rest.BaseReq      `json:"base_req"`
-	ValidatorAddressOrNickName string            `json:"validator_address_or_nickname"`
-	ConsPubKey                 string            `json:"cons_pub_key"`
-	Description                types.Description `json:"description"`
+	BaseReq     rest.BaseReq      `json:"base_req"`
+	ConsPubKey  string            `json:"cons_pub_key"`
+	Description types.Description `json:"description"`
 }
 
 func createValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
@@ -170,11 +167,11 @@ func createValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext,
 	}
 
 	var valAddr sdk.AccAddress
-	valAddr, err := sdk.AccAddressFromBech32(req.ValidatorAddressOrNickName)
+	valAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
 	if err != nil {
-		valAddr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, req.ValidatorAddressOrNickName)
+		valAddr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, req.BaseReq.From)
 		if err != nil {
-			return rest.BaseReq{}, nil, fmt.Errorf("failed to parse sender address or name: %s", req.ValidatorAddressOrNickName)
+			return rest.BaseReq{}, nil, fmt.Errorf("failed to parse sender address or name: %s", req.BaseReq.From)
 		}
 	}
 
@@ -200,9 +197,8 @@ func createValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext,
 }
 
 type editValidatorReq struct {
-	BaseReq                    rest.BaseReq      `json:"base_req"`
-	ValidatorAddressOrNickName string            `json:"validator_address_or_nickname"`
-	Description                types.Description `json:"description"`
+	BaseReq     rest.BaseReq      `json:"base_req"`
+	Description types.Description `json:"description"`
 }
 
 func editValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
@@ -214,11 +210,11 @@ func editValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r
 	}
 
 	var valAddr sdk.AccAddress
-	valAddr, err := sdk.AccAddressFromBech32(req.ValidatorAddressOrNickName)
+	valAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
 	if err != nil {
-		valAddr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, req.ValidatorAddressOrNickName)
+		valAddr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, req.BaseReq.From)
 		if err != nil {
-			return rest.BaseReq{}, nil, fmt.Errorf("failed to parse sender address or name: %s", req.ValidatorAddressOrNickName)
+			return rest.BaseReq{}, nil, fmt.Errorf("failed to parse sender address or name: %s", req.BaseReq.From)
 		}
 	}
 
