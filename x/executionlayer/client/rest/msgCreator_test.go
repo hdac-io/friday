@@ -41,7 +41,6 @@ func TestRESTTransfer(t *testing.T) {
 	transReq := transferReq{
 		BaseReq:                    basereq,
 		TokenContractAddress:       fromAddr,
-		SenderAddressOrNickname:    fromAddr,
 		RecipientAddressOrNickname: receipAddr,
 		Amount:                     20_000_000,
 		Fee:                        10_000_000,
@@ -59,14 +58,13 @@ func TestRESTTransfer(t *testing.T) {
 }
 
 func TestRESTBond(t *testing.T) {
-	fromAddr, _, writer, clictx, basereq := prepare()
+	_, _, writer, clictx, basereq := prepare()
 
 	// Body
 	bondReq := bondReq{
-		BaseReq:           basereq,
-		AddressOrNickname: fromAddr,
-		Amount:            100_000_000,
-		Fee:               10_000_000,
+		BaseReq: basereq,
+		Amount:  100_000_000,
+		Fee:     10_000_000,
 	}
 
 	// http.request
@@ -81,14 +79,13 @@ func TestRESTBond(t *testing.T) {
 }
 
 func TestRESTUnbond(t *testing.T) {
-	fromAddr, _, writer, clictx, basereq := prepare()
+	_, _, writer, clictx, basereq := prepare()
 
 	// Body
 	bondReq := bondReq{
-		BaseReq:           basereq,
-		AddressOrNickname: fromAddr,
-		Amount:            100_000_000,
-		Fee:               10_000_000,
+		BaseReq: basereq,
+		Amount:  100_000_000,
+		Fee:     10_000_000,
 	}
 
 	// http.request
@@ -133,13 +130,12 @@ func TestRESTGetValidators(t *testing.T) {
 }
 
 func TestRESTCreateValidator(t *testing.T) {
-	fromAddr, _, writer, clictx, basereq := prepare()
+	_, _, writer, clictx, basereq := prepare()
 
 	createValidatorReq := createValidatorReq{
-		BaseReq:                    basereq,
-		ValidatorAddressOrNickName: fromAddr,
-		ConsPubKey:                 "fridayvalconspub16jrl8jvqq9k957nfd43n2dnyxc6nsazpgf5yuwtzfe6kku63ga6nvtmcdeg92vj4gy4kkd62vd69vvnhx935w5zpw9ex7733tft8we6evemzke66xv4ks56gfdvx66ndfye5x5z9fs6j74z6g3u4zdzd0p8hw6mr24k8wjzx0ghhz5z8vdm92vjs2e8xwdn5xpvxu56fvejnj7t6wsens5gwxlen9",
-		Description:                types.NewDescription("moniker", "identity", "https://test.io", "details"),
+		BaseReq:     basereq,
+		ConsPubKey:  "fridayvalconspub16jrl8jvqq9k957nfd43n2dnyxc6nsazpgf5yuwtzfe6kku63ga6nvtmcdeg92vj4gy4kkd62vd69vvnhx935w5zpw9ex7733tft8we6evemzke66xv4ks56gfdvx66ndfye5x5z9fs6j74z6g3u4zdzd0p8hw6mr24k8wjzx0ghhz5z8vdm92vjs2e8xwdn5xpvxu56fvejnj7t6wsens5gwxlen9",
+		Description: types.NewDescription("moniker", "identity", "https://test.io", "details"),
 	}
 
 	body := clictx.Codec.MustMarshalJSON(createValidatorReq)
@@ -153,12 +149,11 @@ func TestRESTCreateValidator(t *testing.T) {
 }
 
 func TestRESTEditValidator(t *testing.T) {
-	fromAddr, _, writer, clictx, basereq := prepare()
+	_, _, writer, clictx, basereq := prepare()
 
 	editValidatorReq := editValidatorReq{
-		BaseReq:                    basereq,
-		ValidatorAddressOrNickName: fromAddr,
-		Description:                types.NewDescription("moniker", "identity", "https://test.io", "details"),
+		BaseReq:     basereq,
+		Description: types.NewDescription("moniker", "identity", "https://test.io", "details"),
 	}
 
 	body := clictx.Codec.MustMarshalJSON(editValidatorReq)

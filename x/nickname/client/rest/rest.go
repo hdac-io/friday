@@ -29,10 +29,8 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 // Tx Handler
 
 type newNickname struct {
-	BaseReq rest.BaseReq `json:"base_req"`
-
-	Nickname string `json:"nickname"`
-	Address  string `json:"address"`
+	BaseReq  rest.BaseReq `json:"base_req"`
+	Nickname string       `json:"nickname"`
 }
 
 func newNicknameHandler(cliCtx context.CLIContext) http.HandlerFunc {
@@ -43,12 +41,11 @@ func newNicknameHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		addr, err := sdk.AccAddressFromBech32(req.Address)
+		addr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse from given address")
 		}
 
-		req.BaseReq.From = req.Address
 		if !req.BaseReq.ValidateBasic(w) {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse base request")
 			return
@@ -73,11 +70,9 @@ func newNicknameHandler(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 type changeKey struct {
-	BaseReq rest.BaseReq `json:"base_req"`
-
-	Nickname   string `json:"nickname"`
-	OldAddress string `json:"old_address"`
-	NewAddress string `json:"new_address"`
+	BaseReq    rest.BaseReq `json:"base_req"`
+	Nickname   string       `json:"nickname"`
+	NewAddress string       `json:"new_address"`
 }
 
 func changeKeyHandler(cliCtx context.CLIContext) http.HandlerFunc {
@@ -88,7 +83,7 @@ func changeKeyHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		oldaddr, err := sdk.AccAddressFromBech32(req.OldAddress)
+		oldaddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse 'old_address'")
 		}
@@ -98,7 +93,6 @@ func changeKeyHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse 'new_address'")
 		}
 
-		req.BaseReq.From = req.OldAddress
 		req.BaseReq = req.BaseReq.Sanitize()
 		if !req.BaseReq.ValidateBasic(w) {
 			return
