@@ -14,13 +14,18 @@ import (
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) {
-	r.HandleFunc(fmt.Sprintf("/%s/transfer", storeName), transferHandler(cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/%s/bond", storeName), bondHandler(cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/%s/unbond", storeName), unbondHandler(cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/%s/balance", storeName), getBalanceHandler(cliCtx, storeName)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/%s/validators", storeName), getValidatorHandler(cliCtx, storeName)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/%s/validators", storeName), createValidatorHandler(cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/%s/validators", storeName), editValidatorHandler(cliCtx)).Methods("PUT")
+	const (
+		hdacSpecific = "hdac"
+		general      = "contract"
+	)
+
+	r.HandleFunc(fmt.Sprintf("/%s/transfer", hdacSpecific), transferHandler(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/%s/bond", hdacSpecific), bondHandler(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/%s/unbond", hdacSpecific), unbondHandler(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/%s/balance", hdacSpecific), getBalanceHandler(cliCtx, storeName)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/%s/validators", hdacSpecific), getValidatorHandler(cliCtx, storeName)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/%s/validators", hdacSpecific), createValidatorHandler(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/%s/validators", hdacSpecific), editValidatorHandler(cliCtx)).Methods("PUT")
 }
 
 func transferHandler(cliCtx context.CLIContext) http.HandlerFunc {

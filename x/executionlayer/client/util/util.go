@@ -15,7 +15,8 @@ import (
 // GetAddress searches address in nickname mapping
 func GetAddress(cdc *codec.Codec, cliCtx context.CLIContext, addressOrName string) (sdk.AccAddress, error) {
 	var address sdk.AccAddress
-	address, err := sdk.AccAddressFromBech32(addressOrName)
+	var err error
+	address, err = sdk.AccAddressFromBech32(addressOrName)
 	if err != nil {
 		queryData := idtype.QueryReqUnitAccount{
 			Nickname: addressOrName,

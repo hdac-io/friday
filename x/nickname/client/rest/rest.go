@@ -29,9 +29,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 // Tx Handler
 
 type newNickname struct {
-	ChainID  string `json:"chain_id"`
-	GasPrice uint64 `json:"gas_price"`
-	Memo     string `json:"memo"`
+	BaseReq rest.BaseReq `json:"base_req"`
 
 	Nickname string `json:"nickname"`
 	Address  string `json:"address"`
@@ -50,21 +48,14 @@ func newNicknameHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse from given address")
 		}
 
-		// Force organizing base request
-		baseReq := rest.BaseReq{
-			From:    req.Address,
-			ChainID: req.ChainID,
-			Gas:     fmt.Sprint(req.GasPrice),
-			Memo:    req.Memo,
-		}
-
-		if !baseReq.ValidateBasic(w) {
+		req.BaseReq.From = req.Address
+		if !req.BaseReq.ValidateBasic(w) {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse base request")
 			return
 		}
 
-		baseReq = baseReq.Sanitize()
-		if !baseReq.ValidateBasic(w) {
+		req.BaseReq = req.BaseReq.Sanitize()
+		if !req.BaseReq.ValidateBasic(w) {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse base request")
 			return
 		}
@@ -77,14 +68,12 @@ func newNicknameHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		utils.WriteGenerateStdTxResponse(w, cliCtx, baseReq, []sdk.Msg{msg})
+		utils.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 
 type changeKey struct {
-	ChainID  string `json:"chain_id"`
-	GasPrice uint64 `json:"gas_price"`
-	Memo     string `json:"memo"`
+	BaseReq rest.BaseReq `json:"base_req"`
 
 	Nickname   string `json:"nickname"`
 	OldAddress string `json:"old_address"`
@@ -109,16 +98,9 @@ func changeKeyHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse 'new_address'")
 		}
 
-		// Force organizing base request
-		baseReq := rest.BaseReq{
-			From:    req.OldAddress,
-			ChainID: req.ChainID,
-			Gas:     fmt.Sprint(req.GasPrice),
-			Memo:    req.Memo,
-		}
-
-		baseReq = baseReq.Sanitize()
-		if !baseReq.ValidateBasic(w) {
+		req.BaseReq.From = req.OldAddress
+		req.BaseReq = req.BaseReq.Sanitize()
+		if !req.BaseReq.ValidateBasic(w) {
 			return
 		}
 
@@ -135,7 +117,7 @@ func changeKeyHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		utils.WriteGenerateStdTxResponse(w, cliCtx, baseReq, []sdk.Msg{msg})
+		utils.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }
 
