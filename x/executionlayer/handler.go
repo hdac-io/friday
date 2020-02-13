@@ -2,10 +2,12 @@ package executionlayer
 
 import (
 	"fmt"
-	"math/big"
 	"os"
+	"strconv"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc/transforms"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
@@ -44,16 +46,25 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 //   1) Raw account is needed for checking address existence
 //   2) Fixed transfer & payment WASMs are needed
 func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTransfer) sdk.Result {
+	sessionArgs := []*consensus.Deploy_Arg{
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_BytesValue{
+					BytesValue: msg.ToAddress.ToEEAddress()}}},
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_LongValue{
+					LongValue: int64(msg.Amount)}}},
+	}
+
 	msgExecute := NewMsgExecute(
 		msg.ContractAddress,
 		msg.FromAddress,
 		// TODO Will be change store contract call
 		util.WASM,
 		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm")),
-		util.MakeArgsTransferToAccount(msg.ToAddress.ToEEAddress(), msg.Amount),
-		util.WASM,
-		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm")),
-		util.MakeArgsStandardPayment(new(big.Int).SetUint64(msg.Fee)),
+		util.AbiDeployArgsTobytes(sessionArgs),
+		msg.Fee,
 		msg.GasPrice,
 	)
 	result, log := execute(ctx, k, msgExecute)
@@ -105,16 +116,21 @@ func handlerMsgEditValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.
 }
 
 func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) sdk.Result {
+	sessionArgs := []*consensus.Deploy_Arg{
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_LongValue{
+					LongValue: int64(msg.Amount)}}},
+	}
+
 	msgExecute := NewMsgExecute(
 		msg.ContractAddress,
 		msg.FromAddress,
 		// TODO Will be change store contract call
 		util.WASM,
 		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/bonding.wasm")),
-		util.MakeArgsBonding(msg.Amount),
-		util.WASM,
-		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm")),
-		util.MakeArgsStandardPayment(new(big.Int).SetUint64(msg.Fee)),
+		util.AbiDeployArgsTobytes(sessionArgs),
+		msg.Fee,
 		msg.GasPrice,
 	)
 	result, log := execute(ctx, k, msgExecute)
@@ -122,16 +138,22 @@ func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) 
 }
 
 func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBond) sdk.Result {
+	sessionArgs := []*consensus.Deploy_Arg{
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_OptionalValue{
+					OptionalValue: &consensus.Deploy_Arg_Value{
+						Value: &consensus.Deploy_Arg_Value_LongValue{
+							LongValue: int64(msg.Amount)}}}}}}
+
 	msgExecute := NewMsgExecute(
 		msg.ContractAddress,
 		msg.FromAddress,
 		// TODO Will be change store contract call
 		util.WASM,
 		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/unbonding.wasm")),
-		util.MakeArgsUnBonding(msg.Amount),
-		util.WASM,
-		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm")),
-		util.MakeArgsStandardPayment(new(big.Int).SetUint64(msg.Fee)),
+		util.AbiDeployArgsTobytes(sessionArgs),
+		msg.Fee,
 		msg.GasPrice,
 	)
 	result, log := execute(ctx, k, msgExecute)
@@ -146,12 +168,20 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) (boo
 	protocolVersion := k.MustGetProtocolVersion(ctx)
 	log := ""
 
+	paymentArgs := []*consensus.Deploy_Arg{
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_BigInt{
+					BigInt: &state.BigInt{
+						Value:    strconv.FormatUint(msg.Fee, 10),
+						BitWidth: 512}}}}}
+
 	// Execute
 	deploys := []*ipc.DeployItem{}
 	deploy := util.MakeDeploy(
 		ProtobufSafeEncodeBytes(msg.ExecAddress.ToEEAddress()),
 		msg.SessionType, ProtobufSafeEncodeBytes(msg.SessionCode), ProtobufSafeEncodeBytes(msg.SessionArgs),
-		msg.PaymentType, ProtobufSafeEncodeBytes(msg.PaymentCode), ProtobufSafeEncodeBytes(msg.PaymentArgs),
+		util.WASM, util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm")), util.AbiDeployArgsTobytes(paymentArgs),
 		msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
 	deploys = append(deploys, deploy)
 	reqExecute := &ipc.ExecuteRequest{
