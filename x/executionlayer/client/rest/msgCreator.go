@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/hdac-io/friday/client/context"
 	sdk "github.com/hdac-io/friday/types"
@@ -13,14 +14,12 @@ import (
 )
 
 type transferReq struct {
-	ChainID                    string `json:"chain_id"`
-	TokenContractAddress       string `json:"token_contract_address"`
-	SenderAddressOrNickname    string `json:"sender_address_or_nickname"`
-	RecipientAddressOrNickname string `json:"recipient_address_or_nickname"`
-	Amount                     uint64 `json:"amount"`
-	Fee                        uint64 `json:"fee"`
-	GasPrice                   uint64 `json:"gas_price"`
-	Memo                       string `json:"memo"`
+	BaseReq                    rest.BaseReq `json:"base_req"`
+	TokenContractAddress       string       `json:"token_contract_address"`
+	SenderAddressOrNickname    string       `json:"sender_address_or_nickname"`
+	RecipientAddressOrNickname string       `json:"recipient_address_or_nickname"`
+	Amount                     uint64       `json:"amount"`
+	Fee                        uint64       `json:"fee"`
 }
 
 func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
@@ -40,14 +39,8 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 		}
 	}
 
-	baseReq := rest.BaseReq{
-		From:    senderAddr.String(),
-		ChainID: req.ChainID,
-		Gas:     fmt.Sprint(req.GasPrice),
-		Memo:    req.Memo,
-	}
-
-	if !baseReq.ValidateBasic(w) {
+	req.BaseReq.From = senderAddr.String()
+	if !req.BaseReq.ValidateBasic(w) {
 		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse base request")
 	}
 
@@ -61,24 +54,27 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 		}
 	}
 
+	gas, err := strconv.ParseUint(req.BaseReq.Gas, 10, 64)
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
 	// create the message
-	eeMsg := types.NewMsgTransfer(req.TokenContractAddress, senderAddr, recipientAddr, req.Amount, req.Fee, req.GasPrice)
+	eeMsg := types.NewMsgTransfer(req.TokenContractAddress, senderAddr, recipientAddr, req.Amount, req.Fee, gas)
 	err = eeMsg.ValidateBasic()
 	if err != nil {
 		return rest.BaseReq{}, nil, err
 	}
 
-	return baseReq, []sdk.Msg{eeMsg}, nil
+	return req.BaseReq, []sdk.Msg{eeMsg}, nil
 }
 
 type bondReq struct {
-	ChainID              string `json:"chain_id"`
-	TokenContractAddress string `json:"token_contract_address"`
-	AddressOrNickname    string `json:"address_or_nickname"`
-	Amount               uint64 `json:"amount"`
-	GasPrice             uint64 `json:"gas_price"`
-	Fee                  uint64 `json:"fee"`
-	Memo                 string `json:"memo"`
+	BaseReq              rest.BaseReq `json:"base_req"`
+	TokenContractAddress string       `json:"token_contract_address"`
+	AddressOrNickname    string       `json:"address_or_nickname"`
+	Amount               uint64       `json:"amount"`
+	Fee                  uint64       `json:"fee"`
 }
 
 func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
@@ -99,22 +95,21 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 		}
 	}
 
-	baseReq := rest.BaseReq{
-		From:    addr.String(),
-		ChainID: req.ChainID,
-		Gas:     fmt.Sprint(req.GasPrice),
-		Memo:    req.Memo,
-	}
-
-	if !baseReq.ValidateBasic(w) {
+	req.BaseReq.From = addr.String()
+	if !req.BaseReq.ValidateBasic(w) {
 		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse base request")
 	}
 
 	var msg sdk.Msg
+	gas, err := strconv.ParseUint(req.BaseReq.Gas, 10, 64)
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
 	if bondIsTrue == true {
-		msg = types.NewMsgBond(req.TokenContractAddress, addr, req.Amount, req.Fee, req.GasPrice)
+		msg = types.NewMsgBond(req.TokenContractAddress, addr, req.Amount, req.Fee, gas)
 	} else {
-		msg = types.NewMsgUnBond(req.TokenContractAddress, addr, req.Amount, req.Fee, req.GasPrice)
+		msg = types.NewMsgUnBond(req.TokenContractAddress, addr, req.Amount, req.Fee, gas)
 	}
 
 	// create the message
@@ -123,7 +118,7 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 		return rest.BaseReq{}, nil, err
 	}
 
-	return baseReq, []sdk.Msg{msg}, nil
+	return req.BaseReq, []sdk.Msg{msg}, nil
 }
 
 func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error) {
@@ -160,12 +155,10 @@ func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 }
 
 type createValidatorReq struct {
-	ChainID                    string            `json:"chain_id"`
+	BaseReq                    rest.BaseReq      `json:"base_req"`
 	ValidatorAddressOrNickName string            `json:"validator_address_or_nickname"`
 	ConsPubKey                 string            `json:"cons_pub_key"`
 	Description                types.Description `json:"description"`
-	Gas                        uint64            `json:"gas"`
-	Memo                       string            `json:"memo"`
 }
 
 func createValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
@@ -185,14 +178,8 @@ func createValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext,
 		}
 	}
 
-	baseReq := rest.BaseReq{
-		From:    valAddr.String(),
-		ChainID: req.ChainID,
-		Gas:     fmt.Sprint(req.Gas),
-		Memo:    req.Memo,
-	}
-
-	if !baseReq.ValidateBasic(w) {
+	req.BaseReq.From = valAddr.String()
+	if !req.BaseReq.ValidateBasic(w) {
 		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse base request")
 	}
 
@@ -209,15 +196,13 @@ func createValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext,
 		return rest.BaseReq{}, nil, err
 	}
 
-	return baseReq, []sdk.Msg{msg}, nil
+	return req.BaseReq, []sdk.Msg{msg}, nil
 }
 
 type editValidatorReq struct {
-	ChainID                    string            `json:"chain_id"`
+	BaseReq                    rest.BaseReq      `json:"base_req"`
 	ValidatorAddressOrNickName string            `json:"validator_address_or_nickname"`
 	Description                types.Description `json:"description"`
-	Gas                        uint64            `json:"gas"`
-	Memo                       string            `json:"memo"`
 }
 
 func editValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
@@ -237,14 +222,8 @@ func editValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r
 		}
 	}
 
-	baseReq := rest.BaseReq{
-		From:    valAddr.String(),
-		ChainID: req.ChainID,
-		Gas:     fmt.Sprint(req.Gas),
-		Memo:    req.Memo,
-	}
-
-	if !baseReq.ValidateBasic(w) {
+	req.BaseReq.From = valAddr.String()
+	if !req.BaseReq.ValidateBasic(w) {
 		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse base request")
 	}
 
@@ -255,7 +234,7 @@ func editValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r
 		return rest.BaseReq{}, nil, err
 	}
 
-	return baseReq, []sdk.Msg{msg}, nil
+	return req.BaseReq, []sdk.Msg{msg}, nil
 }
 
 func getValidatorQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) ([]byte, error) {

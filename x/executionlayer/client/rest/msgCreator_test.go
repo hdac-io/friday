@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"testing"
 
 	"github.com/hdac-io/friday/client/context"
@@ -39,15 +38,12 @@ func TestRESTTransfer(t *testing.T) {
 	fromAddr, receipAddr, writer, clictx, basereq := prepare()
 
 	// Body
-	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
 	transReq := transferReq{
-		ChainID:                    basereq.ChainID,
-		Memo:                       basereq.Memo,
+		BaseReq:                    basereq,
 		TokenContractAddress:       fromAddr,
 		SenderAddressOrNickname:    fromAddr,
 		RecipientAddressOrNickname: receipAddr,
 		Amount:                     20_000_000,
-		GasPrice:                   gas,
 		Fee:                        10_000_000,
 	}
 
@@ -66,14 +62,11 @@ func TestRESTBond(t *testing.T) {
 	fromAddr, _, writer, clictx, basereq := prepare()
 
 	// Body
-	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
 	bondReq := bondReq{
-		ChainID:           basereq.ChainID,
-		Memo:              basereq.Memo,
+		BaseReq:           basereq,
 		AddressOrNickname: fromAddr,
 		Amount:            100_000_000,
 		Fee:               10_000_000,
-		GasPrice:          gas,
 	}
 
 	// http.request
@@ -91,14 +84,11 @@ func TestRESTUnbond(t *testing.T) {
 	fromAddr, _, writer, clictx, basereq := prepare()
 
 	// Body
-	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
 	bondReq := bondReq{
-		ChainID:           basereq.ChainID,
-		Memo:              basereq.Memo,
+		BaseReq:           basereq,
 		AddressOrNickname: fromAddr,
 		Amount:            100_000_000,
 		Fee:               10_000_000,
-		GasPrice:          gas,
 	}
 
 	// http.request
@@ -145,14 +135,11 @@ func TestRESTGetValidators(t *testing.T) {
 func TestRESTCreateValidator(t *testing.T) {
 	fromAddr, _, writer, clictx, basereq := prepare()
 
-	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
 	createValidatorReq := createValidatorReq{
-		ChainID:                    basereq.ChainID,
+		BaseReq:                    basereq,
 		ValidatorAddressOrNickName: fromAddr,
 		ConsPubKey:                 "fridayvalconspub16jrl8jvqq9k957nfd43n2dnyxc6nsazpgf5yuwtzfe6kku63ga6nvtmcdeg92vj4gy4kkd62vd69vvnhx935w5zpw9ex7733tft8we6evemzke66xv4ks56gfdvx66ndfye5x5z9fs6j74z6g3u4zdzd0p8hw6mr24k8wjzx0ghhz5z8vdm92vjs2e8xwdn5xpvxu56fvejnj7t6wsens5gwxlen9",
 		Description:                types.NewDescription("moniker", "identity", "https://test.io", "details"),
-		Gas:                        gas,
-		Memo:                       basereq.Memo,
 	}
 
 	body := clictx.Codec.MustMarshalJSON(createValidatorReq)
@@ -168,13 +155,10 @@ func TestRESTCreateValidator(t *testing.T) {
 func TestRESTEditValidator(t *testing.T) {
 	fromAddr, _, writer, clictx, basereq := prepare()
 
-	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
 	editValidatorReq := editValidatorReq{
-		ChainID:                    basereq.ChainID,
+		BaseReq:                    basereq,
 		ValidatorAddressOrNickName: fromAddr,
 		Description:                types.NewDescription("moniker", "identity", "https://test.io", "details"),
-		Gas:                        gas,
-		Memo:                       basereq.Memo,
 	}
 
 	body := clictx.Codec.MustMarshalJSON(editValidatorReq)
