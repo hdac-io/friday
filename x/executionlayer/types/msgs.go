@@ -18,9 +18,7 @@ type MsgExecute struct {
 	SessionType     util.ContractType `json:"session_type"`
 	SessionCode     []byte            `json:"session_code"`
 	SessionArgs     []byte            `json:"session_args"`
-	PaymentType     util.ContractType `json:"payment_type"`
-	PaymentCode     []byte            `json:"payment_code"`
-	PaymentArgs     []byte            `json:"payment_args"`
+	Fee             uint64            `json:"fee"`
 	GasPrice        uint64            `json:"gas_price"`
 }
 
@@ -30,9 +28,7 @@ func NewMsgExecute(
 	execAddress sdk.AccAddress,
 	sessionType util.ContractType,
 	sessionCode, sessionArgs []byte,
-	paymentType util.ContractType,
-	paymentCode, paymentArgs []byte,
-	gasPrice uint64,
+	fee, gasPrice uint64,
 ) MsgExecute {
 	return MsgExecute{
 		ExecAddress:     execAddress,
@@ -40,9 +36,7 @@ func NewMsgExecute(
 		SessionType:     sessionType,
 		SessionCode:     sessionCode,
 		SessionArgs:     sessionArgs,
-		PaymentType:     paymentType,
-		PaymentCode:     paymentCode,
-		PaymentArgs:     paymentArgs,
+		Fee:             fee,
 		GasPrice:        gasPrice,
 	}
 }

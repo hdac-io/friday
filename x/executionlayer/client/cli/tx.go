@@ -2,8 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"math/big"
-	"os"
 	"strconv"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
@@ -88,9 +86,18 @@ func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 				return fmt.Errorf("type must be one of wasm, name, uref, or hash")
 			}
 
-			sessionArgs, err := cliutil.ProtobufSafeDecodeingHexString(args[2])
-			if err != nil {
-				return err
+			var sessionAbi []byte
+			if args[2] == "" {
+				sessionAbi, err = cliutil.ProtobufSafeDecodeingHexString(args[2])
+				if err != nil {
+					return err
+				}
+			} else {
+				sessionArgs, err := util.JsonStringToDeployArgs(args[2])
+				if err != nil {
+					return err
+				}
+				sessionAbi = util.AbiDeployArgsTobytes(sessionArgs)
 			}
 
 			fee, err := strconv.ParseUint(args[3], 10, 64)
@@ -109,10 +116,8 @@ func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 				fromAddr,
 				sessionType,
 				sessionCode,
-				sessionArgs,
-				util.WASM,
-				util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm")),
-				util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee)),
+				sessionAbi,
+				fee,
 				gasPrice,
 			)
 			txBldr = txBldr.WithGas(gasPrice)

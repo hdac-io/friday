@@ -2,12 +2,13 @@ package executionlayer
 
 import (
 	"fmt"
-	"math/big"
 	"os"
 	"path"
 	"time"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	"github.com/hdac-io/friday/codec"
 	"github.com/hdac-io/friday/store"
@@ -122,7 +123,16 @@ func genesis(input testInput) []byte {
 func counterDefine(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	input := setupTestInput()
 	timestamp := time.Now().Unix()
-	paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000))
+	paymentArgs := []*consensus.Deploy_Arg{
+		&consensus.Deploy_Arg{
+			Name: "fee",
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_BigInt{
+					BigInt: &state.BigInt{
+						Value:    "100000000",
+						BitWidth: 512,
+					}}}}}
+	paymentAbi := util.AbiDeployArgsTobytes(paymentArgs)
 	cntDefCode := util.LoadWasmFile(path.Join(contractPath, counterDefineWasm))
 	standardPaymentCode := util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm))
 	protocolVersion := input.elk.MustGetProtocolVersion(input.ctx)
@@ -151,7 +161,16 @@ func counterDefine(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 func counterCall(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	input := setupTestInput()
 	timestamp := time.Now().Unix()
-	paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000))
+	paymentArgs := []*consensus.Deploy_Arg{
+		&consensus.Deploy_Arg{
+			Name: "fee",
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_BigInt{
+					BigInt: &state.BigInt{
+						Value:    "100000000",
+						BitWidth: 512,
+					}}}}}
+	paymentAbi := util.AbiDeployArgsTobytes(paymentArgs)
 	cntCallCode := util.LoadWasmFile(path.Join(contractPath, counterCallWasm))
 	standardPaymentCode := util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm))
 	protocolVersion := input.elk.MustGetProtocolVersion(input.ctx)

@@ -3,7 +3,6 @@ package executionlayer
 import (
 	"encoding/hex"
 	"fmt"
-	"math/big"
 	"path"
 	"reflect"
 	"strconv"
@@ -103,9 +102,7 @@ func TestCreateBlock(t *testing.T) {
 		util.WASM,
 		util.LoadWasmFile(path.Join(contractPath, counterDefineWasm)),
 		[]byte{},
-		util.WASM,
-		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
-		util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000)),
+		uint64(100000000),
 		uint64(10),
 	)
 	handlerMsgExecute(input.ctx, input.elk, counterDefineMSG)
@@ -125,9 +122,7 @@ func TestCreateBlock(t *testing.T) {
 		util.WASM,
 		util.LoadWasmFile(path.Join(contractPath, counterCallWasm)),
 		[]byte{},
-		util.WASM,
-		util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm)),
-		util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000)),
+		uint64(100000000),
 		uint64(10),
 	)
 	handlerMsgExecute(input.ctx, input.elk, counterCallMSG)
