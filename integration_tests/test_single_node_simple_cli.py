@@ -5,7 +5,7 @@ import pytest
 from .lib import cmd
 from .lib.errors import DeadDaemonException
 
-class TestClass():
+class TestSingleNode():
     proc_ee = None
     proc_friday = None
 
@@ -14,10 +14,14 @@ class TestClass():
 
     wallet_elsa = "elsa"
     wallet_anna = "anna"
+    wallet_olaf = "olaf"
+    wallet_hans = "hans"
     wallet_password = "!friday1234@"
 
     info_elsa = None
     info_anna = None
+    info_olaf = None
+    info_hans = None
 
     basic_coin = 5000000000000
     basic_stake = 100000000
@@ -63,14 +67,20 @@ class TestClass():
         print("Create wallet")
         self.info_elsa = cmd.create_wallet(self.wallet_elsa, self.wallet_password)
         self.info_anna = cmd.create_wallet(self.wallet_anna, self.wallet_password)
+        self.info_olaf = cmd.create_wallet(self.wallet_olaf, self.wallet_password)
+        self.info_hans = cmd.create_wallet(self.wallet_hans, self.wallet_password)
 
         print("Add genesis account in cosmos way")
         cmd.add_genesis_account(self.info_elsa['address'], self.basic_coin, self.basic_stake)
         cmd.add_genesis_account(self.info_anna['address'], self.basic_coin, self.basic_stake)
+        cmd.add_genesis_account(self.info_olaf['address'], self.basic_coin, self.basic_stake)
+        cmd.add_genesis_account(self.info_hans['address'], self.basic_coin, self.basic_stake)
 
         print("Add genesis account in EE way")
         cmd.add_el_genesis_account(self.wallet_elsa, self.basic_coin, self.basic_stake)
         cmd.add_el_genesis_account(self.wallet_anna, self.basic_coin, self.basic_stake)
+        cmd.add_el_genesis_account(self.wallet_olaf, self.basic_coin, self.basic_stake)
+        cmd.add_el_genesis_account(self.wallet_hans, self.basic_coin, self.basic_stake)
 
         print("Load chainspec")
         cmd.load_chainspec()
