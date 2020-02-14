@@ -1,8 +1,7 @@
 from lib import cmd
 
 def setup_multinode():
-    chain_id = "testchain"
-    moniker = "testnode"
+    chain_id = "ci_testnet"
 
     wallet_elsa = "elsa"
     wallet_anna = "anna"
@@ -20,11 +19,6 @@ def setup_multinode():
 
     print("*********************Multinode environment preparation start*********************")
 
-    print("Cleanup double check")
-    cmd.whole_cleanup()
-
-    print("Init chain")
-    cmd.init_chain(moniker, chain_id)
     print("Copy manifest file")
     cmd.copy_manifest()
 
@@ -60,7 +54,7 @@ def setup_multinode():
     cmd.validate_genesis()
 
     print("*********************Multinode environment preparation done*********************")
-    
+
 
 if __name__ == "__main__":
     setup_multinode()
