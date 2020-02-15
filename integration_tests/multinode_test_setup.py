@@ -1,12 +1,16 @@
 from lib import cmd
 
+
 def setup_multinode():
     chain_id = "ci_testnet"
 
+    # 'bryan' will be used in account creation & broadcasting in transfer
     wallet_elsa = "elsa"
     wallet_anna = "anna"
     wallet_olaf = "olaf"
     wallet_hans = "hans"
+    wallet_bryan = "bryan"
+    
     wallet_password = "!friday1234@"
 
     info_elsa = None
@@ -22,11 +26,13 @@ def setup_multinode():
     print("Copy manifest file")
     cmd.copy_manifest()
 
+    # 'bryan' are not in genesis account, but create wallets in advance
     print("Create wallet")
     info_elsa = cmd.create_wallet(wallet_elsa, wallet_password)
     info_anna = cmd.create_wallet(wallet_anna, wallet_password)
     info_olaf = cmd.create_wallet(wallet_olaf, wallet_password)
     info_hans = cmd.create_wallet(wallet_hans, wallet_password)
+    info_bryan = cmd.create_wallet(wallet_bryan, wallet_password)
 
     print("Add genesis account in cosmos way")
     cmd.add_genesis_account(info_elsa['address'], basic_coin, basic_stake)
