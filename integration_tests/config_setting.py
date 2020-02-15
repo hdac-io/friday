@@ -18,7 +18,9 @@ def insert_address_to_seed_in_toml(toml_filename: str, home_path: str, address: 
     content = None
     with open(toml_filename, 'r') as f:
         content = toml.load(f)
+        content['proxy_app'] = "tcp://0.0.0.0:26658"
         content['p2p']['seeds'] = "{}@{}:26656".format(address, master_ip)
+        content['rpc']['laddr'] = "tcp://0.0.0.0:26657"
 
     output_file_path = os.path.join(home_path, "config.toml")
 
