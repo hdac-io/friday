@@ -57,13 +57,18 @@ func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTr
 					LongValue: int64(msg.Amount)}}},
 	}
 
+	sessionAbi, err := util.AbiDeployArgsTobytes(sessionArgs)
+	if err != nil {
+		return getResult(false, err.Error())
+	}
+
 	msgExecute := NewMsgExecute(
 		msg.ContractAddress,
 		msg.FromAddress,
 		// TODO Will be change store contract call
 		util.WASM,
 		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm")),
-		util.AbiDeployArgsTobytes(sessionArgs),
+		sessionAbi,
 		msg.Fee,
 		msg.GasPrice,
 	)
@@ -123,13 +128,18 @@ func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) 
 					LongValue: int64(msg.Amount)}}},
 	}
 
+	sessionAbi, err := util.AbiDeployArgsTobytes(sessionArgs)
+	if err != nil {
+		return getResult(false, err.Error())
+	}
+
 	msgExecute := NewMsgExecute(
 		msg.ContractAddress,
 		msg.FromAddress,
 		// TODO Will be change store contract call
 		util.WASM,
 		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/bonding.wasm")),
-		util.AbiDeployArgsTobytes(sessionArgs),
+		sessionAbi,
 		msg.Fee,
 		msg.GasPrice,
 	)
@@ -146,13 +156,18 @@ func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBo
 						Value: &consensus.Deploy_Arg_Value_LongValue{
 							LongValue: int64(msg.Amount)}}}}}}
 
+	sessionAbi, err := util.AbiDeployArgsTobytes(sessionArgs)
+	if err != nil {
+		return getResult(false, err.Error())
+	}
+
 	msgExecute := NewMsgExecute(
 		msg.ContractAddress,
 		msg.FromAddress,
 		// TODO Will be change store contract call
 		util.WASM,
 		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/unbonding.wasm")),
-		util.AbiDeployArgsTobytes(sessionArgs),
+		sessionAbi,
 		msg.Fee,
 		msg.GasPrice,
 	)
@@ -176,12 +191,16 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) (boo
 						Value:    strconv.FormatUint(msg.Fee, 10),
 						BitWidth: 512}}}}}
 
+	paymentAbi, err := util.AbiDeployArgsTobytes(paymentArgs)
+	if err != nil {
+		return false, err.Error()
+	}
 	// Execute
 	deploys := []*ipc.DeployItem{}
 	deploy := util.MakeDeploy(
 		ProtobufSafeEncodeBytes(msg.ExecAddress.ToEEAddress()),
 		msg.SessionType, ProtobufSafeEncodeBytes(msg.SessionCode), ProtobufSafeEncodeBytes(msg.SessionArgs),
-		util.WASM, util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm")), util.AbiDeployArgsTobytes(paymentArgs),
+		util.WASM, util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm")), paymentAbi,
 		msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
 	deploys = append(deploys, deploy)
 	reqExecute := &ipc.ExecuteRequest{

@@ -132,7 +132,10 @@ func counterDefine(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 						Value:    "100000000",
 						BitWidth: 512,
 					}}}}}
-	paymentAbi := util.AbiDeployArgsTobytes(paymentArgs)
+	paymentAbi, err := util.AbiDeployArgsTobytes(paymentArgs)
+	if err != nil {
+		panic(fmt.Sprintf("fail to convert payment abi: %s", err.Error()))
+	}
 	cntDefCode := util.LoadWasmFile(path.Join(contractPath, counterDefineWasm))
 	standardPaymentCode := util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm))
 	protocolVersion := input.elk.MustGetProtocolVersion(input.ctx)
@@ -170,7 +173,10 @@ func counterCall(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 						Value:    "100000000",
 						BitWidth: 512,
 					}}}}}
-	paymentAbi := util.AbiDeployArgsTobytes(paymentArgs)
+	paymentAbi, err := util.AbiDeployArgsTobytes(paymentArgs)
+	if err != nil {
+		panic(fmt.Sprintf("fail to convert payment abi: %s", err.Error()))
+	}
 	cntCallCode := util.LoadWasmFile(path.Join(contractPath, counterCallWasm))
 	standardPaymentCode := util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm))
 	protocolVersion := input.elk.MustGetProtocolVersion(input.ctx)
