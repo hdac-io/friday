@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
@@ -19,14 +20,14 @@ const (
 
 // Validator - save a validater information
 type Validator struct {
-	OperatorAddress sdk.EEAddress `json:"operator_address" yaml:"operator_address"` // address of the validator's operator; bech encoded in JSON
-	ConsPubKey      crypto.PubKey `json:"consensus_pubkey" yaml:"consensus_pubkey"` // the consensus public key of the validator; bech encoded in JSON
-	Description     Description   `json:"description" yaml:"description"`           // description terms for the validator
-	Stake           string        `json:"stake" yaml: "stake"`
+	OperatorAddress sdk.AccAddress `json:"operator_address" yaml:"operator_address"` // address of the validator's operator; bech encoded in JSON
+	ConsPubKey      crypto.PubKey  `json:"consensus_pubkey" yaml:"consensus_pubkey"` // the consensus public key of the validator; bech encoded in JSON
+	Description     Description    `json:"description" yaml:"description"`           // description terms for the validator
+	Stake           string         `json:"stake" yaml:"stake"`
 }
 
 // NewValidator - initialize a new validator
-func NewValidator(operator sdk.EEAddress, pubKey crypto.PubKey, description Description, stake string) Validator {
+func NewValidator(operator sdk.AccAddress, pubKey crypto.PubKey, description Description, stake string) Validator {
 	return Validator{
 		OperatorAddress: operator,
 		ConsPubKey:      pubKey,
@@ -180,4 +181,14 @@ func (v Validator) TestEquivalent(v2 Validator) bool {
 // return the TM validator address
 func (v Validator) ConsAddress() sdk.ConsAddress {
 	return sdk.ConsAddress(v.ConsPubKey.Address())
+}
+
+// Validators is a collection of Validator
+type Validators []Validator
+
+func (v Validators) String() (out string) {
+	for _, val := range v {
+		out += val.String() + "\n"
+	}
+	return strings.TrimSpace(out)
 }

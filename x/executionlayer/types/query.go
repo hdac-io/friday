@@ -2,7 +2,8 @@ package types
 
 import (
 	"fmt"
-	secp256k1 "github.com/hdac-io/tendermint/crypto/secp256k1"
+
+	sdk "github.com/hdac-io/friday/types"
 )
 
 // QueryExecutionLayerDetail payload for a EE query
@@ -33,22 +34,22 @@ func (q QueryExecutionLayer) String() string {
 // QueryGetBalanceDetail payload for balance query
 type QueryGetBalanceDetail struct {
 	StateHash []byte
-	PublicKey secp256k1.PubKeySecp256k1
+	Address   sdk.AccAddress
 }
 
 // implement fmt.Stringer
 func (q QueryGetBalanceDetail) String() string {
-	return fmt.Sprintf("State: %s\nQuery public key or readable name: %s", q.StateHash, q.PublicKey)
+	return fmt.Sprintf("State: %s\nQuery public key or readable name: %s", q.StateHash, q.Address)
 }
 
 // QueryGetBalance payload for balance query in the latest data
 type QueryGetBalance struct {
-	PublicKey secp256k1.PubKeySecp256k1
+	Address sdk.AccAddress
 }
 
 // implement fmt.Stringer
 func (q QueryGetBalance) String() string {
-	return fmt.Sprintf("Query public key or readable name: %s", q.PublicKey)
+	return fmt.Sprintf("Query public key or readable name: %s", q.Address)
 }
 
 // QueryExecutionLayerResp is used for response of EE query
@@ -59,4 +60,16 @@ type QueryExecutionLayerResp struct {
 // implement fmt.Stringer
 func (q QueryExecutionLayerResp) String() string {
 	return fmt.Sprintf("Value: %s", q.Value)
+}
+
+// defines the params for the following queries:
+// - 'custom/%s/validator'
+type QueryValidatorParams struct {
+	ValidatorAddr sdk.AccAddress
+}
+
+func NewQueryValidatorParams(validatorAddr sdk.AccAddress) QueryValidatorParams {
+	return QueryValidatorParams{
+		ValidatorAddr: validatorAddr,
+	}
 }

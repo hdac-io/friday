@@ -2,12 +2,13 @@ package executionlayer
 
 import (
 	"fmt"
-	"math/big"
 	"os"
 	"path"
 	"time"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	"github.com/hdac-io/friday/codec"
 	"github.com/hdac-io/friday/store"
@@ -15,8 +16,8 @@ import (
 	"github.com/hdac-io/friday/x/auth"
 	authtypes "github.com/hdac-io/friday/x/auth/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
+	"github.com/hdac-io/friday/x/nickname"
 	"github.com/hdac-io/friday/x/params/subspace"
-	"github.com/hdac-io/friday/x/readablename"
 	abci "github.com/hdac-io/tendermint/abci/types"
 	"github.com/hdac-io/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -27,12 +28,9 @@ const (
 )
 
 var (
+	ContractAddress            = "friday15evpva2u57vv6l5czehyk1111111111111"
 	GenesisAccountAddress, _   = sdk.AccAddressFromBech32("friday15evpva2u57vv6l5czehyk69s0wnq9hrkqulwfz")
-	GenesisPubKeyString        = "fridaypub1addwnpepqw6vr6728nvg2duwj062y2yx2mfhmqjh66mjtgsyf7jwyq2kx2kaqlkq94l"
-	GenesisPubKey              = sdk.MustGetAccPubKeyBech32(GenesisPubKeyString)
 	RecipientAccountAddress, _ = sdk.AccAddressFromBech32("friday1y2dx0evs5k6hxuhfrfdmm7wcwsrqr073htghpv")
-	RecipientPubKeyString      = "fridaypub1addwnpepqg3xvg45h4j0wsj6dng0wcze2vwvnc7hse696xjvy0cwk347zm0lvhcskq7"
-	RecipientPubKey            = sdk.MustGetAccPubKeyBech32(RecipientPubKeyString)
 
 	contractPath        = os.ExpandEnv("$HOME/.nodef/contracts")
 	mintInstallWasm     = "mint_install.wasm"
@@ -60,7 +58,7 @@ func setupTestInput() testInput {
 
 	authCapKey := sdk.NewKVStoreKey("authCapKey")
 	keyParams := sdk.NewKVStoreKey("subspace")
-	readablenameStoreKey := sdk.NewKVStoreKey("readablename")
+	nicknameStoreKey := sdk.NewKVStoreKey("nickname")
 	tkeyParams := sdk.NewTransientStoreKey("transient_subspace")
 
 	ps := subspace.NewSubspace(cdc, keyParams, tkeyParams, authtypes.DefaultParamspace)
@@ -68,24 +66,23 @@ func setupTestInput() testInput {
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(authCapKey, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(readablenameStoreKey, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(nicknameStoreKey, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	ms.MountStoreWithDB(hashMapStoreKey, sdk.StoreTypeIAVL, db)
 	ms.LoadLatestVersion()
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: chainID}, false, log.NewNopLogger())
 	accountKeeper := auth.NewAccountKeeper(cdc, authCapKey, ps, auth.ProtoBaseAccount)
-	readablenameKeeper := readablename.NewReadableNameKeeper(readablenameStoreKey, cdc)
+	nicknameKeeper := nickname.NewNicknameKeeper(nicknameStoreKey, cdc, accountKeeper)
 
 	elk := NewExecutionLayerKeeper(cdc, hashMapStoreKey, os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"),
-		accountKeeper, readablenameKeeper)
+		accountKeeper, nicknameKeeper)
 
 	gs := types.DefaultGenesisState()
 	gs.ChainName = chainID
 	gs.Accounts = make([]types.Account, 1)
-	pubkey := sdk.MustGetSecp256k1FromBech32AccPubKey(GenesisPubKeyString)
 	gs.Accounts[0] = types.Account{
-		PublicKey:           *pubkey,
+		Address:             GenesisAccountAddress,
 		InitialBalance:      "500000000",
 		InitialBondedAmount: "1000000",
 	}
@@ -99,8 +96,7 @@ func setupTestInput() testInput {
 	}
 }
 
-func genesis(keeper ExecutionLayerKeeper) []byte {
-	input := setupTestInput()
+func genesis(input testInput) []byte {
 	genesisState := types.GenesisState{
 		GenesisConf: input.elk.GetGenesisConf(input.ctx),
 		Accounts:    input.elk.GetGenesisAccounts(input.ctx),
@@ -109,11 +105,17 @@ func genesis(keeper ExecutionLayerKeeper) []byte {
 	if err != nil {
 		panic(err)
 	}
-	response, err := grpc.RunGenesis(keeper.client, genesisConfig)
+	response, err := grpc.RunGenesis(input.elk.client, genesisConfig)
 
 	if err != nil {
 		panic(err)
 	}
+
+	input.elk.SetEEState(input.ctx, []byte{}, response.GetSuccess().PoststateHash)
+
+	candidateBlock := input.ctx.CandidateBlock()
+	candidateBlock.Hash = []byte{}
+	candidateBlock.State = response.GetSuccess().PoststateHash
 
 	return response.GetSuccess().PoststateHash
 }
@@ -121,24 +123,36 @@ func genesis(keeper ExecutionLayerKeeper) []byte {
 func counterDefine(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	input := setupTestInput()
 	timestamp := time.Now().Unix()
-	paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000))
+	paymentArgs := []*consensus.Deploy_Arg{
+		&consensus.Deploy_Arg{
+			Name: "fee",
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_BigInt{
+					BigInt: &state.BigInt{
+						Value:    "100000000",
+						BitWidth: 512,
+					}}}}}
+	paymentAbi, err := util.AbiDeployArgsTobytes(paymentArgs)
+	if err != nil {
+		panic(fmt.Sprintf("fail to convert payment abi: %s", err.Error()))
+	}
 	cntDefCode := util.LoadWasmFile(path.Join(contractPath, counterDefineWasm))
 	standardPaymentCode := util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm))
 	protocolVersion := input.elk.MustGetProtocolVersion(input.ctx)
-	genesisAddr := sdk.MustGetEEAddressFromCryptoPubkey(input.elk.GetGenesisAccounts(input.ctx)[0].PublicKey)
+	genesisAddr := input.elk.GetGenesisAccounts(input.ctx)[0]
 
-	deploy := util.MakeDeploy(genesisAddr.Bytes(), cntDefCode, []byte{},
-		standardPaymentCode, paymentAbi, uint64(10), timestamp, input.elk.GetChainName(input.ctx))
+	deploy := util.MakeDeploy(genesisAddr.Address.ToEEAddress(), util.WASM, cntDefCode, []byte{},
+		util.WASM, standardPaymentCode, paymentAbi, uint64(10), timestamp, input.elk.GetChainName(input.ctx))
 
 	deploys := util.MakeInitDeploys()
 	deploys = util.AddDeploy(deploys, deploy)
 
-	effects2, grpcErr := grpc.Execute(keeper.client, parentStateHash, timestamp, deploys, &protocolVersion)
-	if grpcErr != "" {
-		panic(fmt.Sprintf("counter define execute: %s", grpcErr))
+	res, err := grpc.Execute(keeper.client, parentStateHash, timestamp, deploys, &protocolVersion)
+	if err != nil {
+		panic(fmt.Sprintf("counter define execute: %s", err.Error()))
 	}
 
-	postStateHash, _, grpcErr := grpc.Commit(keeper.client, parentStateHash, effects2, &protocolVersion)
+	postStateHash, _, grpcErr := grpc.Commit(keeper.client, parentStateHash, res.GetSuccess().GetDeployResults()[0].GetExecutionResult().GetEffects().GetTransformMap(), &protocolVersion)
 	if grpcErr != "" {
 		panic(fmt.Sprintf("counter define commmit: %s", grpcErr))
 	}
@@ -150,24 +164,36 @@ func counterDefine(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 func counterCall(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	input := setupTestInput()
 	timestamp := time.Now().Unix()
-	paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(200000000))
+	paymentArgs := []*consensus.Deploy_Arg{
+		&consensus.Deploy_Arg{
+			Name: "fee",
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_BigInt{
+					BigInt: &state.BigInt{
+						Value:    "100000000",
+						BitWidth: 512,
+					}}}}}
+	paymentAbi, err := util.AbiDeployArgsTobytes(paymentArgs)
+	if err != nil {
+		panic(fmt.Sprintf("fail to convert payment abi: %s", err.Error()))
+	}
 	cntCallCode := util.LoadWasmFile(path.Join(contractPath, counterCallWasm))
 	standardPaymentCode := util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm))
 	protocolVersion := input.elk.MustGetProtocolVersion(input.ctx)
-	genesisAddr := sdk.MustGetEEAddressFromCryptoPubkey(input.elk.GetGenesisAccounts(input.ctx)[0].PublicKey)
+	genesisAddr := input.elk.GetGenesisAccounts(input.ctx)[0]
 
 	timestamp = time.Now().Unix()
-	deploy := util.MakeDeploy(genesisAddr.Bytes(), cntCallCode,
-		[]byte{}, standardPaymentCode, paymentAbi, uint64(10), timestamp, input.elk.GetChainName(input.ctx))
+	deploy := util.MakeDeploy(genesisAddr.Address.ToEEAddress(), util.WASM, cntCallCode,
+		[]byte{}, util.WASM, standardPaymentCode, paymentAbi, uint64(10), timestamp, input.elk.GetChainName(input.ctx))
 	deploys := util.MakeInitDeploys()
 	deploys = util.AddDeploy(deploys, deploy)
 
-	effects3, grpcErr := grpc.Execute(keeper.client, parentStateHash, timestamp, deploys, &protocolVersion)
-	if grpcErr != "" {
-		panic(fmt.Sprintf("counter call execute: %s", grpcErr))
+	res, err := grpc.Execute(keeper.client, parentStateHash, timestamp, deploys, &protocolVersion)
+	if err != nil {
+		panic(fmt.Sprintf("counter call execute: %s", err.Error()))
 	}
 
-	postStateHash, _, grpcErr := grpc.Commit(keeper.client, parentStateHash, effects3, &protocolVersion)
+	postStateHash, _, grpcErr := grpc.Commit(keeper.client, parentStateHash, res.GetSuccess().GetDeployResults()[0].GetExecutionResult().GetEffects().GetTransformMap(), &protocolVersion)
 	if grpcErr != "" {
 		panic(fmt.Sprintf("counter call commit: %s", grpcErr))
 	}

@@ -1,4 +1,4 @@
-package readablename
+package nickname
 
 import (
 	"fmt"
@@ -21,8 +21,8 @@ func NewGenesisState(accountRec []UnitAccount) GenesisStateLoad {
 
 func ValidateGenesis(data GenesisStateStorage) error {
 	for _, record := range data.UnitAccountArr {
-		if record.Name.Equal(NewName("")) {
-			return fmt.Errorf("Invalid UnitAccount!\nName: %s. Error: Missing id", record.Name.MustToString())
+		if record.Nickname.Equal(NewName("")) {
+			return fmt.Errorf("Invalid UnitAccount!\nName: %s. Error: Missing id", record.Nickname.MustToString())
 		}
 		if record.Address.String() == "" {
 			return fmt.Errorf("Invalid UnitAccount: Address: %s. Error: Missing Address", record.Address.String())
@@ -37,14 +37,14 @@ func DefaultGenesisState() GenesisStateLoad {
 	}
 }
 
-func InitGenesis(ctx sdk.Context, k ReadableNameKeeper, data GenesisStateStorage) []abci.ValidatorUpdate {
+func InitGenesis(ctx sdk.Context, k NicknameKeeper, data GenesisStateStorage) []abci.ValidatorUpdate {
 	for _, record := range data.UnitAccountArr {
-		k.SetUnitAccount(ctx, record.Name.MustToString(), record.Address, record.PubKey)
+		k.SetNickname(ctx, record.Nickname.MustToString(), record.Address)
 	}
 	return []abci.ValidatorUpdate{}
 }
 
-func ExportGenesis(ctx sdk.Context, k ReadableNameKeeper) GenesisStateStorage {
+func ExportGenesis(ctx sdk.Context, k NicknameKeeper) GenesisStateStorage {
 	var records []MsgSetAccount
 	iterator := k.GetAccountIterator(ctx)
 	for ; iterator.Valid(); iterator.Next() {
@@ -52,7 +52,7 @@ func ExportGenesis(ctx sdk.Context, k ReadableNameKeeper) GenesisStateStorage {
 		var acc UnitAccount
 		acc = k.GetUnitAccount(ctx, name)
 
-		convertedAcc := NewMsgSetAccount(acc.Name, acc.Address, acc.PubKey)
+		convertedAcc := NewMsgSetAccount(acc.Nickname, acc.Address)
 		records = append(records, convertedAcc)
 	}
 	return GenesisStateStorage{UnitAccountArr: records}

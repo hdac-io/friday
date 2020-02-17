@@ -15,6 +15,5 @@ func TestNewPublicKeyFromAddress(t *testing.T) {
 	require.Nil(t, err)
 
 	valAddr := sdk.ValAddress(byteAddr)
-	pubkey := ToPublicKey(valAddr)
-	require.Equal(t, len(pubkey), 32)
+	require.Equal(t, len(valAddr.ToEEAddress()), 32)
 }

@@ -2,15 +2,17 @@ package executionlayer
 
 import (
 	"fmt"
-	"reflect"
+	"os"
 	"strconv"
 
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc/transforms"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
-	abci "github.com/hdac-io/tendermint/abci/types"
-	tmtypes "github.com/hdac-io/tendermint/types"
-
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
 )
 
 // NewHandler returns a handler for "executionlayer" type messages.
@@ -25,6 +27,8 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 			return handlerMsgTransfer(ctx, k, msg)
 		case types.MsgCreateValidator:
 			return handlerMsgCreateValidator(ctx, k, msg)
+		case types.MsgEditValidator:
+			return handlerMsgEditValidator(ctx, k, msg)
 		case types.MsgBond:
 			return handlerMsgBond(ctx, k, msg)
 		case types.MsgUnBond:
@@ -37,122 +41,224 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 }
 
 // Handle MsgExecute
+// Transfer function executes "Execute" of Execution layer, that is specialized for transfer
+// Difference of general execution
+//   1) Raw account is needed for checking address existence
+//   2) Fixed transfer & payment WASMs are needed
 func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTransfer) sdk.Result {
-	err := k.Transfer(ctx, msg.TokenContractAddress, msg.FromPubkey, msg.ToPubkey, msg.TransferCode, msg.TransferArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
-	if err != nil {
-		return getResult(false, msg)
+	sessionArgs := []*consensus.Deploy_Arg{
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_BytesValue{
+					BytesValue: msg.ToAddress.ToEEAddress()}}},
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_LongValue{
+					LongValue: int64(msg.Amount)}}},
 	}
-	return getResult(true, msg)
+
+	sessionAbi, err := util.AbiDeployArgsTobytes(sessionArgs)
+	if err != nil {
+		return getResult(false, err.Error())
+	}
+
+	msgExecute := NewMsgExecute(
+		msg.ContractAddress,
+		msg.FromAddress,
+		// TODO Will be change store contract call
+		util.WASM,
+		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm")),
+		sessionAbi,
+		msg.Fee,
+		msg.GasPrice,
+	)
+	result, log := execute(ctx, k, msgExecute)
+	if result == true {
+		k.SetAccountIfNotExists(ctx, msg.ToAddress)
+	}
+	return getResult(result, log)
 }
 
 // Handle MsgExecute
 func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) sdk.Result {
-	err := k.Execute(ctx, msg.BlockHash, msg.ExecPubkey, msg.ContractAddress,
-		msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
-	if err != nil {
-		return getResult(false, msg)
-	}
-	return getResult(true, msg)
+	result, log := execute(ctx, k, msg)
+	return getResult(result, log)
 }
 
 func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgCreateValidator) sdk.Result {
-	eeAddress, err := sdk.GetEEAddressFromCryptoPubkey(msg.ValidatorPubKey)
-	if err != nil {
-		return getResult(false, msg)
-	}
-
-	validator, found := k.GetValidator(ctx, eeAddress)
+	validator, found := k.GetValidator(ctx, msg.ValidatorAddress)
 	if !found {
 		validator = types.Validator{}
 	}
 
-	validator.OperatorAddress = eeAddress
+	validator.OperatorAddress = msg.ValidatorAddress
 	validator.ConsPubKey = msg.ConsPubKey
 	validator.Description = msg.Description
 	validator.Stake = ""
 
-	k.SetValidator(ctx, eeAddress, validator)
+	k.SetValidator(ctx, msg.ValidatorAddress, validator)
 
-	return getResult(true, msg)
+	return getResult(true, "")
+}
+
+func handlerMsgEditValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgEditValidator) sdk.Result {
+	// validator must already be registered
+	validator, found := k.GetValidator(ctx, msg.ValidatorAddress)
+	if !found {
+		return getResult(false, "validator does not exist for that address")
+	}
+
+	// replace all editable fields (clients should autofill existing values)
+	description, err := validator.Description.UpdateDescription(msg.Description)
+	if err != nil {
+		return getResult(false, err.Error())
+	}
+
+	validator.Description = description
+
+	k.SetValidator(ctx, msg.ValidatorAddress, validator)
+	return getResult(true, "")
 }
 
 func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) sdk.Result {
-	err := k.Execute(ctx, []byte{0}, msg.FromPubkey, msg.TokenContractAddress, msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
-	if err != nil {
-		return getResult(false, msg)
+	sessionArgs := []*consensus.Deploy_Arg{
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_LongValue{
+					LongValue: int64(msg.Amount)}}},
 	}
-	return getResult(true, msg)
+
+	sessionAbi, err := util.AbiDeployArgsTobytes(sessionArgs)
+	if err != nil {
+		return getResult(false, err.Error())
+	}
+
+	msgExecute := NewMsgExecute(
+		msg.ContractAddress,
+		msg.FromAddress,
+		// TODO Will be change store contract call
+		util.WASM,
+		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/bonding.wasm")),
+		sessionAbi,
+		msg.Fee,
+		msg.GasPrice,
+	)
+	result, log := execute(ctx, k, msgExecute)
+	return getResult(result, log)
 }
 
 func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBond) sdk.Result {
-	err := k.Execute(ctx, []byte{0}, msg.FromPubkey, msg.TokenContractAddress, msg.SessionCode, msg.SessionArgs, msg.PaymentCode, msg.PaymentArgs, msg.GasPrice)
+	sessionArgs := []*consensus.Deploy_Arg{
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_OptionalValue{
+					OptionalValue: &consensus.Deploy_Arg_Value{
+						Value: &consensus.Deploy_Arg_Value_LongValue{
+							LongValue: int64(msg.Amount)}}}}}}
+
+	sessionAbi, err := util.AbiDeployArgsTobytes(sessionArgs)
 	if err != nil {
-		return getResult(false, msg)
+		return getResult(false, err.Error())
 	}
 
-	return getResult(true, msg)
+	msgExecute := NewMsgExecute(
+		msg.ContractAddress,
+		msg.FromAddress,
+		// TODO Will be change store contract call
+		util.WASM,
+		util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/unbonding.wasm")),
+		sessionAbi,
+		msg.Fee,
+		msg.GasPrice,
+	)
+	result, log := execute(ctx, k, msgExecute)
+
+	return getResult(result, log)
 }
 
-func EndBloker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
-	var validatorUpdates []abci.ValidatorUpdate
+func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) (bool, string) {
 
-	validators := k.GetAllValidators(ctx)
+	// Parameter preparation
+	stateHash := ctx.CandidateBlock().State
+	protocolVersion := k.MustGetProtocolVersion(ctx)
+	log := ""
 
-	resultbonds := k.GetCandidateBlockBond(ctx)
-	resultBondsMap := make(map[string]*ipc.Bond)
-	for _, bond := range resultbonds {
-		resultBondsMap[string(bond.GetValidatorPublicKey())] = bond
+	paymentArgs := []*consensus.Deploy_Arg{
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_BigInt{
+					BigInt: &state.BigInt{
+						Value:    strconv.FormatUint(msg.Fee, 10),
+						BitWidth: 512}}}}}
+
+	paymentAbi, err := util.AbiDeployArgsTobytes(paymentArgs)
+	if err != nil {
+		return false, err.Error()
+	}
+	// Execute
+	deploys := []*ipc.DeployItem{}
+	deploy := util.MakeDeploy(
+		ProtobufSafeEncodeBytes(msg.ExecAddress.ToEEAddress()),
+		msg.SessionType, ProtobufSafeEncodeBytes(msg.SessionCode), ProtobufSafeEncodeBytes(msg.SessionArgs),
+		util.WASM, util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm")), paymentAbi,
+		msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
+	deploys = append(deploys, deploy)
+	reqExecute := &ipc.ExecuteRequest{
+		ParentStateHash: stateHash,
+		BlockTime:       uint64(ctx.BlockTime().Unix()),
+		Deploys:         deploys,
+		ProtocolVersion: &protocolVersion,
+	}
+	resExecute, err := k.client.Execute(ctx.Context(), reqExecute)
+	if err != nil {
+		return false, err.Error()
 	}
 
-	var power string
-	for _, validator := range validators {
-		resultBond, found := resultBondsMap[string(validator.OperatorAddress.Bytes())]
-		if found {
-			if validator.Stake == resultBond.GetStake().GetValue() {
-				continue
+	effects := []*transforms.TransformEntry{}
+	switch resExecute.GetResult().(type) {
+	case *ipc.ExecuteResponse_Success:
+		for _, res := range resExecute.GetSuccess().GetDeployResults() {
+			switch res.GetExecutionResult().GetError().GetValue().(type) {
+			case *ipc.DeployError_GasError:
+				err = types.ErrGRpcExecuteDeployGasError(types.DefaultCodespace)
+			case *ipc.DeployError_ExecError:
+				err = types.ErrGRpcExecuteDeployExecError(types.DefaultCodespace, res.GetExecutionResult().GetError().GetExecError().GetMessage())
 			}
-			power = resultBond.GetStake().GetValue()
-			validator.Stake = resultBond.GetStake().GetValue()
-		} else {
-			if validator.Stake != "" {
-				power = "0"
-				validator.Stake = ""
+
+			effects = append(effects, res.GetExecutionResult().GetEffects().GetTransformMap()...)
+			if err != nil {
+				log = fmt.Sprintf(log, err.Error())
 			}
 		}
-		coin, err := strconv.ParseInt(power, 10, 64)
-		if err != nil {
-			continue
-		}
-		validatorUpdate := abci.ValidatorUpdate{
-			PubKey: tmtypes.TM2PB.PubKey(validator.ConsPubKey),
-			Power:  coin,
-		}
-		validatorUpdates = append(validatorUpdates, validatorUpdate)
-		k.SetValidator(ctx, validator.OperatorAddress, validator)
+	case *ipc.ExecuteResponse_MissingParent:
+		err = types.ErrGRpcExecuteMissingParent(types.DefaultCodespace, util.EncodeToHexString(resExecute.GetMissingParent().GetHash()))
+		return false, err.Error()
+	default:
+		err = fmt.Errorf("Unknown result : %s", resExecute.String())
+		return false, err.Error()
 	}
 
-	return validatorUpdates
+	// Commit
+	postStateHash, bonds, errGrpc := grpc.Commit(k.client, stateHash, effects, &protocolVersion)
+	if errGrpc != "" {
+		return false, errGrpc
+	}
+
+	candidateBlock := ctx.CandidateBlock()
+	candidateBlock.State = postStateHash
+	candidateBlock.Bonds = bonds
+
+	return true, log
 }
 
-func getResult(ok bool, msg sdk.Msg) sdk.Result {
+func getResult(ok bool, log string) sdk.Result {
 	res := sdk.Result{}
 	if ok {
 		res.Code = sdk.CodeOK
 	} else {
 		res.Code = sdk.CodeUnknownRequest
 	}
-
-	events := sdk.EmptyEvents()
-	event := sdk.Event{}
-	v := reflect.ValueOf(msg)
-	typeOfV := v.Type()
-	for i := 0; i < v.NumField(); i++ {
-		event.AppendAttributes(
-			sdk.NewAttribute(typeOfV.Field(i).Name, fmt.Sprintf("%v", v.Field(i).Interface())),
-		)
-	}
-	events.AppendEvent(event)
-	res.Events = events
+	res.Log = log
 
 	return res
 }

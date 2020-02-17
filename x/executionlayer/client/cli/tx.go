@@ -2,8 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"math/big"
-	"os"
 	"strconv"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
@@ -11,7 +9,6 @@ import (
 	"github.com/hdac-io/friday/codec"
 	cliutil "github.com/hdac-io/friday/x/executionlayer/client/util"
 	"github.com/hdac-io/friday/x/executionlayer/types"
-	"github.com/hdac-io/tendermint/crypto/secp256k1"
 
 	"github.com/hdac-io/friday/client/context"
 	sdk "github.com/hdac-io/friday/types"
@@ -21,117 +18,215 @@ import (
 	"github.com/spf13/viper"
 )
 
-// GetCmdTransfer is the CLI command for transfer
-func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
+func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: fmt.Sprintf("transfer [--token-contract-address] "+
-			"[--from] [--to-name or --to-pubkey or --to-%[1]spub] "+
-			"[--amount] [--fee] [--gas-price]", sdk.Bech32MainPrefix),
-		Short: "Transfer token",
-		Long: fmt.Sprintf("Transfer token\n"+
-			"It needs at least one of \"--to-name\", \"--to-pubkey\", or \"--to-%[1]spub\" parameter.\n"+
-			"\t--to-name: readabld ID of recipient\n"+
-			"\t--to-pubkey: Compressed Secp256k1 public keyof recipient\n"+
-			"\t--to-%[1]spub: Bech32 encoded public key starting from '%[1]s' of recipient\n\n"+
-			"\t--amount: amount to transfer\n"+
-			"\t--fee: amount of fee\n"+
-			"\t--gas-price: amount of gas price", sdk.Bech32MainPrefix),
-		Args: cobra.NoArgs,
+		Use:   "run <type> <wasm-path>|<uref>|<name>|<hash> <argument> <fee> <gas_price> --wallet|--address|--nickname <from>",
+		Short: "Run contract",
+		Long: "Run contract\n" +
+			"There are 4 types of contract run. ('wasm', 'uref', 'name', 'hash)",
+		Args: cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			// --token_contract_address: Currently useless
-			contractAddress := viper.GetString(FlagTokenContractAddress)
+			// Extract "from" from flags
+			var fromAddr sdk.AccAddress
 
-			// --from: get key info from local wallet DB
-			//         DO NOT GET PARAMETER AS ADDRESS, PUBKEY DIRECTLY. Only from the local-stored wallet
-			// Get secp256k1 pubkey from local wallet key descriptor "--from"
 			kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
 			if err != nil {
 				return err
 			}
 
-			key, err := kb.Get(viper.GetString(client.FlagFrom))
-			if err != nil {
-				return err
-			}
-
-			fromPubkey := sdk.MustGetSecp256k1FromCryptoPubKey(key.GetPubKey())
-			fromAddr := key.GetAddress()
-			cliCtx = cliCtx.WithFromAddress(fromAddr)
-
-			// --to-name, --to-pubkey, --to-[bech32_precix]pub
-			// At least one of the above is essential
-			// Derive secp256k1 pubkey from the value
-			var toPubkey secp256k1.PubKeySecp256k1
-
-			if toName := viper.GetString(FlagToName); toName != "" {
-				// --to-name: from readable id
-				toPubkeyPtr, err := cliutil.GetPubKey(cdc, cliCtx, toName)
+			if walletname := viper.GetString(FlagWallet); walletname != "" {
+				key, err := kb.Get(walletname)
 				if err != nil {
 					return err
 				}
-				toPubkey = *toPubkeyPtr
-			} else if toRawPubkey := viper.GetString(FlagToPubkey); toRawPubkey != "" {
-				// --to-pubkey: from raw secp256k1 public key
-				toPubkeyPtr, err := sdk.GetSecp256k1FromRawHexString(toRawPubkey)
+
+				fromAddr = key.GetAddress()
+				cliCtx = cliCtx.WithFromAddress(fromAddr).WithFromName(key.GetName())
+			} else if straddr := viper.GetString(FlagAddress); straddr != "" {
+				fromAddr, err = sdk.AccAddressFromBech32(straddr)
+				if err != nil {
+					return fmt.Errorf("malformed address in --address: %s\n%s", straddr, err.Error())
+				}
+
+				key, err := kb.GetByAddress(fromAddr)
 				if err != nil {
 					return err
 				}
-				toPubkey = *toPubkeyPtr
-			} else if toBech32Pubkey := viper.GetString(FlagToBech32Pubkey); toBech32Pubkey != "" {
-				// --to-[bech32_prefix]pub: from bech32 public key (fridaypubxxxxxx...)
-				rawToPubkey, err := sdk.GetSecp256k1FromBech32AccPubKey(toBech32Pubkey)
+
+				cliCtx = cliCtx.WithFromAddress(fromAddr).WithFromName(key.GetName())
+			} else if nickname := viper.GetString(FlagNickname); nickname != "" {
+				fromAddr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, nickname)
+				if err != nil {
+					return fmt.Errorf("no registered address of the given nickname '%s'", nickname)
+				}
+
+				key, err := kb.GetByAddress(fromAddr)
 				if err != nil {
 					return err
 				}
-				toPubkey = *rawToPubkey
+				cliCtx = cliCtx.WithFromAddress(fromAddr).WithFromName(key.GetName())
 			} else {
-				return fmt.Errorf("at least one of --to-name, --to-pubkey, or --to-%[1]spub is essential", sdk.Bech32MainPrefix)
+				return fmt.Errorf("one of --address, --wallet, --nickname is essential")
 			}
 
-			// get rest of the essential values
-			amount, err := strconv.ParseUint(viper.GetString(FlagAmount), 10, 64)
-			if err != nil {
-				return err
-			}
-			fee, err := strconv.ParseUint(viper.GetString(FlagFee), 10, 64)
-			if err != nil {
-				return err
-			}
-			gasPrice, err := strconv.ParseUint(viper.GetString(FlagGasPrice), 10, 64)
-			if err != nil {
-				return err
+			sessionType := cliutil.GetContractType(args[0])
+			var sessionCode []byte
+			switch sessionType {
+			case util.WASM:
+				sessionCode = util.LoadWasmFile(args[1])
+			case util.HASH:
+			case util.UREF:
+				sessionCode = util.DecodeHexString(args[1])
+			case util.NAME:
+				sessionCode = []byte(args[1])
+			default:
+				return fmt.Errorf("type must be one of wasm, name, uref, or hash")
 			}
 
-			// organize ABIs
-			transferCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/transfer_to_account.wasm"))
-			transferAbi := util.MakeArgsTransferToAccount(sdk.GetEEAddressFromSecp256k1PubKey(toPubkey).Bytes(), amount)
-			paymentCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
-			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
+			var sessionAbi []byte
+			if args[2] == "" {
+				sessionAbi, err = cliutil.ProtobufSafeDecodeingHexString(args[2])
+				if err != nil {
+					return err
+				}
+			} else {
+				sessionArgs, err := util.JsonStringToDeployArgs(args[2])
+				if err != nil {
+					return err
+				}
+				sessionAbi, err = util.AbiDeployArgsTobytes(sessionArgs)
+				if err != nil {
+					return err
+				}
+			}
+
+			fee, err := strconv.ParseUint(args[3], 10, 64)
+			if err != nil {
+				return err
+			}
+			gasPrice, err := strconv.ParseUint(args[4], 10, 64)
+			if err != nil {
+				return err
+			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgTransfer(contractAddress, *fromPubkey, toPubkey, transferCode, transferAbi, paymentCode, paymentAbi, gasPrice, fromAddr)
+			// TODO: Currently implementation of contract address is dummy
+			msg := types.NewMsgExecute(
+				"dummyAddress",
+				fromAddr,
+				sessionType,
+				sessionCode,
+				sessionAbi,
+				fee,
+				gasPrice,
+			)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 
-	cmd.Flags().String(client.FlagHome, DefaultClientHome, "flag for custom local path of client's home dir")
-	cmd.Flags().String(FlagTokenContractAddress, "", "flag for token contract address (Currently it is dummy)")
-	cmd.Flags().String(client.FlagFrom, "", "flag for local wallet keybase loading")
-	cmd.Flags().String(FlagToName, "", "flag for readable ID of recipient")
-	cmd.Flags().String(FlagToPubkey, "", "flag for secp256k1 public key of receipeint")
-	cmd.Flags().String(FlagToBech32Pubkey, "", "flag for bech32 public key of recipient")
-	cmd.Flags().String(FlagAmount, "", "flag for the amount to transfer")
-	cmd.Flags().String(FlagFee, "", "flag for tx fee")
-	cmd.Flags().String(FlagGasPrice, "", "flag for gas price")
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(FlagAddress, "", "Bech32 endocded address (fridayxxxxxx..)")
+	cmd.Flags().String(FlagWallet, "", "Wallet alias")
+	cmd.Flags().String(FlagNickname, "", "Nickname")
 
-	cmd.MarkFlagRequired(client.FlagFrom)
-	cmd.MarkFlagRequired(FlagAmount)
-	cmd.MarkFlagRequired(FlagFee)
-	cmd.MarkFlagRequired(FlagGasPrice)
+	return cmd
+}
+
+// GetCmdTransfer is the CLI command for transfer
+func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "transfer-to <recipient_nickname>|<address> <amount> <fee> <gas_price> --wallet|--address|--nickname <from>",
+		Short: "Transfer Hdac token",
+		Long: "Transfer Hdac token\n" +
+			"It needs at least one of '--wallet', '--address', or '--nickname' flag.",
+		Args: cobra.ExactArgs(4),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			// Parse nickname of address
+			var recipentAddr sdk.AccAddress
+			recipentAddr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				recipentAddr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, args[0])
+				if err != nil {
+					return fmt.Errorf("no nickname mapping of %s", args[0])
+				}
+			}
+
+			// Numbers parsing
+			amount, err := strconv.ParseUint(args[1], 10, 64)
+			if err != nil {
+				return err
+			}
+			fee, err := strconv.ParseUint(args[2], 10, 64)
+			if err != nil {
+				return err
+			}
+			gasPrice, err := strconv.ParseUint(args[3], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			// Extract "from" from flags
+			var fromAddr sdk.AccAddress
+
+			kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+			if err != nil {
+				return err
+			}
+
+			if walletname := viper.GetString(FlagWallet); walletname != "" {
+				key, err := kb.Get(walletname)
+				if err != nil {
+					return err
+				}
+
+				fromAddr = key.GetAddress()
+				cliCtx = cliCtx.WithFromAddress(fromAddr).WithFromName(key.GetName())
+			} else if straddr := viper.GetString(FlagAddress); straddr != "" {
+				fromAddr, err = sdk.AccAddressFromBech32(straddr)
+				if err != nil {
+					return fmt.Errorf("malformed address in --address: %s\n%s", straddr, err.Error())
+				}
+
+				key, err := kb.GetByAddress(fromAddr)
+				if err != nil {
+					return err
+				}
+
+				cliCtx = cliCtx.WithFromAddress(fromAddr).WithFromName(key.GetName())
+			} else if nickname := viper.GetString(FlagNickname); nickname != "" {
+				fromAddr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, nickname)
+				if err != nil {
+					return fmt.Errorf("no registered address of the given nickname '%s'", nickname)
+				}
+
+				key, err := kb.GetByAddress(fromAddr)
+				if err != nil {
+					return err
+				}
+				cliCtx = cliCtx.WithFromAddress(fromAddr).WithFromName(key.GetName())
+			} else {
+				return fmt.Errorf("one of --address, --wallet, --nickname is essential")
+			}
+
+			// build and sign the transaction, then broadcast to Tendermint
+			// TODO: Currently implementation of contract address is dummy
+			msg := types.NewMsgTransfer("dummyAddress", fromAddr, recipentAddr, amount, fee, gasPrice)
+			txBldr = txBldr.WithGas(gasPrice)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(FlagAddress, "", "Bech32 endocded address (fridayxxxxxx..)")
+	cmd.Flags().String(FlagWallet, "", "Wallet alias")
+	cmd.Flags().String(FlagNickname, "", "Nickname")
 
 	return cmd
 }
@@ -139,60 +234,82 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 // GetCmdBonding is the CLI command for bonding
 func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "bond [--from] [--amount] [--fee] [--gas-price]",
+		Use:   "bond --wallet|--address|--nickname <from> <amount> <fee> <gas-price>",
 		Short: "Bond token",
-		Long: "Bond token\n" +
-			"\t--from: alias of local-stored wallet\n" +
-			"\t--amount: amount of bonding\n" +
-			"\t--fee: amount of fee\n" +
-			"\t--gas-price: amount of gas price",
+		Long:  "Bond token for useful activity",
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			// --from: get key info from local wallet DB
-			//         DO NOT GET PARAMETER AS ADDRESS, PUBKEY DIRECTLY. Only from the local-stored wallet
-			// Get secp256k1 pubkey from local wallet key descriptor "--from"
+			var addr sdk.AccAddress
+			var err error
+
 			kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
 			if err != nil {
 				return err
 			}
 
-			key, err := kb.Get(viper.GetString(client.FlagFrom))
+			// Extract "from" from flags
+			if walletname := viper.GetString(FlagWallet); walletname != "" {
+				key, err := kb.Get(walletname)
+				if err != nil {
+					return err
+				}
+
+				addr = key.GetAddress()
+				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
+			} else if straddr := viper.GetString(FlagAddress); straddr != "" {
+				addr, err = sdk.AccAddressFromBech32(straddr)
+				if err != nil {
+					return fmt.Errorf("malformed address in --address: %s\n%s", straddr, err.Error())
+				}
+
+				key, err := kb.GetByAddress(addr)
+				if err != nil {
+					return err
+				}
+				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
+			} else if nickname := viper.GetString(FlagNickname); nickname != "" {
+				addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, nickname)
+				if err != nil {
+					return fmt.Errorf("no registered address of the given nickname '%s'", nickname)
+				}
+				key, err := kb.GetByAddress(addr)
+				if err != nil {
+					return err
+				}
+				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
+			} else {
+				return fmt.Errorf("one of --address, --wallet, --nickname is essential")
+			}
+
+			// Numbers parsing
+			amount, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+			fee, err := strconv.ParseUint(args[1], 10, 64)
+			if err != nil {
+				return err
+			}
+			gasPrice, err := strconv.ParseUint(args[2], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			pubkey := sdk.MustGetSecp256k1FromCryptoPubKey(key.GetPubKey())
-			addr := key.GetAddress()
-			cliCtx = cliCtx.WithFromAddress(addr)
-
-			amount := viper.GetUint64(FlagAmount)
-			fee := viper.GetUint64(FlagFee)
-			gasPrice := viper.GetUint64(FlagGasPrice)
-
-			bondingCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/bonding.wasm"))
-			bondingAbi := util.MakeArgsBonding(amount)
-			paymentCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
-			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
-
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgBond(cliCtx.FromAddress.String(), *pubkey, bondingCode, bondingAbi, paymentCode, paymentAbi, gasPrice, addr)
+			// TODO: Currently implementation of contract address is dummy
+			msg := types.NewMsgBond("dummyAddress", addr, amount, fee, gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 
-	cmd.Flags().String(client.FlagHome, DefaultClientHome, "flag for custom local path of client's home dir")
-	cmd.Flags().String(client.FlagFrom, "", "Bech32 address")
-	cmd.Flags().String(FlagFee, "", "fee")
-	cmd.Flags().String(FlagGasPrice, "", "gas prices")
-	cmd.Flags().AddFlagSet(FsAmount)
-
-	cmd.MarkFlagRequired(client.FlagFrom)
-	cmd.MarkFlagRequired(FlagFee)
-	cmd.MarkFlagRequired(FlagGasPrice)
-	cmd.MarkFlagRequired(FlagAmount)
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(FlagAddress, "", "Bech32 endocded address (fridayxxxxxx..)")
+	cmd.Flags().String(FlagWallet, "", "Wallet alias")
+	cmd.Flags().String(FlagNickname, "", "Nickname")
 
 	return cmd
 }
@@ -200,60 +317,85 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 // GetCmdUnbonding is the CLI command for unbonding
 func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unbond [--from] [--amount] [--fee] [--gas-price]",
+		Use:   "unbond --wallet|--address|--nickname <from> <amount> <fee> <gas-price>",
 		Short: "Unbond token",
-		Long: "Unbond token\n" +
-			"\t--from: alias of local-stored wallet\n" +
-			"\t--amount: amount of unbonding\n" +
-			"\t--fee: amount of fee\n" +
-			"\t--gas-price: amount of gas price",
+		Long:  "Unbond token for converts tokens as a freedom",
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			// --from: get key info from local wallet DB
-			//         DO NOT GET PARAMETER AS ADDRESS, PUBKEY DIRECTLY. Only from the local-stored wallet
-			// Get secp256k1 pubkey from local wallet key descriptor "--from"
+			var addr sdk.AccAddress
+			var err error
+
 			kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
 			if err != nil {
 				return err
 			}
 
-			key, err := kb.Get(viper.GetString(client.FlagFrom))
+			// Extract "from" from flags
+			if walletname := viper.GetString(FlagWallet); walletname != "" {
+				key, err := kb.Get(walletname)
+				if err != nil {
+					return err
+				}
+
+				addr = key.GetAddress()
+				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
+			} else if straddr := viper.GetString(FlagAddress); straddr != "" {
+				addr, err = sdk.AccAddressFromBech32(straddr)
+				if err != nil {
+					return fmt.Errorf("malformed address in --address: %s\n%s", straddr, err.Error())
+				}
+
+				key, err := kb.GetByAddress(addr)
+				if err != nil {
+					return err
+				}
+				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
+			} else if nickname := viper.GetString(FlagNickname); nickname != "" {
+				addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, nickname)
+				if err != nil {
+					return fmt.Errorf("no registered address of the given nickname '%s'", nickname)
+				}
+
+				key, err := kb.GetByAddress(addr)
+				if err != nil {
+					return err
+				}
+				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
+			} else {
+				return fmt.Errorf("one of --address, --wallet, --nickname is essential")
+			}
+
+			// Numbers parsing
+			amount, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+			fee, err := strconv.ParseUint(args[1], 10, 64)
+			if err != nil {
+				return err
+			}
+			gasPrice, err := strconv.ParseUint(args[2], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			pubkey := sdk.MustGetSecp256k1FromCryptoPubKey(key.GetPubKey())
-			addr := key.GetAddress()
 			cliCtx = cliCtx.WithFromAddress(addr)
 
-			amount := viper.GetUint64(FlagAmount)
-			fee := viper.GetUint64(FlagFee)
-			gasPrice := viper.GetUint64(FlagGasPrice)
-
-			unbondingCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/unbonding.wasm"))
-			unbondingAbi := util.MakeArgsUnBonding(amount)
-			paymentCode := util.LoadWasmFile(os.ExpandEnv("$HOME/.nodef/contracts/standard_payment.wasm"))
-			paymentAbi := util.MakeArgsStandardPayment(new(big.Int).SetUint64(fee))
-
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgUnBond(cliCtx.FromAddress.String(), *pubkey, unbondingCode, unbondingAbi, paymentCode, paymentAbi, gasPrice, addr)
+			// TODO: Currently implementation of contract address is dummy
+			msg := types.NewMsgUnBond("dummyAddress", addr, amount, fee, gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 
-	cmd.Flags().String(client.FlagHome, DefaultClientHome, "flag for custom local path of client's home dir")
-	cmd.Flags().String(client.FlagFrom, "", "Bech32 address")
-	cmd.Flags().String(FlagFee, "", "fee")
-	cmd.Flags().String(FlagGasPrice, "", "gas prices")
-	cmd.Flags().AddFlagSet(FsAmount)
-
-	cmd.MarkFlagRequired(client.FlagFrom)
-	cmd.MarkFlagRequired(FlagFee)
-	cmd.MarkFlagRequired(FlagGasPrice)
-	cmd.MarkFlagRequired(FlagAmount)
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(FlagAddress, "", "Bech32 endocded address (fridayxxxxxx..)")
+	cmd.Flags().String(FlagWallet, "", "Wallet alias")
+	cmd.Flags().String(FlagNickname, "", "Nickname")
 
 	return cmd
 }
@@ -261,11 +403,57 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 // GetCmdCreateValidator implements the create validator command handler.
 func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-validator [--from] [--pubkey] [--moniker] [--identity] [--website] [--details]",
+		Use: "create-validator --wallet|--address|--nickname <from> --pubkey <validator_cons_pubkey> " +
+			"[--moniker <moniker>] [--identity <identity>] [--website <site_address>] [--details <detail_description>]",
 		Short: "create new validator initialized with a self-delegation to it",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			var addr sdk.AccAddress
+			var err error
+
+			kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+			if err != nil {
+				return err
+			}
+
+			// Extract "from" from flags
+			if walletname := viper.GetString(FlagWallet); walletname != "" {
+				key, err := kb.Get(walletname)
+				if err != nil {
+					return err
+				}
+
+				addr = key.GetAddress()
+				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
+			} else if straddr := viper.GetString(FlagAddress); straddr != "" {
+				addr, err = sdk.AccAddressFromBech32(straddr)
+				if err != nil {
+					return fmt.Errorf("malformed address in --address: %s\n%s", straddr, err.Error())
+				}
+
+				key, err := kb.GetByAddress(addr)
+				if err != nil {
+					return err
+				}
+				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
+			} else if nickname := viper.GetString(FlagNickname); nickname != "" {
+				addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, nickname)
+				if err != nil {
+					return fmt.Errorf("no registered address of the given nickname '%s'", nickname)
+				}
+
+				key, err := kb.GetByAddress(addr)
+				if err != nil {
+					return err
+				}
+				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
+			} else {
+				return fmt.Errorf("one of --address, --wallet, --nickname is essential")
+			}
+
+			cliCtx = cliCtx.WithFromAddress(addr)
 
 			msg, err := BuildCreateValidatorMsg(cliCtx)
 			if err != nil {
@@ -276,26 +464,103 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(client.FlagHome, DefaultClientHome, "flag for custom local path of client's home dir")
-	cmd.Flags().String(client.FlagFrom, "", "Bech32 address")
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(FlagAddress, "", "Bech32 endocded address (fridayxxxxxx..)")
+	cmd.Flags().String(FlagWallet, "", "Wallet alias")
+	cmd.Flags().String(FlagNickname, "", "Nickname")
 	cmd.Flags().AddFlagSet(fsDescriptionCreate)
 	cmd.Flags().AddFlagSet(FsPk)
 
-	cmd.MarkFlagRequired(client.FlagFrom)
 	cmd.MarkFlagRequired(FlagPubKey)
 	cmd.MarkFlagRequired(FlagMoniker)
 
 	return cmd
 }
 
-func BuildCreateValidatorMsg(cliCtx context.CLIContext) (sdk.Msg, error) {
-	kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
-	if err != nil {
-		return types.MsgCreateValidator{}, err
+// GetCmdEditValidator implements the create edit validator command.
+func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use: "edit-validator --wallet|--address|--nickname <from> " +
+			"[--moniker <moniker>] [--identity <identity>] [--website <site_address>] [--details <detail_description>]",
+		Short: "edit an existing validator account",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			var addr sdk.AccAddress
+			var err error
+
+			kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+			if err != nil {
+				return err
+			}
+
+			// Extract "from" from flags
+			if walletname := viper.GetString(FlagWallet); walletname != "" {
+				key, err := kb.Get(walletname)
+				if err != nil {
+					return err
+				}
+
+				addr = key.GetAddress()
+				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
+			} else if straddr := viper.GetString(FlagAddress); straddr != "" {
+				addr, err = sdk.AccAddressFromBech32(straddr)
+				if err != nil {
+					return fmt.Errorf("malformed address in --address: %s\n%s", straddr, err.Error())
+				}
+
+				key, err := kb.GetByAddress(addr)
+				if err != nil {
+					return err
+				}
+				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
+			} else if nickname := viper.GetString(FlagNickname); nickname != "" {
+				addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, nickname)
+				if err != nil {
+					return fmt.Errorf("no registered address of the given nickname '%s'", nickname)
+				}
+
+				key, err := kb.GetByAddress(addr)
+				if err != nil {
+					return err
+				}
+				cliCtx = cliCtx.WithFromAddress(addr).WithFromName(key.GetName())
+			} else {
+				return fmt.Errorf("one of --address, --wallet, --nickname is essential")
+			}
+
+			cliCtx = cliCtx.WithFromAddress(addr)
+
+			valAddr := cliCtx.GetFromAddress()
+			description := types.Description{
+				Moniker:  viper.GetString(FlagMoniker),
+				Identity: viper.GetString(FlagIdentity),
+				Website:  viper.GetString(FlagWebsite),
+				Details:  viper.GetString(FlagDetails),
+			}
+
+			msg := types.NewMsgEditValidator(valAddr, description)
+
+			// build and sign the transaction, then broadcast to Tendermint
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
 	}
 
-	key, err := kb.Get(viper.GetString(client.FlagFrom))
-	valPubKey := sdk.MustGetSecp256k1FromCryptoPubKey(key.GetPubKey())
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(FlagAddress, "", "Bech32 endocded address (fridayxxxxxx..)")
+	cmd.Flags().String(FlagWallet, "", "Wallet alias")
+	cmd.Flags().String(FlagNickname, "", "Nickname")
+
+	cmd.Flags().AddFlagSet(fsDescriptionEdit)
+
+	cmd.MarkFlagRequired(client.FlagFrom)
+
+	return cmd
+}
+
+// BuildCreateValidatorMsg implements for adding validator module spec
+func BuildCreateValidatorMsg(cliCtx context.CLIContext) (sdk.Msg, error) {
 	valAddr := cliCtx.GetFromAddress()
 
 	consPubKeyStr := viper.GetString(FlagPubKey)
@@ -311,7 +576,7 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext) (sdk.Msg, error) {
 		viper.GetString(FlagDetails),
 	)
 
-	msg := types.NewMsgCreateValidator(sdk.ValAddress(valAddr), valPubKey, consPubKey, description)
+	msg := types.NewMsgCreateValidator(valAddr, consPubKey, description)
 
 	return msg, nil
 }

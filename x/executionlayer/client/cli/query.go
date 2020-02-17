@@ -8,7 +8,6 @@ import (
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/codec"
 	cliutil "github.com/hdac-io/friday/x/executionlayer/client/util"
-	"github.com/hdac-io/tendermint/crypto/secp256k1"
 
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
@@ -36,77 +35,74 @@ func GetExecutionLayerQueryCmd(cdc *codec.Codec) *cobra.Command {
 // GetCmdQueryBalance is a getter of the balance of the address
 func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   fmt.Sprintf("getbalance [--name \"readable_id\" or --pubkey \"secp256k1_pubkey\" or --%spub \"bech32\"] [--blockhash]", sdk.Bech32MainPrefix),
+		Use:   "getbalance --wallet|--address|--nickname <from> [--blockhash <blockhash_since>]",
 		Short: "Get balance of address",
-		Long: fmt.Sprintf("Get balance of address.\nIt needs at least one of \"--name\", \"--pubkey\", or \"--%[1]spub\" parameter.\n"+
-			"\t--name: readabld ID\n"+
-			"\t--pubkey: Compressed Secp256k1 public key\n"+
-			"\t--%[1]spub: Bech32 encoded public key starting from '%[1]s'\n"+
-			"If you need the value of specific time, use \"--blockhash\" option.\n"+
-			"\t--blockhash: Hex blockhash value which represents of the specific time. (Default: the latest state)", sdk.Bech32MainPrefix),
-		Args: cobra.NoArgs,
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			// Get public key with 3 different types
-			var pubkey secp256k1.PubKeySecp256k1
+			var addr sdk.AccAddress
+			var err error
 
-			if name := viper.GetString(client.FlagName); name != "" {
-				// --name: from readable id
-				pubkeyPtr, err := cliutil.GetPubKey(cdc, cliCtx, name)
+			// Extract "from" from flags
+			if walletname := viper.GetString(FlagWallet); walletname != "" {
+				kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
 				if err != nil {
 					return err
 				}
-				pubkey = *pubkeyPtr
-			} else if rawPubkey := viper.GetString(FlagPubKey); rawPubkey != "" {
-				// --pubkey: from raw secp256k1 public key
-				pubkeyPtr, err := sdk.GetSecp256k1FromRawHexString(rawPubkey)
+
+				key, err := kb.Get(walletname)
 				if err != nil {
 					return err
 				}
-				pubkey = *pubkeyPtr
-			} else if bech32Pubkey := viper.GetString(FlagBech32PubKey); bech32Pubkey != "" {
-				// --[bech32_prefix]pub: from bech32 public key (fridaypubxxxxxx...)
-				rawPubkey, err := sdk.GetSecp256k1FromBech32AccPubKey(bech32Pubkey)
+
+				addr = key.GetAddress()
+			} else if straddr := viper.GetString(FlagAddress); straddr != "" {
+				addr, err = sdk.AccAddressFromBech32(straddr)
 				if err != nil {
-					return err
+					return fmt.Errorf("malformed address in --address: %s\n%s", straddr, err.Error())
 				}
-				pubkey = *rawPubkey
+			} else if nickname := viper.GetString(FlagNickname); nickname != "" {
+				addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, nickname)
+				if err != nil {
+					return fmt.Errorf("no registered address of the given nickname '%s'", nickname)
+				}
 			} else {
-				return fmt.Errorf("at least one of --name, --pubkey, or --%[1]spub is essential", sdk.Bech32MainPrefix)
+				return fmt.Errorf("one of --address, --wallet, --nickname is essential")
 			}
+			cliCtx = cliCtx.WithFromAddress(addr)
 
 			var out types.QueryExecutionLayerResp
 			if blockhashstr := viper.GetString(FlagBlockHash); blockhashstr != "" {
 				blockHash, err := hex.DecodeString(blockhashstr)
 				if err != nil || len(blockHash) != 32 {
-					fmt.Println("Malformed block hash - ", blockhashstr)
+					fmt.Println("malformed block hash - ", blockhashstr)
 					fmt.Println(err)
 					return nil
 				}
 
 				queryData := types.QueryGetBalanceDetail{
-					PublicKey: pubkey,
+					Address:   addr,
 					StateHash: blockHash,
 				}
 				bz := cdc.MustMarshalJSON(queryData)
 
 				res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalancedetail", types.ModuleName), bz)
 				if err != nil {
-					fmt.Printf("No balance data of input")
+					fmt.Printf("no balance data of input")
 					return nil
 				}
 				cdc.MustUnmarshalJSON(res, &out)
 
 			} else {
 				queryData := types.QueryGetBalance{
-					PublicKey: pubkey,
+					Address: addr,
 				}
 				bz := cdc.MustMarshalJSON(queryData)
 
 				res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalance", types.ModuleName), bz)
 				if err != nil {
-					fmt.Printf("No balance data of input")
+					fmt.Printf("no balance data of input")
 					fmt.Println(err.Error())
 					return nil
 				}
@@ -117,10 +113,11 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(client.FlagName, "", "flag for readable name input")
-	cmd.Flags().String(FlagPubKey, "", "flag for secp256k1 public key input")
-	cmd.Flags().String(FlagBech32PubKey, "", "flag for bech32 public key input")
-	cmd.Flags().String(FlagBlockHash, "", "flag for block hash input")
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(FlagAddress, "", "Bech32 endocded address (fridayxxxxxx..)")
+	cmd.Flags().String(FlagWallet, "", "Wallet alias in local")
+	cmd.Flags().String(FlagNickname, "", "Nickname (Readable ID)")
+	cmd.Flags().String(FlagBlockHash, "", "Block hash at the moment")
 
 	return cmd
 }
@@ -128,7 +125,7 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 // GetCmdQuery is a EE query getter
 func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "query [type:=address,uref,hash,local] [data] [path] [--blockhash]",
+		Use:   "query address|uref|hash|local <data> <path> [--blockhash <blockhash_since>]",
 		Short: "Get query of the data",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -141,7 +138,7 @@ func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
 			if blockhashstr := viper.GetString(FlagBlockHash); blockhashstr != "" {
 				blockhash, err := hex.DecodeString(blockhashstr)
 				if err != nil || len(blockhash) != 32 {
-					fmt.Println("Malformed block hash - ", blockhashstr)
+					fmt.Println("malformed block hash - ", blockhashstr)
 					fmt.Println(err)
 					return nil
 				}
@@ -180,6 +177,84 @@ func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(FlagBlockHash, "", "flag for block hash input")
+	cmd.Flags().String(FlagBlockHash, "", "Block hash at the moment")
+	return cmd
+}
+
+// GetCmdQueryValidator implements the validator query command.
+func GetCmdQueryValidator(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "validator --wallet|--address|--nickname <from>",
+		Short: "Query a validator",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			var addr sdk.AccAddress
+			var err error
+
+			// Extract "from" from flags
+			if walletname := viper.GetString(FlagWallet); walletname != "" {
+				kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+				if err != nil {
+					return err
+				}
+
+				key, err := kb.Get(walletname)
+				if err != nil {
+					return err
+				}
+
+				addr = key.GetAddress()
+			} else if straddr := viper.GetString(FlagAddress); straddr != "" {
+				addr, err = sdk.AccAddressFromBech32(straddr)
+				if err != nil {
+					return fmt.Errorf("malformed address in --address: %s\n%s", straddr, err.Error())
+				}
+			} else if nickname := viper.GetString(FlagNickname); nickname != "" {
+				addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, nickname)
+				if err != nil {
+					return fmt.Errorf("no registered address of the given nickname '%s'", nickname)
+				}
+			}
+
+			if addr.Empty() {
+				res, _, err := cliCtx.Query(fmt.Sprintf("custom/%s/queryallvalidator", types.ModuleName))
+				if err != nil {
+					fmt.Printf("could not resolve")
+					return nil
+				}
+
+				var out types.Validators
+				cdc.MustUnmarshalJSON(res, &out)
+
+				return cliCtx.PrintOutput(out)
+			} else {
+				queryData := types.NewQueryValidatorParams(addr)
+				bz := cdc.MustMarshalJSON(queryData)
+
+				res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/queryvalidator", types.ModuleName), bz)
+				if err != nil {
+					fmt.Printf("could not resolve data - %s\n", addr.String())
+					return nil
+				}
+
+				if len(res) == 0 {
+					return fmt.Errorf("No validator found with address %s", addr)
+				}
+
+				var out types.Validator
+				cdc.MustUnmarshalJSON(res, &out)
+
+				return cliCtx.PrintOutput(out)
+			}
+		},
+	}
+
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(FlagAddress, "", "Bech32 endocded address (fridayxxxxxx..)")
+	cmd.Flags().String(FlagWallet, "", "Wallet alias in local")
+	cmd.Flags().String(FlagNickname, "", "Nickname (Readable ID)")
+
 	return cmd
 }

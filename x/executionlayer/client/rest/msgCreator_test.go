@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"testing"
 
 	"github.com/hdac-io/friday/client/context"
@@ -14,20 +13,19 @@ import (
 	"github.com/hdac-io/friday/types/rest"
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 )
 
 func prepare() (fromAddr, receipAddr string, w http.ResponseWriter, clictx context.CLIContext, basereq rest.BaseReq) {
-	fromAddr = "02014a87d1ec490005f85bb4296596ed741411f673a35317543439971c7c7731bb"
-	receipAddr = "0216cde7d343c4bb6f8236c85b6f6a541e2d13ce8a306664714384bf53fd9d14e5"
+	fromAddr = "friday15evpva2u57vv6l5czehyk69s0wnq9hrkqulwfz"
+	receipAddr = "friday1y2dx0evs5k6hxuhfrfdmm7wcwsrqr073htghpv"
 
 	w = httptest.NewRecorder()
 	cdc := codec.New()
 	clictx = context.NewCLIContext().WithCodec(cdc)
 
 	basereq = rest.BaseReq{
-		From:    sdk.AccAddress(sdk.MustGetSecp256k1FromRawHexString(fromAddr).Address()).String(),
+		From:    fromAddr,
 		ChainID: "monday-0001",
 		Gas:     fmt.Sprint(60_000_000),
 		Memo:    "",
@@ -40,16 +38,12 @@ func TestRESTTransfer(t *testing.T) {
 	fromAddr, receipAddr, writer, clictx, basereq := prepare()
 
 	// Body
-	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
 	transReq := transferReq{
-		ChainID:               basereq.ChainID,
-		Memo:                  basereq.Memo,
-		TokenContractAddress:  fromAddr,
-		SenderPubkeyOrName:    fromAddr,
-		RecipientPubkeyOrName: receipAddr,
-		Amount:                20_000_000,
-		GasPrice:              gas,
-		Fee:                   10_000_000,
+		BaseReq:                    basereq,
+		TokenContractAddress:       fromAddr,
+		RecipientAddressOrNickname: receipAddr,
+		Amount:                     20_000_000,
+		Fee:                        10_000_000,
 	}
 
 	// http.request
@@ -64,16 +58,13 @@ func TestRESTTransfer(t *testing.T) {
 }
 
 func TestRESTBond(t *testing.T) {
-	fromAddr, _, writer, clictx, basereq := prepare()
+	_, _, writer, clictx, basereq := prepare()
 
 	// Body
-	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
 	bondReq := bondReq{
-		ChainID:      basereq.ChainID,
-		Memo:         basereq.Memo,
-		PubkeyOrName: fromAddr,
-		Amount:       100_000_000,
-		GasPrice:     gas,
+		BaseReq: basereq,
+		Amount:  100_000_000,
+		Fee:     10_000_000,
 	}
 
 	// http.request
@@ -88,16 +79,13 @@ func TestRESTBond(t *testing.T) {
 }
 
 func TestRESTUnbond(t *testing.T) {
-	fromAddr, _, writer, clictx, basereq := prepare()
+	_, _, writer, clictx, basereq := prepare()
 
 	// Body
-	gas, _ := strconv.ParseUint(basereq.Gas, 10, 64)
 	bondReq := bondReq{
-		ChainID:      basereq.ChainID,
-		Memo:         basereq.Memo,
-		PubkeyOrName: fromAddr,
-		Amount:       100_000_000,
-		GasPrice:     gas,
+		BaseReq: basereq,
+		Amount:  100_000_000,
+		Fee:     10_000_000,
 	}
 
 	// http.request
@@ -120,6 +108,64 @@ func TestRESTBalance(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 }
+
+func TestRESTGetValidator(t *testing.T) {
+	fromAddr, _, writer, clictx, _ := prepare()
+
+	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/validator?address=%s", types.ModuleName, fromAddr), nil)
+	res, err := getValidatorQuerying(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
+func TestRESTGetValidators(t *testing.T) {
+	_, _, writer, clictx, _ := prepare()
+
+	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/validator", types.ModuleName), nil)
+	res, err := getValidatorQuerying(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
+func TestRESTCreateValidator(t *testing.T) {
+	_, _, writer, clictx, basereq := prepare()
+
+	createValidatorReq := createValidatorReq{
+		BaseReq:     basereq,
+		ConsPubKey:  "fridayvalconspub16jrl8jvqq9k957nfd43n2dnyxc6nsazpgf5yuwtzfe6kku63ga6nvtmcdeg92vj4gy4kkd62vd69vvnhx935w5zpw9ex7733tft8we6evemzke66xv4ks56gfdvx66ndfye5x5z9fs6j74z6g3u4zdzd0p8hw6mr24k8wjzx0ghhz5z8vdm92vjs2e8xwdn5xpvxu56fvejnj7t6wsens5gwxlen9",
+		Description: types.NewDescription("moniker", "identity", "https://test.io", "details"),
+	}
+
+	body := clictx.Codec.MustMarshalJSON(createValidatorReq)
+	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/validator", types.ModuleName), bytes.NewReader((body)))
+
+	outputCreateValidatorReq, msgs, err := createValidatorMsgCreator(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.Equal(t, outputCreateValidatorReq, basereq)
+	require.NotNil(t, msgs)
+}
+
+func TestRESTEditValidator(t *testing.T) {
+	_, _, writer, clictx, basereq := prepare()
+
+	editValidatorReq := editValidatorReq{
+		BaseReq:     basereq,
+		Description: types.NewDescription("moniker", "identity", "https://test.io", "details"),
+	}
+
+	body := clictx.Codec.MustMarshalJSON(editValidatorReq)
+	req := mustNewRequest(t, "PUT", fmt.Sprintf("/%s/validator", types.ModuleName), bytes.NewReader((body)))
+
+	outputEditValidatorReq, msgs, err := editValidatorMsgCreator(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.Equal(t, outputEditValidatorReq, basereq)
+	require.NotNil(t, msgs)
+}
+
 func mustNewRequest(t *testing.T, method, url string, body io.Reader) *http.Request {
 	req, err := http.NewRequest(method, url, body)
 	require.NoError(t, err)
