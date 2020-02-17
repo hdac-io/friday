@@ -97,7 +97,10 @@ func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 				if err != nil {
 					return err
 				}
-				sessionAbi = util.AbiDeployArgsTobytes(sessionArgs)
+				sessionAbi, err = util.AbiDeployArgsTobytes(sessionArgs)
+				if err != nil {
+					return err
+				}
 			}
 
 			fee, err := strconv.ParseUint(args[3], 10, 64)
