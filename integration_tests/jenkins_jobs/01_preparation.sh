@@ -7,4 +7,3 @@ git reset --hard origin/$TEST_BRANCH && git rebase
 
 PATH="$HOME/.cargo/bin:$PATH" && make install
 PATH="$PATH:$HOME/go/bin" && nodef init node1 --chain-id ci_testnet
-
