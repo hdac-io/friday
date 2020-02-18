@@ -163,40 +163,13 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			if walletname := viper.GetString(FlagWallet); walletname != "" {
-				key, err := kb.Get(walletname)
-				if err != nil {
-					return err
-				}
-
-				fromAddr = key.GetAddress()
-				cliCtx = cliCtx.WithFromAddress(fromAddr).WithFromName(key.GetName())
-			} else if straddr := viper.GetString(FlagAddress); straddr != "" {
-				fromAddr, err = sdk.AccAddressFromBech32(straddr)
-				if err != nil {
-					return fmt.Errorf("malformed address in --address: %s\n%s", straddr, err.Error())
-				}
-
-				key, err := kb.GetByAddress(fromAddr)
-				if err != nil {
-					return err
-				}
-
-				cliCtx = cliCtx.WithFromAddress(fromAddr).WithFromName(key.GetName())
-			} else if nickname := viper.GetString(FlagNickname); nickname != "" {
-				fromAddr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, nickname)
-				if err != nil {
-					return fmt.Errorf("no registered address of the given nickname '%s'", nickname)
-				}
-
-				key, err := kb.GetByAddress(fromAddr)
-				if err != nil {
-					return err
-				}
-				cliCtx = cliCtx.WithFromAddress(fromAddr).WithFromName(key.GetName())
-			} else {
-				return fmt.Errorf("one of --address, --wallet, --nickname is essential")
+			valueFromFromFlag := viper.GetString(client.FlagFrom)
+			keyInfo, err := cliutil.GetLocalWalletInfo(valueFromFromFlag, kb, cdc, cliCtx)
+			if err != nil {
+				return err
 			}
+
+			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
 
 			// build and sign the transaction, then broadcast to Tendermint
 			// TODO: Currently implementation of contract address is dummy
@@ -207,9 +180,7 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
-	cmd.Flags().String(FlagAddress, "", "Bech32 endocded address (fridayxxxxxx..)")
-	cmd.Flags().String(FlagWallet, "", "Wallet alias")
-	cmd.Flags().String(FlagNickname, "", "Nickname")
+	cmd.Flags().String(client.FlagFrom, "", "Executor's identity (one of wallet alias, address, nickname)")
 
 	return cmd
 }

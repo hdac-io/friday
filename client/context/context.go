@@ -63,8 +63,10 @@ func NewCLIContextWithFrom(from string) CLIContext {
 	genOnly := viper.GetBool(flags.FlagGenerateOnly)
 	fromAddress, fromName, err := GetFromFields(from, genOnly)
 	if err != nil {
-		fmt.Printf("failed to get from fields: %v", err)
-		os.Exit(1)
+		// fmt.Printf("failed to get from fields: %v", err)
+		// os.Exit(1)
+		fromAddress = nil
+		fromName = ""
 	}
 
 	if !genOnly {
