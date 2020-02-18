@@ -305,5 +305,5 @@ def get_balance(from_type: str, from_value: str, node: str = "tcp://localhost:26
 
 
 def create_validator(passphrase: str, from_value: str, pubkey: str, moniker: str, identity: str='""', website: str='""', details: str='""', node: str = "tcp://localhost:26657"):
-    return _tx_executor("clif hdac create-validator --from {} --pubkey {} --moniker {} --identity {} --website {} --details {} --node {}",
+    return _tx_executor("clif hdac create-validator --wallet {} --pubkey {} --moniker {} --identity {} --website {} --details {} --node {}",
                       passphrase, from_value, pubkey, moniker, identity, website, details, node)
