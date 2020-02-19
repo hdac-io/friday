@@ -5,30 +5,17 @@ import (
 
 	flag "github.com/spf13/pflag"
 
-	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 )
 
 // nolint
 const (
-	FlagAddressValidator     = "validator"
-	FlagAddressValidatorSrc  = "addr-validator-source"
-	FlagAddressValidatorDst  = "addr-validator-dest"
-	FlagPubKey               = "pubkey"
-	FlagTokenContractAddress = "token-contract-address"
-	FlagBech32PubKey         = sdk.Bech32MainPrefix + "pub"
-	FlagAmount               = "amount"
-	FlagFee                  = "fee"
-	FlagGasPrice             = "gas-price"
-	FlagBlockHash            = "blockhash"
-	FlagConsPubKey           = "cons-" + FlagPubKey
-	FlagConsBech32PubKey     = "cons-" + FlagBech32PubKey
-	FlagValPubkey            = "val-" + FlagPubKey
-	FlagValBech32PubKey      = "val-" + FlagBech32PubKey
+	FlagAddressValidator    = "validator"
+	FlagAddressValidatorSrc = "addr-validator-source"
+	FlagAddressValidatorDst = "addr-validator-dest"
+	FlagPubKey              = "pubkey"
 
-	FlagWallet   = "wallet"
-	FlagAddress  = "address"
-	FlagNickname = "nickname"
+	FlagBlockHash = "blockhash"
 
 	FlagMoniker  = "moniker"
 	FlagIdentity = "identity"
@@ -55,7 +42,6 @@ var (
 
 func init() {
 	FsPk.String(FlagPubKey, "", "The Bech32 encoded PubKey of the validator")
-	FsAmount.String(FlagAmount, "", "Amount of coins to bond")
 	fsDescriptionCreate.String(FlagMoniker, "", "The validator's name")
 	fsDescriptionCreate.String(FlagIdentity, "", "The optional identity signature (ex. UPort or Keybase)")
 	fsDescriptionCreate.String(FlagWebsite, "", "The validator's (optional) website")
