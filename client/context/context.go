@@ -270,8 +270,21 @@ func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
 // an address or key name. If genOnly is true, only a valid Bech32
 // address is returned.
 func GetFromFields(from string, genOnly bool) (sdk.AccAddress, string, error) {
+	keybase, err := keys.NewKeyBaseFromHomeFlag()
+	if err != nil {
+		return nil, "", err
+	}
+
 	if from == "" {
-		return nil, "", nil
+		infoList, _ := keybase.List()
+
+		if len(infoList) > 1 {
+			return nil, "", fmt.Errorf("multiple wallets in local. Cannot specify one wallet")
+		} else if len(infoList) == 0 {
+			return nil, "", fmt.Errorf("no wallet in local")
+		}
+
+		return infoList[0].GetAddress(), infoList[0].GetName(), nil
 	}
 
 	if genOnly {
@@ -281,11 +294,6 @@ func GetFromFields(from string, genOnly bool) (sdk.AccAddress, string, error) {
 		}
 
 		return addr, "", nil
-	}
-
-	keybase, err := keys.NewKeyBaseFromHomeFlag()
-	if err != nil {
-		return nil, "", err
 	}
 
 	var info cryptokeys.Info
