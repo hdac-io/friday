@@ -93,7 +93,7 @@ class TestMultiNodeSimple:
                 zip(self.nodes_address[1:], self.bls_pubkeys[1:], [self.wallet_anna, self.wallet_hans, self.wallet_olaf], self.monikers[1:]):
 
             print("For {}".format(unit_node_address))
-            unit_bond_hash = cmd.bond(self.wallet_password, self.basic_bond, self.bonding_fee, self.bonding_gas, "wallet", unit_wallet_alias)
+            unit_bond_hash = cmd.bond(self.wallet_password, self.basic_bond, self.bonding_fee, self.bonding_gas, unit_wallet_alias)
             bond_hashes.append(unit_bond_hash)
 
         print("Wait for switching next block...")
@@ -139,10 +139,10 @@ class TestMultiNodeSimple:
 
         for node in self.nodes_address[:3]:
             print("Test of {}".format(node))
-            res = cmd.get_balance("wallet", self.wallet_anna, node=node)
+            res = cmd.get_balance(self.wallet_anna, node=node)
             assert("value" in res)
 
-            res = cmd.get_balance("wallet", self.wallet_elsa, node=node)
+            res = cmd.get_balance(self.wallet_elsa, node=node)
             assert("value" in res)
 
             print("{} OK".format(node))
@@ -159,8 +159,7 @@ class TestMultiNodeSimple:
         print("At {}".format(picked_node))
 
         tx_hash = cmd.transfer_to(self.wallet_password, self.info_anna['address'], self.transfer_amount,
-                        self.transfer_fee, self.transfer_gas,
-                        'address', self.info_elsa['address'], node=picked_node)
+                        self.transfer_fee, self.transfer_gas, self.info_elsa['address'], node=picked_node)
 
         print("Tx sent. Waiting for validation")
         time.sleep(self.tx_blocktime * 3 + 1)
@@ -175,12 +174,12 @@ class TestMultiNodeSimple:
         picked_node = self.get_node_randomly()
         print("At {}".format(picked_node))
 
-        res = cmd.get_balance("wallet", self.wallet_anna, node=picked_node)
+        res = cmd.get_balance(self.wallet_anna, node=picked_node)
         assert((self.basic_coin + self.transfer_amount) * 0.95 < int(res["value"]))
 
         picked_node = self.get_node_randomly()
         print("At {}".format(picked_node))
-        res = cmd.get_balance("wallet", self.wallet_elsa, node=picked_node)
+        res = cmd.get_balance(self.wallet_elsa, node=picked_node)
         assert(int(res["value"]) < self.basic_coin - self.transfer_amount)
 
         print("======================Done test01_transfer_to======================")
@@ -193,8 +192,7 @@ class TestMultiNodeSimple:
         print("At {}".format(picked_node))
 
         tx_hash = cmd.transfer_to(self.wallet_password, self.info_bryan['address'], int(self.transfer_amount / 10),
-                        self.transfer_fee, self.transfer_gas,
-                        'address', self.info_anna['address'], node=picked_node)
+                        self.transfer_fee, self.transfer_gas, self.info_anna['address'], node=picked_node)
 
         print("Tx sent. Waiting for validation")
         time.sleep(self.tx_blocktime * 3 + 1)
@@ -212,10 +210,10 @@ class TestMultiNodeSimple:
         # If the query result comes, we can sure that the account exists, although there is no balance assertion.
         for node in self.nodes_address[:3]:
             print("Test of {}".format(node))
-            res = cmd.get_balance("wallet", self.wallet_anna, node=node)
+            res = cmd.get_balance(self.wallet_anna, node=node)
             print("Balance of 'anna': ", int(res["value"]))
 
-            res = cmd.get_balance("wallet", self.wallet_bryan, node=node)
+            res = cmd.get_balance(self.wallet_bryan, node=node)
             print("Balance of 'anna': ", int(res["value"]))
             print("{} OK".format(node))
 
@@ -226,7 +224,7 @@ class TestMultiNodeSimple:
         print("Set nickname")
         picked_node = self.get_node_randomly()
         print("At {}".format(picked_node))
-        tx_hash_nickname = cmd.set_nickname_by_address(self.wallet_password, self.nickname_anna, self.info_anna['address'], node=picked_node)
+        tx_hash_nickname = cmd.set_nickname(self.wallet_password, self.nickname_anna, self.info_anna['address'], node=picked_node)
 
         print("Tx sent. Waiting for validation")
         time.sleep(self.tx_blocktime * 3 + 1)
@@ -259,7 +257,7 @@ class TestMultiNodeSimple:
         print("At {}".format(picked_node))
 
         tx_hash_transfer = cmd.transfer_to(self.wallet_password, self.nickname_anna, self.transfer_amount,
-                                           self.transfer_fee, self.transfer_gas, "wallet", self.wallet_elsa, node=picked_node)
+                                           self.transfer_fee, self.transfer_gas, self.wallet_elsa, node=picked_node)
 
         print("Tx sent. Waiting for validation")
         time.sleep(self.tx_blocktime * 3 + 1)

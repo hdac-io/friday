@@ -262,20 +262,12 @@ def get_bls_pubkey_remote(remote_address):
 ## Nickname CLI
 #################
 
-def set_nickname_by_address(passphrase: str, nickname: str, address: str, node: str = "tcp://localhost:26657"):
-    return _tx_executor("clif nickname set {} --address {} --node {}", passphrase, nickname, address, node)
+def set_nickname(passphrase: str, nickname: str, address: str, node: str = "tcp://localhost:26657"):
+    return _tx_executor("clif nickname set {} --from {} --node {}", passphrase, nickname, address, node)
 
 
-def set_nickname_by_wallet_alias(passphrase: str, nickname: str, wallet_alias: str, node: str = "tcp://localhost:26657"):
-    return _tx_executor("clif nickname set {} --wallet {} --node {}", passphrase, nickname, wallet_alias, node)
-
-
-def change_to_by_address(passphrase: str, nickname: str, new_address: str, old_address: str, node: str = "tcp://localhost:26657"):
-    return _tx_executor("clif nickname change-to {} {} --address {} --node {}", passphrase, nickname, new_address, old_address, node)
-    
-
-def change_to_by_wallet(passphrase: str, nickname: str, new_address: str, wallet_alias: str, node: str = "tcp://localhost:26657"):
-    return _tx_executor("clif nickname change-to {} {} --wallet {} --node {}", passphrase, nickname, new_address, wallet_alias, node)
+def change_address_of_nickname(passphrase: str, nickname: str, new_address: str, old_address: str, node: str = "tcp://localhost:26657"):
+    return _tx_executor("clif nickname change-to {} {} --from {} --node {}", passphrase, nickname, new_address, old_address, node)
 
 
 def get_address(nickname: str, node: str = "tcp://localhost:26657"):
@@ -287,23 +279,23 @@ def get_address(nickname: str, node: str = "tcp://localhost:26657"):
 ## Hdac custom CLI
 ##################
 
-def transfer_to(passphrase: str, recipient: str, amount: int, fee: int, gas_price: int, from_type: str, from_value: str, node: str = "tcp://localhost:26657"):
-    return _tx_executor("clif hdac transfer-to {} {} {} {} --{} {} --node {}", passphrase, recipient, amount, fee, gas_price, from_type, from_value, node)
+def transfer_to(passphrase: str, recipient: str, amount: int, fee: int, gas_price: int, from_value: str, node: str = "tcp://localhost:26657"):
+    return _tx_executor("clif hdac transfer-to {} {} {} {} --from {} --node {}", passphrase, recipient, amount, fee, gas_price, from_value, node)
 
 
-def bond(passphrase: str, amount: int, fee: int, gas_price: int, from_type: str, from_value: str, node: str = "tcp://localhost:26657"):
-    return _tx_executor("clif hdac bond {} {} {} --{} {} --node {}", passphrase, amount, fee, gas_price, from_type, from_value, node)
+def bond(passphrase: str, amount: int, fee: int, gas_price: int, from_value: str, node: str = "tcp://localhost:26657"):
+    return _tx_executor("clif hdac bond {} {} {} --from {} --node {}", passphrase, amount, fee, gas_price, from_value, node)
 
 
-def unbond(passphrase: str, amount: int, fee: int, gas_price: int, from_type: str, from_value: str, node: str = "tcp://localhost:26657"):
-    return _tx_executor("clif hdac unbond {} {} {} --{} {} --node {}", passphrase, amount, fee, gas_price, from_type, from_value, node)
+def unbond(passphrase: str, amount: int, fee: int, gas_price: int, from_value: str, node: str = "tcp://localhost:26657"):
+    return _tx_executor("clif hdac unbond {} {} {} --from {} --node {}", passphrase, amount, fee, gas_price, from_value, node)
 
 
-def get_balance(from_type: str, from_value: str, node: str = "tcp://localhost:26657"):
-    res = _process_executor("clif hdac getbalance --{} {} --node {}", from_type, from_value, node, need_output=True)
+def get_balance(from_value: str, node: str = "tcp://localhost:26657"):
+    res = _process_executor("clif hdac getbalance --from {} --node {}", from_value, node, need_output=True)
     return res
 
 
 def create_validator(passphrase: str, from_value: str, pubkey: str, moniker: str, identity: str='""', website: str='""', details: str='""', node: str = "tcp://localhost:26657"):
-    return _tx_executor("clif hdac create-validator --wallet {} --pubkey {} --moniker {} --identity {} --website {} --details {} --node {}",
+    return _tx_executor("clif hdac create-validator --from {} --pubkey {} --moniker {} --identity {} --website {} --details {} --node {}",
                       passphrase, from_value, pubkey, moniker, identity, website, details, node)
