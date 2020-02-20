@@ -302,4 +302,19 @@ class TestSingleNode():
         res_transfer = cmd.get_balance(self.info_anna['address'])
         assert(int(res_transfer['value']) == int(self.basic_coin + self.transfer_amount))
 
+        print("Try to transfer to nickname sender")
+        tx_hash_transfer = cmd.transfer_to(self.wallet_password, self.info_elsa['address'], self.transfer_amount,
+                                           self.transfer_fee, self.transfer_gas, self.nickname_anna)
+
+        print("Tx sent. Waiting for validation")
+        time.sleep(self.tx_block_time * 3 + 1)
+
+        print("Check Tx OK or not")
+        is_ok = cmd.is_tx_ok(tx_hash_transfer)
+        assert(is_ok == True)
+
+        print("Check wallet by address. Should be match with wallet info")
+        res_transfer = cmd.get_balance(self.info_anna['address'])
+        assert(int(self.basic_coin *0.9) < int(res_transfer['value']) < self.basic_coin)
+
         print("======================Done test04_transfer_to_by_nickname======================")

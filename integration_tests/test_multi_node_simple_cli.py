@@ -270,4 +270,15 @@ class TestMultiNodeSimple:
         #res_transfer = cmd.get_balance("address", self.info_anna['address'], node=picked_node)
         #assert(int(res_transfer['value']) == int(self.basic_coin + self.transfer_amount))
 
+        print("Try to transfer to nickname sender")
+        tx_hash_transfer = cmd.transfer_to(self.wallet_password, self.info_elsa['address'], self.transfer_amount,
+                                           self.transfer_fee, self.transfer_gas, self.nickname_anna)
+
+        print("Tx sent. Waiting for validation")
+        time.sleep(self.tx_blocktime * 3 + 1)
+
+        print("Check Tx OK or not")
+        is_ok = cmd.is_tx_ok(tx_hash_transfer)
+        assert(is_ok == True)
+
         print("======================Done test04_transfer_to_by_nickname======================")
