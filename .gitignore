@@ -32,6 +32,11 @@ mytestnet
 coverage.txt
 profile.out
 sim_log_file
+integration_tests/*.txt
+.cache
+.cache/*
+.pytest_cache
+__pycache__
 
 # Vagrant
 .vagrant/

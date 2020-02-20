@@ -1,0 +1,72 @@
+pipeline{
+    agent none
+    stages{
+        stage('prepare'){
+            parallel{
+                stage('prepare1'){
+                    steps{
+                        build job: '01_(Do not trigger yourself) Preparation ci_node_01',
+                        parameters: [string(name: 'TEST_BRANCH', value: "${params.TEST_BRANCH}")]
+                    }
+                }
+                stage('prepare2'){
+                    steps {
+                        build job: '01_(Do not trigger yourself) Preparation ci_node_02',
+                        parameters: [string(name: 'TEST_BRANCH', value: "${params.TEST_BRANCH}")]
+                    }
+                }
+                stage('prepare3'){
+                    steps {
+                        build job: '01_(Do not trigger yourself) Preparation ci_node_03',
+                        parameters: [string(name: 'TEST_BRANCH', value: "${params.TEST_BRANCH}")]
+                    }
+                }
+                stage('prepare4'){
+                    steps{
+                        build job: '01_(Do not trigger yourself) Preparation ci_node_04',
+                        parameters: [string(name: 'TEST_BRANCH', value: "${params.TEST_BRANCH}")]
+                    }
+                }
+            }
+        }
+        stage('make genesis.json'){
+            steps{
+                build job: '02_(Do not trigger yourself) Genesis setting'
+            }
+        }
+        stage('config distribution'){
+            steps{
+                build job: '03_(Do not trigger yourself) Setting distribution'
+            }
+        }
+        stage('daemon start'){
+            parallel{
+                stage('daemon at node01'){
+                    steps{
+                        build job: '04_(Do not trigger yourself) Start daemon at node 01'
+                    }
+                }
+                stage('daemon at node02'){
+                    steps{
+                        build job: '04_(Do not trigger yourself) Start daemon at node 02'
+                    }
+                }
+                stage('daemon at node03'){
+                    steps{
+                        build job: '04_(Do not trigger yourself) Start daemon at node 03'
+                    }
+                }
+                stage('daemon at node04'){
+                    steps{
+                        build job: '04_(Do not trigger yourself) Start daemon at node 04'
+                    }
+                }
+            }
+        }
+        stage('test run'){
+            steps{
+                build job: '05_(Do not trigger yourself) Test run'
+            }
+        }
+    }
+}

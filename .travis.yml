@@ -3,8 +3,11 @@ jobs:
     - stage: unit test
       os: linux
       dist: xenial
-      language: go
+      language:
+        - go
+        - python
       go: 1.13.x
+      python: 3.8.1
       cache:
         directories:
           - $HOME/.cache/go-build
@@ -13,6 +16,7 @@ jobs:
           - CasperLabs
       script:
         - make test
+        - make integration-tests
       after_success:
         - bash <(curl -s https://codecov.io/bash)
 
@@ -30,12 +34,14 @@ jobs:
       script:
         - unset -f cd # workaround for https://github.com/travis-ci/travis-ci/issues/8703
         - make test
-
+        - make integration-tests
 addons:
-  apt:
-    packages: curl
   homebrew:
     package: curl
+  apt:
+    packages:
+      - curl
+      - python3-pip
 before_install:
   - bash scripts/travis_ci_prerequisites.sh
   - export PATH="$PATH:$HOME/.cargo/bin"
