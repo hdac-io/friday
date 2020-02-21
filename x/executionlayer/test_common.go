@@ -8,7 +8,6 @@ import (
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus"
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	"github.com/hdac-io/friday/codec"
 	"github.com/hdac-io/friday/store"
@@ -117,32 +116,44 @@ func genesis(input testInput) []byte {
 	candidateBlock.Hash = []byte{}
 	candidateBlock.State = response.GetSuccess().PoststateHash
 
+	systemAccount := make([]byte, 32)
+	res, errStr := grpc.Query(input.elk.client, candidateBlock.State, "address", systemAccount, []string{}, genesisConfig.GetProtocolVersion())
+	if errStr != "" {
+		panic(errStr)
+	}
+
+	for _, namedKey := range res.GetAccount().GetNamedKeys() {
+		if namedKey.GetName() == types.ProxyContractName {
+			input.elk.SetProxyContractHash(input.ctx, namedKey.GetKey().GetHash().GetHash())
+			break
+		}
+	}
+
 	return response.GetSuccess().PoststateHash
 }
 
 func counterDefine(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	input := setupTestInput()
+	proxyHash := keeper.GetProxyContractHash(input.ctx)
 	timestamp := time.Now().Unix()
 	paymentArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
-			Name: "fee",
 			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_BigInt{
-					BigInt: &state.BigInt{
-						Value:    "100000000",
-						BitWidth: 512,
-					}}}}}
-	paymentAbi, err := util.AbiDeployArgsTobytes(paymentArgs)
-	if err != nil {
-		panic(fmt.Sprintf("fail to convert payment abi: %s", err.Error()))
-	}
+				Value: &consensus.Deploy_Arg_Value_StringValue{
+					StringValue: types.PaymentMethodName}}},
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_IntValue{
+					IntValue: 100000000}}}}
 	cntDefCode := util.LoadWasmFile(path.Join(contractPath, counterDefineWasm))
-	standardPaymentCode := util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm))
 	protocolVersion := input.elk.MustGetProtocolVersion(input.ctx)
 	genesisAddr := input.elk.GetGenesisAccounts(input.ctx)[0]
 
-	deploy := util.MakeDeploy(genesisAddr.Address.ToEEAddress(), util.WASM, cntDefCode, []byte{},
-		util.WASM, standardPaymentCode, paymentAbi, uint64(10), timestamp, input.elk.GetChainName(input.ctx))
+	deploy, err := util.MakeDeploy(genesisAddr.Address.ToEEAddress(), util.WASM, cntDefCode, []*consensus.Deploy_Arg{},
+		util.WASM, proxyHash, paymentArgs, uint64(10), timestamp, input.elk.GetChainName(input.ctx))
+	if err != nil {
+		panic(fmt.Sprintf("fail to make deploy error : %s", err.Error()))
+	}
 
 	deploys := util.MakeInitDeploys()
 	deploys = util.AddDeploy(deploys, deploy)
@@ -163,28 +174,27 @@ func counterDefine(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 
 func counterCall(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	input := setupTestInput()
+	proxyHash := keeper.GetProxyContractHash(input.ctx)
 	timestamp := time.Now().Unix()
 	paymentArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
-			Name: "fee",
 			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_BigInt{
-					BigInt: &state.BigInt{
-						Value:    "100000000",
-						BitWidth: 512,
-					}}}}}
-	paymentAbi, err := util.AbiDeployArgsTobytes(paymentArgs)
-	if err != nil {
-		panic(fmt.Sprintf("fail to convert payment abi: %s", err.Error()))
-	}
+				Value: &consensus.Deploy_Arg_Value_StringValue{
+					StringValue: types.PaymentMethodName}}},
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_IntValue{
+					IntValue: 100000000}}}}
 	cntCallCode := util.LoadWasmFile(path.Join(contractPath, counterCallWasm))
-	standardPaymentCode := util.LoadWasmFile(path.Join(contractPath, standardPaymentWasm))
 	protocolVersion := input.elk.MustGetProtocolVersion(input.ctx)
 	genesisAddr := input.elk.GetGenesisAccounts(input.ctx)[0]
 
 	timestamp = time.Now().Unix()
-	deploy := util.MakeDeploy(genesisAddr.Address.ToEEAddress(), util.WASM, cntCallCode,
-		[]byte{}, util.WASM, standardPaymentCode, paymentAbi, uint64(10), timestamp, input.elk.GetChainName(input.ctx))
+	deploy, err := util.MakeDeploy(genesisAddr.Address.ToEEAddress(), util.WASM, cntCallCode, []*consensus.Deploy_Arg{},
+		util.HASH, proxyHash, paymentArgs, uint64(10), timestamp, input.elk.GetChainName(input.ctx))
+	if err != nil {
+		panic(fmt.Sprintf("fail to make deploy error : %s", err.Error()))
+	}
 	deploys := util.MakeInitDeploys()
 	deploys = util.AddDeploy(deploys, deploy)
 

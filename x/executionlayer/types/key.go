@@ -12,10 +12,11 @@ const (
 	HashMapStoreKey = ModuleName + "_hashmap"
 
 	// key value
-	GenesisBlockHashKey = "genesisblockhash"
-	GenesisConfigKey    = "genesisconf"
-	GenesisAccountKey   = "genesisaccount"
-	CandidateBlockKey   = "candidateblock"
+	GenesisBlockHashKey  = "genesisblockhash"
+	GenesisConfigKey     = "genesisconf"
+	GenesisAccountKey    = "genesisaccount"
+	CandidateBlockKey    = "candidateblock"
+	ProxyContractHashKey = "proxycontractkey"
 )
 
 var (
