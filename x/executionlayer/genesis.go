@@ -45,6 +45,19 @@ func InitGenesis(
 	candidateBlock.Hash = []byte(types.GenesisBlockHashKey)
 	candidateBlock.State = stateHash
 	candidateBlock.Bonds = bonds
+
+	systemAccount := make([]byte, 32)
+	res, errStr := grpc.Query(keeper.client, stateHash, "address", systemAccount, []string{}, genesisConfig.GetProtocolVersion())
+	if errStr != "" {
+		panic(errStr)
+	}
+
+	for _, namedKey := range res.GetAccount().GetNamedKeys() {
+		if namedKey.GetName() == types.ProxyContractName {
+			keeper.SetProxyContractHash(ctx, namedKey.GetKey().GetHash().GetHash())
+			break
+		}
+	}
 }
 
 // ExportGenesis : exports an executionlayer configuration for genesis

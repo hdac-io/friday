@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc/transforms"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
@@ -101,7 +102,7 @@ func TestCreateBlock(t *testing.T) {
 		GenesisAccountAddress,
 		util.WASM,
 		util.LoadWasmFile(path.Join(contractPath, counterDefineWasm)),
-		[]byte{},
+		[]*consensus.Deploy_Arg{},
 		uint64(100000000),
 		uint64(10),
 	)
@@ -121,7 +122,7 @@ func TestCreateBlock(t *testing.T) {
 		GenesisAccountAddress,
 		util.WASM,
 		util.LoadWasmFile(path.Join(contractPath, counterCallWasm)),
-		[]byte{},
+		[]*consensus.Deploy_Arg{},
 		uint64(100000000),
 		uint64(10),
 	)
@@ -189,7 +190,7 @@ func TestTransfer(t *testing.T) {
 
 func TestMarsahlAndUnMarshal(t *testing.T) {
 	src := &transforms.TransformEntry{
-		Transform: &transforms.Transform{TransformInstance: &transforms.Transform_Write{Write: &transforms.TransformWrite{Value: &state.Value{Value: &state.Value_IntValue{IntValue: 1}}}}}}
+		Transform: &transforms.Transform{TransformInstance: &transforms.Transform_Write{Write: &transforms.TransformWrite{Value: &state.StoredValue{Variants: &state.StoredValue_ClValue{ClValue: &state.CLValue{ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_BOOL}}, SerializedValue: []byte{1, 2, 3}}}}}}}}
 	bz, _ := proto.Marshal(src)
 
 	obj := &transforms.TransformEntry{}
@@ -263,4 +264,15 @@ func TestValidator(t *testing.T) {
 
 	validators := input.elk.GetAllValidators(input.ctx)
 	assert.Equal(t, 1, len(validators))
+}
+
+func TestProxyContractKeeper(t *testing.T) {
+	input := setupTestInput()
+
+	contractHash := []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+	input.elk.SetProxyContractHash(input.ctx, contractHash)
+
+	res := input.elk.GetProxyContractHash(input.ctx)
+
+	assert.Equal(t, contractHash, res)
 }

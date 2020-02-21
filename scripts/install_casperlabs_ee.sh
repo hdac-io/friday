@@ -7,14 +7,15 @@ if [ ${PWD##*/} != "friday" ]; then
   exit 1
 fi
 
-CASPERLABS_TARGET_TAG="v0.10.0"
+TARGET_BRANCH="master"
+COMMIT_HASH="8733f52719eb7bbca8ee6f10996d11f461f8ec66"
 if [ ! -d "CasperLabs/.git" ]; then
-  git clone --single-branch --branch $CASPERLABS_TARGET_TAG https://github.com/CasperLabs/CasperLabs.git
+  git clone --single-branch --branch $TARGET_BRANCH https://github.com/hdac-io/CasperLabs.git
 fi
 
 cd CasperLabs
-git fetch origin refs/tags/$CASPERLABS_TARGET_TAG:refs/tags/$CASPERLABS_TARGET_TAG
-git checkout $CASPERLABS_TARGET_TAG
+git fetch origin $TARGET_BRANCH
+git reset --hard $COMMIT_HASH
 
 cd execution-engine
 make setup
@@ -25,10 +26,6 @@ declare -a TARGET_CONTRACTS=(
   "pos-install"
   "counter-call"
   "counter-define"
-  "standard-payment"
-  "transfer-to-account"
-  "bonding"
-  "unbonding"
 )
 
 declare -a WASM_FILES=(
@@ -36,14 +33,10 @@ declare -a WASM_FILES=(
   "pos_install.wasm"
   "counter_call.wasm"
   "counter_define.wasm"
-  "standard_payment.wasm"
-  "transfer_to_account.wasm"
-  "bonding.wasm"
-  "unbonding.wasm"
 )
 
 for pkg in "${TARGET_CONTRACTS[@]}"; do
-  make build-contract/$pkg
+  make build-contract-rs/$pkg
 done
 
 CONTRACT_DIR="$HOME/.nodef/contracts"

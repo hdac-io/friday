@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/tendermint/crypto"
@@ -13,13 +14,13 @@ const RouterKey = ModuleName
 
 // MsgExecute for sending deploy to execution engine
 type MsgExecute struct {
-	ContractAddress string            `json:"contract_address"`
-	ExecAddress     sdk.AccAddress    `json:"exec_address"`
-	SessionType     util.ContractType `json:"session_type"`
-	SessionCode     []byte            `json:"session_code"`
-	SessionArgs     []byte            `json:"session_args"`
-	Fee             uint64            `json:"fee"`
-	GasPrice        uint64            `json:"gas_price"`
+	ContractAddress string                  `json:"contract_address"`
+	ExecAddress     sdk.AccAddress          `json:"exec_address"`
+	SessionType     util.ContractType       `json:"session_type"`
+	SessionCode     []byte                  `json:"session_code"`
+	SessionArgs     []*consensus.Deploy_Arg `json:"session_args"`
+	Fee             uint64                  `json:"fee"`
+	GasPrice        uint64                  `json:"gas_price"`
 }
 
 // NewMsgExecute is a constructor function for MsgSetName
@@ -27,7 +28,8 @@ func NewMsgExecute(
 	contractAddress string,
 	execAddress sdk.AccAddress,
 	sessionType util.ContractType,
-	sessionCode, sessionArgs []byte,
+	sessionCode []byte,
+	sessionArgs []*consensus.Deploy_Arg,
 	fee, gasPrice uint64,
 ) MsgExecute {
 	return MsgExecute{
