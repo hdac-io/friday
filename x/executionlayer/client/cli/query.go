@@ -7,6 +7,7 @@ import (
 	"github.com/hdac-io/friday/client"
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/codec"
+	sdk "github.com/hdac-io/friday/types"
 	cliutil "github.com/hdac-io/friday/x/executionlayer/client/util"
 
 	"github.com/hdac-io/friday/x/executionlayer/types"
@@ -40,18 +41,23 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
-			if err != nil {
-				return err
-			}
-
 			valueFromFromFlag := viper.GetString(client.FlagFrom)
-			keyInfo, err := cliutil.GetLocalWalletInfo(valueFromFromFlag, kb, cdc, cliCtx)
+			var addr sdk.AccAddress
+			var err error
+			addr, err = cliutil.GetAddress(cdc, cliCtx, valueFromFromFlag)
 			if err != nil {
-				return err
+				kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+				if err != nil {
+					return err
+				}
+
+				keyInfo, err := kb.Get(valueFromFromFlag)
+				if err != nil {
+					return err
+				}
+
+				addr = keyInfo.GetAddress()
 			}
-			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
-			addr := keyInfo.GetAddress()
 
 			var out types.QueryExecutionLayerResp
 			if blockhashstr := viper.GetString(FlagBlockHash); blockhashstr != "" {
@@ -169,18 +175,11 @@ func GetCmdQueryValidator(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
-			if err != nil {
-				return err
-			}
-
 			valueFromFromFlag := viper.GetString(client.FlagFrom)
-			keyInfo, err := cliutil.GetLocalWalletInfo(valueFromFromFlag, kb, cdc, cliCtx)
+			addr, err := cliutil.GetAddress(cdc, cliCtx, valueFromFromFlag)
 			if err != nil {
 				return err
 			}
-			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
-			addr := keyInfo.GetAddress()
 
 			if addr.Empty() {
 				res, _, err := cliCtx.Query(fmt.Sprintf("custom/%s/queryallvalidator", types.ModuleName))
