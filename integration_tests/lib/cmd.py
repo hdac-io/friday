@@ -10,9 +10,10 @@ import time
 import pexpect
 
 
-from .errors import DeadDaemonException, FinishedWithError
+from .errors import DeadDaemonException, FinishedWithError, InvalidContractRunType
 
 def _process_executor(cmd: str, *args, need_output=False):
+    print(cmd.format(*args))
     child = pexpect.spawn(cmd.format(*args))    
     outs = child.read().decode('utf-8')
 
@@ -28,8 +29,9 @@ def _process_executor(cmd: str, *args, need_output=False):
 
 def _tx_executor(cmd: str, passphrase, *args):
     try:
+        print(cmd.format(*args))
         child = pexpect.spawn(cmd.format(*args))
-        _ = child.read_nonblocking(10000, timeout=1)
+        _ = child.read_nonblocking(30000000, timeout=3)
         _ = child.sendline('Y')
         _ = child.read_nonblocking(10000, timeout=1)
         _ = child.sendline(passphrase)
@@ -102,7 +104,7 @@ def create_wallet(wallet_alias: str, passphrase: str, client_home: str = '.test_
     client_home = os.path.join(os.environ["HOME"], client_home)
     try:
         child = pexpect.spawn("clif keys add {} --home {}".format(wallet_alias, client_home))
-        _ = child.read_nonblocking(10000, timeout=1)
+        _ = child.read_nonblocking(3000000000, timeout=3)
         _ = child.sendline(passphrase)
         _ = child.read_nonblocking(10000, timeout=1)
         _ = child.sendline(passphrase)
@@ -328,3 +330,15 @@ def create_validator(passphrase: str, from_value: str, pubkey: str, moniker: str
     client_home = os.path.join(os.environ["HOME"], client_home)
     return _tx_executor("clif hdac create-validator --from {} --pubkey {} --moniker {} --identity {} --website {} --details {} --node {} --home {}",
                       passphrase, from_value, pubkey, moniker, identity, website, details, node, client_home)
+
+##################
+## Contract exec CLI
+##################
+
+def run_contract(passphrase: str, run_type: str, run_type_value: str, args: str, fee: int, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+    client_home = os.path.join(os.environ["HOME"], client_home)
+    if run_type not in ["wasm", "uref", "hash", "name"]:
+        raise InvalidContractRunType
+
+    return _tx_executor("clif contract run {} {} '{}' {} {} --from {} --node {} --home {}",
+                      passphrase, run_type, run_type_value, args, fee, gas_price, from_value, node, client_home)
