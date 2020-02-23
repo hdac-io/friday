@@ -1,4 +1,6 @@
 import time
+import json
+import os
 
 import pytest
 
@@ -318,3 +320,33 @@ class TestSingleNode():
         assert(int(self.basic_coin *0.9) < int(res_transfer['value']) < self.basic_coin)
 
         print("======================Done test04_transfer_to_by_nickname======================")
+
+    
+    def test05_custom_contract_execution(self):
+        print("======================Start test05_custom_contract_execution======================")
+        print("Run store system contract")
+
+        print("Try to run bond function by wasm path")
+        wasm_path = os.path.join(os.environ['HOME'], ".nodef", "contracts", "bonding.wasm")
+        param = json.dumps([
+            # {
+            #       "name": "method_name",
+            #       "value": {
+            #         "string_value": "bond"
+            #       }
+            # },
+            {
+                "name": "amount",
+                "value": {
+                    "int_value":1000000
+                }
+            }
+        ])
+        tx_hash_store_contract = cmd.run_contract(self.wallet_password, "wasm", wasm_path, param, 100000000, 50000000, self.wallet_anna)
+        print("Tx sent. Waiting for validation")
+        time.sleep(self.tx_block_time * 3 + 1)
+
+        print("Check Tx OK or not")
+        is_ok = cmd.is_tx_ok(tx_hash_store_contract)
+        assert(is_ok == True)
+        print("======================End test05_custom_contract_execution======================")
