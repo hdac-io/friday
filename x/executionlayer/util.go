@@ -14,18 +14,26 @@ import (
 func toBytes(keyType string, key string,
 	k nickname.NicknameKeeper, ctx sdk.Context) ([]byte, error) {
 	var bytes []byte
-	var err error = nil
+	var err error
 
 	switch keyType {
 	case "address":
+		// we have special key for system account
+		if key == "system" {
+			bytes = make([]byte, 32)
+			break
+		}
+
 		var addr sdk.AccAddress
-		addr, err := sdk.AccAddressFromBech32(key)
+		addr, err = sdk.AccAddressFromBech32(key)
 		if err != nil {
 			acc := k.GetUnitAccount(ctx, key)
 			if acc.Nickname.MustToString() == "" {
-				return nil, fmt.Errorf("no readable ID mapping of %s", key)
+				err = fmt.Errorf("no readable ID mapping of %s", key)
+				break
 			}
 			addr = acc.Address
+			err = nil
 		}
 		bytes = addr.ToEEAddress().Bytes()
 
@@ -37,9 +45,10 @@ func toBytes(keyType string, key string,
 	}
 
 	if err != nil {
-		return nil, err
+		bytes = nil
 	}
-	return bytes, nil
+
+	return bytes, err
 }
 
 func DeployArgsToJsonString(args []*consensus.Deploy_Arg) (string, error) {
