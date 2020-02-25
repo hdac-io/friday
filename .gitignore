@@ -47,6 +47,7 @@ vagrant
 # IDE
 .idea/
 *.iml
+tags
 
 # Graphviz
 dependency-graph.png
