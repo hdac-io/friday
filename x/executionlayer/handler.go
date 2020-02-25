@@ -59,12 +59,17 @@ func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTr
 					LongValue: int64(msg.Amount)}}},
 	}
 
+	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
+	if err != nil {
+		getResult(false, err.Error())
+	}
+
 	msgExecute := NewMsgExecute(
 		msg.ContractAddress,
 		msg.FromAddress,
 		util.HASH,
 		proxyContractHash,
-		sessionArgs,
+		sessionArgsStr,
 		msg.Fee,
 		msg.GasPrice,
 	)
@@ -128,12 +133,17 @@ func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) 
 				Value: &consensus.Deploy_Arg_Value_LongValue{
 					LongValue: int64(msg.Amount)}}}}
 
+	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
+	if err != nil {
+		getResult(false, err.Error())
+	}
+
 	msgExecute := NewMsgExecute(
 		msg.ContractAddress,
 		msg.FromAddress,
 		util.HASH,
 		proxyContractHash,
-		sessionArgs,
+		sessionArgsStr,
 		msg.Fee,
 		msg.GasPrice,
 	)
@@ -155,12 +165,17 @@ func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBo
 						Value: &consensus.Deploy_Arg_Value_LongValue{
 							LongValue: int64(msg.Amount)}}}}}}
 
+	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
+	if err != nil {
+		getResult(false, err.Error())
+	}
+
 	msgExecute := NewMsgExecute(
 		msg.ContractAddress,
 		msg.FromAddress,
 		util.HASH,
 		proxyContractHash,
-		sessionArgs,
+		sessionArgsStr,
 		msg.Fee,
 		msg.GasPrice,
 	)
@@ -176,6 +191,15 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) (boo
 	protocolVersion := k.MustGetProtocolVersion(ctx)
 	log := ""
 
+	sessionArgs := []*consensus.Deploy_Arg{}
+	var err error
+	if msg.SessionArgs != "" {
+		sessionArgs, err = util.JsonStringToDeployArgs(msg.SessionArgs)
+		if err != nil {
+			return false, err.Error()
+		}
+	}
+
 	paymentArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
 			Value: &consensus.Deploy_Arg_Value{
@@ -190,7 +214,7 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) (boo
 	deploys := []*ipc.DeployItem{}
 	deploy, err := util.MakeDeploy(
 		msg.ExecAddress.ToEEAddress(),
-		msg.SessionType, msg.SessionCode, msg.SessionArgs,
+		msg.SessionType, msg.SessionCode, sessionArgs,
 		util.HASH, proxyContractHash, paymentArgs,
 		msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
 	if err != nil {

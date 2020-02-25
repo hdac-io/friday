@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	"github.com/hdac-io/friday/client"
 	"github.com/hdac-io/friday/codec"
@@ -87,14 +86,6 @@ func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 				return fmt.Errorf("type must be one of wasm, name, uref, or hash")
 			}
 
-			sessionArgs := []*consensus.Deploy_Arg{}
-			if args[2] != "" {
-				sessionArgs, err = util.JsonStringToDeployArgs(args[2])
-				if err != nil {
-					return err
-				}
-			}
-
 			fee, err := strconv.ParseUint(args[3], 10, 64)
 			if err != nil {
 				return err
@@ -111,7 +102,7 @@ func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 				fromAddr,
 				sessionType,
 				sessionCode,
-				sessionArgs,
+				args[2],
 				fee,
 				gasPrice,
 			)

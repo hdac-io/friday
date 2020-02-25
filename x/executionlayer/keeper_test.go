@@ -11,7 +11,6 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc/transforms"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
@@ -102,7 +101,7 @@ func TestCreateBlock(t *testing.T) {
 		GenesisAccountAddress,
 		util.WASM,
 		util.LoadWasmFile(path.Join(contractPath, counterDefineWasm)),
-		[]*consensus.Deploy_Arg{},
+		"",
 		uint64(100000000),
 		uint64(10),
 	)
@@ -122,7 +121,7 @@ func TestCreateBlock(t *testing.T) {
 		GenesisAccountAddress,
 		util.WASM,
 		util.LoadWasmFile(path.Join(contractPath, counterCallWasm)),
-		[]*consensus.Deploy_Arg{},
+		"",
 		uint64(100000000),
 		uint64(10),
 	)
