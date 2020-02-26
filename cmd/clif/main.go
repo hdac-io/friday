@@ -75,8 +75,8 @@ func main() {
 		client.NewCompletionCmd(rootCmd, true),
 	)
 
-	// Add flags and prefix all env exposed with GA
-	executor := cli.PrepareMainCmd(rootCmd, "GA", app.DefaultCLIHome)
+	// Add flags and prefix all env exposed with FR
+	executor := cli.PrepareMainCmd(rootCmd, "FR", app.DefaultCLIHome)
 
 	err := executor.Execute()
 	if err != nil {
