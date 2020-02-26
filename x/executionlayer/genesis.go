@@ -1,6 +1,7 @@
 package executionlayer
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
@@ -45,6 +46,26 @@ func InitGenesis(
 	candidateBlock.Hash = []byte(types.GenesisBlockHashKey)
 	candidateBlock.State = stateHash
 	candidateBlock.Bonds = bonds
+
+	systemAccount := make([]byte, 32)
+	res, errStr := grpc.Query(keeper.client, stateHash, "address", systemAccount, []string{}, genesisConfig.GetProtocolVersion())
+	if errStr != "" {
+		panic(errStr)
+	}
+
+	proxyContractHash := []byte{}
+	for _, namedKey := range res.GetAccount().GetNamedKeys() {
+		if namedKey.GetName() == types.ProxyContractName {
+			proxyContractHash = namedKey.GetKey().GetHash().GetHash()
+			break
+		}
+	}
+
+	if len(proxyContractHash) != 32 {
+		panic(fmt.Sprintf("%s must exist. Check systemcontract.", types.ProxyContractName))
+	}
+
+	keeper.SetProxyContractHash(ctx, proxyContractHash)
 }
 
 // ExportGenesis : exports an executionlayer configuration for genesis

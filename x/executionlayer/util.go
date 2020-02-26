@@ -1,10 +1,11 @@
 package executionlayer
 
 import (
-	"bytes"
 	"encoding/hex"
 	"fmt"
 
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/nickname"
 )
@@ -41,10 +42,20 @@ func toBytes(keyType string, key string,
 	return bytes, nil
 }
 
-func ProtobufSafeEncodeBytes(src []byte) []byte {
-	if bytes.Equal(src, []byte("empty")) {
-		src = []byte{}
+func DeployArgsToJsonString(args []*consensus.Deploy_Arg) (string, error) {
+	m := &jsonpb.Marshaler{}
+	str := "["
+	for idx, arg := range args {
+		if idx != 0 {
+			str += ","
+		}
+		s, err := m.MarshalToString(arg)
+		if err != nil {
+			return "", err
+		}
+		str += s
 	}
+	str += "]"
 
-	return src
+	return str, nil
 }

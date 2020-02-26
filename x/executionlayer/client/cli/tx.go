@@ -86,23 +86,6 @@ func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 				return fmt.Errorf("type must be one of wasm, name, uref, or hash")
 			}
 
-			var sessionAbi []byte
-			if args[2] == "" {
-				sessionAbi, err = cliutil.ProtobufSafeDecodeingHexString(args[2])
-				if err != nil {
-					return err
-				}
-			} else {
-				sessionArgs, err := util.JsonStringToDeployArgs(args[2])
-				if err != nil {
-					return err
-				}
-				sessionAbi, err = util.AbiDeployArgsTobytes(sessionArgs)
-				if err != nil {
-					return err
-				}
-			}
-
 			fee, err := strconv.ParseUint(args[3], 10, 64)
 			if err != nil {
 				return err
@@ -119,7 +102,7 @@ func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 				fromAddr,
 				sessionType,
 				sessionCode,
-				sessionAbi,
+				args[2],
 				fee,
 				gasPrice,
 			)

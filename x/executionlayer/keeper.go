@@ -298,3 +298,17 @@ func (k ExecutionLayerKeeper) GetAllValidators(ctx sdk.Context) (validators []ty
 }
 
 // -----------------------------------------------------------------------------------------------------------
+
+// GetProxyContractHash retrieves proxy_contract_hash
+func (k ExecutionLayerKeeper) GetProxyContractHash(ctx sdk.Context) []byte {
+	store := ctx.KVStore(k.HashMapStoreKey)
+	proxyContractHash := store.Get([]byte(types.ProxyContractHashKey))
+
+	return proxyContractHash
+}
+
+// SetProxyContractHash save proxy_contract_hash value.
+func (k ExecutionLayerKeeper) SetProxyContractHash(ctx sdk.Context, contractHash []byte) {
+	store := ctx.KVStore(k.HashMapStoreKey)
+	store.Set([]byte(types.ProxyContractHashKey), contractHash)
+}
