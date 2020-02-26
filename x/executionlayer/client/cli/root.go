@@ -26,7 +26,6 @@ func GetHdacCustomCmd(cdc *codec.Codec) *cobra.Command {
 
 		// Query
 		GetCmdQueryBalance(cdc),
-		GetCmdQuery(cdc),
 		GetCmdQueryValidator(cdc),
 	)...)
 	return hdacCustomTxCmd
@@ -43,6 +42,7 @@ func GetContractCmd(cdc *codec.Codec) *cobra.Command {
 	}
 	contractTxCmd.AddCommand(client.GetCommands(
 		// Tx
+		GetCmdQuery(cdc),
 		GetCmdContractRun(cdc),
 	)...)
 
