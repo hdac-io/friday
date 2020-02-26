@@ -11,11 +11,8 @@ import (
 	"github.com/hdac-io/friday/client/rpc"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/version"
-	"github.com/hdac-io/friday/x/auth"
 	authcmd "github.com/hdac-io/friday/x/auth/client/cli"
 	authrest "github.com/hdac-io/friday/x/auth/client/rest"
-	"github.com/hdac-io/friday/x/bank"
-	bankcmd "github.com/hdac-io/friday/x/bank/client/cli"
 	eecmd "github.com/hdac-io/friday/x/executionlayer/client/cli"
 	nicknamecmd "github.com/hdac-io/friday/x/nickname/client/cli"
 
@@ -59,13 +56,14 @@ func main() {
 
 	// Construct Root Command
 	rootCmd.AddCommand(
-		rpc.StatusCommand(),
 		eecmd.GetHdacCustomCmd(cdc),
 		eecmd.GetContractCmd(cdc),
 		nicknamecmd.GetRootCmd(cdc),
-		client.ConfigCmd(app.DefaultCLIHome),
+		client.LineBreak,
 		queryCmd(cdc),
 		txCmd(cdc),
+		rpc.StatusCommand(),
+		client.ConfigCmd(app.DefaultCLIHome),
 		client.LineBreak,
 		lcd.ServeCommand(cdc, registerRoutes),
 		client.LineBreak,
@@ -99,11 +97,7 @@ func queryCmd(cdc *amino.Codec) *cobra.Command {
 		rpc.BlockCommand(),
 		authcmd.QueryTxsByEventsCmd(cdc),
 		authcmd.QueryTxCmd(cdc),
-		client.LineBreak,
 	)
-
-	// add modules' query commands
-	app.ModuleBasics.AddQueryCommands(queryCmd, cdc)
 
 	return queryCmd
 }
@@ -115,29 +109,12 @@ func txCmd(cdc *amino.Codec) *cobra.Command {
 	}
 
 	txCmd.AddCommand(
-		bankcmd.SendTxCmd(cdc),
-		client.LineBreak,
 		authcmd.GetSignCommand(cdc),
 		authcmd.GetMultiSignCommand(cdc),
 		client.LineBreak,
 		authcmd.GetBroadcastCommand(cdc),
 		authcmd.GetEncodeCommand(cdc),
-		client.LineBreak,
 	)
-
-	// add modules' tx commands
-	app.ModuleBasics.AddTxCommands(txCmd, cdc)
-
-	// remove auth and bank commands as they're mounted under the root tx command
-	var cmdsToRemove []*cobra.Command
-
-	for _, cmd := range txCmd.Commands() {
-		if cmd.Use == auth.ModuleName || cmd.Use == bank.ModuleName {
-			cmdsToRemove = append(cmdsToRemove, cmd)
-		}
-	}
-
-	txCmd.RemoveCommand(cmdsToRemove...)
 
 	return txCmd
 }
