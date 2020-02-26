@@ -122,12 +122,19 @@ func genesis(input testInput) []byte {
 		panic(errStr)
 	}
 
+	proxyContractHash := []byte{}
 	for _, namedKey := range res.GetAccount().GetNamedKeys() {
 		if namedKey.GetName() == types.ProxyContractName {
-			input.elk.SetProxyContractHash(input.ctx, namedKey.GetKey().GetHash().GetHash())
+			proxyContractHash = namedKey.GetKey().GetHash().GetHash()
 			break
 		}
 	}
+
+	if len(proxyContractHash) != 32 {
+		panic(fmt.Sprintf("%s must exist. Check systemcontract.", types.ProxyContractName))
+	}
+
+	input.elk.SetProxyContractHash(input.ctx, proxyContractHash)
 
 	return response.GetSuccess().PoststateHash
 }
