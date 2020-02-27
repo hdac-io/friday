@@ -7,9 +7,9 @@ import (
 	"github.com/hdac-io/friday/client"
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/codec"
+	sdk "github.com/hdac-io/friday/types"
 	cliutil "github.com/hdac-io/friday/x/executionlayer/client/util"
 
-	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 
 	"github.com/spf13/cobra"
@@ -35,42 +35,29 @@ func GetExecutionLayerQueryCmd(cdc *codec.Codec) *cobra.Command {
 // GetCmdQueryBalance is a getter of the balance of the address
 func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "getbalance --wallet|--address|--nickname <from> [--blockhash <blockhash_since>]",
+		Use:   "getbalance --from <from> [--blockhash <blockhash_since>]",
 		Short: "Get balance of address",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
+			valueFromFromFlag := viper.GetString(client.FlagFrom)
 			var addr sdk.AccAddress
 			var err error
-
-			// Extract "from" from flags
-			if walletname := viper.GetString(FlagWallet); walletname != "" {
+			addr, err = cliutil.GetAddress(cdc, cliCtx, valueFromFromFlag)
+			if err != nil {
 				kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
 				if err != nil {
 					return err
 				}
 
-				key, err := kb.Get(walletname)
+				keyInfo, err := kb.Get(valueFromFromFlag)
 				if err != nil {
 					return err
 				}
 
-				addr = key.GetAddress()
-			} else if straddr := viper.GetString(FlagAddress); straddr != "" {
-				addr, err = sdk.AccAddressFromBech32(straddr)
-				if err != nil {
-					return fmt.Errorf("malformed address in --address: %s\n%s", straddr, err.Error())
-				}
-			} else if nickname := viper.GetString(FlagNickname); nickname != "" {
-				addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, nickname)
-				if err != nil {
-					return fmt.Errorf("no registered address of the given nickname '%s'", nickname)
-				}
-			} else {
-				return fmt.Errorf("one of --address, --wallet, --nickname is essential")
+				addr = keyInfo.GetAddress()
 			}
-			cliCtx = cliCtx.WithFromAddress(addr)
 
 			var out types.QueryExecutionLayerResp
 			if blockhashstr := viper.GetString(FlagBlockHash); blockhashstr != "" {
@@ -114,9 +101,7 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
-	cmd.Flags().String(FlagAddress, "", "Bech32 endocded address (fridayxxxxxx..)")
-	cmd.Flags().String(FlagWallet, "", "Wallet alias in local")
-	cmd.Flags().String(FlagNickname, "", "Nickname (Readable ID)")
+	cmd.Flags().String(client.FlagFrom, "", "Executor's identity (one of wallet alias, address, nickname)")
 	cmd.Flags().String(FlagBlockHash, "", "Block hash at the moment")
 
 	return cmd
@@ -184,38 +169,16 @@ func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
 // GetCmdQueryValidator implements the validator query command.
 func GetCmdQueryValidator(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "validator --wallet|--address|--nickname <from>",
+		Use:   "validator --from <from>",
 		Short: "Query a validator",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			var addr sdk.AccAddress
-			var err error
-
-			// Extract "from" from flags
-			if walletname := viper.GetString(FlagWallet); walletname != "" {
-				kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
-				if err != nil {
-					return err
-				}
-
-				key, err := kb.Get(walletname)
-				if err != nil {
-					return err
-				}
-
-				addr = key.GetAddress()
-			} else if straddr := viper.GetString(FlagAddress); straddr != "" {
-				addr, err = sdk.AccAddressFromBech32(straddr)
-				if err != nil {
-					return fmt.Errorf("malformed address in --address: %s\n%s", straddr, err.Error())
-				}
-			} else if nickname := viper.GetString(FlagNickname); nickname != "" {
-				addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, nickname)
-				if err != nil {
-					return fmt.Errorf("no registered address of the given nickname '%s'", nickname)
-				}
+			valueFromFromFlag := viper.GetString(client.FlagFrom)
+			addr, err := cliutil.GetAddress(cdc, cliCtx, valueFromFromFlag)
+			if err != nil {
+				return err
 			}
 
 			if addr.Empty() {
@@ -252,9 +215,7 @@ func GetCmdQueryValidator(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
-	cmd.Flags().String(FlagAddress, "", "Bech32 endocded address (fridayxxxxxx..)")
-	cmd.Flags().String(FlagWallet, "", "Wallet alias in local")
-	cmd.Flags().String(FlagNickname, "", "Nickname (Readable ID)")
+	cmd.Flags().String(client.FlagFrom, "", "Executor's identity (one of wallet alias, address, nickname)")
 
 	return cmd
 }

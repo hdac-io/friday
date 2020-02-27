@@ -26,6 +26,7 @@ declare -a TARGET_CONTRACTS=(
   "pos-install"
   "counter-call"
   "counter-define"
+  "bonding"
 )
 
 declare -a WASM_FILES=(
@@ -33,6 +34,7 @@ declare -a WASM_FILES=(
   "pos_install.wasm"
   "counter_call.wasm"
   "counter_define.wasm"
+  "bonding.wasm"
 )
 
 for pkg in "${TARGET_CONTRACTS[@]}"; do
