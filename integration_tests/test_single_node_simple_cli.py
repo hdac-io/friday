@@ -28,15 +28,15 @@ class TestSingleNode():
     info_olaf = None
     info_hans = None
 
-    basic_coin = 5000000000000
+    basic_coin = 500000000000000000
     basic_stake = 100000000
 
     basic_bond = 10000000000
-    bonding_fee = 1000000000
+    bonding_fee = 1000000000000000
     bonding_gas = 50000000
 
     transfer_amount = 1000000000000
-    transfer_fee = 100000000
+    transfer_fee = 1000000000000000
     transfer_gas = 25000000
 
     tx_block_time = 6
