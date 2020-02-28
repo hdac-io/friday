@@ -17,8 +17,8 @@ type transferReq struct {
 	BaseReq                    rest.BaseReq `json:"base_req"`
 	TokenContractAddress       string       `json:"token_contract_address"`
 	RecipientAddressOrNickname string       `json:"recipient_address_or_nickname"`
-	Amount                     uint64       `json:"amount"`
-	Fee                        uint64       `json:"fee"`
+	Amount                     string       `json:"amount"`
+	Fee                        string       `json:"fee"`
 }
 
 func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
@@ -71,8 +71,8 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 type bondReq struct {
 	BaseReq              rest.BaseReq `json:"base_req"`
 	TokenContractAddress string       `json:"token_contract_address"`
-	Amount               uint64       `json:"amount"`
-	Fee                  uint64       `json:"fee"`
+	Amount               string       `json:"amount"`
+	Fee                  string       `json:"fee"`
 }
 
 func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {

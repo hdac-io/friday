@@ -5,6 +5,7 @@ import (
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc/transforms"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
@@ -55,8 +56,8 @@ func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTr
 					BytesValue: msg.ToAddress.ToEEAddress()}}},
 		&consensus.Deploy_Arg{
 			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_LongValue{
-					LongValue: int64(msg.Amount)}}},
+				Value: &consensus.Deploy_Arg_Value_BigInt{
+					BigInt: &state.BigInt{Value: msg.Amount, BitWidth: 512}}}},
 	}
 
 	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
@@ -130,8 +131,8 @@ func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) 
 					StringValue: types.BondMethodName}}},
 		&consensus.Deploy_Arg{
 			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_LongValue{
-					LongValue: int64(msg.Amount)}}}}
+				Value: &consensus.Deploy_Arg_Value_BigInt{
+					BigInt: &state.BigInt{Value: msg.Amount, BitWidth: 512}}}}}
 
 	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
 	if err != nil {
@@ -162,8 +163,8 @@ func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBo
 			Value: &consensus.Deploy_Arg_Value{
 				Value: &consensus.Deploy_Arg_Value_OptionalValue{
 					OptionalValue: &consensus.Deploy_Arg_Value{
-						Value: &consensus.Deploy_Arg_Value_LongValue{
-							LongValue: int64(msg.Amount)}}}}}}
+						Value: &consensus.Deploy_Arg_Value_BigInt{
+							BigInt: &state.BigInt{Value: string(msg.Amount), BitWidth: 512}}}}}}}
 
 	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
 	if err != nil {
@@ -207,8 +208,8 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) (boo
 					StringValue: types.PaymentMethodName}}},
 		&consensus.Deploy_Arg{
 			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_IntValue{
-					IntValue: int32(msg.Fee)}}}}
+				Value: &consensus.Deploy_Arg_Value_BigInt{
+					BigInt: &state.BigInt{Value: string(msg.Fee), BitWidth: 512}}}}}
 
 	// Execute
 	deploys := []*ipc.DeployItem{}

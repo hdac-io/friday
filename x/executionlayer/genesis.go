@@ -53,8 +53,9 @@ func InitGenesis(
 		panic(errStr)
 	}
 
+	storedValue := util.UnmarshalStoreValue(res)
 	proxyContractHash := []byte{}
-	for _, namedKey := range res.GetAccount().GetNamedKeys() {
+	for _, namedKey := range storedValue.GetAccount().GetNamedKeys() {
 		if namedKey.GetName() == types.ProxyContractName {
 			proxyContractHash = namedKey.GetKey().GetHash().GetHash()
 			break
