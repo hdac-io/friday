@@ -23,6 +23,7 @@ You should install the packages below before you build the source.
 * [Rust](https://www.rust-lang.org/tools/install)
 * [Golang](https://golang.org/doc/install) >= 1.13
 * [protoc](http://google.github.io/proto-lens/installing-protoc.html) >= 3.6.1
+* [node](https://nodejs.org/en/download/)
 * make
 * cmake
 
