@@ -18,7 +18,7 @@ type MsgExecute struct {
 	SessionType     util.ContractType `json:"session_type"`
 	SessionCode     []byte            `json:"session_code"`
 	SessionArgs     string            `json:"session_args"`
-	Fee             uint64            `json:"fee"`
+	Fee             string            `json:"fee"`
 	GasPrice        uint64            `json:"gas_price"`
 }
 
@@ -29,7 +29,8 @@ func NewMsgExecute(
 	sessionType util.ContractType,
 	sessionCode []byte,
 	sessionArgs string,
-	fee, gasPrice uint64,
+	fee string,
+	gasPrice uint64,
 ) MsgExecute {
 	return MsgExecute{
 		ExecAddress:     execAddress,
@@ -71,8 +72,8 @@ type MsgTransfer struct {
 	ContractAddress string         `json:"contract_address" yaml:"contract_address"`
 	FromAddress     sdk.AccAddress `json:"from_address" yaml:"from_address"`
 	ToAddress       sdk.AccAddress `json:"to_address" yaml:"to_address"`
-	Amount          uint64         `json:"amount" yaml:"amount"`
-	Fee             uint64         `json:"fee" yaml:"fee"`
+	Amount          string         `json:"amount" yaml:"amount"`
+	Fee             string         `json:"fee" yaml:"fee"`
 	GasPrice        uint64         `json:"gas_price" yaml:"gas_price"`
 }
 
@@ -80,7 +81,8 @@ type MsgTransfer struct {
 func NewMsgTransfer(
 	tokenContractAddress string,
 	fromAddress, toAddress sdk.AccAddress,
-	amount, fee, gasPrice uint64,
+	amount, fee string,
+	gasPrice uint64,
 ) MsgTransfer {
 	return MsgTransfer{
 		ContractAddress: tokenContractAddress,
@@ -249,8 +251,8 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 type MsgBond struct {
 	ContractAddress string         `json:"contract_address" yaml:"contract_address"`
 	FromAddress     sdk.AccAddress `json:"from_address" yaml:"from_address"`
-	Amount          uint64         `json:"amount" yaml:"amount"`
-	Fee             uint64         `json:"fee" yaml:"fee"`
+	Amount          string         `json:"amount" yaml:"amount"`
+	Fee             string         `json:"fee" yaml:"fee"`
 	GasPrice        uint64         `json:"gas_price" yaml:"gas_price"`
 }
 
@@ -258,7 +260,8 @@ type MsgBond struct {
 func NewMsgBond(
 	tokenContractAddress string,
 	bonderAddress sdk.AccAddress,
-	amount, fee, gasPrice uint64,
+	amount, fee string,
+	gasPrice uint64,
 ) MsgBond {
 	return MsgBond{
 		ContractAddress: tokenContractAddress,
@@ -297,8 +300,8 @@ func (msg MsgBond) GetSigners() []sdk.AccAddress {
 type MsgUnBond struct {
 	ContractAddress string         `json:"contract_address" yaml:"contract_address"`
 	FromAddress     sdk.AccAddress `json:"from_address" yaml:"from_address"`
-	Amount          uint64         `json:"amount" yaml:"amount"`
-	Fee             uint64         `json:"fee" yaml:"fee"`
+	Amount          string         `json:"amount" yaml:"amount"`
+	Fee             string         `json:"fee" yaml:"fee"`
 	GasPrice        uint64         `json:"gas_price" yaml:"gas_price"`
 }
 
@@ -306,7 +309,8 @@ type MsgUnBond struct {
 func NewMsgUnBond(
 	tokenContractAddress string,
 	unbonderAddress sdk.AccAddress,
-	amount, fee, gasPrice uint64,
+	amount, fee string,
+	gasPrice uint64,
 ) MsgUnBond {
 	return MsgUnBond{
 		ContractAddress: tokenContractAddress,
