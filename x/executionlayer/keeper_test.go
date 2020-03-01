@@ -102,7 +102,7 @@ func TestCreateBlock(t *testing.T) {
 		util.WASM,
 		util.LoadWasmFile(path.Join(contractPath, counterDefineWasm)),
 		"",
-		"100000000",
+		"1000000000000000",
 		uint64(10),
 	)
 	handlerMsgExecute(input.ctx, input.elk, counterDefineMSG)
@@ -122,7 +122,7 @@ func TestCreateBlock(t *testing.T) {
 		util.WASM,
 		util.LoadWasmFile(path.Join(contractPath, counterCallWasm)),
 		"",
-		"100000000",
+		"1000000000000000",
 		uint64(10),
 	)
 	handlerMsgExecute(input.ctx, input.elk, counterCallMSG)
@@ -160,7 +160,7 @@ func TestTransfer(t *testing.T) {
 		GenesisAccountAddress,
 		RecipientAccountAddress,
 		"100000000",
-		"200000000",
+		"1000000000000000",
 		200000000,
 	)
 	handlerMsgTransfer(input.ctx, input.elk, transferMSG)

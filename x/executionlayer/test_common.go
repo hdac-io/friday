@@ -82,7 +82,7 @@ func setupTestInput() testInput {
 	gs.Accounts = make([]types.Account, 1)
 	gs.Accounts[0] = types.Account{
 		Address:             GenesisAccountAddress,
-		InitialBalance:      "500000000",
+		InitialBalance:      "500000000000000000",
 		InitialBondedAmount: "1000000",
 	}
 	elk.SetGenesisConf(ctx, gs.GenesisConf)
