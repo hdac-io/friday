@@ -28,16 +28,16 @@ class TestSingleNode():
     info_olaf = None
     info_hans = None
 
-    basic_coin = 500000000000000000000
-    basic_stake = 100000000
+    basic_coin = "500000000000000000000"
+    basic_stake = "100000000"
 
-    basic_bond = 1
-    bonding_fee = 0.001
+    basic_bond = "1"
+    bonding_fee = "0.001"
     bonding_gas = 50000000
 
-    transfer_amount = 1
-    transfer_fee = 0.001
-    transfer_gas = 25000000
+    transfer_amount = "1"
+    transfer_fee = "0.001"
+    transfer_gas = 30000000
 
     tx_block_time = 6
 
@@ -140,10 +140,10 @@ class TestSingleNode():
 
         res = cmd.get_balance(self.wallet_elsa)
         print("Output: ", res)
-        assert(int(res["value"]) == self.basic_coin)
+        assert(int(res["value"]) == int(self.basic_coin) / 1000000000000000000) 
 
         res = cmd.get_balance(self.wallet_anna)
-        assert(int(res["value"]) == self.basic_coin)
+        assert(int(res["value"]) == int(self.basic_coin) / 1000000000000000000)
         print("======================Done test00_get_balance======================")
 
 
@@ -163,10 +163,10 @@ class TestSingleNode():
 
         print("Balance checking after transfer..")
         res = cmd.get_balance(self.wallet_anna)
-        assert(int(res["value"]) == self.basic_coin + self.transfer_amount)
+        assert(int(res["value"])== (int(self.basic_coin) / 1000000000000000000)  + int(self.transfer_amount))
 
         res = cmd.get_balance(self.wallet_elsa)
-        assert(int(res["value"]) < self.basic_coin - self.transfer_amount)
+        assert(int(res["value"]) < (int(self.basic_coin) / 1000000000000000000)  - int(self.transfer_amount))
 
         print("======================Done test01_transfer_to======================")
 
