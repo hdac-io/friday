@@ -53,12 +53,12 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 		}
 	}
 
-	amount, err := cliutil.UnitConverterRemovePoint(req.Amount)
+	amount, err := cliutil.ToBigsun(cliutil.Hdac(req.Amount))
 	if err != nil {
 		return rest.BaseReq{}, nil, err
 	}
 
-	fee, err := cliutil.UnitConverterRemovePoint(req.Fee)
+	fee, err := cliutil.ToBigsun(cliutil.Hdac(req.Fee))
 	if err != nil {
 		return rest.BaseReq{}, nil, err
 	}
@@ -69,7 +69,7 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 	}
 
 	// create the message
-	eeMsg := types.NewMsgTransfer(req.TokenContractAddress, senderAddr, recipientAddr, amount, fee, gas)
+	eeMsg := types.NewMsgTransfer(req.TokenContractAddress, senderAddr, recipientAddr, string(amount), string(fee), gas)
 	err = eeMsg.ValidateBasic()
 	if err != nil {
 		return rest.BaseReq{}, nil, err
@@ -108,12 +108,12 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse base request")
 	}
 
-	amount, err := cliutil.UnitConverterRemovePoint(req.Amount)
+	amount, err := cliutil.ToBigsun(cliutil.Hdac(req.Amount))
 	if err != nil {
 		return rest.BaseReq{}, nil, err
 	}
 
-	fee, err := cliutil.UnitConverterRemovePoint(req.Fee)
+	fee, err := cliutil.ToBigsun(cliutil.Hdac(req.Fee))
 	if err != nil {
 		return rest.BaseReq{}, nil, err
 	}
@@ -125,9 +125,9 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 	}
 
 	if bondIsTrue == true {
-		msg = types.NewMsgBond(req.TokenContractAddress, addr, amount, fee, gas)
+		msg = types.NewMsgBond(req.TokenContractAddress, addr, string(amount), string(fee), gas)
 	} else {
-		msg = types.NewMsgUnBond(req.TokenContractAddress, addr, amount, fee, gas)
+		msg = types.NewMsgUnBond(req.TokenContractAddress, addr, string(amount), string(fee), gas)
 	}
 
 	// create the message
