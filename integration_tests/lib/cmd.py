@@ -19,6 +19,7 @@ def _process_executor(cmd: str, *args, need_output=False):
 
     if need_output == True:
         try:
+            print(outs)
             res = json.loads(outs)
         except Exception as e:
             print(e)
@@ -37,6 +38,7 @@ def _tx_executor(cmd: str, passphrase, *args):
         _ = child.sendline(passphrase)
         
         outs = child.read().decode('utf-8')
+        print(outs)
         try:
             tx_hash = re.search(r'"txhash": "([A-Z0-9]+)"', outs).group(1)
         except Exception as e:
@@ -102,9 +104,11 @@ def create_wallet(wallet_alias: str, passphrase: str, client_home: str = '.test_
     clif key add <wallet_alias>
     """
     client_home = os.path.join(os.environ["HOME"], client_home)
+    cmd = "clif keys add {} --home {}".format(wallet_alias, client_home)
+    print(cmd)
     try:
-        child = pexpect.spawn("clif keys add {} --home {}".format(wallet_alias, client_home))
-        _ = child.read_nonblocking(3000000000, timeout=3)
+        child = pexpect.spawn(cmd)
+        _ = child.read_nonblocking(10000, timeout=1)
         _ = child.sendline(passphrase)
         _ = child.read_nonblocking(10000, timeout=1)
         _ = child.sendline(passphrase)
