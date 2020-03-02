@@ -102,7 +102,7 @@ func TestCreateBlock(t *testing.T) {
 		util.WASM,
 		util.LoadWasmFile(path.Join(contractPath, counterDefineWasm)),
 		"",
-		uint64(100000000),
+		"1000000000000000",
 		uint64(10),
 	)
 	handlerMsgExecute(input.ctx, input.elk, counterDefineMSG)
@@ -122,7 +122,7 @@ func TestCreateBlock(t *testing.T) {
 		util.WASM,
 		util.LoadWasmFile(path.Join(contractPath, counterCallWasm)),
 		"",
-		uint64(100000000),
+		"1000000000000000",
 		uint64(10),
 	)
 	handlerMsgExecute(input.ctx, input.elk, counterCallMSG)
@@ -135,11 +135,12 @@ func TestCreateBlock(t *testing.T) {
 	pv := input.elk.MustGetProtocolVersion(input.ctx)
 
 	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", GenesisAccountAddress.ToEEAddress(), arrPath, &pv)
-	assert.Equal(t, int32(0), res1.GetIntValue())
+
+	assert.Equal(t, int32(0), util.ToValues(util.UnmarshalStoreValue(res1).GetClValue()).GetIntValue())
 
 	unitHash2 := input.elk.GetUnitHashMap(input.ctx, blockHash2)
 	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", GenesisAccountAddress.ToEEAddress(), arrPath, &pv)
-	assert.Equal(t, int32(1), res2.GetIntValue())
+	assert.Equal(t, int32(1), util.ToValues(util.UnmarshalStoreValue(res2).GetClValue()).GetIntValue())
 }
 
 func TestTransfer(t *testing.T) {
@@ -158,8 +159,8 @@ func TestTransfer(t *testing.T) {
 		ContractAddress,
 		GenesisAccountAddress,
 		RecipientAccountAddress,
-		100000000,
-		200000000,
+		"100000000",
+		"1000000000000000",
 		200000000,
 	)
 	handlerMsgTransfer(input.ctx, input.elk, transferMSG)

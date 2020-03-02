@@ -56,10 +56,11 @@ func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 				return fmt.Errorf("type must be one of wasm, name, uref, or hash")
 			}
 
-			fee, err := strconv.ParseUint(args[3], 10, 64)
+			fee, err := cliutil.ToBigsun(cliutil.Hdac(args[3]))
 			if err != nil {
 				return err
 			}
+
 			gasPrice, err := strconv.ParseUint(args[4], 10, 64)
 			if err != nil {
 				return err
@@ -73,7 +74,7 @@ func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 				sessionType,
 				sessionCode,
 				args[2],
-				fee,
+				string(fee),
 				gasPrice,
 			)
 			txBldr = txBldr.WithGas(gasPrice)
@@ -108,15 +109,17 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 				}
 			}
 
+			amount, err := cliutil.ToBigsun(cliutil.Hdac(args[1]))
+			if err != nil {
+				return err
+			}
+
+			fee, err := cliutil.ToBigsun(cliutil.Hdac(args[2]))
+			if err != nil {
+				return err
+			}
+
 			// Numbers parsing
-			amount, err := strconv.ParseUint(args[1], 10, 64)
-			if err != nil {
-				return err
-			}
-			fee, err := strconv.ParseUint(args[2], 10, 64)
-			if err != nil {
-				return err
-			}
 			gasPrice, err := strconv.ParseUint(args[3], 10, 64)
 			if err != nil {
 				return err
@@ -138,7 +141,7 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 
 			// build and sign the transaction, then broadcast to Tendermint
 			// TODO: Currently implementation of contract address is dummy
-			msg := types.NewMsgTransfer("dummyAddress", fromAddr, recipentAddr, amount, fee, gasPrice)
+			msg := types.NewMsgTransfer("dummyAddress", fromAddr, recipentAddr, string(amount), string(fee), gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
@@ -172,18 +175,19 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
+			amount, err := cliutil.ToBigsun(cliutil.Hdac(args[0]))
+			if err != nil {
+				return err
+			}
+
+			fee, err := cliutil.ToBigsun(cliutil.Hdac(args[1]))
+			if err != nil {
+				return err
+			}
+
 			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
 			addr := keyInfo.GetAddress()
 
-			// Numbers parsing
-			amount, err := strconv.ParseUint(args[0], 10, 64)
-			if err != nil {
-				return err
-			}
-			fee, err := strconv.ParseUint(args[1], 10, 64)
-			if err != nil {
-				return err
-			}
 			gasPrice, err := strconv.ParseUint(args[2], 10, 64)
 			if err != nil {
 				return err
@@ -191,7 +195,7 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 
 			// build and sign the transaction, then broadcast to Tendermint
 			// TODO: Currently implementation of contract address is dummy
-			msg := types.NewMsgBond("dummyAddress", addr, amount, fee, gasPrice)
+			msg := types.NewMsgBond("dummyAddress", addr, string(amount), string(fee), gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
@@ -225,18 +229,19 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
+			amount, err := cliutil.ToBigsun(cliutil.Hdac(args[0]))
+			if err != nil {
+				return err
+			}
+
+			fee, err := cliutil.ToBigsun(cliutil.Hdac(args[1]))
+			if err != nil {
+				return err
+			}
+
 			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
 			addr := keyInfo.GetAddress()
 
-			// Numbers parsing
-			amount, err := strconv.ParseUint(args[0], 10, 64)
-			if err != nil {
-				return err
-			}
-			fee, err := strconv.ParseUint(args[1], 10, 64)
-			if err != nil {
-				return err
-			}
 			gasPrice, err := strconv.ParseUint(args[2], 10, 64)
 			if err != nil {
 				return err
@@ -244,7 +249,7 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 
 			// build and sign the transaction, then broadcast to Tendermint
 			// TODO: Currently implementation of contract address is dummy
-			msg := types.NewMsgUnBond("dummyAddress", addr, amount, fee, gasPrice)
+			msg := types.NewMsgUnBond("dummyAddress", addr, string(amount), string(fee), gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},

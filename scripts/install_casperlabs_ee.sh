@@ -8,7 +8,7 @@ if [ ${PWD##*/} != "friday" ]; then
 fi
 
 TARGET_BRANCH="master"
-COMMIT_HASH="8733f52719eb7bbca8ee6f10996d11f461f8ec66"
+COMMIT_HASH="2184a48c28c1c048131d3a8f2f4b127ad9bad2c8"
 if [ ! -d "CasperLabs/.git" ]; then
   git clone --single-branch --branch $TARGET_BRANCH https://github.com/hdac-io/CasperLabs.git
 fi

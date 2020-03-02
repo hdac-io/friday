@@ -113,8 +113,8 @@ github.com/hdac-io/bls-go-binary v0.0.0-20191223054157-fad152e9a679 h1:xdX2qinan
 github.com/hdac-io/bls-go-binary v0.0.0-20191223054157-fad152e9a679/go.mod h1:qG6qX5Hrs2noYc1lcWj3PEb64gc2VoGtmcghXK8trCw=
 github.com/hdac-io/btcutil v0.0.0-20191220081549-27e3c0391404 h1:9FvbWqlHq6n2ciDoBzfqZj4Nri+cs34of5D2SHQhfLs=
 github.com/hdac-io/btcutil v0.0.0-20191220081549-27e3c0391404/go.mod h1:PQwlReOMYFpmYFt9Mtnw06XeVTjkjFZLs8/v0gwoW+0=
-github.com/hdac-io/casperlabs-ee-grpc-go-util v0.3.0 h1:IJKTCuAZq/wHXgGTl6kX6PUcbGtjpdDKMGyvoI7ACTQ=
-github.com/hdac-io/casperlabs-ee-grpc-go-util v0.3.0/go.mod h1:WakxSanxTmCA9D/VB2EBWH0sEwXTyUOrGbTk7HcO8Hc=
+github.com/hdac-io/casperlabs-ee-grpc-go-util v0.4.0 h1:oe+ohmkOe1ote6Z0I97lCzNxj7S0fvZoIutuMglHVwk=
+github.com/hdac-io/casperlabs-ee-grpc-go-util v0.4.0/go.mod h1:WakxSanxTmCA9D/VB2EBWH0sEwXTyUOrGbTk7HcO8Hc=
 github.com/hdac-io/iavl v0.0.0-20191220074654-211e1bd34eef h1:2Agvbgr7rAy4OwBETZ6a4VAXLXCbPDdLWw8Mz9zQcLw=
 github.com/hdac-io/iavl v0.0.0-20191220074654-211e1bd34eef/go.mod h1:ry8RH8MNJJhiO1VJeosYAsKrPu7X8Xy0B5D5UQvEiVM=
 github.com/hdac-io/tendermint v0.0.0-20191220055750-d875915aea37/go.mod h1:BronDynhlemRSl99OCZ3owAs/cTcDuw0BrgFmzasWPk=
