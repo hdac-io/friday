@@ -19,6 +19,7 @@ def _process_executor(cmd: str, *args, need_output=False):
 
     if need_output == True:
         try:
+            print(outs)
             res = json.loads(outs)
         except Exception as e:
             print(e)
@@ -37,6 +38,7 @@ def _tx_executor(cmd: str, passphrase, *args):
         _ = child.sendline(passphrase)
         
         outs = child.read().decode('utf-8')
+        print(outs)
         try:
             tx_hash = re.search(r'"txhash": "([A-Z0-9]+)"', outs).group(1)
         except Exception as e:
@@ -102,9 +104,11 @@ def create_wallet(wallet_alias: str, passphrase: str, client_home: str = '.test_
     clif key add <wallet_alias>
     """
     client_home = os.path.join(os.environ["HOME"], client_home)
+    cmd = "clif keys add {} --home {}".format(wallet_alias, client_home)
+    print(cmd)
     try:
-        child = pexpect.spawn("clif keys add {} --home {}".format(wallet_alias, client_home))
-        _ = child.read_nonblocking(3000000000, timeout=3)
+        child = pexpect.spawn(cmd)
+        _ = child.read_nonblocking(10000, timeout=1)
         _ = child.sendline(passphrase)
         _ = child.read_nonblocking(10000, timeout=1)
         _ = child.sendline(passphrase)
@@ -173,7 +177,7 @@ def delete_wallet(wallet_alias: str, passphrase: str, client_home: str = '.test_
         raise FinishedWithError
 
 
-def add_genesis_account(address: str, coin: int, stake: int, client_home: str = '.test_clif'):
+def add_genesis_account(address: str, coin: str, stake: str, client_home: str = '.test_clif'):
     """
     Will deleted later
 
@@ -184,7 +188,7 @@ def add_genesis_account(address: str, coin: int, stake: int, client_home: str = 
     _ = _process_executor("nodef add-genesis-account {} {}dummy,{}stake --home-client {}", address, coin, stake, client_home)
 
 
-def add_el_genesis_account(address: str, coin: int, stake: int, client_home: str = '.test_clif'):
+def add_el_genesis_account(address: str, coin: str, stake: str, client_home: str = '.test_clif'):
     """
     nodef add-el-genesis-account <address> <initial_coin> <initial_stake>
     """
@@ -305,17 +309,17 @@ def get_address(nickname: str, node: str = "tcp://localhost:26657", client_home:
 ## Hdac custom CLI
 ##################
 
-def transfer_to(passphrase: str, recipient: str, amount: int, fee: int, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+def transfer_to(passphrase: str, recipient: str, amount: str, fee: str, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
     client_home = os.path.join(os.environ["HOME"], client_home)
     return _tx_executor("clif hdac transfer-to {} {} {} {} --from {} --node {} --home {}", passphrase, recipient, amount, fee, gas_price, from_value, node, client_home)
 
 
-def bond(passphrase: str, amount: int, fee: int, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+def bond(passphrase: str, amount: str, fee: str, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
     client_home = os.path.join(os.environ["HOME"], client_home)
     return _tx_executor("clif hdac bond {} {} {} --from {} --node {} --home {}", passphrase, amount, fee, gas_price, from_value, node, client_home)
 
 
-def unbond(passphrase: str, amount: int, fee: int, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+def unbond(passphrase: str, amount: str, fee: str, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
     client_home = os.path.join(os.environ["HOME"], client_home)
     return _tx_executor("clif hdac unbond {} {} {} --from {} --node {} --home {}", passphrase, amount, fee, gas_price, from_value, node, client_home)
 
@@ -335,7 +339,7 @@ def create_validator(passphrase: str, from_value: str, pubkey: str, moniker: str
 ## Contract exec CLI
 ##################
 
-def run_contract(passphrase: str, run_type: str, run_type_value: str, args: str, fee: int, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+def run_contract(passphrase: str, run_type: str, run_type_value: str, args: str, fee: str, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
     client_home = os.path.join(os.environ["HOME"], client_home)
     if run_type not in ["wasm", "uref", "hash", "name"]:
         raise InvalidContractRunType

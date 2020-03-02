@@ -38,18 +38,22 @@ class TestMultiNodeSimple:
     info_hans = None
     info_bryan = None
 
-    basic_coin = 500000000000000000000
-    basic_stake = 100000000
+    basic_coin = "500000000000000000000"
+    basic_stake = "100000000"
 
-    basic_bond = 1
-    bonding_fee = 0.001
+    multiplier = 10 ** 18
+
+    basic_coin_amount = int(int(basic_coin) / multiplier)
+
+    basic_bond = "1"
+    bonding_fee = "0.001"
     bonding_gas = 50000000
 
-    transfer_amount = 1
-    transfer_fee = 0.001
-    transfer_gas = 25000000
+    transfer_amount = "1"
+    transfer_fee = "0.001"
+    transfer_gas = 30000000
 
-    tx_blocktime = 7
+    tx_blocktime = 6
 
 
     def get_node_randomly(self):
@@ -175,12 +179,12 @@ class TestMultiNodeSimple:
         print("At {}".format(picked_node))
 
         res = cmd.get_balance(self.wallet_anna, node=picked_node)
-        assert((self.basic_coin + self.transfer_amount) * 0.95 < int(res["value"]))
+        assert((self.basic_coin_amount + float(self.transfer_amount)) * 0.95 < float(res["value"]))
 
         picked_node = self.get_node_randomly()
         print("At {}".format(picked_node))
         res = cmd.get_balance(self.wallet_elsa, node=picked_node)
-        assert(int(res["value"]) < self.basic_coin - self.transfer_amount)
+        assert(float(res["value"]) < self.basic_coin_amount - float(self.transfer_amount))
 
         print("======================Done test01_transfer_to======================")
 
@@ -191,7 +195,7 @@ class TestMultiNodeSimple:
         picked_node = self.get_node_randomly()
         print("At {}".format(picked_node))
 
-        tx_hash = cmd.transfer_to(self.wallet_password, self.info_bryan['address'], int(self.transfer_amount / 10),
+        tx_hash = cmd.transfer_to(self.wallet_password, self.info_bryan['address'], float(self.transfer_amount) / 10,
                         self.transfer_fee, self.transfer_gas, self.info_anna['address'], node=picked_node)
 
         print("Tx sent. Waiting for validation")
@@ -211,10 +215,10 @@ class TestMultiNodeSimple:
         for node in self.nodes_address[:3]:
             print("Test of {}".format(node))
             res = cmd.get_balance(self.wallet_anna, node=node)
-            print("Balance of 'anna': ", int(res["value"]))
+            print("Balance of 'anna': ", float(res["value"]))
 
             res = cmd.get_balance(self.wallet_bryan, node=node)
-            print("Balance of 'anna': ", int(res["value"]))
+            print("Balance of 'anna': ", float(res["value"]))
             print("{} OK".format(node))
 
         print("======================End test01_1_transfer_to_nonexistent_account======================")
