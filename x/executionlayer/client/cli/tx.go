@@ -56,6 +56,11 @@ func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 				return fmt.Errorf("type must be one of wasm, name, uref, or hash")
 			}
 
+			fee, err := cliutil.UnitConverterRemovePoint(args[3])
+			if err != nil {
+				return err
+			}
+
 			gasPrice, err := strconv.ParseUint(args[4], 10, 64)
 			if err != nil {
 				return err
@@ -69,7 +74,7 @@ func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 				sessionType,
 				sessionCode,
 				args[2],
-				args[3],
+				fee,
 				gasPrice,
 			)
 			txBldr = txBldr.WithGas(gasPrice)
@@ -104,6 +109,16 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 				}
 			}
 
+			amount, err := cliutil.UnitConverterRemovePoint(args[1])
+			if err != nil {
+				return err
+			}
+
+			fee, err := cliutil.UnitConverterRemovePoint(args[2])
+			if err != nil {
+				return err
+			}
+
 			// Numbers parsing
 			gasPrice, err := strconv.ParseUint(args[3], 10, 64)
 			if err != nil {
@@ -126,7 +141,7 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 
 			// build and sign the transaction, then broadcast to Tendermint
 			// TODO: Currently implementation of contract address is dummy
-			msg := types.NewMsgTransfer("dummyAddress", fromAddr, recipentAddr, args[1], args[2], gasPrice)
+			msg := types.NewMsgTransfer("dummyAddress", fromAddr, recipentAddr, amount, fee, gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
@@ -160,6 +175,16 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
+			amount, err := cliutil.UnitConverterRemovePoint(args[0])
+			if err != nil {
+				return err
+			}
+
+			fee, err := cliutil.UnitConverterRemovePoint(args[1])
+			if err != nil {
+				return err
+			}
+
 			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
 			addr := keyInfo.GetAddress()
 
@@ -170,7 +195,7 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 
 			// build and sign the transaction, then broadcast to Tendermint
 			// TODO: Currently implementation of contract address is dummy
-			msg := types.NewMsgBond("dummyAddress", addr, args[0], args[1], gasPrice)
+			msg := types.NewMsgBond("dummyAddress", addr, amount, fee, gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
@@ -204,6 +229,16 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
+			amount, err := cliutil.UnitConverterRemovePoint(args[0])
+			if err != nil {
+				return err
+			}
+
+			fee, err := cliutil.UnitConverterRemovePoint(args[1])
+			if err != nil {
+				return err
+			}
+
 			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
 			addr := keyInfo.GetAddress()
 
@@ -214,7 +249,7 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 
 			// build and sign the transaction, then broadcast to Tendermint
 			// TODO: Currently implementation of contract address is dummy
-			msg := types.NewMsgUnBond("dummyAddress", addr, args[0], args[1], gasPrice)
+			msg := types.NewMsgUnBond("dummyAddress", addr, amount, fee, gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},

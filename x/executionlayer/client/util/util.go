@@ -1,9 +1,9 @@
 package util
 
 import (
-	"bytes"
-	"encoding/hex"
 	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	"github.com/hdac-io/friday/client/context"
@@ -51,21 +51,6 @@ func GetContractType(strContractType string) util.ContractType {
 	return contractType
 }
 
-// ProtobufSafeDecodeingHexString is decode to string.
-// The encoding and decoding data for nil is different. Use it to avoid that part.
-func ProtobufSafeDecodeingHexString(str string) ([]byte, error) {
-	res, err := hex.DecodeString(str)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	if bytes.Equal(res, []byte{}) {
-		res = []byte("empty")
-	}
-
-	return res, nil
-}
-
 // GetLocalWalletInfo takes wallet info from local
 // Rules:
 // 1) If --from exists, search according to:
@@ -107,4 +92,74 @@ func GetLocalWalletInfo(valueFromFromFlag string, kb keys.Keybase, cdc *codec.Co
 	}
 
 	return infoList[0], nil
+}
+
+func UnitConverterRemovePoint(src string) (string, error) {
+	// validation
+	resRegexp, err := regexp.MatchString("^[0-9|.]*$", src)
+	if !resRegexp {
+		errStr := "Must be number or '.'"
+		if err != nil {
+			errStr += err.Error()
+		}
+		return "0", fmt.Errorf(errStr)
+	}
+
+	// convert
+	ress := strings.Split(src, ".")
+
+	if len(ress) > 2 {
+		return "0", fmt.Errorf("'.' must be less than or equal to 1, But %d", len(ress))
+	}
+
+	res := strings.Join(ress, "")
+
+	if strings.Count(res, "0") == len(res) {
+		return "0", nil
+	}
+
+	paddingCount := 18
+	if len(res) != len(ress[0]) {
+		paddingCount -= len(ress[1])
+		if paddingCount < 0 {
+			return "0", fmt.Errorf("The decimal place must be 18 digits or less, But %d", len(ress[1]))
+		}
+	}
+	res += strings.Repeat("0", paddingCount)
+
+	for i := 0; i < len(res); i++ {
+		if res[i] != '0' {
+			res = res[i:]
+			break
+		}
+	}
+
+	return res, nil
+}
+
+func UnitConvertAddPoint(src string) string {
+	res := []string{"0", ""}
+	if len(src) > 18 {
+		res[0] = src[:len(src)-18]
+		res[1] = src[len(src)-18:]
+	} else {
+		if src == "0" {
+			return src
+		}
+		res[1] = strings.Repeat("0", 18-len(src)) + src
+	}
+
+	i := len(res[1]) - 1
+	for ; i >= 0; i-- {
+		if res[1][i] != '0' {
+			res[1] = res[1][:i+1]
+			break
+		}
+	}
+
+	if i < 0 {
+		return res[0]
+	}
+
+	return strings.Join(res, ".")
 }

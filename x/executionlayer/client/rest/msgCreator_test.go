@@ -42,8 +42,8 @@ func TestRESTTransfer(t *testing.T) {
 		BaseReq:                    basereq,
 		TokenContractAddress:       fromAddr,
 		RecipientAddressOrNickname: receipAddr,
-		Amount:                     20_000_000,
-		Fee:                        10_000_000,
+		Amount:                     "20000000",
+		Fee:                        "10000000",
 	}
 
 	// http.request
@@ -63,8 +63,8 @@ func TestRESTBond(t *testing.T) {
 	// Body
 	bondReq := bondReq{
 		BaseReq: basereq,
-		Amount:  100_000_000,
-		Fee:     10_000_000,
+		Amount:  "100000000",
+		Fee:     "10000000",
 	}
 
 	// http.request
@@ -84,8 +84,8 @@ func TestRESTUnbond(t *testing.T) {
 	// Body
 	bondReq := bondReq{
 		BaseReq: basereq,
-		Amount:  100_000_000,
-		Fee:     10_000_000,
+		Amount:  "100000000",
+		Fee:     "10000000",
 	}
 
 	// http.request
