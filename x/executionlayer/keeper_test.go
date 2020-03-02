@@ -106,7 +106,7 @@ func TestCreateBlock(t *testing.T) {
 		uint64(10),
 	)
 	handlerMsgExecute(input.ctx, input.elk, counterDefineMSG)
-	EndBloker(input.ctx, input.elk)
+	EndBlocker(input.ctx, input.elk)
 
 	// Block #2
 	blockHash2 := []byte{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
@@ -126,7 +126,7 @@ func TestCreateBlock(t *testing.T) {
 		uint64(10),
 	)
 	handlerMsgExecute(input.ctx, input.elk, counterCallMSG)
-	EndBloker(input.ctx, input.elk)
+	EndBlocker(input.ctx, input.elk)
 
 	queryPath := "counter/count"
 	arrPath := strings.Split(queryPath, "/")
@@ -164,7 +164,7 @@ func TestTransfer(t *testing.T) {
 		200000000,
 	)
 	handlerMsgTransfer(input.ctx, input.elk, transferMSG)
-	EndBloker(input.ctx, input.elk)
+	EndBlocker(input.ctx, input.elk)
 
 	// Block #2
 	blockHash2 := []byte{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
@@ -174,7 +174,7 @@ func TestTransfer(t *testing.T) {
 	}
 	BeginBlocker(input.ctx, nextBlockABCI2, input.elk)
 	input.ctx = input.ctx.WithBlockHeader(nextBlockABCI2.Header)
-	EndBloker(input.ctx, input.elk)
+	EndBlocker(input.ctx, input.elk)
 
 	res, err := input.elk.GetQueryBalanceResultSimple(input.ctx, RecipientAccountAddress)
 	queriedRes, _ := strconv.Atoi(res)

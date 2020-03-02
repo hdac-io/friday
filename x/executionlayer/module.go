@@ -130,5 +130,5 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 
 // module end-block
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return EndBloker(ctx, am.keeper)
+	return EndBlocker(ctx, am.keeper)
 }

@@ -18,7 +18,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, elk ExecutionLaye
 	candidateBlock.State = unitHash.EEState
 }
 
-func EndBloker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
+func EndBlocker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
 	var validatorUpdates []abci.ValidatorUpdate
 
 	validators := k.GetAllValidators(ctx)
@@ -47,6 +47,13 @@ func EndBloker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
 					continue
 				}
 			}
+
+			if len(power) <= 18 {
+				power = "0"
+			} else {
+				power = power[:len(power)-18]
+			}
+
 			coin, err := strconv.ParseInt(power, 10, 64)
 			if err != nil {
 				continue
