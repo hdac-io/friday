@@ -53,13 +53,23 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 		}
 	}
 
+	amount, err := cliutil.UnitConverterRemovePoint(req.Amount)
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	fee, err := cliutil.UnitConverterRemovePoint(req.Fee)
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
 	gas, err := strconv.ParseUint(req.BaseReq.Gas, 10, 64)
 	if err != nil {
 		return rest.BaseReq{}, nil, err
 	}
 
 	// create the message
-	eeMsg := types.NewMsgTransfer(req.TokenContractAddress, senderAddr, recipientAddr, req.Amount, req.Fee, gas)
+	eeMsg := types.NewMsgTransfer(req.TokenContractAddress, senderAddr, recipientAddr, amount, fee, gas)
 	err = eeMsg.ValidateBasic()
 	if err != nil {
 		return rest.BaseReq{}, nil, err
@@ -98,6 +108,16 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse base request")
 	}
 
+	amount, err := cliutil.UnitConverterRemovePoint(req.Amount)
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	fee, err := cliutil.UnitConverterRemovePoint(req.Fee)
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
 	var msg sdk.Msg
 	gas, err := strconv.ParseUint(req.BaseReq.Gas, 10, 64)
 	if err != nil {
@@ -105,9 +125,9 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 	}
 
 	if bondIsTrue == true {
-		msg = types.NewMsgBond(req.TokenContractAddress, addr, req.Amount, req.Fee, gas)
+		msg = types.NewMsgBond(req.TokenContractAddress, addr, amount, fee, gas)
 	} else {
-		msg = types.NewMsgUnBond(req.TokenContractAddress, addr, req.Amount, req.Fee, gas)
+		msg = types.NewMsgUnBond(req.TokenContractAddress, addr, amount, fee, gas)
 	}
 
 	// create the message

@@ -38,15 +38,15 @@ class TestMultiNodeSimple:
     info_hans = None
     info_bryan = None
 
-    basic_coin = 500000000000000000
+    basic_coin = 500000000000000000000
     basic_stake = 100000000
 
-    basic_bond = 10000000000
-    bonding_fee = 1000000000000000
+    basic_bond = 1
+    bonding_fee = 0.001
     bonding_gas = 50000000
 
-    transfer_amount = 1000000000000
-    transfer_fee = 1000000000000000
+    transfer_amount = 1
+    transfer_fee = 0.001
     transfer_gas = 25000000
 
     tx_blocktime = 7
