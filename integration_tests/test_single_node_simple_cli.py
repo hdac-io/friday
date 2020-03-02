@@ -144,10 +144,10 @@ class TestSingleNode():
 
         res = cmd.get_balance(self.wallet_elsa)
         print("Output: ", res)
-        assert(int(res["value"]) == self.basic_coin_amount) 
+        assert(float(res["value"]) == self.basic_coin_amount) 
 
         res = cmd.get_balance(self.wallet_anna)
-        assert(int(res["value"]) == self.basic_coin_amount)
+        assert(float(res["value"]) == self.basic_coin_amount)
         print("======================Done test00_get_balance======================")
 
 
@@ -167,10 +167,10 @@ class TestSingleNode():
 
         print("Balance checking after transfer..")
         res = cmd.get_balance(self.wallet_anna)
-        assert(int(res["value"]) == self.basic_coin_amount + int(self.transfer_amount))
+        assert(float(res["value"]) == self.basic_coin_amount + float(self.transfer_amount))
 
         res = cmd.get_balance(self.wallet_elsa)
-        assert(int(res["value"]) < self.basic_coin_amount - int(self.transfer_amount))
+        assert(float(res["value"]) < self.basic_coin_amount - float(self.transfer_amount))
 
         print("======================Done test01_transfer_to======================")
 
@@ -306,7 +306,7 @@ class TestSingleNode():
 
         print("Check wallet by address. Should be match with wallet info")
         res_transfer = cmd.get_balance(self.info_anna['address'])
-        assert(int(res_transfer['value']) == self.basic_coin_amount + int(self.transfer_amount))
+        assert(float(res_transfer['value']) == self.basic_coin_amount + float(self.transfer_amount))
 
         print("Try to transfer to nickname sender")
         tx_hash_transfer = cmd.transfer_to(self.wallet_password, self.info_elsa['address'], self.transfer_amount,
@@ -321,7 +321,7 @@ class TestSingleNode():
 
         print("Check wallet by address. Should be match with wallet info")
         res_transfer = cmd.get_balance(self.info_anna['address'])
-        assert(int(self.basic_coin_amount *0.9) < int(res_transfer['value']) < self.basic_coin_amount)
+        assert(float(self.basic_coin_amount *0.9) < float(res_transfer['value']) < self.basic_coin_amount)
 
         print("======================Done test04_transfer_to_by_nickname======================")
 
