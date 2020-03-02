@@ -94,7 +94,11 @@ func GetLocalWalletInfo(valueFromFromFlag string, kb keys.Keybase, cdc *codec.Co
 	return infoList[0], nil
 }
 
-func UnitConverterRemovePoint(src string) (string, error) {
+type Hdac string
+type Bigsun string
+
+func ToBigsun(hdac Hdac) (Bigsun, error) {
+	src := string(hdac)
 	// validation
 	resRegexp, err := regexp.MatchString("^[0-9|.]*$", src)
 	if !resRegexp {
@@ -102,27 +106,27 @@ func UnitConverterRemovePoint(src string) (string, error) {
 		if err != nil {
 			errStr += err.Error()
 		}
-		return "0", fmt.Errorf(errStr)
+		return Bigsun("0"), fmt.Errorf(errStr)
 	}
 
 	// convert
 	ress := strings.Split(src, ".")
 
 	if len(ress) > 2 {
-		return "0", fmt.Errorf("'.' must be less than or equal to 1, But %d", len(ress))
+		return Bigsun("0"), fmt.Errorf("'.' must be less than or equal to 1, But %d", len(ress))
 	}
 
 	res := strings.Join(ress, "")
 
 	if strings.Count(res, "0") == len(res) {
-		return "0", nil
+		return Bigsun("0"), nil
 	}
 
 	paddingCount := 18
 	if len(res) != len(ress[0]) {
 		paddingCount -= len(ress[1])
 		if paddingCount < 0 {
-			return "0", fmt.Errorf("The decimal place must be 18 digits or less, But %d", len(ress[1]))
+			return Bigsun("0"), fmt.Errorf("The decimal place must be 18 digits or less, But %d", len(ress[1]))
 		}
 	}
 	res += strings.Repeat("0", paddingCount)
@@ -134,17 +138,19 @@ func UnitConverterRemovePoint(src string) (string, error) {
 		}
 	}
 
-	return res, nil
+	return Bigsun(res), nil
 }
 
-func UnitConvertAddPoint(src string) string {
+func ToHdac(Bigsun Bigsun) Hdac {
+	src := string(Bigsun)
+
 	res := []string{"0", ""}
 	if len(src) > 18 {
 		res[0] = src[:len(src)-18]
 		res[1] = src[len(src)-18:]
 	} else {
 		if src == "0" {
-			return src
+			return Hdac(src)
 		}
 		res[1] = strings.Repeat("0", 18-len(src)) + src
 	}
@@ -158,8 +164,8 @@ func UnitConvertAddPoint(src string) string {
 	}
 
 	if i < 0 {
-		return res[0]
+		return Hdac(res[0])
 	}
 
-	return strings.Join(res, ".")
+	return Hdac(strings.Join(res, "."))
 }

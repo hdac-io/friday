@@ -96,7 +96,7 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 				cdc.MustUnmarshalJSON(res, &out)
 			}
 
-			out.Value = cliutil.UnitConvertAddPoint(out.Value)
+			out.Value = string(cliutil.ToHdac(cliutil.Bigsun(out.Value)))
 
 			return cliCtx.PrintOutput(out)
 		},

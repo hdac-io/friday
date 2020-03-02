@@ -7,101 +7,101 @@ import (
 )
 
 func TestNormalUnitConvert1(t *testing.T) {
-	src := "10.12"
-	res, err := UnitConverterRemovePoint(src)
+	src := Hdac("10.12")
+	res, err := ToBigsun(src)
 
 	assert.NoError(t, err)
-	assert.EqualValues(t, "10120000000000000000", res)
+	assert.EqualValues(t, Bigsun("10120000000000000000"), res)
 }
 
 func TestNormalUnitConvert2(t *testing.T) {
-	src := "1023"
-	res, err := UnitConverterRemovePoint(src)
+	src := Hdac("1023")
+	res, err := ToBigsun(src)
 
 	assert.NoError(t, err)
-	assert.Equal(t, "1023000000000000000000", res)
+	assert.Equal(t, Bigsun("1023000000000000000000"), res)
 }
 
 func TestFormatUnitConvert(t *testing.T) {
-	src := "10.1.2"
-	res, err := UnitConverterRemovePoint(src)
+	src := Hdac("10.1.2")
+	res, err := ToBigsun(src)
 
 	assert.Error(t, err)
-	assert.Equal(t, "0", res)
+	assert.Equal(t, Bigsun("0"), res)
 }
 
 func TestLengthUnitConvert(t *testing.T) {
-	src := "10.1234567890123456789"
-	res, err := UnitConverterRemovePoint(src)
+	src := Hdac("10.1234567890123456789")
+	res, err := ToBigsun(src)
 
 	assert.Error(t, err)
-	assert.Equal(t, "0", res)
+	assert.Equal(t, Bigsun("0"), res)
 }
 
 func TestRegexpUnitConvert1(t *testing.T) {
-	src := "a10.23"
-	res, err := UnitConverterRemovePoint(src)
+	src := Hdac("a10.23")
+	res, err := ToBigsun(src)
 
 	assert.Error(t, err)
-	assert.Equal(t, "0", res)
+	assert.Equal(t, Bigsun("0"), res)
 }
 
 func TestZeroUnitCounvert1(t *testing.T) {
-	src := "0"
-	res, err := UnitConverterRemovePoint(src)
+	src := Hdac("0")
+	res, err := ToBigsun(src)
 
 	assert.NoError(t, err)
-	assert.Equal(t, "0", res)
+	assert.Equal(t, Bigsun("0"), res)
 }
 
 func TestZeroUnitCounvert2(t *testing.T) {
-	src := "00.00"
-	res, err := UnitConverterRemovePoint(src)
+	src := Hdac("00.00")
+	res, err := ToBigsun(src)
 
 	assert.NoError(t, err)
-	assert.Equal(t, "0", res)
+	assert.Equal(t, Bigsun("0"), res)
 }
 
 func TestDecimalPlaceZeroUnitCounvert2(t *testing.T) {
-	src := "0.01"
-	res, err := UnitConverterRemovePoint(src)
+	src := Hdac("0.01")
+	res, err := ToBigsun(src)
 
 	assert.NoError(t, err)
-	assert.Equal(t, "10000000000000000", res)
+	assert.Equal(t, Bigsun("10000000000000000"), res)
 }
 
 func TestUnitConvertAddPoint1(t *testing.T) {
-	src := "1"
-	res := UnitConvertAddPoint(src)
-	assert.Equal(t, "0.000000000000000001", res)
+	src := Bigsun("1")
+	res := ToHdac(src)
+	assert.Equal(t, Hdac("0.000000000000000001"), res)
 }
 
 func TestUnitConvertAddPoint2(t *testing.T) {
-	src := "1000000000000000001"
-	res := UnitConvertAddPoint(src)
-	assert.Equal(t, "1.000000000000000001", res)
+	src := Bigsun("1000000000000000001")
+	res := ToHdac(src)
+	assert.Equal(t, Hdac("1.000000000000000001"), res)
 }
 
 func TestUnitConvertAddPoint3(t *testing.T) {
-	src := "1123000000000000000"
-	res := UnitConvertAddPoint(src)
-	assert.Equal(t, "1.123", res)
+	src := Bigsun("1123000000000000000")
+	res := ToHdac(src)
+	assert.Equal(t, Hdac("1.123"), res)
 }
 
 func TestUnitConvertAddPoint4(t *testing.T) {
-	src := "123000"
-	res := UnitConvertAddPoint(src)
-	assert.Equal(t, "0.000000000000123", res)
+	src := Bigsun("123000")
+	res := ToHdac(src)
+	assert.Equal(t, Hdac("0.000000000000123"), res)
 }
 
 func TestUnitConvertAddPoint5(t *testing.T) {
-	src := "0"
-	res := UnitConvertAddPoint(src)
-	assert.Equal(t, "0", res)
+	src := Bigsun("0")
+	res := ToHdac(src)
+	assert.Equal(t, Hdac("0"), res)
 }
 
 func TestUnitConvertAddPoint6(t *testing.T) {
-	src := "10000000000000000000"
-	res := UnitConvertAddPoint(src)
-	assert.Equal(t, "10", res)
+	src := Bigsun("10000000000000000000")
+	res := ToHdac(src)
+	assert.Equal(t, Hdac("10"), res)
 }
