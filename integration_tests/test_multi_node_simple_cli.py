@@ -38,8 +38,8 @@ class TestMultiNodeSimple:
     info_hans = None
     info_bryan = None
 
-    basic_coin = "500000000000000000000"
-    basic_stake = "100000000"
+    basic_coin = "1000000000000000000000000000"
+    basic_stake = "1000000000000000000"
 
     multiplier = 10 ** 18
 

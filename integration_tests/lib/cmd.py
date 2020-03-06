@@ -32,10 +32,10 @@ def _tx_executor(cmd: str, passphrase, *args):
     try:
         print(cmd.format(*args))
         child = pexpect.spawn(cmd.format(*args))
-        _ = child.read_nonblocking(30000000, timeout=3)
-        _ = child.sendline('Y')
-        _ = child.read_nonblocking(10000, timeout=1)
-        _ = child.sendline(passphrase)
+        child = child.read_nonblocking(30000000, timeout=3)
+        child = child.sendline('Y')
+        child = child.read_nonblocking(10000, timeout=1)
+        child = child.sendline(passphrase)
         
         outs = child.read().decode('utf-8')
         print(outs)
@@ -281,7 +281,7 @@ def is_tx_ok(tx_hash):
 
 def get_bls_pubkey_remote(remote_address):
     child = pexpect.spawn('ssh -i ~/ci_nodes.pem {} "~/go/bin/nodef tendermint show-validator"'.format(remote_address))
-    outs = child.read().decode('utf-8')
+    outs = child.read().decode('utf-8').strip()
     return outs
 
 
