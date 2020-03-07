@@ -32,17 +32,18 @@ def _tx_executor(cmd: str, passphrase, *args):
     try:
         print(cmd.format(*args))
         child = pexpect.spawn(cmd.format(*args))
-        child = child.read_nonblocking(30000000, timeout=3)
-        child = child.sendline('Y')
-        child = child.read_nonblocking(10000, timeout=1)
-        child = child.sendline(passphrase)
+        outs_of_child = child.read_nonblocking(30000000, timeout=3)
+        outs_of_child = child.sendline('Y')
+        outs_of_child = child.read_nonblocking(10000, timeout=1)
+        outs_of_child = child.sendline(passphrase)
         
         outs = child.read().decode('utf-8')
         print(outs)
         try:
             tx_hash = re.search(r'"txhash": "([A-Z0-9]+)"', outs).group(1)
         except Exception as e:
-            print(outs)
+            print(outs_of_child)
+            print(e)
             raise e
 
     except pexpect.TIMEOUT:
