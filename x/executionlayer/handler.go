@@ -192,15 +192,6 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) (boo
 	protocolVersion := k.MustGetProtocolVersion(ctx)
 	log := ""
 
-	sessionArgs := []*consensus.Deploy_Arg{}
-	var err error
-	if msg.SessionArgs != "" {
-		sessionArgs, err = util.JsonStringToDeployArgs(msg.SessionArgs)
-		if err != nil {
-			return false, err.Error()
-		}
-	}
-
 	paymentArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
 			Value: &consensus.Deploy_Arg_Value{
@@ -211,12 +202,17 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) (boo
 				Value: &consensus.Deploy_Arg_Value_BigInt{
 					BigInt: &state.BigInt{Value: string(msg.Fee), BitWidth: 512}}}}}
 
+	paymentArgsJson, err := DeployArgsToJsonString(paymentArgs)
+	if err != nil {
+		return false, err.Error()
+	}
+
 	// Execute
 	deploys := []*ipc.DeployItem{}
 	deploy, err := util.MakeDeploy(
 		msg.ExecAddress.ToEEAddress(),
-		msg.SessionType, msg.SessionCode, sessionArgs,
-		util.HASH, proxyContractHash, paymentArgs,
+		msg.SessionType, msg.SessionCode, msg.SessionArgs,
+		util.HASH, proxyContractHash, paymentArgsJson,
 		msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
 	if err != nil {
 		return false, err.Error()

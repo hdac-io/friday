@@ -113,8 +113,8 @@ github.com/hdac-io/bls-go-binary v0.0.0-20191223054157-fad152e9a679 h1:xdX2qinan
 github.com/hdac-io/bls-go-binary v0.0.0-20191223054157-fad152e9a679/go.mod h1:qG6qX5Hrs2noYc1lcWj3PEb64gc2VoGtmcghXK8trCw=
 github.com/hdac-io/btcutil v0.0.0-20191220081549-27e3c0391404 h1:9FvbWqlHq6n2ciDoBzfqZj4Nri+cs34of5D2SHQhfLs=
 github.com/hdac-io/btcutil v0.0.0-20191220081549-27e3c0391404/go.mod h1:PQwlReOMYFpmYFt9Mtnw06XeVTjkjFZLs8/v0gwoW+0=
-github.com/hdac-io/casperlabs-ee-grpc-go-util v0.4.1 h1:oxpG6IxoUqq5R8NdhJQvCS2mVD6AzcEzzWbR46Jvxm4=
-github.com/hdac-io/casperlabs-ee-grpc-go-util v0.4.1/go.mod h1:WakxSanxTmCA9D/VB2EBWH0sEwXTyUOrGbTk7HcO8Hc=
+github.com/hdac-io/casperlabs-ee-grpc-go-util v0.4.2 h1:GsDOx9H2RdIa5R+2KZ8QEZiR2+E6ZjkcC3AOMhB+tmw=
+github.com/hdac-io/casperlabs-ee-grpc-go-util v0.4.2/go.mod h1:WakxSanxTmCA9D/VB2EBWH0sEwXTyUOrGbTk7HcO8Hc=
 github.com/hdac-io/iavl v0.0.0-20191220074654-211e1bd34eef h1:2Agvbgr7rAy4OwBETZ6a4VAXLXCbPDdLWw8Mz9zQcLw=
 github.com/hdac-io/iavl v0.0.0-20191220074654-211e1bd34eef/go.mod h1:ry8RH8MNJJhiO1VJeosYAsKrPu7X8Xy0B5D5UQvEiVM=
 github.com/hdac-io/tendermint v0.0.0-20191220055750-d875915aea37/go.mod h1:BronDynhlemRSl99OCZ3owAs/cTcDuw0BrgFmzasWPk=
@@ -280,7 +280,6 @@ golang.org/x/crypto v0.0.0-20170930174604-9419663f5a44/go.mod h1:6SG95UA2DQfeDnf
 golang.org/x/crypto v0.0.0-20180904163835-0709b304e793/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
 golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
-golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a h1:YX8ljsm6wXlHZO+aRz9Exqr0evNhKRNe5K/gi+zKh4U=
 golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550 h1:ObdrDkeb4kJdCP557AjRjq69pTHfNouLtWZG7j9rPN8=
 golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
