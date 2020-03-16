@@ -13,6 +13,7 @@ import (
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc/transforms"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/storedvalue"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
@@ -135,12 +136,17 @@ func TestCreateBlock(t *testing.T) {
 	pv := input.elk.MustGetProtocolVersion(input.ctx)
 
 	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", GenesisAccountAddress.ToEEAddress(), arrPath, &pv)
-
-	assert.Equal(t, int32(0), util.ToValues(util.UnmarshalStoreValue(res1).GetClValue()).GetIntValue())
+	var sValue1 storedvalue.StoredValue
+	sValue1, err, _ := sValue1.FromBytes(res1)
+	assert.NoError(t, err)
+	assert.Equal(t, int32(0), sValue1.ClValue.ToStateValues().GetIntValue())
 
 	unitHash2 := input.elk.GetUnitHashMap(input.ctx, blockHash2)
 	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", GenesisAccountAddress.ToEEAddress(), arrPath, &pv)
-	assert.Equal(t, int32(1), util.ToValues(util.UnmarshalStoreValue(res2).GetClValue()).GetIntValue())
+	var sValue2 storedvalue.StoredValue
+	sValue2, err, _ = sValue2.FromBytes(res2)
+	assert.NoError(t, err)
+	assert.Equal(t, int32(1), sValue2.ClValue.ToStateValues().GetIntValue())
 }
 
 func TestTransfer(t *testing.T) {

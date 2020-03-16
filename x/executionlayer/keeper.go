@@ -7,7 +7,7 @@ import (
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/storedvalue"
 
 	"github.com/hdac-io/tendermint/crypto"
 
@@ -111,21 +111,26 @@ func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockHash []byte) []by
 // -----------------------------------------------------------------------------------------------------------
 // GetQueryResult queries with whole parameters
 func (k ExecutionLayerKeeper) GetQueryResult(ctx sdk.Context,
-	blockhash []byte, keyType string, keyData string, path string) (state.StoredValue, error) {
+	blockhash []byte, keyType string, keyData string, path string) (state.Value, error) {
 	arrPath := strings.Split(path, "/")
 
 	protocolVersion := k.MustGetProtocolVersion(ctx)
 	unitHash := k.GetUnitHashMap(ctx, blockhash)
 	keyDataBytes, err := toBytes(keyType, keyData, k.NicknameKeeper, ctx)
 	if err != nil {
-		return state.StoredValue{}, err
+		return state.Value{}, err
 	}
 	res, errstr := grpc.Query(k.client, unitHash.EEState, keyType, keyDataBytes, arrPath, &protocolVersion)
 	if errstr != "" {
-		return state.StoredValue{}, fmt.Errorf(errstr)
+		return state.Value{}, fmt.Errorf(errstr)
 	}
 
-	storedValue := util.UnmarshalStoreValue(res)
+	var sValue storedvalue.StoredValue
+	sValue, err, _ = sValue.FromBytes(res)
+	if err != nil {
+		return state.Value{}, err
+	}
+	storedValue := sValue.ClValue.ToStateValues()
 
 	return *storedValue, nil
 }
@@ -133,11 +138,11 @@ func (k ExecutionLayerKeeper) GetQueryResult(ctx sdk.Context,
 // GetQueryResultSimple queries without state hash.
 // State hash comes from Tendermint block state - EE state mapping DB
 func (k ExecutionLayerKeeper) GetQueryResultSimple(ctx sdk.Context,
-	keyType string, keyData string, path string) (state.StoredValue, error) {
+	keyType string, keyData string, path string) (state.Value, error) {
 	currBlock := ctx.BlockHeader().LastBlockId.Hash
 	res, err := k.GetQueryResult(ctx, currBlock, keyType, keyData, path)
 	if err != nil {
-		return state.StoredValue{}, err
+		return state.Value{}, err
 	}
 
 	return res, nil

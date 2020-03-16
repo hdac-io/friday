@@ -6,6 +6,7 @@ import (
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/storedvalue"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
@@ -53,11 +54,16 @@ func InitGenesis(
 		panic(errStr)
 	}
 
-	storedValue := util.UnmarshalStoreValue(res)
+	var storedValue storedvalue.StoredValue
+	storedValue, err, _ = storedValue.FromBytes(res)
+	if err != nil {
+		panic(err)
+	}
+
 	proxyContractHash := []byte{}
-	for _, namedKey := range storedValue.GetAccount().GetNamedKeys() {
-		if namedKey.GetName() == types.ProxyContractName {
-			proxyContractHash = namedKey.GetKey().GetHash().GetHash()
+	for _, namedKey := range storedValue.Account.NamedKeys {
+		if namedKey.Name == types.ProxyContractName {
+			proxyContractHash = namedKey.Key.Hash
 			break
 		}
 	}
