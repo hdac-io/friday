@@ -8,7 +8,7 @@ import (
 
 // Might be relocated into 'types'
 
-const charmap string = "0123456789abcdefghijhlmnopqrstuvwxyz-._"
+const charmap string = "0123456789abcdefghijklmnopqrstuvwxyz-._"
 const encodingBase int = len(charmap)
 
 // Name is uint128 datatype, and supports redable ID which contains up to 20 letters.
