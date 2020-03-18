@@ -61,8 +61,8 @@ type DeployConfig struct {
 }
 
 const (
-	mintCodePath = "$HOME/.nodef/contracts/mint_install.wasm"
-	posCodePath  = "$HOME/.nodef/contracts/pos_install.wasm"
+	mintCodePath = "$HOME/.nodef/contracts/hdac_mint_install.wasm"
+	posCodePath  = "$HOME/.nodef/contracts/pop_install.wasm"
 )
 
 // NewGenesisState creates a new genesis state.
