@@ -8,10 +8,10 @@ timestamp = 0
 protocol-version = "1.0.0"
 
 # Path (absolute, or relative to the manifest) to the file containing wasm bytecode for installing the mint system contract.
-mint-code-path = "../contracts/mint_install.wasm"
+mint-code-path = "../contracts/hdac_mint_install.wasm"
 
 # Path (absolute, or relative to the manifest) to the file containing wasm bytecode for installing the PoS system contract.
-pos-code-path = "../contracts/pos_install.wasm"
+pos-code-path = "../contracts/pop_install.wasm"
 
 [deploys]
 # 1 day
