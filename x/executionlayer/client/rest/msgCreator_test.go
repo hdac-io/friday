@@ -99,6 +99,73 @@ func TestRESTUnbond(t *testing.T) {
 	require.NotNil(t, msgs)
 }
 
+func TestRESTDelegate(t *testing.T) {
+	fromAddr, _, writer, clictx, basereq := prepare()
+
+	// Body
+	delegateReq := delegateReq{
+		BaseReq:          basereq,
+		ValidatorAddress: fromAddr,
+		Amount:           "100000000",
+		Fee:              "10000000",
+	}
+
+	// http.request
+	body := clictx.Codec.MustMarshalJSON(delegateReq)
+	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/delegate", types.ModuleName), bytes.NewReader(body))
+
+	outputBasereq, msgs, err := delegateUndelegateMsgCreator(true, writer, clictx, req)
+
+	require.NoError(t, err)
+	require.Equal(t, outputBasereq, basereq)
+	require.NotNil(t, msgs)
+}
+
+func TestRESTUndelegate(t *testing.T) {
+	fromAddr, _, writer, clictx, basereq := prepare()
+
+	// Body
+	delegateReq := delegateReq{
+		BaseReq:          basereq,
+		ValidatorAddress: fromAddr,
+		Amount:           "100000000",
+		Fee:              "10000000",
+	}
+
+	// http.request
+	body := clictx.Codec.MustMarshalJSON(delegateReq)
+	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/undelegate", types.ModuleName), bytes.NewReader(body))
+
+	outputBasereq, msgs, err := delegateUndelegateMsgCreator(false, writer, clictx, req)
+
+	require.NoError(t, err)
+	require.Equal(t, outputBasereq, basereq)
+	require.NotNil(t, msgs)
+}
+
+func TestRESTRedelegate(t *testing.T) {
+	srcAddr, destAddr, writer, clictx, basereq := prepare()
+
+	// Body
+	delegateReq := redelegateReq{
+		BaseReq:              basereq,
+		SrcValidatorAddress:  srcAddr,
+		DestValidatorAddress: destAddr,
+		Amount:               "100000000",
+		Fee:                  "10000000",
+	}
+
+	// http.request
+	body := clictx.Codec.MustMarshalJSON(delegateReq)
+	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/undelegate", types.ModuleName), bytes.NewReader(body))
+
+	outputBasereq, msgs, err := delegateUndelegateMsgCreator(false, writer, clictx, req)
+
+	require.NoError(t, err)
+	require.Equal(t, outputBasereq, basereq)
+	require.NotNil(t, msgs)
+}
+
 func TestRESTBalance(t *testing.T) {
 	fromAddr, _, writer, clictx, _ := prepare()
 

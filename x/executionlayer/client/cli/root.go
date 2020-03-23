@@ -21,6 +21,9 @@ func GetHdacCustomCmd(cdc *codec.Codec) *cobra.Command {
 		GetCmdTransfer(cdc),
 		GetCmdBonding(cdc),
 		GetCmdUnbonding(cdc),
+		GetCmdDelegate(cdc),
+		GetCmdUndelegate(cdc),
+		GetCmdRedelegate(cdc),
 		GetCmdCreateValidator(cdc),
 		GetCmdEditValidator(cdc),
 

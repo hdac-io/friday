@@ -6,11 +6,14 @@ import (
 )
 
 const (
-	ProxyContractName  = "client_api_proxy"
-	TransferMethodName = "transfer_to_account"
-	PaymentMethodName  = "standard_payment"
-	BondMethodName     = "bond"
-	UnbondMethodName   = "unbond"
+	ProxyContractName    = "client_api_proxy"
+	TransferMethodName   = "transfer_to_account"
+	PaymentMethodName    = "standard_payment"
+	BondMethodName       = "bond"
+	UnbondMethodName     = "unbond"
+	DelegateMethodName   = "delegate"
+	UndelegateMethodName = "undelegate"
+	RedelegateMethodName = "redelegate"
 )
 
 // UnitHashMap used to define Unit account structure

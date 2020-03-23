@@ -324,6 +324,17 @@ def unbond(passphrase: str, amount: str, fee: str, gas_price: int, from_value: s
     client_home = os.path.join(os.environ["HOME"], client_home)
     return _tx_executor("clif hdac unbond {} {} {} --from {} --node {} --home {}", passphrase, amount, fee, gas_price, from_value, node, client_home)
 
+def delegate(passphrase: str, validator_address: str, amount: str, fee: str, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+    client_home = os.path.join(os.environ["HOME"], client_home)
+    return _tx_executor("clif hdac delegate {} {} {} {} --from {} --node {} --home {}", passphrase, validator_address, amount, fee, gas_price, from_value, node, client_home)
+
+def undelegate(passphrase: str, validator_address: str, amount: str, fee: str, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+    client_home = os.path.join(os.environ["HOME"], client_home)
+    return _tx_executor("clif hdac undelegate {} {} {} {} --from {} --node {} --home {}", passphrase, validator_address, amount, fee, gas_price, from_value, node, client_home)
+
+def redelegate(passphrase: str, src_validator_address: str, dest_validator_address: str, amount: str, fee: str, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+    client_home = os.path.join(os.environ["HOME"], client_home)
+    return _tx_executor("clif hdac redelegate {} {} {} {} {} --from {} --node {} --home {}", passphrase, src_validator_address, dest_validator_address, amount, fee, gas_price, from_value, node, client_home)
 
 def get_balance(from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
     client_home = os.path.join(os.environ["HOME"], client_home)

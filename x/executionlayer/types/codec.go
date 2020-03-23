@@ -20,4 +20,7 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgTransfer{}, "executionengine/Transfer", nil)
 	cdc.RegisterConcrete(MsgBond{}, "executionengine/Bond", nil)
 	cdc.RegisterConcrete(MsgUnBond{}, "executionengine/UnBond", nil)
+	cdc.RegisterConcrete(MsgDelegate{}, "executionengine/Delegate", nil)
+	cdc.RegisterConcrete(MsgUndelegate{}, "executionengine/Undelegate", nil)
+	cdc.RegisterConcrete(MsgRedelegate{}, "executionengine/Redelegate", nil)
 }

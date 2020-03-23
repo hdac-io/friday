@@ -344,3 +344,158 @@ func (msg MsgUnBond) GetSignBytes() []byte {
 func (msg MsgUnBond) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.FromAddress}
 }
+
+//______________________________________________________________________
+type MsgDelegate struct {
+	ContractAddress string         `json:"contract_address" yaml:"contract_address"`
+	FromAddress     sdk.AccAddress `json:"from_address" yaml:"from_address"`
+	ValAddress      sdk.AccAddress `json:"val_address" yaml:"val_address"`
+	Amount          string         `json:"amount" yaml:"amount"`
+	Fee             string         `json:"fee" yaml:"fee"`
+	GasPrice        uint64         `json:"gas_price" yaml:"gas_price"`
+}
+
+// NewMsgDelegate is a constructor function for MsgSetName
+func NewMsgDelegate(
+	tokenContractAddress string,
+	fromAddress, vaildatorAddress sdk.AccAddress,
+	amount, fee string,
+	gasPrice uint64,
+) MsgDelegate {
+	return MsgDelegate{
+		ContractAddress: tokenContractAddress,
+		FromAddress:     fromAddress,
+		ValAddress:      vaildatorAddress,
+		Amount:          amount,
+		Fee:             fee,
+		GasPrice:        gasPrice,
+	}
+}
+
+// Route should return the name of the module
+func (msg MsgDelegate) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgDelegate) Type() string { return "executionengine" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgDelegate) ValidateBasic() sdk.Error {
+	if msg.FromAddress.Equals(sdk.AccAddress("")) {
+		return sdk.ErrUnknownRequest("Address cannot be empty")
+	}
+	return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgDelegate) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgDelegate) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.FromAddress}
+}
+
+//______________________________________________________________________
+type MsgUndelegate struct {
+	ContractAddress string         `json:"contract_address" yaml:"contract_address"`
+	FromAddress     sdk.AccAddress `json:"from_address" yaml:"from_address"`
+	ValAddress      sdk.AccAddress `json:"val_address" yaml:"val_address"`
+	Amount          string         `json:"amount" yaml:"amount"`
+	Fee             string         `json:"fee" yaml:"fee"`
+	GasPrice        uint64         `json:"gas_price" yaml:"gas_price"`
+}
+
+// NewMsgUndelegate is a constructor function for MsgSetName
+func NewMsgUndelegate(
+	tokenContractAddress string,
+	fromAddress, vaildatorAddress sdk.AccAddress,
+	amount, fee string,
+	gasPrice uint64,
+) MsgUndelegate {
+	return MsgUndelegate{
+		ContractAddress: tokenContractAddress,
+		FromAddress:     fromAddress,
+		ValAddress:      vaildatorAddress,
+		Amount:          amount,
+		Fee:             fee,
+		GasPrice:        gasPrice,
+	}
+}
+
+// Route should return the name of the module
+func (msg MsgUndelegate) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgUndelegate) Type() string { return "executionengine" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgUndelegate) ValidateBasic() sdk.Error {
+	if msg.FromAddress.Equals(sdk.AccAddress("")) {
+		return sdk.ErrUnknownRequest("Address cannot be empty")
+	}
+	return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgUndelegate) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgUndelegate) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.FromAddress}
+}
+
+//______________________________________________________________________
+type MsgRedelegate struct {
+	ContractAddress string         `json:"contract_address" yaml:"contract_address"`
+	FromAddress     sdk.AccAddress `json:"from_address" yaml:"from_address"`
+	SrcValAddress   sdk.AccAddress `json:"src_val_address" yaml:"src_val_address"`
+	DestValAddress  sdk.AccAddress `json:"dest_val_address" yaml:"dest_val_address"`
+	Amount          string         `json:"amount" yaml:"amount"`
+	Fee             string         `json:"fee" yaml:"fee"`
+	GasPrice        uint64         `json:"gas_price" yaml:"gas_price"`
+}
+
+// MsgRedelegate is a constructor function for MsgSetName
+func NewMsgRedelegate(
+	tokenContractAddress string,
+	fromAddress, srcVaildatorAddress, descVaildatorAddress sdk.AccAddress,
+	amount, fee string,
+	gasPrice uint64,
+) MsgRedelegate {
+	return MsgRedelegate{
+		ContractAddress: tokenContractAddress,
+		FromAddress:     fromAddress,
+		SrcValAddress:   srcVaildatorAddress,
+		DestValAddress:  descVaildatorAddress,
+		Amount:          amount,
+		Fee:             fee,
+		GasPrice:        gasPrice,
+	}
+}
+
+// Route should return the name of the module
+func (msg MsgRedelegate) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgRedelegate) Type() string { return "executionengine" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgRedelegate) ValidateBasic() sdk.Error {
+	if msg.FromAddress.Equals(sdk.AccAddress("")) {
+		return sdk.ErrUnknownRequest("Address cannot be empty")
+	}
+	return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgRedelegate) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgRedelegate) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.FromAddress}
+}

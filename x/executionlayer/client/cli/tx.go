@@ -261,6 +261,197 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
+func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "delegate <validator-address> <amount> <fee> <gas-price> --from <from>",
+		Short: "Delegate token",
+		Long:  "Delegate token for converts tokens as a freedom",
+		Args:  cobra.ExactArgs(4),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+			if err != nil {
+				return err
+			}
+
+			valueFromFromFlag := viper.GetString(client.FlagFrom)
+			keyInfo, err := cliutil.GetLocalWalletInfo(valueFromFromFlag, kb, cdc, cliCtx)
+			if err != nil {
+				return err
+			}
+
+			valAddress, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				valAddress, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, args[0])
+				if err != nil {
+					return fmt.Errorf("no nickname mapping of %s", args[0])
+				}
+			}
+
+			amount, err := cliutil.ToBigsun(cliutil.Hdac(args[1]))
+			if err != nil {
+				return err
+			}
+
+			fee, err := cliutil.ToBigsun(cliutil.Hdac(args[2]))
+			if err != nil {
+				return err
+			}
+
+			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
+			addr := keyInfo.GetAddress()
+
+			gasPrice, err := strconv.ParseUint(args[3], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			// build and sign the transaction, then broadcast to Tendermint
+			// TODO: Currently implementation of contract address is dummy
+			msg := types.NewMsgDelegate("dummyAddress", addr, valAddress, string(amount), string(fee), gasPrice)
+			txBldr = txBldr.WithGas(gasPrice)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(client.FlagFrom, "", "Executor's identity (one of wallet alias, address, nickname)")
+
+	return cmd
+}
+
+func GetCmdUndelegate(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "undelegate <validator-address> <amount> <fee> <gas-price> --from <from>",
+		Short: "Undelegate token",
+		Long:  "Undelegate token for converts tokens as a freedom",
+		Args:  cobra.ExactArgs(4),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+			if err != nil {
+				return err
+			}
+
+			valueFromFromFlag := viper.GetString(client.FlagFrom)
+			keyInfo, err := cliutil.GetLocalWalletInfo(valueFromFromFlag, kb, cdc, cliCtx)
+			if err != nil {
+				return err
+			}
+
+			valAddress, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				valAddress, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, args[0])
+				if err != nil {
+					return fmt.Errorf("no nickname mapping of %s", args[0])
+				}
+			}
+
+			amount, err := cliutil.ToBigsun(cliutil.Hdac(args[1]))
+			if err != nil {
+				return err
+			}
+
+			fee, err := cliutil.ToBigsun(cliutil.Hdac(args[2]))
+			if err != nil {
+				return err
+			}
+
+			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
+			addr := keyInfo.GetAddress()
+
+			gasPrice, err := strconv.ParseUint(args[3], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			// build and sign the transaction, then broadcast to Tendermint
+			// TODO: Currently implementation of contract address is dummy
+			msg := types.NewMsgUndelegate("dummyAddress", addr, valAddress, string(amount), string(fee), gasPrice)
+			txBldr = txBldr.WithGas(gasPrice)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(client.FlagFrom, "", "Executor's identity (one of wallet alias, address, nickname)")
+
+	return cmd
+}
+
+func GetCmdRedelegate(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "redelegate <src-validator-address> <dest-validator-address> <amount> <fee> <gas-price> --from <from>",
+		Short: "Redelegate token",
+		Long:  "Redelegate token for converts tokens as a freedom",
+		Args:  cobra.ExactArgs(5),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+			if err != nil {
+				return err
+			}
+
+			valueFromFromFlag := viper.GetString(client.FlagFrom)
+			keyInfo, err := cliutil.GetLocalWalletInfo(valueFromFromFlag, kb, cdc, cliCtx)
+			if err != nil {
+				return err
+			}
+
+			srcValAddress, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				srcValAddress, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, args[0])
+				if err != nil {
+					return fmt.Errorf("no nickname mapping of %s", args[0])
+				}
+			}
+
+			destValAddress, err := sdk.AccAddressFromBech32(args[1])
+			if err != nil {
+				destValAddress, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, args[0])
+				if err != nil {
+					return fmt.Errorf("no nickname mapping of %s", args[0])
+				}
+			}
+
+			amount, err := cliutil.ToBigsun(cliutil.Hdac(args[2]))
+			if err != nil {
+				return err
+			}
+
+			fee, err := cliutil.ToBigsun(cliutil.Hdac(args[3]))
+			if err != nil {
+				return err
+			}
+
+			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
+			addr := keyInfo.GetAddress()
+
+			gasPrice, err := strconv.ParseUint(args[4], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			// build and sign the transaction, then broadcast to Tendermint
+			// TODO: Currently implementation of contract address is dummy
+			msg := types.NewMsgRedelegate("dummyAddress", addr, srcValAddress, destValAddress, string(amount), string(fee), gasPrice)
+			txBldr = txBldr.WithGas(gasPrice)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(client.FlagFrom, "", "Executor's identity (one of wallet alias, address, nickname)")
+
+	return cmd
+}
+
 // GetCmdCreateValidator implements the create validator command handler.
 func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
