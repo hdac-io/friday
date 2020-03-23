@@ -139,6 +139,151 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 	return req.BaseReq, []sdk.Msg{msg}, nil
 }
 
+type delegateReq struct {
+	BaseReq              rest.BaseReq `json:"base_req"`
+	TokenContractAddress string       `json:"token_contract_address"`
+	ValidatorAddress     string       `json:"validator_address"`
+	Amount               string       `json:"amount"`
+	Fee                  string       `json:"fee"`
+}
+
+func delegateUndelegateMsgCreator(delegateIsTrue bool, w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
+	var req delegateReq
+
+	// Get body parameters
+	if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse request")
+	}
+
+	// Parameter touching
+	var addr sdk.AccAddress
+	addr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
+	if err != nil {
+		addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, req.BaseReq.From)
+		if err != nil {
+			return rest.BaseReq{}, nil, fmt.Errorf("failed to parse address or name: %s", req.BaseReq.From)
+		}
+	}
+
+	req.BaseReq.From = addr.String()
+	if !req.BaseReq.ValidateBasic(w) {
+		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse base request")
+	}
+
+	valAddress, err := sdk.AccAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		valAddress, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, req.ValidatorAddress)
+		if err != nil {
+			return rest.BaseReq{}, nil, fmt.Errorf("failed to parse address or name: %s", req.BaseReq.From)
+		}
+	}
+
+	amount, err := cliutil.ToBigsun(cliutil.Hdac(req.Amount))
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	fee, err := cliutil.ToBigsun(cliutil.Hdac(req.Fee))
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	var msg sdk.Msg
+	gas, err := strconv.ParseUint(req.BaseReq.Gas, 10, 64)
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	if delegateIsTrue == true {
+		msg = types.NewMsgDelegate(req.TokenContractAddress, addr, valAddress, string(amount), string(fee), gas)
+	} else {
+		msg = types.NewMsgUndelegate(req.TokenContractAddress, addr, valAddress, string(amount), string(fee), gas)
+	}
+
+	// create the message
+	err = msg.ValidateBasic()
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	return req.BaseReq, []sdk.Msg{msg}, nil
+}
+
+type redelegateReq struct {
+	BaseReq              rest.BaseReq `json:"base_req"`
+	TokenContractAddress string       `json:"token_contract_address"`
+	SrcValidatorAddress  string       `json:"src_validator_address"`
+	DestValidatorAddress string       `json:"dest_validator_address"`
+	Amount               string       `json:"amount"`
+	Fee                  string       `json:"fee"`
+}
+
+func redelegateMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
+	var req redelegateReq
+
+	// Get body parameters
+	if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse request")
+	}
+
+	// Parameter touching
+	var addr sdk.AccAddress
+	addr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
+	if err != nil {
+		addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, req.BaseReq.From)
+		if err != nil {
+			return rest.BaseReq{}, nil, fmt.Errorf("failed to parse address or name: %s", req.BaseReq.From)
+		}
+	}
+
+	req.BaseReq.From = addr.String()
+	if !req.BaseReq.ValidateBasic(w) {
+		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse base request")
+	}
+
+	srcValAddress, err := sdk.AccAddressFromBech32(req.SrcValidatorAddress)
+	if err != nil {
+		srcValAddress, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, req.SrcValidatorAddress)
+		if err != nil {
+			return rest.BaseReq{}, nil, fmt.Errorf("failed to parse address or name: %s", req.BaseReq.From)
+		}
+	}
+
+	destValAddress, err := sdk.AccAddressFromBech32(req.DestValidatorAddress)
+	if err != nil {
+		destValAddress, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, req.DestValidatorAddress)
+		if err != nil {
+			return rest.BaseReq{}, nil, fmt.Errorf("failed to parse address or name: %s", req.BaseReq.From)
+		}
+	}
+
+	amount, err := cliutil.ToBigsun(cliutil.Hdac(req.Amount))
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	fee, err := cliutil.ToBigsun(cliutil.Hdac(req.Fee))
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	var msg sdk.Msg
+	gas, err := strconv.ParseUint(req.BaseReq.Gas, 10, 64)
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	msg = types.NewMsgRedelegate(req.TokenContractAddress, addr, srcValAddress, destValAddress, string(amount), string(fee), gas)
+
+	// create the message
+	err = msg.ValidateBasic()
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	return req.BaseReq, []sdk.Msg{msg}, nil
+}
+
 func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error) {
 	vars := r.URL.Query()
 	straddr := vars.Get("address")

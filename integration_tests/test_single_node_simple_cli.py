@@ -39,6 +39,10 @@ class TestSingleNode():
     bonding_fee = "0.001"
     bonding_gas = 50000000
 
+    delegate_amount = "1"
+    delegate_fee = "0.002"
+    delegate_gas = 50000000
+
     transfer_amount = "1"
     transfer_fee = "0.001"
     transfer_gas = 30000000
@@ -354,3 +358,38 @@ class TestSingleNode():
         is_ok = cmd.is_tx_ok(tx_hash_store_contract)
         assert(is_ok == True)
         print("======================End test05_custom_contract_execution======================")
+
+    def test06_simple_delegate_redelegate_and_undlegate(self):
+        print("======================Start test06_simple_delegate_and_undlegate======================")
+
+        print("Delegate token")
+        delegate_tx_hash = cmd.delegate(self.wallet_password, self.info_elsa['address'], self.delegate_amount, self.delegate_fee, self.delegate_gas, self.wallet_anna)
+        print("Tx sent. Waiting for validation")
+
+        time.sleep(self.tx_block_time * 3 + 1)
+
+        print("Check whether tx is ok or not")
+        is_ok = cmd.is_tx_ok(delegate_tx_hash)
+        assert(is_ok == True)
+
+        print("Redelegate token")
+        redelegate_tx_hash = cmd.redelegate(self.wallet_password, self.info_elsa['address'], self.info_olaf['address'], self.delegate_amount, self.delegate_fee, self.delegate_gas, self.wallet_anna)
+        print("Tx sent. Waiting for validation")
+
+        time.sleep(self.tx_block_time * 3 + 1)
+
+        print("Check whether tx is ok or not")
+        is_ok = cmd.is_tx_ok(redelegate_tx_hash)
+        assert(is_ok == True)
+
+        print("Undelegate token")
+        undelegate_tx_hash = cmd.undelegate(self.wallet_password, self.info_olaf['address'], self.delegate_amount, self.delegate_fee, self.delegate_gas, self.wallet_anna)
+        print("Tx sent. Waiting for validation")
+
+        time.sleep(self.tx_block_time * 3 + 1)
+
+        print("Check whether tx is ok or not")
+        is_ok = cmd.is_tx_ok(undelegate_tx_hash)
+        assert(is_ok == True)
+
+        print("======================Done test06_simple_delegate_and_undlegate======================")
