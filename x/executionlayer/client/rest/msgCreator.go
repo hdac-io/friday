@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"encoding/hex"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -294,25 +293,14 @@ func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 		return nil, err
 	}
 
-	var bz []byte
-
-	if blockHashStr == "" {
-		queryData := types.QueryGetBalance{
-			Address: addr,
-		}
-		bz = cliCtx.Codec.MustMarshalJSON(queryData)
-		//return bz, nil
-	} else {
-		blockHash, err := hex.DecodeString(blockHashStr)
-		if err != nil {
-			return nil, err
-		}
-		queryData := types.QueryGetBalanceDetail{
-			Address:   addr,
-			StateHash: blockHash,
-		}
-		bz = cliCtx.Codec.MustMarshalJSON(queryData)
+	if err != nil {
+		return nil, err
 	}
+	queryData := types.QueryGetBalanceDetail{
+		Address:   addr,
+		BlockHash: blockHashStr,
+	}
+	bz := cliCtx.Codec.MustMarshalJSON(queryData)
 
 	return bz, nil
 }

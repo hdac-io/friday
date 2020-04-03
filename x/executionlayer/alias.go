@@ -30,11 +30,9 @@ type (
 	MsgUnBond                 = types.MsgUnBond
 	MsgCreateValidator        = types.MsgCreateValidator
 	MsgEditValidator          = types.MsgEditValidator
-	QueryExecutionLayer       = types.QueryExecutionLayer
 	UnitHashMap               = types.UnitHashMap
 	QueryExecutionLayerResp   = types.QueryExecutionLayerResp
 	QueryExecutionLayerDetail = types.QueryExecutionLayerDetail
-	QueryGetBalance           = types.QueryGetBalance
 	QueryGetBalanceDetail     = types.QueryGetBalanceDetail
 	QueryValidatorParams      = types.QueryValidatorParams
 )

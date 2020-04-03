@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"encoding/hex"
 	"fmt"
 
 	"github.com/hdac-io/friday/client"
@@ -60,41 +59,20 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 			}
 
 			var out types.QueryExecutionLayerResp
-			if blockhashstr := viper.GetString(FlagBlockHash); blockhashstr != "" {
-				blockHash, err := hex.DecodeString(blockhashstr)
-				if err != nil || len(blockHash) != 32 {
-					fmt.Println("malformed block hash - ", blockhashstr)
-					fmt.Println(err)
-					return nil
-				}
+			blockhashstr := viper.GetString(FlagBlockHash)
 
-				queryData := types.QueryGetBalanceDetail{
-					Address:   addr,
-					StateHash: blockHash,
-				}
-				bz := cdc.MustMarshalJSON(queryData)
-
-				res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalancedetail", types.ModuleName), bz)
-				if err != nil {
-					fmt.Printf("no balance data of input")
-					return nil
-				}
-				cdc.MustUnmarshalJSON(res, &out)
-
-			} else {
-				queryData := types.QueryGetBalance{
-					Address: addr,
-				}
-				bz := cdc.MustMarshalJSON(queryData)
-
-				res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalance", types.ModuleName), bz)
-				if err != nil {
-					fmt.Printf("no balance data of input")
-					fmt.Println(err.Error())
-					return nil
-				}
-				cdc.MustUnmarshalJSON(res, &out)
+			queryData := types.QueryGetBalanceDetail{
+				Address:   addr,
+				BlockHash: blockhashstr,
 			}
+			bz := cdc.MustMarshalJSON(queryData)
+
+			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalancedetail", types.ModuleName), bz)
+			if err != nil {
+				fmt.Printf("no balance data of input")
+				return nil
+			}
+			cdc.MustUnmarshalJSON(res, &out)
 
 			out.Value = string(cliutil.ToHdac(cliutil.Bigsun(out.Value)))
 
@@ -122,44 +100,23 @@ func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
 			path := args[2]
 
 			var out types.QueryExecutionLayerResp
-			if blockhashstr := viper.GetString(FlagBlockHash); blockhashstr != "" {
-				blockhash, err := hex.DecodeString(blockhashstr)
-				if err != nil || len(blockhash) != 32 {
-					fmt.Println("malformed block hash - ", blockhashstr)
-					fmt.Println(err)
-					return nil
-				}
-				queryData := types.QueryExecutionLayerDetail{
-					KeyType:   dataType,
-					KeyData:   data,
-					Path:      path,
-					StateHash: blockhash,
-				}
-				bz := cdc.MustMarshalJSON(queryData)
+			blockhash := viper.GetString(FlagBlockHash)
 
-				res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querydetail", types.ModuleName), bz)
-				if err != nil {
-					fmt.Printf("could not resolve data - %s %s %s\n", dataType, data, path)
-					return nil
-				}
-
-				cdc.MustUnmarshalJSON(res, &out)
-			} else {
-				queryData := types.QueryExecutionLayer{
-					KeyType: dataType,
-					KeyData: data,
-					Path:    path,
-				}
-				bz := cdc.MustMarshalJSON(queryData)
-
-				res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/query", types.ModuleName), bz)
-				if err != nil {
-					fmt.Printf("could not resolve data - %s %s %s\n", dataType, data, path)
-					return nil
-				}
-
-				cdc.MustUnmarshalJSON(res, &out)
+			queryData := types.QueryExecutionLayerDetail{
+				KeyType:   dataType,
+				KeyData:   data,
+				Path:      path,
+				BlockHash: blockhash,
 			}
+			bz := cdc.MustMarshalJSON(queryData)
+
+			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querydetail", types.ModuleName), bz)
+			if err != nil {
+				fmt.Printf("could not resolve data - %s %s %s\n", dataType, data, path)
+				return nil
+			}
+			cdc.MustUnmarshalJSON(res, &out)
+
 			return cliCtx.PrintOutput(out)
 		},
 	}

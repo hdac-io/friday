@@ -2,12 +2,10 @@ package executionlayer
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/storedvalue"
 
 	"github.com/hdac-io/tendermint/crypto"
 
@@ -106,69 +104,6 @@ func (k ExecutionLayerKeeper) GetEEState(ctx sdk.Context, blockHash []byte) []by
 	}
 	unit := k.GetUnitHashMap(ctx, blockHash)
 	return unit.EEState
-}
-
-// -----------------------------------------------------------------------------------------------------------
-// GetQueryResult queries with whole parameters
-func (k ExecutionLayerKeeper) GetQueryResult(ctx sdk.Context,
-	blockhash []byte, keyType string, keyData string, path string) (state.Value, error) {
-	arrPath := strings.Split(path, "/")
-
-	protocolVersion := k.MustGetProtocolVersion(ctx)
-	unitHash := k.GetUnitHashMap(ctx, blockhash)
-	keyDataBytes, err := toBytes(keyType, keyData, k.NicknameKeeper, ctx)
-	if err != nil {
-		return state.Value{}, err
-	}
-	res, errstr := grpc.Query(k.client, unitHash.EEState, keyType, keyDataBytes, arrPath, &protocolVersion)
-	if errstr != "" {
-		return state.Value{}, fmt.Errorf(errstr)
-	}
-
-	var sValue storedvalue.StoredValue
-	sValue, err, _ = sValue.FromBytes(res)
-	if err != nil {
-		return state.Value{}, err
-	}
-	storedValue := sValue.ClValue.ToStateValues()
-
-	return *storedValue, nil
-}
-
-// GetQueryResultSimple queries without state hash.
-// State hash comes from Tendermint block state - EE state mapping DB
-func (k ExecutionLayerKeeper) GetQueryResultSimple(ctx sdk.Context,
-	keyType string, keyData string, path string) (state.Value, error) {
-	currBlock := ctx.BlockHeader().LastBlockId.Hash
-	res, err := k.GetQueryResult(ctx, currBlock, keyType, keyData, path)
-	if err != nil {
-		return state.Value{}, err
-	}
-
-	return res, nil
-}
-
-// GetQueryBalanceResult queries with whole parameters
-func (k ExecutionLayerKeeper) GetQueryBalanceResult(ctx sdk.Context, blockhash []byte, addr sdk.AccAddress) (string, error) {
-	unitHash := k.GetUnitHashMap(ctx, blockhash)
-	protocolVersion := k.MustGetProtocolVersion(ctx)
-
-	res, grpcErr := grpc.QueryBalance(k.client, unitHash.EEState, addr.ToEEAddress(), &protocolVersion)
-	if grpcErr != "" {
-		return "", fmt.Errorf(grpcErr)
-	}
-
-	return res, nil
-}
-
-// GetQueryBalanceResultSimple queries with whole parameters
-func (k ExecutionLayerKeeper) GetQueryBalanceResultSimple(ctx sdk.Context, addr sdk.AccAddress) (string, error) {
-	res, err := k.GetQueryBalanceResult(ctx, ctx.BlockHeader().LastBlockId.Hash, addr)
-	if err != nil {
-		return "", err
-	}
-
-	return res, nil
 }
 
 // -----------------------------------------------------------------------------------------------------------

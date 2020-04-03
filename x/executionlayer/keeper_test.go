@@ -2,22 +2,15 @@ package executionlayer
 
 import (
 	"encoding/hex"
-	"fmt"
-	"path"
 	"reflect"
-	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc/transforms"
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/storedvalue"
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
-	abci "github.com/hdac-io/tendermint/abci/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -85,113 +78,6 @@ func TestMustGetProtocolVersion(t *testing.T) {
 		}
 	}()
 	input.elk.MustGetProtocolVersion(sdk.Context{})
-}
-
-func TestCreateBlock(t *testing.T) {
-	input := setupTestInput()
-	genesis(input)
-
-	blockHash1 := []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
-	beginBlockABCI1 := abci.RequestBeginBlock{
-		Hash:   blockHash1,
-		Header: abci.Header{LastBlockId: abci.BlockID{Hash: input.ctx.CandidateBlock().Hash}},
-	}
-	BeginBlocker(input.ctx, beginBlockABCI1, input.elk)
-	counterDefineMSG := NewMsgExecute(
-		ContractAddress,
-		GenesisAccountAddress,
-		util.WASM,
-		util.LoadWasmFile(path.Join(contractPath, counterDefineWasm)),
-		"",
-		"1000000000000000",
-		uint64(10),
-	)
-	handlerMsgExecute(input.ctx, input.elk, counterDefineMSG)
-	EndBlocker(input.ctx, input.elk)
-
-	// Block #2
-	blockHash2 := []byte{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
-	nextBlockABCI2 := abci.RequestBeginBlock{
-		Hash:   blockHash2,
-		Header: abci.Header{LastBlockId: abci.BlockID{Hash: blockHash1}},
-	}
-	BeginBlocker(input.ctx, nextBlockABCI2, input.elk)
-
-	counterCallMSG := NewMsgExecute(
-		ContractAddress,
-		GenesisAccountAddress,
-		util.WASM,
-		util.LoadWasmFile(path.Join(contractPath, counterCallWasm)),
-		"",
-		"1000000000000000",
-		uint64(10),
-	)
-	handlerMsgExecute(input.ctx, input.elk, counterCallMSG)
-	EndBlocker(input.ctx, input.elk)
-
-	queryPath := "counter/count"
-	arrPath := strings.Split(queryPath, "/")
-
-	unitHash1 := input.elk.GetUnitHashMap(input.ctx, blockHash1)
-	pv := input.elk.MustGetProtocolVersion(input.ctx)
-
-	res1, _ := grpc.Query(input.elk.client, unitHash1.EEState, "address", GenesisAccountAddress.ToEEAddress(), arrPath, &pv)
-	var sValue1 storedvalue.StoredValue
-	sValue1, err, _ := sValue1.FromBytes(res1)
-	assert.NoError(t, err)
-	assert.Equal(t, int32(0), sValue1.ClValue.ToStateValues().GetIntValue())
-
-	unitHash2 := input.elk.GetUnitHashMap(input.ctx, blockHash2)
-	res2, _ := grpc.Query(input.elk.client, unitHash2.EEState, "address", GenesisAccountAddress.ToEEAddress(), arrPath, &pv)
-	var sValue2 storedvalue.StoredValue
-	sValue2, err, _ = sValue2.FromBytes(res2)
-	assert.NoError(t, err)
-	assert.Equal(t, int32(1), sValue2.ClValue.ToStateValues().GetIntValue())
-}
-
-func TestTransfer(t *testing.T) {
-	input := setupTestInput()
-	genesis(input)
-
-	// Block #1
-	blockHash1 := []byte{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
-	nextBlockABCI1 := abci.RequestBeginBlock{
-		Hash:   blockHash1,
-		Header: abci.Header{LastBlockId: abci.BlockID{Hash: input.ctx.CandidateBlock().Hash}},
-	}
-	BeginBlocker(input.ctx, nextBlockABCI1, input.elk)
-
-	transferMSG := NewMsgTransfer(
-		ContractAddress,
-		GenesisAccountAddress,
-		RecipientAccountAddress,
-		"100000000",
-		"1000000000000000",
-		200000000,
-	)
-	handlerMsgTransfer(input.ctx, input.elk, transferMSG)
-	EndBlocker(input.ctx, input.elk)
-
-	// Block #2
-	blockHash2 := []byte{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
-	nextBlockABCI2 := abci.RequestBeginBlock{
-		Hash:   blockHash2,
-		Header: abci.Header{LastBlockId: abci.BlockID{Hash: blockHash1}},
-	}
-	BeginBlocker(input.ctx, nextBlockABCI2, input.elk)
-	input.ctx = input.ctx.WithBlockHeader(nextBlockABCI2.Header)
-	EndBlocker(input.ctx, input.elk)
-
-	res, err := input.elk.GetQueryBalanceResultSimple(input.ctx, RecipientAccountAddress)
-	queriedRes, _ := strconv.Atoi(res)
-
-	assert.Equal(t, queriedRes, 100000000)
-	assert.Equal(t, err, nil)
-
-	res2, err := input.elk.GetQueryBalanceResultSimple(input.ctx, GenesisAccountAddress)
-	queriedRes2, _ := strconv.Atoi(res2)
-	fmt.Println(queriedRes)
-	fmt.Println(queriedRes2)
 }
 
 func TestMarsahlAndUnMarshal(t *testing.T) {
