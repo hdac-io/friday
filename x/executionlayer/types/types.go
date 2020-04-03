@@ -5,7 +5,14 @@ import (
 	"strings"
 )
 
+var (
+	SYSTEM_ACCOUNT = make([]byte, 32)
+)
+
 const (
+	MintContractName = "mint"
+	PosContractName  = "pos"
+
 	ProxyContractName    = "client_api_proxy"
 	TransferMethodName   = "transfer_to_account"
 	PaymentMethodName    = "standard_payment"
