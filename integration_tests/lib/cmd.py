@@ -182,11 +182,11 @@ def add_genesis_account(address: str, coin: str, stake: str, client_home: str = 
     """
     Will deleted later
 
-    nodef add-genesis-account <address> <initial_coin>,<initial_stake>
+    nodef add-genesis-account <address> <initial_stake>
     """
 
     client_home = os.path.join(os.environ["HOME"], client_home)
-    _ = _process_executor("nodef add-genesis-account {} {}dummy,{}stake --home-client {}", address, coin, stake, client_home)
+    _ = _process_executor("nodef add-genesis-account {} {}stake --home-client {}", address, stake, client_home)
 
 
 def add_el_genesis_account(address: str, coin: str, stake: str, client_home: str = '.test_clif'):
