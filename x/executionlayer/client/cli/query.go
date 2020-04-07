@@ -178,3 +178,66 @@ func GetCmdQueryValidator(cdc *codec.Codec) *cobra.Command {
 
 	return cmd
 }
+
+// GetCmdQueryDelegator implements the validator query command.
+func GetCmdQueryDelegator(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "delegator [<vaidator-address>] [--from <from>]",
+		Short: "Query a validator",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			valueFromFromFlag := viper.GetString(client.FlagFrom)
+			addr, err := cliutil.GetAddress(cdc, cliCtx, valueFromFromFlag)
+			if err != nil {
+				return err
+			}
+
+			var validator sdk.AccAddress
+			if len(args) > 0 {
+				validator, err = cliutil.GetAddress(cdc, cliCtx, args[0])
+				if err != nil {
+					return err
+				}
+			}
+
+			if addr.Empty() && validator.Empty() {
+				return fmt.Errorf("Requires validator or delegate address.")
+			}
+
+			queryData := types.NewQueryDelegatorParams(addr, validator)
+			bz := cdc.MustMarshalJSON(queryData)
+
+			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querydelegator", types.ModuleName), bz)
+			if err != nil {
+				fmt.Printf("could not resolve data - %s\n", addr.String())
+				return nil
+			}
+
+			if len(res) == 0 {
+				errStr := "No delegator found with"
+				if !addr.Empty() {
+					errStr += (" address " + valueFromFromFlag)
+				}
+				if !validator.Empty() {
+					if !addr.Empty() {
+						errStr += " and "
+					}
+					errStr += ("validator " + args[0])
+				}
+
+				return fmt.Errorf(errStr)
+			}
+
+			var out types.Delegators
+			cdc.MustUnmarshalJSON(res, &out)
+			return cliCtx.PrintOutput(out)
+		},
+	}
+
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(client.FlagFrom, "", "Executor's identity (one of wallet alias, address, nickname)")
+
+	return cmd
+}

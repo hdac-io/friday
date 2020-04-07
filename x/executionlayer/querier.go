@@ -20,6 +20,8 @@ const (
 
 	QueryValidator    = "queryvalidator"
 	QueryAllValidator = "queryallvalidator"
+
+	QueryDelegator = "querydelegator"
 )
 
 // NewQuerier is the module level router for state queries
@@ -34,6 +36,8 @@ func NewQuerier(keeper ExecutionLayerKeeper) sdk.Querier {
 			return queryValidator(ctx, req, keeper)
 		case QueryAllValidator:
 			return queryAllValidator(ctx, keeper)
+		case QueryDelegator:
+			return queryDelegator(ctx, req, keeper)
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown ee query")
 		}
@@ -179,4 +183,52 @@ func getQueryResult(ctx sdk.Context, k ExecutionLayerKeeper,
 	}
 
 	return sValue, nil
+}
+
+func queryDelegator(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
+	var param QueryDelegatorParams
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &param)
+	if err != nil {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
+	}
+
+	storedValue, err := getQueryResult(ctx, keeper, "", types.ADDRESS, types.SYSTEM, types.PosContractName)
+
+	var resMap map[string]string
+	if !param.ValidatorAddr.Empty() {
+		resMap = storedValue.Contract.NamedKeys.GetDelegateFromValidator(param.ValidatorAddr.ToEEAddress())
+
+		if !param.DelegatorAddr.Empty() {
+			delegateAddressStr := hex.EncodeToString(param.DelegatorAddr.ToEEAddress())
+			resMap = map[string]string{delegateAddressStr: resMap[delegateAddressStr]}
+		}
+	}
+	if !param.DelegatorAddr.Empty() {
+		resMap = storedValue.Contract.NamedKeys.GetDelegateFromDelegator(param.DelegatorAddr.ToEEAddress())
+
+		if !param.ValidatorAddr.Empty() {
+			validatorAddressStr := hex.EncodeToString(param.ValidatorAddr.ToEEAddress())
+			resMap = map[string]string{validatorAddressStr: resMap[validatorAddressStr]}
+		}
+	}
+
+	delegators := types.Delegators{}
+	for addressStr, amount := range resMap {
+		address, err := hex.DecodeString(addressStr)
+		if err != nil {
+			return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeInvalidAddress, "Can't convert address {}")
+		}
+		delegator := types.Delegator{
+			Address: sdk.EEAddress(address).ToAccAddress(),
+			Amount:  amount,
+		}
+		delegators = append(delegators, delegator)
+	}
+
+	res, err := codec.MarshalJSONIndent(types.ModuleCdc, delegators)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+	}
+
+	return res, nil
 }

@@ -192,3 +192,53 @@ func (v Validators) String() (out string) {
 	}
 	return strings.TrimSpace(out)
 }
+
+type Delegator struct {
+	Address sdk.AccAddress `json:"address" yaml:"address"`
+	Amount  string         `json:"amount" yaml:"amount"`
+}
+
+// NewDelegator - initialize a new delegator
+func NewDelegator(address sdk.AccAddress, amount string) Delegator {
+	return Delegator{
+		Address: address,
+		Amount:  amount,
+	}
+}
+
+// return the delegate
+func MustMarshalDelegator(cdc *codec.Codec, delegator Delegator) []byte {
+	return cdc.MustMarshalBinaryLengthPrefixed(delegator)
+}
+
+// unmarshal a delegator from a store value
+func MustUnmarshalDelegator(cdc *codec.Codec, value []byte) Delegator {
+	delegator, err := UnmarshalDelegator(cdc, value)
+	if err != nil {
+		panic(err)
+	}
+	return delegator
+}
+
+// unmarshal a delegator from a store value
+func UnmarshalDelegator(cdc *codec.Codec, value []byte) (delegator Delegator, err error) {
+	err = cdc.UnmarshalBinaryLengthPrefixed(value, &delegator)
+	return delegator, err
+}
+
+// String returns a human readable string representation of a validator.
+func (d Delegator) String() string {
+	return fmt.Sprintf(`Validator
+  Address:           %s
+  Amount:			 %s`, d.Address, d.Amount)
+}
+
+// Delegators is a collection of Delegator
+type Delegators []Delegator
+
+func (d Delegators) String() (out string) {
+	for _, val := range d {
+		out += val.String() + "\n"
+	}
+	return strings.TrimSpace(out)
+}
