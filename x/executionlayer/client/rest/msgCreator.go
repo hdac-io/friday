@@ -407,3 +407,31 @@ func getValidatorQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *h
 
 	return bz, nil
 }
+
+func getDelegatorQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) ([]byte, error) {
+	vars := r.URL.Query()
+	validatorAddressStr := vars.Get("validator")
+	validatorAddress, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, validatorAddressStr)
+	if err != nil {
+		return nil, err
+	}
+
+	delegatorAddressStr := vars.Get("delegator")
+	delegatorAddress, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, delegatorAddressStr)
+	if err != nil {
+		return nil, err
+	}
+
+	if validatorAddress.Empty() && delegatorAddress.Empty() {
+		return nil, fmt.Errorf("Requires validator or delegate address.")
+	}
+
+	queryData := types.QueryDelegatorParams{
+		ValidatorAddr: validatorAddress,
+		DelegatorAddr: delegatorAddress,
+	}
+
+	bz := cliCtx.Codec.MustMarshalJSON(queryData)
+
+	return bz, nil
+}

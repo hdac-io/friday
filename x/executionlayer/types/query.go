@@ -52,11 +52,25 @@ func (q QueryExecutionLayerResp) String() string {
 // defines the params for the following queries:
 // - 'custom/%s/validator'
 type QueryValidatorParams struct {
-	ValidatorAddr sdk.AccAddress
+	ValidatorAddr sdk.AccAddress `json:"validator_address"`
 }
 
 func NewQueryValidatorParams(validatorAddr sdk.AccAddress) QueryValidatorParams {
 	return QueryValidatorParams{
+		ValidatorAddr: validatorAddr,
+	}
+}
+
+// defines the params for the following queries:
+// - 'custom/%s/delegator'
+type QueryDelegatorParams struct {
+	DelegatorAddr sdk.AccAddress `json:"delegator_address"`
+	ValidatorAddr sdk.AccAddress `json:"validator_address"`
+}
+
+func NewQueryDelegatorParams(delegaatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) QueryDelegatorParams {
+	return QueryDelegatorParams{
+		DelegatorAddr: delegaatorAddr,
 		ValidatorAddr: validatorAddr,
 	}
 }
