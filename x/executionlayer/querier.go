@@ -118,6 +118,13 @@ func queryValidator(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLaye
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, err.Error())
 	}
 
+	storedValue, err := getQueryResult(ctx, keeper, "", types.ADDRESS, types.SYSTEM, types.PosContractName)
+	if err != nil {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
+	}
+
+	validator.Stake = storedValue.Contract.NamedKeys.GetValidatorStake(param.ValidatorAddr.ToEEAddress())
+
 	res, err := codec.MarshalJSONIndent(types.ModuleCdc, validator)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
