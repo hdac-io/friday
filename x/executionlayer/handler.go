@@ -37,6 +37,10 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 			return handlerMsgUndelgate(ctx, k, msg)
 		case types.MsgRedelegate:
 			return handlerMsgRedelegate(ctx, k, msg)
+		case types.MsgVote:
+			return handlerMsgVote(ctx, k, msg)
+		case types.MsgUnvote:
+			return handlerMsgUnvote(ctx, k, msg)
 		default:
 			errMsg := fmt.Sprintf("unrecognized execution layer messgae type: %T", msg)
 			return sdk.ErrUnknownRequest(errMsg).Result()
@@ -278,6 +282,82 @@ func handlerMsgRedelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.Msg
 			Value: &consensus.Deploy_Arg_Value{
 				Value: &consensus.Deploy_Arg_Value_BytesValue{
 					BytesValue: msg.DestValAddress.ToEEAddress()}}},
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_OptionalValue{
+					OptionalValue: &consensus.Deploy_Arg_Value{
+						Value: &consensus.Deploy_Arg_Value_BigInt{
+							BigInt: &state.BigInt{Value: msg.Amount, BitWidth: 512}}}}}}}
+
+	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
+	if err != nil {
+		getResult(false, err.Error())
+	}
+
+	msgExecute := NewMsgExecute(
+		msg.ContractAddress,
+		msg.FromAddress,
+		util.HASH,
+		proxyContractHash,
+		sessionArgsStr,
+		msg.Fee,
+		msg.GasPrice,
+	)
+	result, log := execute(ctx, k, msgExecute)
+
+	return getResult(result, log)
+}
+
+func handlerMsgVote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgVote) sdk.Result {
+	proxyContractHash := k.GetProxyContractHash(ctx)
+	sessionArgs := []*consensus.Deploy_Arg{
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_StringValue{
+					StringValue: types.VoteMethodName}}},
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_Key{
+					Key: &state.Key{Value: &state.Key_Hash_{
+						Hash: &state.Key_Hash{
+							Hash: msg.Hash}}}}}},
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_BigInt{
+					BigInt: &state.BigInt{Value: msg.Amount, BitWidth: 512}}}}}
+
+	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
+	if err != nil {
+		getResult(false, err.Error())
+	}
+
+	msgExecute := NewMsgExecute(
+		msg.ContractAddress,
+		msg.FromAddress,
+		util.HASH,
+		proxyContractHash,
+		sessionArgsStr,
+		msg.Fee,
+		msg.GasPrice,
+	)
+	result, log := execute(ctx, k, msgExecute)
+
+	return getResult(result, log)
+}
+
+func handlerMsgUnvote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnvote) sdk.Result {
+	proxyContractHash := k.GetProxyContractHash(ctx)
+	sessionArgs := []*consensus.Deploy_Arg{
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_StringValue{
+					StringValue: types.UnvoteMethodName}}},
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_Key{
+					Key: &state.Key{Value: &state.Key_Hash_{
+						Hash: &state.Key_Hash{
+							Hash: msg.Hash}}}}}},
 		&consensus.Deploy_Arg{
 			Value: &consensus.Deploy_Arg_Value{
 				Value: &consensus.Deploy_Arg_Value_OptionalValue{

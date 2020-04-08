@@ -499,3 +499,113 @@ func (msg MsgRedelegate) GetSignBytes() []byte {
 func (msg MsgRedelegate) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.FromAddress}
 }
+
+//______________________________________________________________________
+type MsgVote struct {
+	ContractAddress string         `json:"contract_address" yaml:"contract_address"`
+	FromAddress     sdk.AccAddress `json:"from_address" yaml:"from_address"`
+	Hash            []byte         `json:"hash" yaml:"hash"`
+	Amount          string         `json:"amount" yaml:"amount"`
+	Fee             string         `json:"fee" yaml:"fee"`
+	GasPrice        uint64         `json:"gas_price" yaml:"gas_price"`
+}
+
+// NewMsgVote is a constructor function for MsgSetName
+func NewMsgVote(
+	tokenContractAddress string,
+	fromAddress sdk.AccAddress,
+	hash []byte,
+	amount, fee string,
+	gasPrice uint64,
+) MsgVote {
+	return MsgVote{
+		ContractAddress: tokenContractAddress,
+		FromAddress:     fromAddress,
+		Hash:            hash,
+		Amount:          amount,
+		Fee:             fee,
+		GasPrice:        gasPrice,
+	}
+}
+
+// Route should return the name of the module
+func (msg MsgVote) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgVote) Type() string { return "executionengine" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgVote) ValidateBasic() sdk.Error {
+	if msg.FromAddress.Equals(sdk.AccAddress("")) {
+		return sdk.ErrUnknownRequest("Address cannot be empty")
+	}
+	if len(msg.Hash) != 32 {
+		return sdk.ErrUnknownRequest("Hash must be 32 bytes")
+	}
+	return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgVote) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgVote) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.FromAddress}
+}
+
+//______________________________________________________________________
+type MsgUnvote struct {
+	ContractAddress string         `json:"contract_address" yaml:"contract_address"`
+	FromAddress     sdk.AccAddress `json:"from_address" yaml:"from_address"`
+	Hash            []byte         `json:"hash" yaml:"hash"`
+	Amount          string         `json:"amount" yaml:"amount"`
+	Fee             string         `json:"fee" yaml:"fee"`
+	GasPrice        uint64         `json:"gas_price" yaml:"gas_price"`
+}
+
+// NewMsgUnvote is a constructor function for MsgSetName
+func NewMsgUnvote(
+	tokenContractAddress string,
+	fromAddress sdk.AccAddress,
+	hash []byte,
+	amount, fee string,
+	gasPrice uint64,
+) MsgUnvote {
+	return MsgUnvote{
+		ContractAddress: tokenContractAddress,
+		FromAddress:     fromAddress,
+		Hash:            hash,
+		Amount:          amount,
+		Fee:             fee,
+		GasPrice:        gasPrice,
+	}
+}
+
+// Route should return the name of the module
+func (msg MsgUnvote) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgUnvote) Type() string { return "executionengine" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgUnvote) ValidateBasic() sdk.Error {
+	if msg.FromAddress.Equals(sdk.AccAddress("")) {
+		return sdk.ErrUnknownRequest("Address cannot be empty")
+	}
+	if len(msg.Hash) != 32 {
+		return sdk.ErrUnknownRequest("Hash must be 32 bytes")
+	}
+	return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgUnvote) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgUnvote) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.FromAddress}
+}

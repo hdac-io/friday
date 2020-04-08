@@ -36,4 +36,5 @@ type (
 	QueryGetBalanceDetail     = types.QueryGetBalanceDetail
 	QueryValidatorParams      = types.QueryValidatorParams
 	QueryDelegatorParams      = types.QueryDelegatorParams
+	QueryVoterParams          = types.QueryVoterParams
 )

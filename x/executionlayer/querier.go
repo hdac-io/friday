@@ -22,6 +22,7 @@ const (
 	QueryAllValidator = "queryallvalidator"
 
 	QueryDelegator = "querydelegator"
+	QueryVoter     = "queryvoter"
 )
 
 // NewQuerier is the module level router for state queries
@@ -38,6 +39,8 @@ func NewQuerier(keeper ExecutionLayerKeeper) sdk.Querier {
 			return queryAllValidator(ctx, keeper)
 		case QueryDelegator:
 			return queryDelegator(ctx, req, keeper)
+		case QueryVoter:
+			return queryVoter(ctx, req, keeper)
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown ee query")
 		}
@@ -233,6 +236,55 @@ func queryDelegator(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLaye
 	}
 
 	res, err := codec.MarshalJSONIndent(types.ModuleCdc, delegators)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+	}
+
+	return res, nil
+}
+
+func queryVoter(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
+	var param QueryVoterParams
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &param)
+	if err != nil {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
+	}
+
+	storedValue, err := getQueryResult(ctx, keeper, "", types.ADDRESS, types.SYSTEM, types.PosContractName)
+
+	var resMap map[string]string
+	if !param.Address.Empty() {
+		resMap = storedValue.Contract.NamedKeys.GetVotingDappFromUser(param.Address.ToEEAddress())
+
+		if len(param.Hash) > 0 {
+			hashStr := hex.EncodeToString(param.Hash)
+			resMap = map[string]string{hashStr: resMap[hashStr]}
+		}
+	}
+	if len(param.Hash) > 0 {
+		resMap = storedValue.Contract.NamedKeys.GetVotingUserFromDapp(param.Hash)
+
+		if !param.Address.Empty() {
+			addressStr := hex.EncodeToString(param.Address.ToEEAddress())
+			resMap = map[string]string{addressStr: resMap[addressStr]}
+		}
+	}
+
+	voters := types.Voters{}
+	for addressStr, amount := range resMap {
+		address, err := hex.DecodeString(addressStr)
+		if err != nil {
+			return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeInvalidAddress, "Can't convert address {}")
+		}
+
+		voter := types.Voter{
+			Address: sdk.EEAddress(address),
+			Amount:  amount,
+		}
+		voters = append(voters, voter)
+	}
+
+	res, err := codec.MarshalJSONIndent(types.ModuleCdc, voters)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
