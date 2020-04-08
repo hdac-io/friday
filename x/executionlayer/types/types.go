@@ -21,6 +21,8 @@ const (
 	DelegateMethodName   = "delegate"
 	UndelegateMethodName = "undelegate"
 	RedelegateMethodName = "redelegate"
+	VoteMethodName       = "vote"
+	UnvoteMethodName     = "unvote"
 )
 
 // UnitHashMap used to define Unit account structure

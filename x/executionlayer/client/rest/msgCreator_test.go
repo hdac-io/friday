@@ -2,6 +2,7 @@ package rest
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
@@ -166,6 +167,52 @@ func TestRESTRedelegate(t *testing.T) {
 	require.NotNil(t, msgs)
 }
 
+func TestRESTVote(t *testing.T) {
+	_, _, writer, clictx, basereq := prepare()
+	hash := hex.EncodeToString(types.SYSTEM_ACCOUNT)
+
+	// Body
+	delegateReq := voteReq{
+		BaseReq: basereq,
+		Hash:    hash,
+		Amount:  "100000000",
+		Fee:     "10000000",
+	}
+
+	// http.request
+	body := clictx.Codec.MustMarshalJSON(delegateReq)
+	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/vote", types.ModuleName), bytes.NewReader(body))
+
+	outputBasereq, msgs, err := voteUnvoteMsgCreator(true, writer, clictx, req)
+
+	require.NoError(t, err)
+	require.Equal(t, outputBasereq, basereq)
+	require.NotNil(t, msgs)
+}
+
+func TestRESTUnvote(t *testing.T) {
+	_, _, writer, clictx, basereq := prepare()
+	hash := hex.EncodeToString(types.SYSTEM_ACCOUNT)
+
+	// Body
+	delegateReq := voteReq{
+		BaseReq: basereq,
+		Hash:    hash,
+		Amount:  "100000000",
+		Fee:     "10000000",
+	}
+
+	// http.request
+	body := clictx.Codec.MustMarshalJSON(delegateReq)
+	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/unvote", types.ModuleName), bytes.NewReader(body))
+
+	outputBasereq, msgs, err := voteUnvoteMsgCreator(false, writer, clictx, req)
+
+	require.NoError(t, err)
+	require.Equal(t, outputBasereq, basereq)
+	require.NotNil(t, msgs)
+}
+
 func TestRESTBalance(t *testing.T) {
 	fromAddr, _, writer, clictx, _ := prepare()
 
@@ -191,6 +238,68 @@ func TestRESTGetValidators(t *testing.T) {
 
 	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/validator", types.ModuleName), nil)
 	res, err := getValidatorQuerying(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
+func TestRESTGetDelegatorFromValidator(t *testing.T) {
+	fromAddr, _, writer, clictx, _ := prepare()
+
+	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/delegator?validator=%s", types.ModuleName, fromAddr), nil)
+	res, err := getDelegatorQuerying(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
+func TestRESTGetDelegatorFromDelegator(t *testing.T) {
+	fromAddr, _, writer, clictx, _ := prepare()
+
+	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/delegator?delegator=%s", types.ModuleName, fromAddr), nil)
+	res, err := getDelegatorQuerying(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
+func TestRESTGetDelegatorFromAll(t *testing.T) {
+	fromAddr, _, writer, clictx, _ := prepare()
+
+	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/delegator?validator=%s&delegator=%s", types.ModuleName, fromAddr, fromAddr), nil)
+	res, err := getDelegatorQuerying(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
+func TestRESTGetVoterFromAddress(t *testing.T) {
+	fromAddr, _, writer, clictx, _ := prepare()
+
+	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/voter?address=%s", types.ModuleName, fromAddr), nil)
+	res, err := getVoterQuerying(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
+func TestRESTGetVoterFromDapp(t *testing.T) {
+	_, _, writer, clictx, _ := prepare()
+	hash := hex.EncodeToString(types.SYSTEM_ACCOUNT)
+
+	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/voter?hash=%s", types.ModuleName, hash), nil)
+	res, err := getVoterQuerying(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
+func TestRESTGetVoterFromAll(t *testing.T) {
+	fromAddr, _, writer, clictx, _ := prepare()
+	hash := hex.EncodeToString(types.SYSTEM_ACCOUNT)
+
+	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/voter?hash=%s&address=%s", types.ModuleName, hash, fromAddr), nil)
+	res, err := getVoterQuerying(writer, clictx, req)
 
 	require.NoError(t, err)
 	require.NotNil(t, res)

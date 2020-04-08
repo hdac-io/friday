@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/hex"
 	"fmt"
 
 	"github.com/hdac-io/friday/client"
@@ -231,6 +232,69 @@ func GetCmdQueryDelegator(cdc *codec.Codec) *cobra.Command {
 			}
 
 			var out types.Delegators
+			cdc.MustUnmarshalJSON(res, &out)
+			return cliCtx.PrintOutput(out)
+		},
+	}
+
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(client.FlagFrom, "", "Executor's identity (one of wallet alias, address, nickname)")
+
+	return cmd
+}
+
+// GetCmdQueryVoter implements the validator query command.
+func GetCmdQueryVoter(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "voter [<dapp-hash>] [--from <from>]",
+		Short: "Query a voter",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			valueFromFromFlag := viper.GetString(client.FlagFrom)
+			addr, err := cliutil.GetAddress(cdc, cliCtx, valueFromFromFlag)
+			if err != nil {
+				return err
+			}
+
+			var hash []byte
+			if len(args) > 0 {
+				hash, err = hex.DecodeString(args[0])
+				if err != nil {
+					return err
+				}
+			}
+
+			if addr.Empty() && len(hash) == 0 {
+				return fmt.Errorf("Requires voter address or dapp hash.")
+			}
+
+			queryData := types.NewQueryVoterParams(addr, hash)
+			bz := cdc.MustMarshalJSON(queryData)
+
+			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/queryvoter", types.ModuleName), bz)
+			if err != nil {
+				fmt.Printf("could not resolve data - %s\n", addr.String())
+				return nil
+			}
+
+			if len(res) == 0 {
+				errStr := "No voter found with"
+				if !addr.Empty() {
+					errStr += (" address " + valueFromFromFlag)
+				}
+				if len(hash) > 0 {
+					if !addr.Empty() {
+						errStr += " and "
+					}
+					errStr += ("hash " + args[0])
+				}
+
+				return fmt.Errorf(errStr)
+			}
+
+			var out types.Voters
 			cdc.MustUnmarshalJSON(res, &out)
 			return cliCtx.PrintOutput(out)
 		},

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/hex"
 	"fmt"
 	"strconv"
 
@@ -441,6 +442,124 @@ func GetCmdRedelegate(cdc *codec.Codec) *cobra.Command {
 			// build and sign the transaction, then broadcast to Tendermint
 			// TODO: Currently implementation of contract address is dummy
 			msg := types.NewMsgRedelegate("dummyAddress", addr, srcValAddress, destValAddress, string(amount), string(fee), gasPrice)
+			txBldr = txBldr.WithGas(gasPrice)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(client.FlagFrom, "", "Executor's identity (one of wallet alias, address, nickname)")
+
+	return cmd
+}
+
+func GetCmdVote(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "vote <hash> <amount> <fee> <gas-price> --from <from>",
+		Short: "Vote token",
+		Long:  "Vote token for converts tokens as a freedom",
+		Args:  cobra.ExactArgs(4),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+			if err != nil {
+				return err
+			}
+
+			valueFromFromFlag := viper.GetString(client.FlagFrom)
+			keyInfo, err := cliutil.GetLocalWalletInfo(valueFromFromFlag, kb, cdc, cliCtx)
+			if err != nil {
+				return err
+			}
+
+			hash, err := hex.DecodeString(args[0])
+			if err != nil {
+				return err
+
+			}
+
+			amount, err := cliutil.ToBigsun(cliutil.Hdac(args[1]))
+			if err != nil {
+				return err
+			}
+
+			fee, err := cliutil.ToBigsun(cliutil.Hdac(args[2]))
+			if err != nil {
+				return err
+			}
+
+			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
+			addr := keyInfo.GetAddress()
+
+			gasPrice, err := strconv.ParseUint(args[3], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			// build and sign the transaction, then broadcast to Tendermint
+			// TODO: Currently implementation of contract address is dummy
+			msg := types.NewMsgVote("dummyAddress", addr, hash, string(amount), string(fee), gasPrice)
+			txBldr = txBldr.WithGas(gasPrice)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(client.FlagFrom, "", "Executor's identity (one of wallet alias, address, nickname)")
+
+	return cmd
+}
+
+func GetCmdUnvote(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "unvote <hash> <amount> <fee> <gas-price> --from <from>",
+		Short: "Unvote token",
+		Long:  "Unvote token for converts tokens as a freedom",
+		Args:  cobra.ExactArgs(4),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+			if err != nil {
+				return err
+			}
+
+			valueFromFromFlag := viper.GetString(client.FlagFrom)
+			keyInfo, err := cliutil.GetLocalWalletInfo(valueFromFromFlag, kb, cdc, cliCtx)
+			if err != nil {
+				return err
+			}
+
+			hash, err := hex.DecodeString(args[0])
+			if err != nil {
+				return err
+
+			}
+
+			amount, err := cliutil.ToBigsun(cliutil.Hdac(args[1]))
+			if err != nil {
+				return err
+			}
+
+			fee, err := cliutil.ToBigsun(cliutil.Hdac(args[2]))
+			if err != nil {
+				return err
+			}
+
+			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
+			addr := keyInfo.GetAddress()
+
+			gasPrice, err := strconv.ParseUint(args[3], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			// build and sign the transaction, then broadcast to Tendermint
+			// TODO: Currently implementation of contract address is dummy
+			msg := types.NewMsgUnvote("dummyAddress", addr, hash, string(amount), string(fee), gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},

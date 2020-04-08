@@ -74,3 +74,17 @@ func NewQueryDelegatorParams(delegaatorAddr sdk.AccAddress, validatorAddr sdk.Ac
 		ValidatorAddr: validatorAddr,
 	}
 }
+
+// defines the params for the following queries:
+// - 'custom/%s/voter'
+type QueryVoterParams struct {
+	Address sdk.AccAddress `json:"address"`
+	Hash    []byte         `json:"hash"`
+}
+
+func NewQueryVoterParams(address sdk.AccAddress, hash []byte) QueryVoterParams {
+	return QueryVoterParams{
+		Address: address,
+		Hash:    hash,
+	}
+}
