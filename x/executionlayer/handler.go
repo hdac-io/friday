@@ -284,10 +284,8 @@ func handlerMsgRedelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.Msg
 					BytesValue: msg.DestValAddress.ToEEAddress()}}},
 		&consensus.Deploy_Arg{
 			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_OptionalValue{
-					OptionalValue: &consensus.Deploy_Arg_Value{
-						Value: &consensus.Deploy_Arg_Value_BigInt{
-							BigInt: &state.BigInt{Value: msg.Amount, BitWidth: 512}}}}}}}
+				Value: &consensus.Deploy_Arg_Value_BigInt{
+					BigInt: &state.BigInt{Value: msg.Amount, BitWidth: 512}}}}}
 
 	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
 	if err != nil {
