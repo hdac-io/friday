@@ -14,6 +14,8 @@ class TestSingleNode():
     chain_id = "testchain"
     moniker = "testnode"
 
+    system_contract = "0000000000000000000000000000000000000000000000000000000000000000"
+
     wallet_elsa = "elsa"
     wallet_anna = "anna"
     wallet_olaf = "olaf"
@@ -40,8 +42,14 @@ class TestSingleNode():
     bonding_gas = 50000000
 
     delegate_amount = "1"
-    delegate_fee = "0.002"
+    delegate_amount_bigsun = "1000000000000000000"
+    delegate_fee = "0.003"
     delegate_gas = 50000000
+
+    vote_amount = "1"
+    vote_amount_bigsun = "1000000000000000000"
+    vote_fee = "0.003"
+    vote_gas = 50000000
 
     transfer_amount = "1"
     transfer_fee = "0.001"
@@ -359,12 +367,12 @@ class TestSingleNode():
         assert(is_ok == True)
         print("======================End test05_custom_contract_execution======================")
 
-    def test06_simple_delegate_redelegate_and_undlegate(self):
-        print("======================Start test06_simple_delegate_and_undlegate======================")
+    def test06_simple_delegate_redelegate_and_undelegate(self):
+        print("======================Start test06_simple_delegate_and_undelegate======================")
 
         print("Delegate token")
         delegate_tx_hash = cmd.delegate(self.wallet_password, self.info_elsa['address'], self.delegate_amount, self.delegate_fee, self.delegate_gas, self.wallet_anna)
-        print("Tx sent. Waiting for validation")
+        print("Tx sent. Waiting for delegate")
 
         time.sleep(self.tx_block_time * 3 + 1)
 
@@ -372,9 +380,13 @@ class TestSingleNode():
         is_ok = cmd.is_tx_ok(delegate_tx_hash)
         assert(is_ok == True)
 
+        res = cmd.get_delegator("", self.info_anna['address'])
+        print("Output: ", res)
+        assert(res[0]["amount"] == self.delegate_amount_bigsun) 
+
         print("Redelegate token")
         redelegate_tx_hash = cmd.redelegate(self.wallet_password, self.info_elsa['address'], self.info_olaf['address'], self.delegate_amount, self.delegate_fee, self.delegate_gas, self.wallet_anna)
-        print("Tx sent. Waiting for validation")
+        print("Tx sent. Waiting for redelegate")
 
         time.sleep(self.tx_block_time * 3 + 1)
 
@@ -382,9 +394,13 @@ class TestSingleNode():
         is_ok = cmd.is_tx_ok(redelegate_tx_hash)
         assert(is_ok == True)
 
+        res = cmd.get_delegator("", self.info_olaf['address'])
+        print("Output: ", res)
+        assert(res[0]["amount"] == self.delegate_amount_bigsun) 
+
         print("Undelegate token")
         undelegate_tx_hash = cmd.undelegate(self.wallet_password, self.info_olaf['address'], self.delegate_amount, self.delegate_fee, self.delegate_gas, self.wallet_anna)
-        print("Tx sent. Waiting for validation")
+        print("Tx sent. Waiting for undelegate")
 
         time.sleep(self.tx_block_time * 3 + 1)
 
@@ -392,4 +408,33 @@ class TestSingleNode():
         is_ok = cmd.is_tx_ok(undelegate_tx_hash)
         assert(is_ok == True)
 
-        print("======================Done test06_simple_delegate_and_undlegate======================")
+        print("======================Done test06_simple_delegate_and_undelegate======================")
+
+    def test07_simple_vote_and_unvote(self):
+        print("======================Start test07_simple_vote_and_unvote======================")
+
+        print("Vote token")
+        delegate_tx_hash = cmd.vote(self.wallet_password, self.system_contract, self.vote_amount, self.vote_fee, self.vote_gas, self.wallet_anna)
+        print("Tx sent. Waiting for vote")
+
+        time.sleep(self.tx_block_time * 3 + 1)
+
+        print("Check whether tx is ok or not")
+        is_ok = cmd.is_tx_ok(delegate_tx_hash)
+        assert(is_ok == True)
+
+        res = cmd.get_voter(self.system_contract, self.info_anna['address'])
+        print("Output: ", res)
+        assert(res[0]["amount"] == self.vote_amount_bigsun) 
+
+        print("Unvote token")
+        redelegate_tx_hash = cmd.unvote(self.wallet_password, self.system_contract, self.vote_amount, self.vote_fee, self.vote_gas, self.wallet_anna)
+        print("Tx sent. Waiting for unvote")
+
+        time.sleep(self.tx_block_time * 3 + 1)
+
+        print("Check whether tx is ok or not")
+        is_ok = cmd.is_tx_ok(redelegate_tx_hash)
+        assert(is_ok == True)
+
+        print("======================Done test07_simple_vote_and_unvote======================")
