@@ -380,7 +380,7 @@ class TestSingleNode():
         is_ok = cmd.is_tx_ok(delegate_tx_hash)
         assert(is_ok == True)
 
-        res = cmd.get_delegator("", self.info_anna['address'])
+        res = cmd.get_delegator(self.info_elsa['address'], self.info_anna['address'])
         print("Output: ", res)
         assert(res[0]["amount"] == self.delegate_amount_bigsun) 
 
@@ -394,7 +394,7 @@ class TestSingleNode():
         is_ok = cmd.is_tx_ok(redelegate_tx_hash)
         assert(is_ok == True)
 
-        res = cmd.get_delegator("", self.info_olaf['address'])
+        res = cmd.get_delegator(self.info_olaf['address'], self.info_anna['address'])
         print("Output: ", res)
         assert(res[0]["amount"] == self.delegate_amount_bigsun) 
 
