@@ -404,10 +404,17 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) (boo
 		return false, err.Error()
 	}
 
+	executeAddress := []byte{}
+	if len(msg.ExecAddress) == sdk.AddrLen {
+		executeAddress = msg.ExecAddress.ToEEAddress()
+	} else {
+		executeAddress = msg.ExecAddress
+	}
+
 	// Execute
 	deploys := []*ipc.DeployItem{}
 	deploy, err := util.MakeDeploy(
-		msg.ExecAddress.ToEEAddress(),
+		executeAddress,
 		msg.SessionType, msg.SessionCode, msg.SessionArgs,
 		util.HASH, proxyContractHash, paymentArgsJson,
 		msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())

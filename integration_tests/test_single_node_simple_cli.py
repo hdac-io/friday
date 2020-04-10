@@ -43,7 +43,7 @@ class TestSingleNode():
 
     delegate_amount = "1"
     delegate_amount_bigsun = "1000000000000000000"
-    delegate_fee = "0.003"
+    delegate_fee = "0.005"
     delegate_gas = 50000000
 
     vote_amount = "1"

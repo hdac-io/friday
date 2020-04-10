@@ -3,8 +3,11 @@ package executionlayer
 import (
 	"strconv"
 
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/executionlayer/types"
 	abci "github.com/hdac-io/tendermint/abci/types"
 	tmtypes "github.com/hdac-io/tendermint/types"
 )
@@ -21,6 +24,34 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, elk ExecutionLaye
 func EndBlocker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
 	var validatorUpdates []abci.ValidatorUpdate
 
+	// step
+	proxyContractHash := k.GetProxyContractHash(ctx)
+	sessionArgs := []*consensus.Deploy_Arg{
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_StringValue{
+					StringValue: types.StepMethodName}}}}
+
+	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
+	if err != nil {
+		getResult(false, err.Error())
+	}
+
+	msgExecute := NewMsgExecute(
+		types.SYSTEM,
+		types.SYSTEM_ACCOUNT,
+		util.HASH,
+		proxyContractHash,
+		sessionArgsStr,
+		types.BASIC_FEE,
+		types.BASIC_GAS,
+	)
+	result, log := execute(ctx, k, msgExecute)
+	if !result {
+		getResult(result, log)
+	}
+
+	// calculate and set voting power
 	validators := k.GetAllValidators(ctx)
 
 	resultbonds := ctx.CandidateBlock().Bonds
@@ -48,10 +79,10 @@ func EndBlocker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate 
 				}
 			}
 
-			if len(power) <= 18 {
+			if len(power) <= types.DECIMAL_POINT_POS {
 				power = "0"
 			} else {
-				power = power[:len(power)-18]
+				power = power[:len(power)-types.DECIMAL_POINT_POS]
 			}
 
 			coin, err := strconv.ParseInt(power, 10, 64)
