@@ -7,6 +7,7 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus"
 	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/executionlayer/types"
 	"github.com/hdac-io/friday/x/nickname"
 )
 
@@ -17,10 +18,10 @@ func toBytes(keyType string, key string,
 	var err error
 
 	switch keyType {
-	case "address":
+	case types.ADDRESS:
 		// we have special key for system account
-		if key == "system" {
-			bytes = make([]byte, 32)
+		if key == types.SYSTEM {
+			bytes = types.SYSTEM_ACCOUNT
 			break
 		}
 
@@ -37,7 +38,7 @@ func toBytes(keyType string, key string,
 		}
 		bytes = addr.ToEEAddress().Bytes()
 
-	case "uref", "local", "hash":
+	case types.UREF, types.LOCAL, types.HASH:
 		bytes, err = hex.DecodeString(key)
 
 	default:

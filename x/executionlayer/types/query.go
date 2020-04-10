@@ -6,9 +6,18 @@ import (
 	sdk "github.com/hdac-io/friday/types"
 )
 
+const (
+	ADDRESS = "address"
+	UREF    = "uref"
+	HASH    = "hash"
+	LOCAL   = "local"
+
+	SYSTEM = "system"
+)
+
 // QueryExecutionLayerDetail payload for a EE query
 type QueryExecutionLayerDetail struct {
-	StateHash []byte `json:"state_hash"`
+	BlockHash string `json:"state_hash"`
 	KeyType   string `json:"key_type"`
 	KeyData   string `json:"key_data"`
 	Path      string `json:"path"`
@@ -16,40 +25,18 @@ type QueryExecutionLayerDetail struct {
 
 // implement fmt.Stringer
 func (q QueryExecutionLayerDetail) String() string {
-	return fmt.Sprintf("State: %s\nKey type: %s\nKey data: %s\nPath: %s", q.StateHash, q.KeyType, q.KeyData, q.Path)
-}
-
-// QueryExecutionLayer payload for a EE query
-type QueryExecutionLayer struct {
-	KeyType string `json:"key_type"`
-	KeyData string `json:"key_data"`
-	Path    string `json:"path"`
-}
-
-// implement fmt.Stringer
-func (q QueryExecutionLayer) String() string {
-	return fmt.Sprintf("Key type: %s\nKey data: %s\nPath: %s", q.KeyType, q.KeyData, q.Path)
+	return fmt.Sprintf("Block Hash: %s\nKey type: %s\nKey data: %s\nPath: %s", q.BlockHash, q.KeyType, q.KeyData, q.Path)
 }
 
 // QueryGetBalanceDetail payload for balance query
 type QueryGetBalanceDetail struct {
-	StateHash []byte
-	Address   sdk.AccAddress
+	BlockHash string         `json:"state_hash"`
+	Address   sdk.AccAddress `json:"address"`
 }
 
 // implement fmt.Stringer
 func (q QueryGetBalanceDetail) String() string {
-	return fmt.Sprintf("State: %s\nQuery public key or readable name: %s", q.StateHash, q.Address)
-}
-
-// QueryGetBalance payload for balance query in the latest data
-type QueryGetBalance struct {
-	Address sdk.AccAddress
-}
-
-// implement fmt.Stringer
-func (q QueryGetBalance) String() string {
-	return fmt.Sprintf("Query public key or readable name: %s", q.Address)
+	return fmt.Sprintf("State: %s\nQuery public key or readable name: %s", q.BlockHash, q.Address)
 }
 
 // QueryExecutionLayerResp is used for response of EE query
@@ -65,11 +52,39 @@ func (q QueryExecutionLayerResp) String() string {
 // defines the params for the following queries:
 // - 'custom/%s/validator'
 type QueryValidatorParams struct {
-	ValidatorAddr sdk.AccAddress
+	ValidatorAddr sdk.AccAddress `json:"validator_address"`
 }
 
 func NewQueryValidatorParams(validatorAddr sdk.AccAddress) QueryValidatorParams {
 	return QueryValidatorParams{
 		ValidatorAddr: validatorAddr,
+	}
+}
+
+// defines the params for the following queries:
+// - 'custom/%s/delegator'
+type QueryDelegatorParams struct {
+	DelegatorAddr sdk.AccAddress `json:"delegator_address"`
+	ValidatorAddr sdk.AccAddress `json:"validator_address"`
+}
+
+func NewQueryDelegatorParams(delegaatorAddr sdk.AccAddress, validatorAddr sdk.AccAddress) QueryDelegatorParams {
+	return QueryDelegatorParams{
+		DelegatorAddr: delegaatorAddr,
+		ValidatorAddr: validatorAddr,
+	}
+}
+
+// defines the params for the following queries:
+// - 'custom/%s/voter'
+type QueryVoterParams struct {
+	Address sdk.AccAddress `json:"address"`
+	Hash    []byte         `json:"hash"`
+}
+
+func NewQueryVoterParams(address sdk.AccAddress, hash []byte) QueryVoterParams {
+	return QueryVoterParams{
+		Address: address,
+		Hash:    hash,
 	}
 }

@@ -284,6 +284,73 @@ func redelegateMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *h
 	return req.BaseReq, []sdk.Msg{msg}, nil
 }
 
+type voteReq struct {
+	BaseReq              rest.BaseReq `json:"base_req"`
+	TokenContractAddress string       `json:"token_contract_address"`
+	Hash                 string       `json:"address"`
+	Amount               string       `json:"amount"`
+	Fee                  string       `json:"fee"`
+}
+
+func voteUnvoteMsgCreator(voteIsTrue bool, w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
+	var req voteReq
+
+	// Get body parameters
+	if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse request")
+	}
+
+	// Parameter touching
+	var addr sdk.AccAddress
+	addr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
+	if err != nil {
+		addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, req.BaseReq.From)
+		if err != nil {
+			return rest.BaseReq{}, nil, fmt.Errorf("failed to parse address or name: %s", req.BaseReq.From)
+		}
+	}
+
+	req.BaseReq.From = addr.String()
+	if !req.BaseReq.ValidateBasic(w) {
+		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse base request")
+	}
+
+	hash, err := hex.DecodeString(req.Hash)
+	if err != nil {
+		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse hash: %s", req.Hash)
+	}
+
+	amount, err := cliutil.ToBigsun(cliutil.Hdac(req.Amount))
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	fee, err := cliutil.ToBigsun(cliutil.Hdac(req.Fee))
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	var msg sdk.Msg
+	gas, err := strconv.ParseUint(req.BaseReq.Gas, 10, 64)
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	if voteIsTrue == true {
+		msg = types.NewMsgVote(req.TokenContractAddress, addr, hash, string(amount), string(fee), gas)
+	} else {
+		msg = types.NewMsgUnvote(req.TokenContractAddress, addr, hash, string(amount), string(fee), gas)
+	}
+
+	// create the message
+	err = msg.ValidateBasic()
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	return req.BaseReq, []sdk.Msg{msg}, nil
+}
+
 func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error) {
 	vars := r.URL.Query()
 	straddr := vars.Get("address")
@@ -294,25 +361,14 @@ func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 		return nil, err
 	}
 
-	var bz []byte
-
-	if blockHashStr == "" {
-		queryData := types.QueryGetBalance{
-			Address: addr,
-		}
-		bz = cliCtx.Codec.MustMarshalJSON(queryData)
-		//return bz, nil
-	} else {
-		blockHash, err := hex.DecodeString(blockHashStr)
-		if err != nil {
-			return nil, err
-		}
-		queryData := types.QueryGetBalanceDetail{
-			Address:   addr,
-			StateHash: blockHash,
-		}
-		bz = cliCtx.Codec.MustMarshalJSON(queryData)
+	if err != nil {
+		return nil, err
 	}
+	queryData := types.QueryGetBalanceDetail{
+		Address:   addr,
+		BlockHash: blockHashStr,
+	}
+	bz := cliCtx.Codec.MustMarshalJSON(queryData)
 
 	return bz, nil
 }
@@ -413,6 +469,62 @@ func getValidatorQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *h
 
 	queryData := types.QueryValidatorParams{
 		ValidatorAddr: addr,
+	}
+
+	bz := cliCtx.Codec.MustMarshalJSON(queryData)
+
+	return bz, nil
+}
+
+func getDelegatorQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) ([]byte, error) {
+	vars := r.URL.Query()
+	validatorAddressStr := vars.Get("validator")
+	validatorAddress, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, validatorAddressStr)
+	if err != nil {
+		return nil, err
+	}
+
+	delegatorAddressStr := vars.Get("delegator")
+	delegatorAddress, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, delegatorAddressStr)
+	if err != nil {
+		return nil, err
+	}
+
+	if validatorAddress.Empty() && delegatorAddress.Empty() {
+		return nil, fmt.Errorf("Requires validator or delegate address.")
+	}
+
+	queryData := types.QueryDelegatorParams{
+		ValidatorAddr: validatorAddress,
+		DelegatorAddr: delegatorAddress,
+	}
+
+	bz := cliCtx.Codec.MustMarshalJSON(queryData)
+
+	return bz, nil
+}
+
+func getVoterQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) ([]byte, error) {
+	vars := r.URL.Query()
+	hashStr := vars.Get("hash")
+	hash, err := hex.DecodeString(hashStr)
+	if err != nil {
+		return nil, err
+	}
+
+	addressStr := vars.Get("address")
+	address, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, addressStr)
+	if err != nil {
+		return nil, err
+	}
+
+	if address.Empty() && len(hash) == 0 {
+		return nil, fmt.Errorf("Requires hash or voter address.")
+	}
+
+	queryData := types.QueryVoterParams{
+		Hash:    hash,
+		Address: address,
 	}
 
 	bz := cliCtx.Codec.MustMarshalJSON(queryData)

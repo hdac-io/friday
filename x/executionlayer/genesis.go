@@ -5,6 +5,8 @@ import (
 	"reflect"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/storedvalue"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
@@ -19,6 +21,15 @@ func InitGenesis(
 	if err != nil {
 		panic(err)
 	}
+
+	// add to temp account
+	tempAddress := sdk.AccAddress(types.TEMP_ACC_ADDRESS)
+	account := &ipc.ChainSpec_GenesisAccount{
+		PublicKey:    tempAddress.ToEEAddress(),
+		Balance:      &state.BigInt{Value: types.SYSTEM_ACCOUNT_BALANCE, BitWidth: 512},
+		BondedAmount: &state.BigInt{Value: types.SYSTEM_ACCOUNT_BONDED_AMOUNT, BitWidth: 512},
+	}
+	genesisConfig.Accounts = append(genesisConfig.Accounts, account)
 
 	response, err := keeper.client.RunGenesis(ctx.Context(), genesisConfig)
 	if err != nil {
@@ -38,18 +49,15 @@ func InitGenesis(
 		keeper.SetGenesisAccounts(ctx, data.Accounts)
 	}
 	keeper.SetChainName(ctx, data.ChainName)
-
 	keeper.SetGenesisConf(ctx, data.GenesisConf)
-
-	keeper.SetEEState(ctx, []byte(types.GenesisBlockHashKey), stateHash)
 
 	candidateBlock := ctx.CandidateBlock()
 	candidateBlock.Hash = []byte(types.GenesisBlockHashKey)
 	candidateBlock.State = stateHash
 	candidateBlock.Bonds = bonds
 
-	systemAccount := make([]byte, 32)
-	res, errStr := grpc.Query(keeper.client, stateHash, "address", systemAccount, []string{}, genesisConfig.GetProtocolVersion())
+	// initial proxy contract
+	res, errStr := grpc.Query(keeper.client, stateHash, "address", types.SYSTEM_ACCOUNT, []string{}, genesisConfig.GetProtocolVersion())
 	if errStr != "" {
 		panic(errStr)
 	}
@@ -73,6 +81,42 @@ func InitGenesis(
 	}
 
 	keeper.SetProxyContractHash(ctx, proxyContractHash)
+
+	// send to system account from temp account
+	sessionArgs := []*consensus.Deploy_Arg{
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_StringValue{
+					StringValue: types.TransferMethodName}}},
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_BytesValue{
+					BytesValue: types.SYSTEM_ACCOUNT}}},
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_BigInt{
+					BigInt: &state.BigInt{Value: types.TRANSFER_BALANCE, BitWidth: 512}}}},
+	}
+	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
+	if err != nil {
+		getResult(false, err.Error())
+	}
+
+	msgExecute := NewMsgExecute(
+		types.SYSTEM,
+		tempAddress,
+		util.HASH,
+		proxyContractHash,
+		sessionArgsStr,
+		types.BASIC_FEE,
+		types.BASIC_GAS,
+	)
+	result, log := execute(ctx, keeper, msgExecute)
+	if !result {
+		getResult(false, log)
+	}
+
+	keeper.SetEEState(ctx, []byte(types.GenesisBlockHashKey), ctx.CandidateBlock().State)
 }
 
 // ExportGenesis : exports an executionlayer configuration for genesis

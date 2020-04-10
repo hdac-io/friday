@@ -26,10 +26,14 @@ func GetHdacCustomCmd(cdc *codec.Codec) *cobra.Command {
 		GetCmdRedelegate(cdc),
 		GetCmdCreateValidator(cdc),
 		GetCmdEditValidator(cdc),
+		GetCmdVote(cdc),
+		GetCmdUnvote(cdc),
 
 		// Query
 		GetCmdQueryBalance(cdc),
 		GetCmdQueryValidator(cdc),
+		GetCmdQueryDelegator(cdc),
+		GetCmdQueryVoter(cdc),
 	)...)
 	return hdacCustomTxCmd
 }

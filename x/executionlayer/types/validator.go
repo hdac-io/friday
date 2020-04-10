@@ -192,3 +192,103 @@ func (v Validators) String() (out string) {
 	}
 	return strings.TrimSpace(out)
 }
+
+type Delegator struct {
+	Address sdk.AccAddress `json:"address" yaml:"address"`
+	Amount  string         `json:"amount" yaml:"amount"`
+}
+
+// NewDelegator - initialize a new delegator
+func NewDelegator(address sdk.AccAddress, amount string) Delegator {
+	return Delegator{
+		Address: address,
+		Amount:  amount,
+	}
+}
+
+// return the delegate
+func MustMarshalDelegator(cdc *codec.Codec, delegator Delegator) []byte {
+	return cdc.MustMarshalBinaryLengthPrefixed(delegator)
+}
+
+// unmarshal a delegator from a store value
+func MustUnmarshalDelegator(cdc *codec.Codec, value []byte) Delegator {
+	delegator, err := UnmarshalDelegator(cdc, value)
+	if err != nil {
+		panic(err)
+	}
+	return delegator
+}
+
+// unmarshal a delegator from a store value
+func UnmarshalDelegator(cdc *codec.Codec, value []byte) (delegator Delegator, err error) {
+	err = cdc.UnmarshalBinaryLengthPrefixed(value, &delegator)
+	return delegator, err
+}
+
+// String returns a human readable string representation of a validator.
+func (d Delegator) String() string {
+	return fmt.Sprintf(`Deligator
+  Address:           %s
+  Amount:			 %s`, d.Address, d.Amount)
+}
+
+// Delegators is a collection of Delegator
+type Delegators []Delegator
+
+func (d Delegators) String() (out string) {
+	for _, val := range d {
+		out += val.String() + "\n"
+	}
+	return strings.TrimSpace(out)
+}
+
+type Voter struct {
+	Address []byte `json:"address" yaml:"address"`
+	Amount  string `json:"amount" yaml:"amount"`
+}
+
+// NewVoter - initialize a new voter
+func NewVoter(address sdk.EEAddress, amount string) Voter {
+	return Voter{
+		Address: address,
+		Amount:  amount,
+	}
+}
+
+// return the voter
+func MustMarshalVoter(cdc *codec.Codec, voter Voter) []byte {
+	return cdc.MustMarshalBinaryLengthPrefixed(voter)
+}
+
+// unmarshal a delegator from a store value
+func MustUnmarshalVoter(cdc *codec.Codec, value []byte) Voter {
+	voter, err := UnmarshalVoter(cdc, value)
+	if err != nil {
+		panic(err)
+	}
+	return voter
+}
+
+// unmarshal a voter from a store value
+func UnmarshalVoter(cdc *codec.Codec, value []byte) (voter Voter, err error) {
+	err = cdc.UnmarshalBinaryLengthPrefixed(value, &voter)
+	return voter, err
+}
+
+// String returns a human readable string representation of a validator.
+func (d Voter) String() string {
+	return fmt.Sprintf(`Voters
+  Address:           %s
+  Amount:			 %s`, d.Address, d.Amount)
+}
+
+// Voters is a collection of Delegator
+type Voters []Voter
+
+func (d Voters) String() (out string) {
+	for _, val := range d {
+		out += val.String() + "\n"
+	}
+	return strings.TrimSpace(out)
+}
