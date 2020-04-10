@@ -129,16 +129,30 @@ func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
 // GetCmdQueryValidator implements the validator query command.
 func GetCmdQueryValidator(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "validator --from <from>",
+		Use:   "validator [--from <from>]",
 		Short: "Query a validator",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			valueFromFromFlag := viper.GetString(client.FlagFrom)
-			addr, err := cliutil.GetAddress(cdc, cliCtx, valueFromFromFlag)
-			if err != nil {
-				return err
+			var addr sdk.AccAddress
+			var err error
+			if valueFromFromFlag != "" {
+				addr, err = cliutil.GetAddress(cdc, cliCtx, valueFromFromFlag)
+				if err != nil {
+					kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+					if err != nil {
+						return err
+					}
+
+					keyInfo, err := kb.Get(valueFromFromFlag)
+					if err != nil {
+						return err
+					}
+
+					addr = keyInfo.GetAddress()
+				}
 			}
 
 			if addr.Empty() {
@@ -190,9 +204,23 @@ func GetCmdQueryDelegator(cdc *codec.Codec) *cobra.Command {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			valueFromFromFlag := viper.GetString(client.FlagFrom)
-			addr, err := cliutil.GetAddress(cdc, cliCtx, valueFromFromFlag)
-			if err != nil {
-				return err
+			var addr sdk.AccAddress
+			var err error
+			if valueFromFromFlag != "" {
+				addr, err = cliutil.GetAddress(cdc, cliCtx, valueFromFromFlag)
+				if err != nil {
+					kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+					if err != nil {
+						return err
+					}
+
+					keyInfo, err := kb.Get(valueFromFromFlag)
+					if err != nil {
+						return err
+					}
+
+					addr = keyInfo.GetAddress()
+				}
 			}
 
 			var validator sdk.AccAddress
@@ -253,9 +281,23 @@ func GetCmdQueryVoter(cdc *codec.Codec) *cobra.Command {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			valueFromFromFlag := viper.GetString(client.FlagFrom)
-			addr, err := cliutil.GetAddress(cdc, cliCtx, valueFromFromFlag)
-			if err != nil {
-				return err
+			var addr sdk.AccAddress
+			var err error
+			if valueFromFromFlag != "" {
+				addr, err = cliutil.GetAddress(cdc, cliCtx, valueFromFromFlag)
+				if err != nil {
+					kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+					if err != nil {
+						return err
+					}
+
+					keyInfo, err := kb.Get(valueFromFromFlag)
+					if err != nil {
+						return err
+					}
+
+					addr = keyInfo.GetAddress()
+				}
 			}
 
 			var hash []byte
