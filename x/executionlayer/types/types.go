@@ -6,23 +6,34 @@ import (
 )
 
 var (
-	SYSTEM_ACCOUNT = make([]byte, 32)
+	SYSTEM_ACCOUNT   = make([]byte, 32)
+	TEMP_ACC_ADDRESS = make([]byte, 20)
 )
 
 const (
 	MintContractName = "mint"
 	PosContractName  = "pos"
 
-	ProxyContractName    = "client_api_proxy"
-	TransferMethodName   = "transfer_to_account"
-	PaymentMethodName    = "standard_payment"
-	BondMethodName       = "bond"
-	UnbondMethodName     = "unbond"
-	DelegateMethodName   = "delegate"
-	UndelegateMethodName = "undelegate"
-	RedelegateMethodName = "redelegate"
-	VoteMethodName       = "vote"
-	UnvoteMethodName     = "unvote"
+	ProxyContractName          = "client_api_proxy"
+	TransferMethodName         = "transfer_to_account"
+	PaymentMethodName          = "standard_payment"
+	BondMethodName             = "bond"
+	UnbondMethodName           = "unbond"
+	DelegateMethodName         = "delegate"
+	UndelegateMethodName       = "undelegate"
+	RedelegateMethodName       = "redelegate"
+	VoteMethodName             = "vote"
+	UnvoteMethodName           = "unvote"
+	StepMethodName             = "step"
+	WriteTotalSupplyMethodName = "write_genesis_total_supply"
+
+	SYSTEM_ACCOUNT_BALANCE       = "1000000000000000000000000000000"
+	TRANSFER_BALANCE             = "999999999999000000000000000000"
+	SYSTEM_ACCOUNT_BONDED_AMOUNT = "0"
+	BASIC_FEE                    = "10000000000000000"
+	BASIC_GAS                    = 30000000
+
+	DECIMAL_POINT_POS = 18
 )
 
 // UnitHashMap used to define Unit account structure

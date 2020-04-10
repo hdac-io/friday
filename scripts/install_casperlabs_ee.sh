@@ -7,14 +7,13 @@ if [ ${PWD##*/} != "friday" ]; then
   exit 1
 fi
 
-TARGET_BRANCH="master"
-COMMIT_HASH="16e1b0378a03ee8db0e35e57709a892f15113e00"
+COMMIT_HASH="cab1fd6f154e54d21bf86200fc02b74bc28c1de5"
 if [ ! -d "CasperLabs/.git" ]; then
-  git clone --single-branch --branch $TARGET_BRANCH https://github.com/hdac-io/CasperLabs.git
+  git clone https://github.com/hdac-io/CasperLabs.git
 fi
 
 cd CasperLabs
-git fetch origin $TARGET_BRANCH
+git fetch origin
 git reset --hard $COMMIT_HASH
 
 cd execution-engine
