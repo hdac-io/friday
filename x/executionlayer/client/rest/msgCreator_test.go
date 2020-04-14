@@ -213,6 +213,50 @@ func TestRESTUnvote(t *testing.T) {
 	require.NotNil(t, msgs)
 }
 
+func TestRESTClaimReward(t *testing.T) {
+	_, _, writer, clictx, basereq := prepare()
+
+	// Body
+	claimReq := claimReq{
+		BaseReq:            basereq,
+		RewardOrCommission: types.RewardValue,
+		Amount:             "100000000",
+		Fee:                "10000000",
+	}
+
+	// http.request
+	body := clictx.Codec.MustMarshalJSON(claimReq)
+	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/claim", types.ModuleName), bytes.NewReader(body))
+
+	outputBasereq, msgs, err := claimMsgCreator(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.Equal(t, outputBasereq, basereq)
+	require.NotNil(t, msgs)
+}
+
+func TestRESTClaimCommission(t *testing.T) {
+	_, _, writer, clictx, basereq := prepare()
+
+	// Body
+	claimReq := claimReq{
+		BaseReq:            basereq,
+		RewardOrCommission: types.CommissionValue,
+		Amount:             "100000000",
+		Fee:                "10000000",
+	}
+
+	// http.request
+	body := clictx.Codec.MustMarshalJSON(claimReq)
+	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/claim", types.ModuleName), bytes.NewReader(body))
+
+	outputBasereq, msgs, err := claimMsgCreator(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.Equal(t, outputBasereq, basereq)
+	require.NotNil(t, msgs)
+}
+
 func TestRESTBalance(t *testing.T) {
 	fromAddr, _, writer, clictx, _ := prepare()
 
@@ -299,6 +343,26 @@ func TestRESTGetVoterFromAll(t *testing.T) {
 	hash := hex.EncodeToString(types.SYSTEM_ACCOUNT)
 
 	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/voter?hash=%s&address=%s", types.ModuleName, hash, fromAddr), nil)
+	res, err := getVoterQuerying(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
+func TestRESTGetReward(t *testing.T) {
+	fromAddr, _, writer, clictx, _ := prepare()
+
+	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/reward?address=%s", types.ModuleName, fromAddr), nil)
+	res, err := getVoterQuerying(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
+func TestRESTGetCommission(t *testing.T) {
+	fromAddr, _, writer, clictx, _ := prepare()
+
+	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/commission?address=%s", types.ModuleName, fromAddr), nil)
 	res, err := getVoterQuerying(writer, clictx, req)
 
 	require.NoError(t, err)

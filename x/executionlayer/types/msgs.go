@@ -609,3 +609,53 @@ func (msg MsgUnvote) GetSignBytes() []byte {
 func (msg MsgUnvote) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.FromAddress}
 }
+
+//______________________________________________________________________
+type MsgClaim struct {
+	ContractAddress    string         `json:"contract_address" yaml:"contract_address"`
+	FromAddress        sdk.AccAddress `json:"from_address" yaml:"from_address"`
+	RewardOrCommission bool           `json:"reward_or_commission" yaml:"reward_or_commission"`
+	Fee                string         `json:"fee" yaml:"fee"`
+	GasPrice           uint64         `json:"gas_price" yaml:"gas_price"`
+}
+
+// NewMsgClaim is a constructor function for MsgSetName
+func NewMsgClaim(
+	tokenContractAddress string,
+	fromAddress sdk.AccAddress,
+	rewardOrCommission bool,
+	fee string,
+	gasPrice uint64,
+) MsgClaim {
+	return MsgClaim{
+		ContractAddress:    tokenContractAddress,
+		FromAddress:        fromAddress,
+		RewardOrCommission: rewardOrCommission,
+		Fee:                fee,
+		GasPrice:           gasPrice,
+	}
+}
+
+// Route should return the name of the module
+func (msg MsgClaim) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgClaim) Type() string { return "executionengine" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgClaim) ValidateBasic() sdk.Error {
+	if msg.FromAddress.Equals(sdk.AccAddress("")) {
+		return sdk.ErrUnknownRequest("Address cannot be empty")
+	}
+	return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgClaim) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgClaim) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.FromAddress}
+}

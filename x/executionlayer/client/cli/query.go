@@ -347,3 +347,105 @@ func GetCmdQueryVoter(cdc *codec.Codec) *cobra.Command {
 
 	return cmd
 }
+
+// GetCmdQueryReward is a getter of the reward of the address
+func GetCmdQueryReward(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "getreward --from <from>",
+		Short: "Get reward of address",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			valueFromFromFlag := viper.GetString(client.FlagFrom)
+			var addr sdk.AccAddress
+			var err error
+			addr, err = cliutil.GetAddress(cdc, cliCtx, valueFromFromFlag)
+			if err != nil {
+				kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+				if err != nil {
+					return err
+				}
+
+				keyInfo, err := kb.Get(valueFromFromFlag)
+				if err != nil {
+					return err
+				}
+
+				addr = keyInfo.GetAddress()
+			}
+
+			var out types.QueryExecutionLayerResp
+
+			queryData := types.NewQueryGetReward(addr)
+			bz := cdc.MustMarshalJSON(queryData)
+
+			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/queryreward", types.ModuleName), bz)
+			if err != nil {
+				fmt.Printf("no reward data of input")
+				return nil
+			}
+			cdc.MustUnmarshalJSON(res, &out)
+
+			out.Value = string(cliutil.ToHdac(cliutil.Bigsun(out.Value)))
+
+			return cliCtx.PrintOutput(out)
+		},
+	}
+
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(client.FlagFrom, "", "Executor's identity (one of wallet alias, address, nickname)")
+
+	return cmd
+}
+
+// GetCmdQueryCommission is a getter of the commission of the address
+func GetCmdQueryCommission(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "getcommission --from <from>",
+		Short: "Get reward of address",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			valueFromFromFlag := viper.GetString(client.FlagFrom)
+			var addr sdk.AccAddress
+			var err error
+			addr, err = cliutil.GetAddress(cdc, cliCtx, valueFromFromFlag)
+			if err != nil {
+				kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+				if err != nil {
+					return err
+				}
+
+				keyInfo, err := kb.Get(valueFromFromFlag)
+				if err != nil {
+					return err
+				}
+
+				addr = keyInfo.GetAddress()
+			}
+
+			var out types.QueryExecutionLayerResp
+
+			queryData := types.NewQueryGetCommission(addr)
+			bz := cdc.MustMarshalJSON(queryData)
+
+			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/queryreward", types.ModuleName), bz)
+			if err != nil {
+				fmt.Printf("no reward data of input")
+				return nil
+			}
+			cdc.MustUnmarshalJSON(res, &out)
+
+			out.Value = string(cliutil.ToHdac(cliutil.Bigsun(out.Value)))
+
+			return cliCtx.PrintOutput(out)
+		},
+	}
+
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(client.FlagFrom, "", "Executor's identity (one of wallet alias, address, nickname)")
+
+	return cmd
+}

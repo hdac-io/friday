@@ -44,6 +44,12 @@ type QueryExecutionLayerResp struct {
 	Value string `json:"value"`
 }
 
+func NewQueryExecutionLayerResp(value string) QueryExecutionLayerResp {
+	return QueryExecutionLayerResp{
+		Value: value,
+	}
+}
+
 // implement fmt.Stringer
 func (q QueryExecutionLayerResp) String() string {
 	return fmt.Sprintf("Value: %s", q.Value)
@@ -87,4 +93,36 @@ func NewQueryVoterParams(address sdk.AccAddress, hash []byte) QueryVoterParams {
 		Address: address,
 		Hash:    hash,
 	}
+}
+
+// QueryGetReward payload for reward query
+type QueryGetReward struct {
+	Address sdk.AccAddress `json:"address"`
+}
+
+func NewQueryGetReward(address sdk.AccAddress) QueryGetReward {
+	return QueryGetReward{
+		Address: address,
+	}
+}
+
+// implement fmt.Stringer
+func (q QueryGetReward) String() string {
+	return fmt.Sprintf("Query public key or readable name: %s", q.Address)
+}
+
+// QueryGetCommission payload for commission query
+type QueryGetCommission struct {
+	Address sdk.AccAddress `json:"address"`
+}
+
+func NewQueryGetCommission(address sdk.AccAddress) QueryGetCommission {
+	return QueryGetCommission{
+		Address: address,
+	}
+}
+
+// implement fmt.Stringer
+func (q QueryGetCommission) String() string {
+	return fmt.Sprintf("Query public key or readable name: %s", q.Address)
 }
