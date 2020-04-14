@@ -25,4 +25,5 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgRedelegate{}, "executionengine/Redelegate", nil)
 	cdc.RegisterConcrete(MsgVote{}, "executionengine/Vote", nil)
 	cdc.RegisterConcrete(MsgUnvote{}, "executionengine/Unvote", nil)
+	cdc.RegisterConcrete(MsgClaim{}, "executionengine/Claim", nil)
 }

@@ -41,6 +41,8 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 			return handlerMsgVote(ctx, k, msg)
 		case types.MsgUnvote:
 			return handlerMsgUnvote(ctx, k, msg)
+		case types.MsgClaim:
+			return handlerMsgClaim(ctx, k, msg)
 		default:
 			errMsg := fmt.Sprintf("unrecognized execution layer messgae type: %T", msg)
 			return sdk.ErrUnknownRequest(errMsg).Result()
@@ -366,6 +368,43 @@ func handlerMsgUnvote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnvo
 	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
 	if err != nil {
 		getResult(false, err.Error())
+	}
+
+	msgExecute := NewMsgExecute(
+		msg.ContractAddress,
+		msg.FromAddress,
+		util.HASH,
+		proxyContractHash,
+		sessionArgsStr,
+		msg.Fee,
+		msg.GasPrice,
+	)
+	result, log := execute(ctx, k, msgExecute)
+
+	return getResult(result, log)
+}
+
+func handlerMsgClaim(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgClaim) sdk.Result {
+	proxyContractHash := k.GetProxyContractHash(ctx)
+	var methodName string
+	switch msg.RewardOrCommission {
+	case types.CommissionValue:
+		methodName = types.ClaimCommissionMethodName
+	case types.RewardValue:
+		methodName = types.ClaimRewardMethodName
+	default:
+		return getResult(false, "Must be reward or commission")
+	}
+
+	sessionArgs := []*consensus.Deploy_Arg{
+		&consensus.Deploy_Arg{
+			Value: &consensus.Deploy_Arg_Value{
+				Value: &consensus.Deploy_Arg_Value_StringValue{
+					StringValue: methodName}}}}
+
+	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
+	if err != nil {
+		return getResult(false, err.Error())
 	}
 
 	msgExecute := NewMsgExecute(
