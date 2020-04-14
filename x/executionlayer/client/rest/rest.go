@@ -131,7 +131,7 @@ func getBalanceHandler(cliCtx context.CLIContext, storeName string) http.Handler
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalance", storeName), bz)
+		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalancedetail", storeName), bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
