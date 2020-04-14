@@ -344,6 +344,14 @@ def unvote(passphrase: str, hash: str, amount: str, fee: str, gas_price: int, fr
     client_home = os.path.join(os.environ["HOME"], client_home)
     return _tx_executor("clif hdac unvote {} {} {} {} --from {} --node {} --home {}", passphrase, hash, amount, fee, gas_price, from_value, node, client_home)
 
+def claim_reward(passphrase: str, fee: str, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+    client_home = os.path.join(os.environ["HOME"], client_home)
+    return _tx_executor("clif hdac claim reward {} {} --from {} --node {} --home {}", passphrase, fee, gas_price, from_value, node, client_home)
+
+def claim_commission(passphrase: str, fee: str, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+    client_home = os.path.join(os.environ["HOME"], client_home)
+    return _tx_executor("clif hdac claim commission {} {} --from {} --node {} --home {}", passphrase, fee, gas_price, from_value, node, client_home)
+
 def get_balance(from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
     client_home = os.path.join(os.environ["HOME"], client_home)
     res = _process_executor("clif hdac getbalance --from {} --node {} --home {}", from_value, node, client_home, need_output=True)
@@ -362,6 +370,16 @@ def get_delegator(validator_address: str, from_value: str, node: str = "tcp://lo
 def get_voter(hash: str, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
     client_home = os.path.join(os.environ["HOME"], client_home)
     res = _process_executor("clif hdac voter {} --from {} --node {} --home {}", hash, from_value, node, client_home, need_output=True)
+    return res
+
+def get_reward(from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+    client_home = os.path.join(os.environ["HOME"], client_home)
+    res = _process_executor("clif hdac getreward --from {} --node {} --home {}", from_value, node, client_home, need_output=True)
+    return res
+
+def get_commission(from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+    client_home = os.path.join(os.environ["HOME"], client_home)
+    res = _process_executor("clif hdac getcommission --from {} --node {} --home {}", from_value, node, client_home, need_output=True)
     return res
 
 def create_validator(passphrase: str, from_value: str, pubkey: str, moniker: str, identity: str='""', website: str='""', details: str='""', node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):

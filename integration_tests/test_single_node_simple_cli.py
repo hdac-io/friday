@@ -414,13 +414,13 @@ class TestSingleNode():
         print("======================Start test07_simple_vote_and_unvote======================")
 
         print("Vote token")
-        delegate_tx_hash = cmd.vote(self.wallet_password, self.system_contract, self.vote_amount, self.vote_fee, self.vote_gas, self.wallet_anna)
+        vote_tx_hash = cmd.vote(self.wallet_password, self.system_contract, self.vote_amount, self.vote_fee, self.vote_gas, self.wallet_anna)
         print("Tx sent. Waiting for vote")
 
         time.sleep(self.tx_block_time * 3 + 1)
 
         print("Check whether tx is ok or not")
-        is_ok = cmd.is_tx_ok(delegate_tx_hash)
+        is_ok = cmd.is_tx_ok(vote_tx_hash)
         assert(is_ok == True)
 
         res = cmd.get_voter(self.system_contract, self.info_anna['address'])
@@ -428,13 +428,56 @@ class TestSingleNode():
         assert(res[0]["amount"] == self.vote_amount_bigsun) 
 
         print("Unvote token")
-        redelegate_tx_hash = cmd.unvote(self.wallet_password, self.system_contract, self.vote_amount, self.vote_fee, self.vote_gas, self.wallet_anna)
+        unvote_tx_hash = cmd.unvote(self.wallet_password, self.system_contract, self.vote_amount, self.vote_fee, self.vote_gas, self.wallet_anna)
         print("Tx sent. Waiting for unvote")
 
         time.sleep(self.tx_block_time * 3 + 1)
 
         print("Check whether tx is ok or not")
-        is_ok = cmd.is_tx_ok(redelegate_tx_hash)
+        is_ok = cmd.is_tx_ok(unvote_tx_hash)
         assert(is_ok == True)
 
         print("======================Done test07_simple_vote_and_unvote======================")
+
+    def test08_simple_claim_reward_and_commission(self):
+        print("======================Start test08_simple_claim_reward_and_commission======================")
+
+        time.sleep(self.tx_block_time * 3 + 1)
+
+        res = cmd.get_balance(self.info_anna['address'])
+        init_balance = res["value"]
+        assert(float(init_balance) == self.basic_coin_amount)
+
+        res = cmd.get_commission(self.info_anna['address'])
+        print("Output: ", res)
+        commission_value = res["value"]
+        assert(float(res["value"]) > 0) 
+
+        res = cmd.get_reward(self.info_anna['address'])
+        print("Output: ", res)
+        reward_value = res["value"]
+        assert(float(res["value"]) > 0) 
+
+        print("Claim reward token")
+        claim_reward_tx_hash = cmd.claim_reward(self.wallet_password, self.vote_fee, self.vote_gas, self.wallet_anna)
+        print("Tx sent. Waiting for claim reward")
+
+        time.sleep(self.tx_block_time * 3 + 1)
+
+        res = cmd.get_balance(self.info_anna['address'])
+        print("Output: ", res)
+        add_reward_balance = res["value"]
+        assert(float(init_balance) < float(add_reward_balance))
+
+        print("Claim commission token")
+        claim_reward_tx_hash = cmd.claim_commission(self.wallet_password, self.vote_fee, self.vote_gas, self.wallet_anna)
+        print("Tx sent. Waiting for claim commission")
+
+        time.sleep(self.tx_block_time * 3 + 1)
+
+        res = cmd.get_balance(self.info_anna['address'])
+        print("Output: ", res)
+        add_reward_and_commission_balance = res["value"]
+        assert(float(add_reward_balance) < float(add_reward_and_commission_balance))
+
+        print("======================Done test08_simple_claim_reward_and_commission======================")
