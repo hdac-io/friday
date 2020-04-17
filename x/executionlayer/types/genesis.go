@@ -17,6 +17,7 @@ type GenesisState struct {
 	GenesisConf GenesisConf `json:"genesis_conf"`
 	Accounts    []Account   `json:"accounts"`
 	ChainName   string      `json:"chain_name"`
+	Validators  []Validator `json:"validators"`
 }
 
 // GenesisConf : the executionlayer configuration that must be provided at genesis.
@@ -66,8 +67,8 @@ const (
 )
 
 // NewGenesisState creates a new genesis state.
-func NewGenesisState(genesisConf GenesisConf, accounts []Account, chainName string) GenesisState {
-	return GenesisState{GenesisConf: genesisConf, Accounts: accounts, ChainName: chainName}
+func NewGenesisState(genesisConf GenesisConf, accounts []Account, chainName string, validators Validators) GenesisState {
+	return GenesisState{GenesisConf: genesisConf, Accounts: accounts, ChainName: chainName, Validators: validators}
 }
 
 // DefaultGenesisState returns a default genesis state
@@ -96,7 +97,7 @@ func DefaultGenesisState() GenesisState {
 			MaxDependencies: 10,
 		},
 	}
-	return NewGenesisState(genesisConf, nil, "friday-devnet")
+	return NewGenesisState(genesisConf, nil, "friday-devnet", nil)
 }
 
 // ValidateGenesis :
