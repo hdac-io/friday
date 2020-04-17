@@ -51,6 +51,11 @@ func InitGenesis(
 	keeper.SetChainName(ctx, data.ChainName)
 	keeper.SetGenesisConf(ctx, data.GenesisConf)
 
+	for _, validator := range data.Validators {
+		validator.Stake = ""
+		keeper.SetValidator(ctx, validator.OperatorAddress, validator)
+	}
+
 	candidateBlock := ctx.CandidateBlock()
 	candidateBlock.Hash = []byte(types.GenesisBlockHashKey)
 	candidateBlock.State = stateHash
@@ -120,6 +125,26 @@ func InitGenesis(
 
 // ExportGenesis : exports an executionlayer configuration for genesis
 func ExportGenesis(ctx sdk.Context, keeper ExecutionLayerKeeper) types.GenesisState {
+	validators := keeper.GetAllValidators(ctx)
+	genesisAccounts := keeper.GetGenesisAccounts(ctx)
+	genesisAccountsMap := map[string]string{}
+	for _, account := range genesisAccounts {
+		if account.Address.Equals(sdk.AccAddress(types.TEMP_ACC_ADDRESS)) {
+			continue
+		}
+		genesisAccountsMap[account.Address.String()] = account.InitialBalance
+	}
+
+	accounts := []types.Account{}
+	for _, validator := range validators {
+		account := types.Account{
+			Address:             validator.OperatorAddress,
+			InitialBalance:      genesisAccountsMap[validator.OperatorAddress.String()],
+			InitialBondedAmount: validator.Stake,
+		}
+		accounts = append(accounts, account)
+	}
+
 	return types.NewGenesisState(
-		keeper.GetGenesisConf(ctx), keeper.GetGenesisAccounts(ctx), keeper.GetChainName(ctx))
+		keeper.GetGenesisConf(ctx), accounts, keeper.GetChainName(ctx), validators)
 }
