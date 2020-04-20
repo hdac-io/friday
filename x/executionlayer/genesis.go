@@ -3,6 +3,7 @@ package executionlayer
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus"
@@ -122,24 +123,33 @@ func InitGenesis(
 	keeper.SetUnitHashMap(ctx, types.NewUnitHashMap(ctx.CandidateBlock().State))
 }
 
-// ExportGenesis : exports an executionlayer configuration for genesis
 func ExportGenesis(ctx sdk.Context, keeper ExecutionLayerKeeper) types.GenesisState {
 	validators := keeper.GetAllValidators(ctx)
-	genesisAccounts := keeper.GetGenesisAccounts(ctx)
-	genesisAccountsMap := map[string]string{}
-	for _, account := range genesisAccounts {
-		if account.Address.Equals(sdk.AccAddress(types.TEMP_ACC_ADDRESS)) {
-			continue
-		}
-		genesisAccountsMap[account.Address.String()] = account.InitialBalance
+	existAccounts := keeper.AccountKeeper.GetAllAccounts(ctx)
+
+	stateHash := keeper.GetUnitHashMap(ctx, ctx.BlockHeight()).EEState
+	protocolVersion := keeper.MustGetProtocolVersion(ctx)
+
+	stakeAmounts := map[string]string{}
+	for _, validator := range validators {
+		stakeAmounts[validator.OperatorAddress.String()] = validator.Stake
 	}
 
 	accounts := []types.Account{}
-	for _, validator := range validators {
+	for _, existAccount := range existAccounts {
+		if strings.Contains(existAccount.String(), "name") {
+			continue
+		}
+
+		balance, err := grpc.QueryBalance(keeper.client, stateHash, existAccount.GetAddress().ToEEAddress(), &protocolVersion)
+		if err != "" {
+			panic(err)
+		}
+
 		account := types.Account{
-			Address:             validator.OperatorAddress,
-			InitialBalance:      genesisAccountsMap[validator.OperatorAddress.String()],
-			InitialBondedAmount: validator.Stake,
+			Address:             existAccount.GetAddress(),
+			InitialBalance:      balance,
+			InitialBondedAmount: stakeAmounts[existAccount.GetAddress().String()],
 		}
 		accounts = append(accounts, account)
 	}
