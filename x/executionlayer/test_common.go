@@ -112,7 +112,7 @@ func genesis(input testInput) []byte {
 		panic(err)
 	}
 
-	input.elk.SetEEState(input.ctx, []byte{}, response.GetSuccess().PoststateHash)
+	input.elk.SetUnitHashMap(input.ctx, NewUnitHashMap(response.GetSuccess().PoststateHash))
 
 	candidateBlock := input.ctx.CandidateBlock()
 	candidateBlock.Hash = []byte{}
