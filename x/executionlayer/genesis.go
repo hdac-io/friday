@@ -57,7 +57,6 @@ func InitGenesis(
 	}
 
 	candidateBlock := ctx.CandidateBlock()
-	candidateBlock.Hash = []byte(types.GenesisBlockHashKey)
 	candidateBlock.State = stateHash
 	candidateBlock.Bonds = bonds
 
@@ -120,7 +119,7 @@ func InitGenesis(
 		getResult(false, log)
 	}
 
-	keeper.SetEEState(ctx, []byte(types.GenesisBlockHashKey), ctx.CandidateBlock().State)
+	keeper.SetUnitHashMap(ctx, types.NewUnitHashMap(ctx.CandidateBlock().State))
 }
 
 // ExportGenesis : exports an executionlayer configuration for genesis

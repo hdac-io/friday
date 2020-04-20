@@ -13,15 +13,14 @@ import (
 )
 
 func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, elk ExecutionLayerKeeper) {
-	preHash := req.Header.LastBlockId.Hash
-	unitHash := elk.GetUnitHashMap(ctx, preHash)
+	unitHash := elk.GetUnitHashMap(ctx, req.GetHeader().Height-1)
 
 	candidateBlock := ctx.CandidateBlock()
 	candidateBlock.Hash = req.GetHash()
 	candidateBlock.State = unitHash.EEState
 }
 
-func EndBlocker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
+func EndBlocker(ctx sdk.Context, req abci.RequestEndBlock, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
 	var validatorUpdates []abci.ValidatorUpdate
 
 	// step
@@ -97,7 +96,9 @@ func EndBlocker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate 
 		}
 	}
 
-	k.SetEEState(ctx, ctx.CandidateBlock().Hash, ctx.CandidateBlock().State)
+	unitHash := NewUnitHashMap(ctx.CandidateBlock().State)
+
+	k.SetUnitHashMap(ctx, unitHash)
 
 	return validatorUpdates
 }
