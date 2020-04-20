@@ -14,18 +14,19 @@ const (
 	MintContractName = "mint"
 	PosContractName  = "pos"
 
-	ProxyContractName          = "client_api_proxy"
-	TransferMethodName         = "transfer_to_account"
-	PaymentMethodName          = "standard_payment"
-	BondMethodName             = "bond"
-	UnbondMethodName           = "unbond"
-	DelegateMethodName         = "delegate"
-	UndelegateMethodName       = "undelegate"
-	RedelegateMethodName       = "redelegate"
-	VoteMethodName             = "vote"
-	UnvoteMethodName           = "unvote"
-	StepMethodName             = "step"
-	WriteTotalSupplyMethodName = "write_genesis_total_supply"
+	ProxyContractName         = "client_api_proxy"
+	TransferMethodName        = "transfer_to_account"
+	PaymentMethodName         = "standard_payment"
+	BondMethodName            = "bond"
+	UnbondMethodName          = "unbond"
+	DelegateMethodName        = "delegate"
+	UndelegateMethodName      = "undelegate"
+	RedelegateMethodName      = "redelegate"
+	VoteMethodName            = "vote"
+	UnvoteMethodName          = "unvote"
+	StepMethodName            = "step"
+	ClaimRewardMethodName     = "claim_reward"
+	ClaimCommissionMethodName = "claim_commission"
 
 	SYSTEM_ACCOUNT_BALANCE       = "1000000000000000000000000000000"
 	TRANSFER_BALANCE             = "999999999999000000000000000000"
@@ -34,6 +35,11 @@ const (
 	BASIC_GAS                    = 30000000
 
 	DECIMAL_POINT_POS = 18
+
+	RewardString     = "reward"
+	CommissionString = "commission"
+	RewardValue      = true
+	CommissionValue  = false
 )
 
 // UnitHashMap used to define Unit account structure

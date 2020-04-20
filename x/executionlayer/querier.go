@@ -23,6 +23,9 @@ const (
 
 	QueryDelegator = "querydelegator"
 	QueryVoter     = "queryvoter"
+
+	QueryReward     = "queryreward"
+	QueryCommission = "querycommission"
 )
 
 // NewQuerier is the module level router for state queries
@@ -41,6 +44,10 @@ func NewQuerier(keeper ExecutionLayerKeeper) sdk.Querier {
 			return queryDelegator(ctx, req, keeper)
 		case QueryVoter:
 			return queryVoter(ctx, req, keeper)
+		case QueryReward:
+			return queryReward(ctx, req, keeper)
+		case QueryCommission:
+			return queryCommission(ctx, req, keeper)
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown ee query")
 		}
@@ -285,6 +292,52 @@ func queryVoter(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKee
 	}
 
 	res, err := codec.MarshalJSONIndent(types.ModuleCdc, voters)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+	}
+
+	return res, nil
+}
+
+func queryReward(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
+	var param types.QueryGetReward
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &param)
+	if err != nil {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
+	}
+
+	storedValue, err := getQueryResult(ctx, keeper, "", types.ADDRESS, types.SYSTEM, types.PosContractName)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not find system account info", err.Error()))
+	}
+
+	reward := storedValue.Contract.NamedKeys.GetUserReward(param.Address.ToEEAddress())
+	queryvalue := types.NewQueryExecutionLayerResp(reward)
+
+	res, err := codec.MarshalJSONIndent(types.ModuleCdc, queryvalue)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+	}
+
+	return res, nil
+}
+
+func queryCommission(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
+	var param types.QueryGetCommission
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &param)
+	if err != nil {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
+	}
+
+	storedValue, err := getQueryResult(ctx, keeper, "", types.ADDRESS, types.SYSTEM, types.PosContractName)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not find system account info", err.Error()))
+	}
+
+	commission := storedValue.Contract.NamedKeys.GetValidatorCommission(param.Address.ToEEAddress())
+	queryvalue := types.NewQueryExecutionLayerResp(commission)
+
+	res, err := codec.MarshalJSONIndent(types.ModuleCdc, queryvalue)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}

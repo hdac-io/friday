@@ -287,7 +287,7 @@ func redelegateMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *h
 type voteReq struct {
 	BaseReq              rest.BaseReq `json:"base_req"`
 	TokenContractAddress string       `json:"token_contract_address"`
-	Hash                 string       `json:"address"`
+	Hash                 string       `json:"hash"`
 	Amount               string       `json:"amount"`
 	Fee                  string       `json:"fee"`
 }
@@ -349,6 +349,95 @@ func voteUnvoteMsgCreator(voteIsTrue bool, w http.ResponseWriter, cliCtx context
 	}
 
 	return req.BaseReq, []sdk.Msg{msg}, nil
+}
+
+type claimReq struct {
+	BaseReq              rest.BaseReq `json:"base_req"`
+	TokenContractAddress string       `json:"token_contract_address"`
+	RewardOrCommission   bool         `json:"reward_or_commission"`
+	Amount               string       `json:"amount"`
+	Fee                  string       `json:"fee"`
+}
+
+func claimMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
+	var req claimReq
+
+	// Get body parameters
+	if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse request")
+	}
+
+	// Parameter touching
+	var addr sdk.AccAddress
+	addr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
+	if err != nil {
+		addr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, req.BaseReq.From)
+		if err != nil {
+			return rest.BaseReq{}, nil, fmt.Errorf("failed to parse address or name: %s", req.BaseReq.From)
+		}
+	}
+
+	req.BaseReq.From = addr.String()
+	if !req.BaseReq.ValidateBasic(w) {
+		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse base request")
+	}
+
+	fee, err := cliutil.ToBigsun(cliutil.Hdac(req.Fee))
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	var msg sdk.Msg
+	gas, err := strconv.ParseUint(req.BaseReq.Gas, 10, 64)
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	msg = types.NewMsgClaim(req.TokenContractAddress, addr, req.RewardOrCommission, string(fee), gas)
+
+	// create the message
+	err = msg.ValidateBasic()
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	return req.BaseReq, []sdk.Msg{msg}, nil
+}
+
+func getRewardQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error) {
+	vars := r.URL.Query()
+	straddr := vars.Get("address")
+
+	addr, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, straddr)
+	if err != nil {
+		return nil, err
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	queryData := types.NewQueryGetReward(addr)
+	bz := cliCtx.Codec.MustMarshalJSON(queryData)
+
+	return bz, nil
+}
+
+func getCommissionQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error) {
+	vars := r.URL.Query()
+	straddr := vars.Get("address")
+
+	addr, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, straddr)
+	if err != nil {
+		return nil, err
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	queryData := types.NewQueryGetCommission(addr)
+	bz := cliCtx.Codec.MustMarshalJSON(queryData)
+
+	return bz, nil
 }
 
 func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error) {
