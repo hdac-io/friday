@@ -48,11 +48,14 @@ type UnitHashMap struct {
 }
 
 // NewUnitHashMap returns a new UnitAccount
-func NewUnitHashMap() UnitHashMap {
-	return UnitHashMap{}
+func NewUnitHashMap(eeState []byte) UnitHashMap {
+	return UnitHashMap{
+		EEState: eeState,
+	}
 }
 
 // implement fmt.Stringer
 func (u UnitHashMap) String() string {
-	return strings.TrimSpace(fmt.Sprintf(`EE state: %s`, u.EEState))
+	return strings.TrimSpace(fmt.Sprintf(`Unit Hash
+  EE state: %s`, u.EEState))
 }

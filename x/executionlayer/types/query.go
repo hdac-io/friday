@@ -17,26 +17,24 @@ const (
 
 // QueryExecutionLayerDetail payload for a EE query
 type QueryExecutionLayerDetail struct {
-	BlockHash string `json:"state_hash"`
-	KeyType   string `json:"key_type"`
-	KeyData   string `json:"key_data"`
-	Path      string `json:"path"`
+	KeyType string `json:"key_type"`
+	KeyData string `json:"key_data"`
+	Path    string `json:"path"`
 }
 
 // implement fmt.Stringer
 func (q QueryExecutionLayerDetail) String() string {
-	return fmt.Sprintf("Block Hash: %s\nKey type: %s\nKey data: %s\nPath: %s", q.BlockHash, q.KeyType, q.KeyData, q.Path)
+	return fmt.Sprintf("Key type: %s\nKey data: %s\nPath: %s", q.KeyType, q.KeyData, q.Path)
 }
 
 // QueryGetBalanceDetail payload for balance query
 type QueryGetBalanceDetail struct {
-	BlockHash string         `json:"state_hash"`
-	Address   sdk.AccAddress `json:"address"`
+	Address sdk.AccAddress `json:"address"`
 }
 
 // implement fmt.Stringer
 func (q QueryGetBalanceDetail) String() string {
-	return fmt.Sprintf("State: %s\nQuery public key or readable name: %s", q.BlockHash, q.Address)
+	return fmt.Sprintf("Query public key or readable name: %s", q.Address)
 }
 
 // QueryExecutionLayerResp is used for response of EE query

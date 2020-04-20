@@ -443,7 +443,11 @@ func getCommissionQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *
 func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error) {
 	vars := r.URL.Query()
 	straddr := vars.Get("address")
-	blockHashStr := vars.Get("block")
+	heightStr := vars.Get("height")
+	height, err := strconv.ParseInt(heightStr, 10, 64)
+	if err != nil {
+		return nil, err
+	}
 
 	addr, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, straddr)
 	if err != nil {
@@ -454,9 +458,9 @@ func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 		return nil, err
 	}
 	queryData := types.QueryGetBalanceDetail{
-		Address:   addr,
-		BlockHash: blockHashStr,
+		Address: addr,
 	}
+	cliCtx = cliCtx.WithHeight(height)
 	bz := cliCtx.Codec.MustMarshalJSON(queryData)
 
 	return bz, nil
