@@ -179,12 +179,12 @@ class TestMultiNodeSimple:
         print("At {}".format(picked_node))
 
         res = cmd.get_balance(self.wallet_anna, node=picked_node)
-        assert((self.basic_coin_amount + float(self.transfer_amount)) * 0.95 < float(res["value"]))
+        assert((self.basic_coin_amount + float(self.transfer_amount)) * 0.95 < float(res))
 
         picked_node = self.get_node_randomly()
         print("At {}".format(picked_node))
         res = cmd.get_balance(self.wallet_elsa, node=picked_node)
-        assert(float(res["value"]) < self.basic_coin_amount - float(self.transfer_amount))
+        assert(float(res) < self.basic_coin_amount - float(self.transfer_amount))
 
         print("======================Done test01_transfer_to======================")
 
@@ -215,10 +215,10 @@ class TestMultiNodeSimple:
         for node in self.nodes_address[:3]:
             print("Test of {}".format(node))
             res = cmd.get_balance(self.wallet_anna, node=node)
-            print("Balance of 'anna': ", float(res["value"]))
+            print("Balance of 'anna': ", float(res))
 
             res = cmd.get_balance(self.wallet_bryan, node=node)
-            print("Balance of 'anna': ", float(res["value"]))
+            print("Balance of 'anna': ", float(res))
             print("{} OK".format(node))
 
         print("======================End test01_1_transfer_to_nonexistent_account======================")
@@ -272,7 +272,7 @@ class TestMultiNodeSimple:
 
         # We cannot sure the status of each wallet. Just validate Tx and skip value comparison
         #res_transfer = cmd.get_balance("address", self.info_anna['address'], node=picked_node)
-        #assert(int(res_transfer['value']) == int(self.basic_coin + self.transfer_amount))
+        #assert(int(res_transfer) == int(self.basic_coin + self.transfer_amount))
 
         print("Try to transfer to nickname sender")
         tx_hash_transfer = cmd.transfer_to(self.wallet_password, self.info_elsa['address'], self.transfer_amount,

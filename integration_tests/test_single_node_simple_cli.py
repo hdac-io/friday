@@ -156,10 +156,10 @@ class TestSingleNode():
 
         res = cmd.get_balance(self.wallet_elsa)
         print("Output: ", res)
-        assert(float(res["value"]) == self.basic_coin_amount) 
+        assert(float(res) == self.basic_coin_amount) 
 
         res = cmd.get_balance(self.wallet_anna)
-        assert(float(res["value"]) == self.basic_coin_amount)
+        assert(float(res) == self.basic_coin_amount)
         print("======================Done test00_get_balance======================")
 
 
@@ -179,10 +179,10 @@ class TestSingleNode():
 
         print("Balance checking after transfer..")
         res = cmd.get_balance(self.wallet_anna)
-        assert(float(res["value"]) == self.basic_coin_amount + float(self.transfer_amount))
+        assert(float(res) == self.basic_coin_amount + float(self.transfer_amount))
 
         res = cmd.get_balance(self.wallet_elsa)
-        assert(float(res["value"]) < self.basic_coin_amount - float(self.transfer_amount))
+        assert(float(res) < self.basic_coin_amount - float(self.transfer_amount))
 
         print("======================Done test01_transfer_to======================")
 
@@ -205,7 +205,7 @@ class TestSingleNode():
         res_before = cmd.get_balance(self.wallet_anna)
 
         print("Try to send more money than bonding. Invalid tx expected")
-        tx_hash_after_bond = cmd.transfer_to(self.wallet_password, self.info_elsa['address'], int(int(res_before['value']) - self.basic_bond / 2),
+        tx_hash_after_bond = cmd.transfer_to(self.wallet_password, self.info_elsa['address'], int(int(res_before) - self.basic_bond / 2),
                                              self.transfer_fee, self.transfer_gas, self.wallet_anna)
         
         print("Tx sent. Waiting for validation")
@@ -218,7 +218,7 @@ class TestSingleNode():
         print("Balance checking after bonding")
         res_after = cmd.get_balance(self.wallet_anna)
         # Reason: Just enough value to ensure that tx become invalid
-        assert(self.basic_bond < int(res_after["value"]))
+        assert(self.basic_bond < int(res_after))
 
         print("Unbond and try to transfer")
         print("Unbond first")
@@ -232,7 +232,7 @@ class TestSingleNode():
         assert(is_ok == True)
 
         print("Try to transfer. Will be confirmed in this time")
-        tx_hash_after_unbond = cmd.transfer_to(self.wallet_password, self.info_elsa['address'], int(int(res_before['value']) - self.basic_bond / 2),
+        tx_hash_after_unbond = cmd.transfer_to(self.wallet_password, self.info_elsa['address'], int(int(res_before) - self.basic_bond / 2),
                                                self.transfer_fee, self.transfer_gas, self.wallet_anna)
         
         print("Tx sent. Waiting for validation")
@@ -245,7 +245,7 @@ class TestSingleNode():
         print("Balance checking after bonding")
         res_after_after = cmd.get_balance(self.wallet_anna)
         # Reason: Just enough value to ensure that tx become invalid
-        assert(int(res_after_after["value"]) == self.basic_coin + int(res_before['value']) - self.basic_bond)
+        assert(int(res_after_after) == self.basic_coin + int(res_before) - self.basic_bond)
 
         print("======================Done test02_bond_and_unbond======================")
 
@@ -318,7 +318,7 @@ class TestSingleNode():
 
         print("Check wallet by address. Should be match with wallet info")
         res_transfer = cmd.get_balance(self.info_anna['address'])
-        assert(float(res_transfer['value']) == self.basic_coin_amount + float(self.transfer_amount))
+        assert(float(res_transfer) == self.basic_coin_amount + float(self.transfer_amount))
 
         print("Try to transfer to nickname sender")
         tx_hash_transfer = cmd.transfer_to(self.wallet_password, self.info_elsa['address'], self.transfer_amount,
@@ -333,7 +333,7 @@ class TestSingleNode():
 
         print("Check wallet by address. Should be match with wallet info")
         res_transfer = cmd.get_balance(self.info_anna['address'])
-        assert(float(self.basic_coin_amount *0.9) < float(res_transfer['value']) < self.basic_coin_amount)
+        assert(float(self.basic_coin_amount *0.9) < float(res_transfer) < self.basic_coin_amount)
 
         print("======================Done test04_transfer_to_by_nickname======================")
 
@@ -445,18 +445,18 @@ class TestSingleNode():
         time.sleep(self.tx_block_time * 3 + 1)
 
         res = cmd.get_balance(self.info_anna['address'])
-        init_balance = res["value"]
+        init_balance = res
         assert(float(init_balance) == self.basic_coin_amount)
 
         res = cmd.get_commission(self.info_anna['address'])
         print("Output: ", res)
-        commission_value = res["value"]
-        assert(float(res["value"]) > 0) 
+        commission_value = res
+        assert(float(res) > 0) 
 
         res = cmd.get_reward(self.info_anna['address'])
         print("Output: ", res)
-        reward_value = res["value"]
-        assert(float(res["value"]) > 0) 
+        reward_value = res
+        assert(float(res) > 0) 
 
         print("Claim reward token")
         claim_reward_tx_hash = cmd.claim_reward(self.wallet_password, self.vote_fee, self.vote_gas, self.wallet_anna)
@@ -466,7 +466,7 @@ class TestSingleNode():
 
         res = cmd.get_balance(self.info_anna['address'])
         print("Output: ", res)
-        add_reward_balance = res["value"]
+        add_reward_balance = res
         assert(float(init_balance) < float(add_reward_balance))
 
         print("Claim commission token")
@@ -477,7 +477,7 @@ class TestSingleNode():
 
         res = cmd.get_balance(self.info_anna['address'])
         print("Output: ", res)
-        add_reward_and_commission_balance = res["value"]
+        add_reward_and_commission_balance = res
         assert(float(add_reward_balance) < float(add_reward_and_commission_balance))
 
         print("======================Done test08_simple_claim_reward_and_commission======================")
