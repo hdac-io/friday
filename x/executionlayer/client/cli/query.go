@@ -1,9 +1,12 @@
 package cli
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 
+	"github.com/gogo/protobuf/jsonpb"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/friday/client"
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/codec"
@@ -59,7 +62,6 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 				addr = keyInfo.GetAddress()
 			}
 
-			var out types.QueryExecutionLayerResp
 			blockhashstr := viper.GetString(FlagBlockHash)
 
 			queryData := types.QueryGetBalanceDetail{
@@ -73,11 +75,16 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 				fmt.Printf("no balance data of input")
 				return nil
 			}
-			cdc.MustUnmarshalJSON(res, &out)
+			out := &state.Value{}
+			err = jsonpb.Unmarshal(bytes.NewReader(res), out)
+			if err != nil {
+				fmt.Printf("Faild to json unmarshal, %s", err)
+			}
 
-			out.Value = string(cliutil.ToHdac(cliutil.Bigsun(out.Value)))
+			balance := string(cliutil.ToHdac(cliutil.Bigsun(out.GetStringValue())))
 
-			return cliCtx.PrintOutput(out)
+			_, err = fmt.Println(balance)
+			return err
 		},
 	}
 
@@ -100,7 +107,6 @@ func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
 			data := args[1]
 			path := args[2]
 
-			var out types.QueryExecutionLayerResp
 			blockhash := viper.GetString(FlagBlockHash)
 
 			queryData := types.QueryExecutionLayerDetail{
@@ -112,13 +118,24 @@ func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
 			bz := cdc.MustMarshalJSON(queryData)
 
 			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querydetail", types.ModuleName), bz)
+
 			if err != nil {
-				fmt.Printf("could not resolve data - %s %s %s\n", dataType, data, path)
+				fmt.Printf("could not resolve data - %s %s %s\nerr : %s\n", dataType, data, path, err.Error())
 				return nil
 			}
-			cdc.MustUnmarshalJSON(res, &out)
 
-			return cliCtx.PrintOutput(out)
+			value := &state.Value{}
+			err = jsonpb.Unmarshal(bytes.NewReader(res), value)
+
+			marshaler := jsonpb.Marshaler{Indent: "  "}
+			valueStr, err := marshaler.MarshalToString(value)
+			if err != nil {
+				fmt.Printf("could not resolve data - %s %s %s\nerr : %s\n", dataType, data, path, err.Error())
+				return nil
+			}
+
+			_, err = fmt.Println(valueStr)
+			return err
 		},
 	}
 
@@ -375,8 +392,6 @@ func GetCmdQueryReward(cdc *codec.Codec) *cobra.Command {
 				addr = keyInfo.GetAddress()
 			}
 
-			var out types.QueryExecutionLayerResp
-
 			queryData := types.NewQueryGetReward(addr)
 			bz := cdc.MustMarshalJSON(queryData)
 
@@ -385,11 +400,16 @@ func GetCmdQueryReward(cdc *codec.Codec) *cobra.Command {
 				fmt.Printf("no reward data of input")
 				return nil
 			}
-			cdc.MustUnmarshalJSON(res, &out)
+			out := &state.Value{}
+			err = jsonpb.Unmarshal(bytes.NewReader(res), out)
+			if err != nil {
+				fmt.Printf("Faild to json unmarshal, %s", err)
+			}
 
-			out.Value = string(cliutil.ToHdac(cliutil.Bigsun(out.Value)))
+			balance := string(cliutil.ToHdac(cliutil.Bigsun(out.GetStringValue())))
 
-			return cliCtx.PrintOutput(out)
+			_, err = fmt.Println(balance)
+			return err
 		},
 	}
 
@@ -426,8 +446,6 @@ func GetCmdQueryCommission(cdc *codec.Codec) *cobra.Command {
 				addr = keyInfo.GetAddress()
 			}
 
-			var out types.QueryExecutionLayerResp
-
 			queryData := types.NewQueryGetCommission(addr)
 			bz := cdc.MustMarshalJSON(queryData)
 
@@ -436,11 +454,16 @@ func GetCmdQueryCommission(cdc *codec.Codec) *cobra.Command {
 				fmt.Printf("no reward data of input")
 				return nil
 			}
-			cdc.MustUnmarshalJSON(res, &out)
+			out := &state.Value{}
+			err = jsonpb.Unmarshal(bytes.NewReader(res), out)
+			if err != nil {
+				fmt.Printf("Faild to json unmarshal, %s", err)
+			}
 
-			out.Value = string(cliutil.ToHdac(cliutil.Bigsun(out.Value)))
+			balance := string(cliutil.ToHdac(cliutil.Bigsun(out.GetStringValue())))
 
-			return cliCtx.PrintOutput(out)
+			_, err = fmt.Println(balance)
+			return err
 		},
 	}
 

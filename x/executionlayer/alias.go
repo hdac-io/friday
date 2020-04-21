@@ -31,7 +31,6 @@ type (
 	MsgCreateValidator        = types.MsgCreateValidator
 	MsgEditValidator          = types.MsgEditValidator
 	UnitHashMap               = types.UnitHashMap
-	QueryExecutionLayerResp   = types.QueryExecutionLayerResp
 	QueryExecutionLayerDetail = types.QueryExecutionLayerDetail
 	QueryGetBalanceDetail     = types.QueryGetBalanceDetail
 	QueryValidatorParams      = types.QueryValidatorParams

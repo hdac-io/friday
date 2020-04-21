@@ -1,11 +1,14 @@
 package executionlayer
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"strings"
 
+	"github.com/gogo/protobuf/jsonpb"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/storedvalue"
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
@@ -66,22 +69,24 @@ func queryEEDetail(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, err.Error())
 	}
 
-	var valueStr string
+	var value *state.Value
 	switch storedValue.Type {
 	case storedvalue.TYPE_ACCOUNT:
-		valueStr = storedValue.Account.ToStateValue().String()
+		value = &state.Value{Value: &state.Value_Account{Account: storedValue.Account.ToStateValue()}}
 	case storedvalue.TYPE_CONTRACT:
-		valueStr = storedValue.Contract.ToStateValue().String()
+		value = &state.Value{Value: &state.Value_Contract{Contract: storedValue.Contract.ToStateValue()}}
 	case storedvalue.TYPE_CL_VALUE:
-		valueStr = storedValue.ClValue.ToStateValues().String()
+		value = storedValue.ClValue.ToStateValues()
 	}
 
-	qryvalue := QueryExecutionLayerResp{
-		Value: valueStr,
+	jsonMarshaler := jsonpb.Marshaler{}
+	res := &bytes.Buffer{}
+	err = jsonMarshaler.Marshal(res, value)
+	if err != nil {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
-	res, _ := codec.MarshalJSONIndent(keeper.cdc, qryvalue)
-	return res, nil
+	return res.Bytes(), nil
 }
 
 func queryBalanceDetail(ctx sdk.Context, path []string, req abci.RequestQuery, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
@@ -108,12 +113,16 @@ func queryBalanceDetail(ctx sdk.Context, path []string, req abci.RequestQuery, k
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", errMsg)
 	}
 
-	queryvalue := QueryExecutionLayerResp{
-		Value: val,
-	}
+	queryvalue := &state.Value{Value: &state.Value_StringValue{StringValue: val}}
 
-	res, _ := codec.MarshalJSONIndent(keeper.cdc, queryvalue)
-	return res, nil
+	jsonMarshaler := jsonpb.Marshaler{}
+	res := &bytes.Buffer{}
+	err = jsonMarshaler.Marshal(res, queryvalue)
+
+	if err != nil {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
+	}
+	return res.Bytes(), nil
 }
 
 func queryValidator(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
@@ -315,14 +324,16 @@ func queryReward(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKe
 	}
 
 	reward := storedValue.Contract.NamedKeys.GetUserReward(param.Address.ToEEAddress())
-	queryvalue := types.NewQueryExecutionLayerResp(reward)
+	queryvalue := &state.Value{Value: &state.Value_StringValue{StringValue: reward}}
 
-	res, err := codec.MarshalJSONIndent(types.ModuleCdc, queryvalue)
+	jsonMarshaler := jsonpb.Marshaler{}
+	res := &bytes.Buffer{}
+	err = jsonMarshaler.Marshal(res, queryvalue)
+
 	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
-
-	return res, nil
+	return res.Bytes(), nil
 }
 
 func queryCommission(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
@@ -338,12 +349,14 @@ func queryCommission(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLay
 	}
 
 	commission := storedValue.Contract.NamedKeys.GetValidatorCommission(param.Address.ToEEAddress())
-	queryvalue := types.NewQueryExecutionLayerResp(commission)
+	queryvalue := &state.Value{Value: &state.Value_StringValue{StringValue: commission}}
 
-	res, err := codec.MarshalJSONIndent(types.ModuleCdc, queryvalue)
+	jsonMarshaler := jsonpb.Marshaler{}
+	res := &bytes.Buffer{}
+	err = jsonMarshaler.Marshal(res, queryvalue)
+
 	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
-
-	return res, nil
+	return res.Bytes(), nil
 }
