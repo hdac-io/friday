@@ -169,7 +169,10 @@ func queryAllValidator(ctx sdk.Context, keeper ExecutionLayerKeeper) ([]byte, sd
 // GetQueryResult queries with whole parameters
 func getQueryResult(ctx sdk.Context, k ExecutionLayerKeeper,
 	blockhashStr string, keyType string, keyData string, path string) (storedvalue.StoredValue, error) {
-	arrPath := strings.Split(path, "/")
+	arrPath := []string{}
+	if path != "" {
+		arrPath = strings.Split(path, "/")
+	}
 
 	var blockhash []byte
 	var err error
