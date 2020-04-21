@@ -39,22 +39,6 @@ func (q QueryGetBalanceDetail) String() string {
 	return fmt.Sprintf("State: %s\nQuery public key or readable name: %s", q.BlockHash, q.Address)
 }
 
-// QueryExecutionLayerResp is used for response of EE query
-type QueryExecutionLayerResp struct {
-	Value string `json:"value"`
-}
-
-func NewQueryExecutionLayerResp(value string) QueryExecutionLayerResp {
-	return QueryExecutionLayerResp{
-		Value: value,
-	}
-}
-
-// implement fmt.Stringer
-func (q QueryExecutionLayerResp) String() string {
-	return fmt.Sprintf("Value: %s", q.Value)
-}
-
 // defines the params for the following queries:
 // - 'custom/%s/validator'
 type QueryValidatorParams struct {

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"strconv"
@@ -48,9 +49,12 @@ func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 			switch sessionType {
 			case util.WASM:
 				sessionCode = util.LoadWasmFile(args[1])
-			case util.HASH:
-			case util.UREF:
-				sessionCode = util.DecodeHexString(args[1])
+			case util.HASH, util.UREF:
+				src, err := base64.StdEncoding.DecodeString(args[1])
+				if err != nil {
+					return err
+				}
+				sessionCode = src
 			case util.NAME:
 				sessionCode = []byte(args[1])
 			default:
