@@ -30,7 +30,8 @@ const (
 	//	config.Seal()
 
 	// AddrLen defines a valid address length
-	AddrLen = 20
+	AddrLen = 32
+
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
 	Bech32MainPrefix = "friday"
 

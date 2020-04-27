@@ -118,8 +118,8 @@ github.com/hdac-io/casperlabs-ee-grpc-go-util v0.6.0/go.mod h1:WakxSanxTmCA9D/VB
 github.com/hdac-io/iavl v0.0.0-20191220074654-211e1bd34eef h1:2Agvbgr7rAy4OwBETZ6a4VAXLXCbPDdLWw8Mz9zQcLw=
 github.com/hdac-io/iavl v0.0.0-20191220074654-211e1bd34eef/go.mod h1:ry8RH8MNJJhiO1VJeosYAsKrPu7X8Xy0B5D5UQvEiVM=
 github.com/hdac-io/tendermint v0.0.0-20191220055750-d875915aea37/go.mod h1:BronDynhlemRSl99OCZ3owAs/cTcDuw0BrgFmzasWPk=
-github.com/hdac-io/tendermint v0.0.0-20200102054348-9a58be0e600b h1:MqI3saH2BP+hBrnkxawBFXk6ZuR3XakJ0X8VZY9ehLE=
-github.com/hdac-io/tendermint v0.0.0-20200102054348-9a58be0e600b/go.mod h1:lQzldj9uvA4kkM+GH9Ty/bXNzAl9wWJEAa8iKt0+bMQ=
+github.com/hdac-io/tendermint v0.32.8-0.20200428044555-bf9158ce5aa8 h1:Ss/vZE37KYzr8V3KhY7GOkJX4/RwMHbDRiRYeaiQQPw=
+github.com/hdac-io/tendermint v0.32.8-0.20200428044555-bf9158ce5aa8/go.mod h1:IAUZycQIr9J/cmXhbWg65G4m0OWV6V7zlqPeu7vyQtU=
 github.com/herumi/bls-go-binary v0.0.0-20191119080710-898950e1a520/go.mod h1:uTBfU/n3h1aOYIl5nNTbLn5dUfNkF1P97JTaz3bdvro=
 github.com/hpcloud/tail v1.0.0 h1:nfCOvKYfkgYP8hkirhJocXT2+zOD8yUNjXaWfTlyFKI=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
@@ -152,6 +152,8 @@ github.com/libp2p/go-buffer-pool v0.0.2/go.mod h1:MvaB6xw5vOrDl8rYZGLFdKAuk/hRoR
 github.com/magiconair/properties v1.8.0/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=
 github.com/magiconair/properties v1.8.1 h1:ZC2Vc7/ZFkGmsVC9KvOjumD+G5lXy2RtTKyzRKO2BQ4=
 github.com/magiconair/properties v1.8.1/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=
+github.com/maoxs2/go-ripemd v0.0.0-20200326052756-bd1759ad7d10 h1:NnHXwmmj75BfHY6QjueamfFOWyoiHRNG65zt2bBx7F0=
+github.com/maoxs2/go-ripemd v0.0.0-20200326052756-bd1759ad7d10/go.mod h1:RPN95RsGHNuR+OUN9pD6OKS7yE3Q966yIMSXYZsgnbI=
 github.com/mattn/go-isatty v0.0.8 h1:HLtExJ+uU2HOZ+wI0Tt5DtUDrx8yhUqDcp7fYERX4CE=
 github.com/mattn/go-isatty v0.0.8/go.mod h1:Iq45c/XA43vh69/j3iqttzPXn0bhXyGjM0Hdxcsrc5s=
 github.com/matttproud/golang_protobuf_extensions v1.0.1 h1:4hp9jkHxhMHkqkrB3Ix0jegS5sx/RkqARlsWZ6pIwiU=
