@@ -65,7 +65,7 @@ func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTr
 		&consensus.Deploy_Arg{
 			Value: &consensus.Deploy_Arg_Value{
 				Value: &consensus.Deploy_Arg_Value_BytesValue{
-					BytesValue: msg.ToAddress.ToEEAddress()}}},
+					BytesValue: msg.ToAddress}}},
 		&consensus.Deploy_Arg{
 			Value: &consensus.Deploy_Arg_Value{
 				Value: &consensus.Deploy_Arg_Value_BigInt{
@@ -207,7 +207,7 @@ func handlerMsgDelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgDe
 		&consensus.Deploy_Arg{
 			Value: &consensus.Deploy_Arg_Value{
 				Value: &consensus.Deploy_Arg_Value_BytesValue{
-					BytesValue: msg.ValAddress.ToEEAddress()}}},
+					BytesValue: msg.ValAddress}}},
 		&consensus.Deploy_Arg{
 			Value: &consensus.Deploy_Arg_Value{
 				Value: &consensus.Deploy_Arg_Value_BigInt{
@@ -242,7 +242,7 @@ func handlerMsgUndelgate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgU
 		&consensus.Deploy_Arg{
 			Value: &consensus.Deploy_Arg_Value{
 				Value: &consensus.Deploy_Arg_Value_BytesValue{
-					BytesValue: msg.ValAddress.ToEEAddress()}}},
+					BytesValue: msg.ValAddress}}},
 		&consensus.Deploy_Arg{
 			Value: &consensus.Deploy_Arg_Value{
 				Value: &consensus.Deploy_Arg_Value_OptionalValue{
@@ -279,11 +279,11 @@ func handlerMsgRedelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.Msg
 		&consensus.Deploy_Arg{
 			Value: &consensus.Deploy_Arg_Value{
 				Value: &consensus.Deploy_Arg_Value_BytesValue{
-					BytesValue: msg.SrcValAddress.ToEEAddress()}}},
+					BytesValue: msg.SrcValAddress}}},
 		&consensus.Deploy_Arg{
 			Value: &consensus.Deploy_Arg_Value{
 				Value: &consensus.Deploy_Arg_Value_BytesValue{
-					BytesValue: msg.DestValAddress.ToEEAddress()}}},
+					BytesValue: msg.DestValAddress}}},
 		&consensus.Deploy_Arg{
 			Value: &consensus.Deploy_Arg_Value{
 				Value: &consensus.Deploy_Arg_Value_BigInt{
@@ -445,7 +445,7 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) (boo
 
 	executeAddress := []byte{}
 	if len(msg.ExecAddress) == sdk.AddrLen {
-		executeAddress = msg.ExecAddress.ToEEAddress()
+		executeAddress = msg.ExecAddress
 	} else {
 		executeAddress = msg.ExecAddress
 	}

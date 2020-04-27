@@ -257,29 +257,6 @@ func (aa AccAddress) Format(s fmt.State, verb rune) {
 	}
 }
 
-// ToEEAddress converts AccAddress to EEAddress
-func (aa AccAddress) ToEEAddress() EEAddress {
-	return EEAddress(append([]byte("fridaybegins"), aa...))
-}
-
-// ----------------------------------------------------------------------------
-// Execution layer address
-// ----------------------------------------------------------------------------
-
-// EEAddress defines a 32-byte address with fixed padding
-// (fixed dummy 12 byte) + (Address 20 byte) = EEAddress
-type EEAddress []byte
-
-// Bytes returns []byte form of address
-func (ee EEAddress) Bytes() []byte {
-	return ee
-}
-
-// ToAccAddress slices dummy 12 bytes and converts into 20-byte address form
-func (ee EEAddress) ToAccAddress() AccAddress {
-	return AccAddress(ee[12:])
-}
-
 // ----------------------------------------------------------------------------
 // validator operator
 // ----------------------------------------------------------------------------
@@ -433,11 +410,6 @@ func (va ValAddress) Format(s fmt.State, verb rune) {
 	default:
 		s.Write([]byte(fmt.Sprintf("%X", []byte(va))))
 	}
-}
-
-// ToEEAddress converts AccAddress to EEAddress
-func (va ValAddress) ToEEAddress() EEAddress {
-	return EEAddress(append([]byte("fridaybegins"), va...))
 }
 
 // ----------------------------------------------------------------------------

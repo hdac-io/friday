@@ -36,7 +36,7 @@ func toBytes(keyType string, key string,
 			addr = acc.Address
 			err = nil
 		}
-		bytes = addr.ToEEAddress().Bytes()
+		bytes = addr.Bytes()
 
 	case types.UREF, types.LOCAL, types.HASH:
 		bytes, err = hex.DecodeString(key)
