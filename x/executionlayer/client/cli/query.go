@@ -431,7 +431,7 @@ func GetCmdQueryCommission(cdc *codec.Codec) *cobra.Command {
 			queryData := types.NewQueryGetCommission(addr)
 			bz := cdc.MustMarshalJSON(queryData)
 
-			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/queryreward", types.ModuleName), bz)
+			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querycommission", types.ModuleName), bz)
 			if err != nil {
 				fmt.Printf("no reward data of input")
 				return nil
