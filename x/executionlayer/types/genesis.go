@@ -164,7 +164,7 @@ func toChainSpecGenesisAccount(account Account) ipc.ChainSpec_GenesisAccount {
 
 	genesisAccount := ipc.ChainSpec_GenesisAccount{}
 
-	genesisAccount.PublicKey = account.Address.ToEEAddress().Bytes()
+	genesisAccount.PublicKey = account.Address.Bytes()
 	genesisAccount.Balance = &balance
 	genesisAccount.BondedAmount = &bondedAmount
 

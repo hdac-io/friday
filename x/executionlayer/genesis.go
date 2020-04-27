@@ -25,7 +25,7 @@ func InitGenesis(
 	// add to temp account
 	tempAddress := sdk.AccAddress(types.TEMP_ACC_ADDRESS)
 	account := &ipc.ChainSpec_GenesisAccount{
-		PublicKey:    tempAddress.ToEEAddress(),
+		PublicKey:    tempAddress,
 		Balance:      &state.BigInt{Value: types.SYSTEM_ACCOUNT_BALANCE, BitWidth: 512},
 		BondedAmount: &state.BigInt{Value: types.SYSTEM_ACCOUNT_BONDED_AMOUNT, BitWidth: 512},
 	}

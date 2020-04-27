@@ -63,7 +63,7 @@ func EndBlocker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate 
 
 		for _, validator := range validators {
 			var power string
-			resultBond, found := resultBondsMap[string(validator.OperatorAddress.ToEEAddress())]
+			resultBond, found := resultBondsMap[string(validator.OperatorAddress)]
 			if found {
 				if validator.Stake == resultBond.GetStake().GetValue() {
 					continue

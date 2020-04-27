@@ -166,7 +166,7 @@ func counterDefine(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	protocolVersion := input.elk.MustGetProtocolVersion(input.ctx)
 	genesisAddr := input.elk.GetGenesisAccounts(input.ctx)[0]
 
-	deploy, err := util.MakeDeploy(genesisAddr.Address.ToEEAddress(), util.WASM, cntDefCode, "",
+	deploy, err := util.MakeDeploy(genesisAddr.Address, util.WASM, cntDefCode, "",
 		util.WASM, proxyHash, paymentArgsJson, uint64(10), timestamp, input.elk.GetChainName(input.ctx))
 	if err != nil {
 		panic(fmt.Sprintf("fail to make deploy error : %s", err.Error()))
@@ -213,7 +213,7 @@ func counterCall(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	genesisAddr := input.elk.GetGenesisAccounts(input.ctx)[0]
 
 	timestamp = time.Now().Unix()
-	deploy, err := util.MakeDeploy(genesisAddr.Address.ToEEAddress(), util.WASM, cntCallCode, "",
+	deploy, err := util.MakeDeploy(genesisAddr.Address, util.WASM, cntCallCode, "",
 		util.HASH, proxyHash, paymentArgsJson, uint64(10), timestamp, input.elk.GetChainName(input.ctx))
 	if err != nil {
 		panic(fmt.Sprintf("fail to make deploy error : %s", err.Error()))
