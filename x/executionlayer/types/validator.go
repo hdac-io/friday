@@ -249,7 +249,7 @@ type Voter struct {
 }
 
 // NewVoter - initialize a new voter
-func NewVoter(address sdk.EEAddress, amount string) Voter {
+func NewVoter(address sdk.AccAddress, amount string) Voter {
 	return Voter{
 		Address: address,
 		Amount:  amount,

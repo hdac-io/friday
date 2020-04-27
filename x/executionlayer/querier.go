@@ -108,7 +108,7 @@ func queryBalanceDetail(ctx sdk.Context, path []string, req abci.RequestQuery, k
 
 	eeState := keeper.GetEEState(ctx, blockHash)
 	protocolVersion := keeper.MustGetProtocolVersion(ctx)
-	val, errMsg := grpc.QueryBalance(keeper.client, eeState, param.Address.ToEEAddress(), &protocolVersion)
+	val, errMsg := grpc.QueryBalance(keeper.client, eeState, param.Address, &protocolVersion)
 	if errMsg != "" {
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", errMsg)
 	}
@@ -142,7 +142,7 @@ func queryValidator(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLaye
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
-	validator.Stake = storedValue.Contract.NamedKeys.GetValidatorStake(param.ValidatorAddr.ToEEAddress())
+	validator.Stake = storedValue.Contract.NamedKeys.GetValidatorStake(param.ValidatorAddr)
 
 	res, err := codec.MarshalJSONIndent(types.ModuleCdc, validator)
 	if err != nil {
@@ -163,7 +163,7 @@ func queryAllValidator(ctx sdk.Context, keeper ExecutionLayerKeeper) ([]byte, sd
 	eeValidators := storedValue.Contract.NamedKeys.GetAllValidators()
 
 	for _, validator := range validators {
-		valEEAddrStr := hex.EncodeToString(validator.OperatorAddress.ToEEAddress())
+		valEEAddrStr := hex.EncodeToString(validator.OperatorAddress)
 		validator.Stake = eeValidators[valEEAddrStr]
 	}
 
@@ -225,18 +225,18 @@ func queryDelegator(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLaye
 
 	var resMap map[string]string
 	if !param.ValidatorAddr.Empty() {
-		resMap = storedValue.Contract.NamedKeys.GetDelegateFromValidator(param.ValidatorAddr.ToEEAddress())
+		resMap = storedValue.Contract.NamedKeys.GetDelegateFromValidator(param.ValidatorAddr)
 
 		if !param.DelegatorAddr.Empty() {
-			delegateAddressStr := hex.EncodeToString(param.DelegatorAddr.ToEEAddress())
+			delegateAddressStr := hex.EncodeToString(param.DelegatorAddr)
 			resMap = map[string]string{delegateAddressStr: resMap[delegateAddressStr]}
 		}
 	}
 	if !param.DelegatorAddr.Empty() {
-		resMap = storedValue.Contract.NamedKeys.GetDelegateFromDelegator(param.DelegatorAddr.ToEEAddress())
+		resMap = storedValue.Contract.NamedKeys.GetDelegateFromDelegator(param.DelegatorAddr)
 
 		if !param.ValidatorAddr.Empty() {
-			validatorAddressStr := hex.EncodeToString(param.ValidatorAddr.ToEEAddress())
+			validatorAddressStr := hex.EncodeToString(param.ValidatorAddr)
 			resMap = map[string]string{validatorAddressStr: resMap[validatorAddressStr]}
 		}
 	}
@@ -248,7 +248,7 @@ func queryDelegator(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLaye
 			return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeInvalidAddress, "Can't convert address {}")
 		}
 		delegator := types.Delegator{
-			Address: sdk.EEAddress(address).ToAccAddress(),
+			Address: address,
 			Amount:  amount,
 		}
 		delegators = append(delegators, delegator)
@@ -273,7 +273,7 @@ func queryVoter(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKee
 
 	var resMap map[string]string
 	if !param.Address.Empty() {
-		resMap = storedValue.Contract.NamedKeys.GetVotingDappFromUser(param.Address.ToEEAddress())
+		resMap = storedValue.Contract.NamedKeys.GetVotingDappFromUser(param.Address)
 
 		if len(param.Hash) > 0 {
 			hashStr := hex.EncodeToString(param.Hash)
@@ -284,7 +284,7 @@ func queryVoter(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKee
 		resMap = storedValue.Contract.NamedKeys.GetVotingUserFromDapp(param.Hash)
 
 		if !param.Address.Empty() {
-			addressStr := hex.EncodeToString(param.Address.ToEEAddress())
+			addressStr := hex.EncodeToString(param.Address)
 			resMap = map[string]string{addressStr: resMap[addressStr]}
 		}
 	}
@@ -297,7 +297,7 @@ func queryVoter(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKee
 		}
 
 		voter := types.Voter{
-			Address: sdk.EEAddress(address),
+			Address: address,
 			Amount:  amount,
 		}
 		voters = append(voters, voter)
@@ -323,7 +323,7 @@ func queryReward(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKe
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not find system account info", err.Error()))
 	}
 
-	reward := storedValue.Contract.NamedKeys.GetUserReward(param.Address.ToEEAddress())
+	reward := storedValue.Contract.NamedKeys.GetUserReward(param.Address)
 	queryvalue := &state.Value{Value: &state.Value_StringValue{StringValue: reward}}
 
 	jsonMarshaler := jsonpb.Marshaler{}
@@ -348,7 +348,7 @@ func queryCommission(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLay
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not find system account info", err.Error()))
 	}
 
-	commission := storedValue.Contract.NamedKeys.GetValidatorCommission(param.Address.ToEEAddress())
+	commission := storedValue.Contract.NamedKeys.GetValidatorCommission(param.Address)
 	queryvalue := &state.Value{Value: &state.Value_StringValue{StringValue: commission}}
 
 	jsonMarshaler := jsonpb.Marshaler{}

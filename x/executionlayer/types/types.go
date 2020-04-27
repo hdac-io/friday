@@ -7,7 +7,7 @@ import (
 
 var (
 	SYSTEM_ACCOUNT   = make([]byte, 32)
-	TEMP_ACC_ADDRESS = make([]byte, 20)
+	TEMP_ACC_ADDRESS = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
 )
 
 const (

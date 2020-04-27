@@ -346,20 +346,3 @@ func TestCustomAddressVerifier(t *testing.T) {
 	_, err = types.ConsAddressFromBech32(consBech)
 	require.Nil(t, err)
 }
-
-func TestEEAddress(t *testing.T) {
-	// to EEAddress
-	byteaddress := types.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
-	eeaddr := byteaddress.ToEEAddress()
-
-	require.Equal(t, len(eeaddr), 32)
-	require.NotNil(t, eeaddr)
-
-	// to []byte
-	require.Equal(t, len(eeaddr.Bytes()), 32)
-
-	// to AccAddress
-	accaddress := eeaddr.ToAccAddress()
-	require.Equal(t, len(accaddress), 20)
-	require.NotNil(t, accaddress)
-}
