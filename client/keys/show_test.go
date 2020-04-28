@@ -23,8 +23,8 @@ func Test_multiSigKey_Properties(t *testing.T) {
 
 	assert.Equal(t, "myMultisig", tmp.GetName())
 	assert.Equal(t, keys.TypeMulti, tmp.GetType())
-	assert.Equal(t, "D3923267FA8A3DD367BB768FA8BDC8FF7F89DA3F", tmp.GetPubKey().Address().String())
-	assert.Equal(t, "friday16wfryel63g7axeamw68630wglalcnk3lchklh3", tmp.GetAddress().String())
+	assert.Equal(t, "D3923267FA8A3DD367BB768FA8BDC8FF7F89DA3FFDFC2D6A937D0031EF690096", tmp.GetPubKey().Address().String())
+	assert.Equal(t, "friday16wfryel63g7axeamw68630wglalcnk3llh7z665n05qrrmmfqztqkhgkwv", tmp.GetAddress().String())
 }
 
 func Test_showKeysCmd(t *testing.T) {

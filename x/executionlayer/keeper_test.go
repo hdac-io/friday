@@ -19,7 +19,7 @@ import (
 func TestQueryKeyToBytes(t *testing.T) {
 	input := setupTestInput()
 
-	_, err := toBytes("address", "friday15evpva2u57vv6l5czehyk69s0wnq9hrkqulwfz", input.elk.NicknameKeeper, input.ctx)
+	_, err := toBytes("address", "friday1gp2u22697kz6slwa25k2tkhz6st2l0zx3hkfc5wdlpjaauv5czsq2dwu8m", input.elk.NicknameKeeper, input.ctx)
 	assert.Nil(t, err)
 	_, err = toBytes("address", "invalid address", input.elk.NicknameKeeper, input.ctx)
 	assert.NotNil(t, err)

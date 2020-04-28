@@ -36,6 +36,6 @@ func ExampleTxSendSize() {
 	tx := auth.NewStdTx([]sdk.Msg{msg1}, fee, sigs, "")
 	fmt.Println(len(cdc.MustMarshalBinaryBare([]sdk.Msg{msg1})))
 	fmt.Println(len(cdc.MustMarshalBinaryBare(tx)))
-	// output: 80
-	// 169
+	// output: 104
+	// 193
 }
