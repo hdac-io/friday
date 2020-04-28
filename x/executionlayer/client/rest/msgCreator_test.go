@@ -18,8 +18,8 @@ import (
 )
 
 func prepare() (fromAddr, receipAddr string, w http.ResponseWriter, clictx context.CLIContext, basereq rest.BaseReq) {
-	fromAddr = "friday15evpva2u57vv6l5czehyk69s0wnq9hrkqulwfz"
-	receipAddr = "friday1y2dx0evs5k6hxuhfrfdmm7wcwsrqr073htghpv"
+	fromAddr = "friday1gp2u22697kz6slwa25k2tkhz6st2l0zx3hkfc5wdlpjaauv5czsq2dwu8m"
+	receipAddr = "friday16wfryel63g7axeamw68630wglalcnk3llh7z665n05qrrmmfqztqkhgkwv"
 
 	w = httptest.NewRecorder()
 	cdc := codec.New()
