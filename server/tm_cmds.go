@@ -44,8 +44,7 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			cfg := ctx.Config
-			UpgradeOldPrivValFile(cfg)
-			privValidator := pvm.LoadOrGenFilePV(
+			privValidator := pvm.LoadOrGenFridayFilePV(
 				cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			valPubKey := privValidator.GetPubKey()
 
@@ -75,8 +74,7 @@ func ShowAddressCmd(ctx *Context) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			cfg := ctx.Config
-			UpgradeOldPrivValFile(cfg)
-			privValidator := pvm.LoadOrGenFilePV(
+			privValidator := pvm.LoadOrGenFridayFilePV(
 				cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			valConsAddr := (sdk.ConsAddress)(privValidator.GetAddress())
 

@@ -11,8 +11,6 @@ import (
 	"github.com/hdac-io/tendermint/p2p"
 	"github.com/hdac-io/tendermint/privval"
 	tmtypes "github.com/hdac-io/tendermint/types"
-
-	"github.com/hdac-io/friday/server"
 )
 
 // ExportGenesisFile creates and writes the genesis configuration to disk. An
@@ -56,7 +54,6 @@ func InitializeNodeValidatorFiles(config *cfg.Config,
 	}
 
 	nodeID = string(nodeKey.ID())
-	server.UpgradeOldPrivValFile(config)
 
 	pvKeyFile := config.PrivValidatorKeyFile()
 	if err := common.EnsureDir(filepath.Dir(pvKeyFile), 0777); err != nil {
@@ -68,7 +65,7 @@ func InitializeNodeValidatorFiles(config *cfg.Config,
 		return nodeID, valPubKey, nil
 	}
 
-	valPubKey = privval.LoadOrGenFilePV(pvKeyFile, pvStateFile).GetPubKey()
+	valPubKey = privval.LoadOrGenFridayFilePV(pvKeyFile, pvStateFile).GetPubKey()
 
 	return nodeID, valPubKey, nil
 }
