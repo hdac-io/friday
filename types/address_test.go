@@ -346,3 +346,25 @@ func TestCustomAddressVerifier(t *testing.T) {
 	_, err = types.ConsAddressFromBech32(consBech)
 	require.Nil(t, err)
 }
+
+func TestContractAddress(t *testing.T) {
+	urefString := "ZU2WKs0h72Ex2OttXsT+V8WCEEddat5QSpXFqOgN4KM="
+	urefAddr, err := types.ContractUrefAddressFromBase64(urefString)
+	require.NoError(t, err)
+
+	fmt.Println(urefAddr.String())
+	require.NotEqual(t, urefAddr, "")
+
+	fmt.Println(urefAddr.Bytes())
+	require.NotEqual(t, len(urefAddr), 0)
+
+	hashString := "DoXyO5zPuhxqpaxGdgiBDtiJxibh1jgf/IFH5ftRxyk="
+	hashAddr, err := types.ContractHashAddressFromBase64(hashString)
+	require.NoError(t, err)
+
+	fmt.Println(hashAddr.String())
+	require.NotEqual(t, hashAddr, "")
+
+	fmt.Println(hashAddr.Bytes())
+	require.NotEqual(t, len(hashAddr), 0)
+}
