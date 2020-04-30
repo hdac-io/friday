@@ -15,6 +15,8 @@ class TestSingleNode():
     moniker = "testnode"
 
     system_contract = "0000000000000000000000000000000000000000000000000000000000000000"
+    anonymous_contract_address_hash = "fridaycontracthash1dl45lfet0wrsduxfeegwmskmmr8yhlpk6lk4qdpyhpjsffkymstq6ajv0a"
+    anonymous_contract_address_uref = "fridaycontracturef1v4xev2kdy8hkzvwcadk4a3872lzcyyz8t44du5z2jhz636qduz3sf9mf96"
 
     wallet_elsa = "elsa"
     wallet_anna = "anna"
@@ -38,21 +40,21 @@ class TestSingleNode():
     basic_coin_amount = int(int(basic_coin) / multiplier)
 
     basic_bond = "1"
-    bonding_fee = "0.001"
+    bonding_fee = "0.1"
     bonding_gas = 50000000
 
     delegate_amount = "1"
     delegate_amount_bigsun = "1000000000000000000"
-    delegate_fee = "0.005"
+    delegate_fee = "0.1"
     delegate_gas = 50000000
 
-    vote_amount = "1"
-    vote_amount_bigsun = "1000000000000000000"
-    vote_fee = "0.003"
+    vote_amount = "0.1"
+    vote_amount_bigsun = "100000000000000000"
+    vote_fee = "0.1"
     vote_gas = 50000000
 
     transfer_amount = "1"
-    transfer_fee = "0.001"
+    transfer_fee = "0.1"
     transfer_gas = 30000000
 
     tx_block_time = 6
@@ -187,7 +189,7 @@ class TestSingleNode():
         print("======================Done test01_transfer_to======================")
 
 
-    @pytest.mark.skip(reason="Bond/Unbond tx itself works, but not effective now")
+    #@pytest.mark.skip(reason="Bond/Unbond tx itself works, but not effective now")
     def test02_bond_and_unbond(self):
         print("======================Start test02_bond_and_unbond======================")
 
@@ -413,8 +415,8 @@ class TestSingleNode():
     def test07_simple_vote_and_unvote(self):
         print("======================Start test07_simple_vote_and_unvote======================")
 
-        print("Vote token")
-        vote_tx_hash = cmd.vote(self.wallet_password, self.system_contract, self.vote_amount, self.vote_fee, self.vote_gas, self.wallet_anna)
+        print("Vote token: uref")
+        vote_tx_hash = cmd.vote(self.wallet_password, self.anonymous_contract_address_uref, self.vote_amount, self.vote_fee, self.vote_gas, self.wallet_anna)
         print("Tx sent. Waiting for vote")
 
         time.sleep(self.tx_block_time * 3 + 1)
@@ -423,12 +425,26 @@ class TestSingleNode():
         is_ok = cmd.is_tx_ok(vote_tx_hash)
         assert(is_ok == True)
 
-        res = cmd.get_voter(self.system_contract, self.info_anna['address'])
+        res = cmd.get_voter(self.anonymous_contract_address_uref, self.info_anna['address'])
+        print("Output: ", res)
+        assert(res[0]["amount"] == self.vote_amount_bigsun)
+
+        print("Vote token: hash")
+        vote_tx_hash = cmd.vote(self.wallet_password, self.anonymous_contract_address_hash, self.vote_amount, self.vote_fee, self.vote_gas, self.wallet_anna)
+        print("Tx sent. Waiting for vote")
+
+        time.sleep(self.tx_block_time * 3 + 1)
+
+        print("Check whether tx is ok or not")
+        is_ok = cmd.is_tx_ok(vote_tx_hash)
+        assert(is_ok == True)
+
+        res = cmd.get_voter(self.anonymous_contract_address_hash, self.info_anna['address'])
         print("Output: ", res)
         assert(res[0]["amount"] == self.vote_amount_bigsun) 
 
         print("Unvote token")
-        unvote_tx_hash = cmd.unvote(self.wallet_password, self.system_contract, self.vote_amount, self.vote_fee, self.vote_gas, self.wallet_anna)
+        unvote_tx_hash = cmd.unvote(self.wallet_password, self.anonymous_contract_address_hash, self.vote_amount, self.vote_fee, self.vote_gas, self.wallet_anna)
         print("Tx sent. Waiting for unvote")
 
         time.sleep(self.tx_block_time * 3 + 1)
@@ -436,6 +452,14 @@ class TestSingleNode():
         print("Check whether tx is ok or not")
         is_ok = cmd.is_tx_ok(unvote_tx_hash)
         assert(is_ok == True)
+
+        print("Check malfunction: wrong address")
+        try:
+            vote_tx_hash = cmd.vote(self.wallet_password, self.system_contract, self.vote_amount, self.vote_fee, self.vote_gas, self.wallet_anna)
+            raise Exception("Executed. Test fails")
+
+        except:
+            print("Expected error occurred. Success")
 
         print("======================Done test07_simple_vote_and_unvote======================")
 
