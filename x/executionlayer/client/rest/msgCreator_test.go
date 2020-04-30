@@ -14,6 +14,7 @@ import (
 
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/codec"
+	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/types/rest"
 	"github.com/stretchr/testify/require"
 
@@ -235,14 +236,14 @@ func TestRESTRedelegate(t *testing.T) {
 
 func TestRESTVote(t *testing.T) {
 	_, _, writer, clictx, basereq := prepare()
-	hash := hex.EncodeToString(types.SYSTEM_ACCOUNT)
+	targetContractAddress := sdk.ContractHashAddress(types.SYSTEM_ACCOUNT)
 
 	// Body
 	delegateReq := voteReq{
-		BaseReq: basereq,
-		Hash:    hash,
-		Amount:  "100000000",
-		Fee:     "10000000",
+		BaseReq:                basereq,
+		TargetContrractAddress: targetContractAddress.String(),
+		Amount:                 "100000000",
+		Fee:                    "10000000",
 	}
 
 	// http.request
@@ -258,14 +259,14 @@ func TestRESTVote(t *testing.T) {
 
 func TestRESTUnvote(t *testing.T) {
 	_, _, writer, clictx, basereq := prepare()
-	hash := hex.EncodeToString(types.SYSTEM_ACCOUNT)
+	targetContractAddress := sdk.ContractHashAddress(types.SYSTEM_ACCOUNT)
 
 	// Body
 	delegateReq := voteReq{
-		BaseReq: basereq,
-		Hash:    hash,
-		Amount:  "100000000",
-		Fee:     "10000000",
+		BaseReq:                basereq,
+		TargetContrractAddress: targetContractAddress.String(),
+		Amount:                 "100000000",
+		Fee:                    "10000000",
 	}
 
 	// http.request

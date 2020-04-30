@@ -95,14 +95,32 @@ type Address interface {
 	Format(s fmt.State, verb rune)
 }
 
+// ContractAddress is a specific interface for contract address
+type ContractAddress interface {
+	Equals(Address) bool
+	Empty() bool
+	Marshal() ([]byte, error)
+	MarshalJSON() ([]byte, error)
+	Bytes() []byte
+	String() string
+	Format(s fmt.State, verb rune)
+}
+
 // Ensure that different address types implement the interface
 var _ Address = AccAddress{}
 var _ Address = ValAddress{}
 var _ Address = ConsAddress{}
+var _ Address = ContractHashAddress{}
+var _ Address = ContractUrefAddress{}
 
 var _ yaml.Marshaler = AccAddress{}
 var _ yaml.Marshaler = ValAddress{}
 var _ yaml.Marshaler = ConsAddress{}
+var _ yaml.Marshaler = ContractHashAddress{}
+var _ yaml.Marshaler = ContractUrefAddress{}
+
+var _ ContractAddress = ContractHashAddress{}
+var _ ContractAddress = ContractUrefAddress{}
 
 // ----------------------------------------------------------------------------
 // account

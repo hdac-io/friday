@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/hdac-io/friday/client/context"
 	sdk "github.com/hdac-io/friday/types"
@@ -398,11 +399,10 @@ func redelegateMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *h
 }
 
 type voteReq struct {
-	BaseReq              rest.BaseReq `json:"base_req"`
-	TokenContractAddress string       `json:"token_contract_address"`
-	Hash                 string       `json:"hash"`
-	Amount               string       `json:"amount"`
-	Fee                  string       `json:"fee"`
+	BaseReq                rest.BaseReq `json:"base_req"`
+	TargetContrractAddress string       `json:"target_contract_address"`
+	Amount                 string       `json:"amount"`
+	Fee                    string       `json:"fee"`
 }
 
 func voteUnvoteMsgCreator(voteIsTrue bool, w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
@@ -428,9 +428,17 @@ func voteUnvoteMsgCreator(voteIsTrue bool, w http.ResponseWriter, cliCtx context
 		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse base request")
 	}
 
-	hash, err := hex.DecodeString(req.Hash)
+	var contractAddress sdk.ContractAddress
+	if strings.HasPrefix(req.TargetContrractAddress, sdk.Bech32PrefixContractURef) {
+		contractAddress, err = sdk.ContractUrefAddressFromBech32(req.TargetContrractAddress)
+	} else if strings.HasPrefix(req.TargetContrractAddress, sdk.Bech32PrefixContractHash) {
+		contractAddress, err = sdk.ContractHashAddressFromBech32(req.TargetContrractAddress)
+	} else {
+		err = fmt.Errorf("Malformed contract address")
+	}
+
 	if err != nil {
-		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse hash: %s", req.Hash)
+		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse hash: %s", req.TargetContrractAddress)
 	}
 
 	amount, err := cliutil.ToBigsun(cliutil.Hdac(req.Amount))
@@ -450,9 +458,9 @@ func voteUnvoteMsgCreator(voteIsTrue bool, w http.ResponseWriter, cliCtx context
 	}
 
 	if voteIsTrue == true {
-		msg = types.NewMsgVote(req.TokenContractAddress, addr, hash, string(amount), string(fee), gas)
+		msg = types.NewMsgVote("system:vote", addr, contractAddress, string(amount), string(fee), gas)
 	} else {
-		msg = types.NewMsgUnvote(req.TokenContractAddress, addr, hash, string(amount), string(fee), gas)
+		msg = types.NewMsgUnvote("system:unvote", addr, contractAddress, string(amount), string(fee), gas)
 	}
 
 	// create the message

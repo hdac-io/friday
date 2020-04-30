@@ -1,9 +1,9 @@
 package cli
 
 import (
-	"encoding/hex"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	"github.com/hdac-io/friday/client"
@@ -469,7 +469,7 @@ func GetCmdRedelegate(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "vote <hash> <amount> <fee> <gas-price> --from <from>",
+		Use:   "vote <contract_address> <amount> <fee> <gas-price> --from <from>",
 		Short: "Vote token",
 		Long:  "Vote token for converts tokens as a freedom",
 		Args:  cobra.ExactArgs(4),
@@ -488,10 +488,13 @@ func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			hash, err := hex.DecodeString(args[0])
-			if err != nil {
-				return err
-
+			var contractAddress sdk.ContractAddress
+			if strings.HasPrefix(args[0], sdk.Bech32PrefixContractURef) {
+				contractAddress, err = sdk.ContractUrefAddressFromBech32(args[0])
+			} else if strings.HasPrefix(args[0], sdk.Bech32PrefixContractHash) {
+				contractAddress, err = sdk.ContractHashAddressFromBech32(args[0])
+			} else {
+				return fmt.Errorf("Malformed contract address")
 			}
 
 			amount, err := cliutil.ToBigsun(cliutil.Hdac(args[1]))
@@ -513,8 +516,7 @@ func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			// TODO: Currently implementation of contract address is dummy
-			msg := types.NewMsgVote("dummyAddress", addr, hash, string(amount), string(fee), gasPrice)
+			msg := types.NewMsgVote("system:vote", addr, contractAddress, string(amount), string(fee), gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
@@ -528,7 +530,7 @@ func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdUnvote(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unvote <hash> <amount> <fee> <gas-price> --from <from>",
+		Use:   "unvote <contract_address> <amount> <fee> <gas-price> --from <from>",
 		Short: "Unvote token",
 		Long:  "Unvote token for converts tokens as a freedom",
 		Args:  cobra.ExactArgs(4),
@@ -547,10 +549,13 @@ func GetCmdUnvote(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			hash, err := hex.DecodeString(args[0])
-			if err != nil {
-				return err
-
+			var contractAddress sdk.ContractAddress
+			if strings.HasPrefix(args[0], sdk.Bech32PrefixContractURef) {
+				contractAddress, err = sdk.ContractUrefAddressFromBech32(args[0])
+			} else if strings.HasPrefix(args[0], sdk.Bech32PrefixContractHash) {
+				contractAddress, err = sdk.ContractHashAddressFromBech32(args[0])
+			} else {
+				return fmt.Errorf("Malformed contract address")
 			}
 
 			amount, err := cliutil.ToBigsun(cliutil.Hdac(args[1]))
@@ -572,8 +577,7 @@ func GetCmdUnvote(cdc *codec.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			// TODO: Currently implementation of contract address is dummy
-			msg := types.NewMsgUnvote("dummyAddress", addr, hash, string(amount), string(fee), gasPrice)
+			msg := types.NewMsgUnvote("system:unvote", addr, contractAddress, string(amount), string(fee), gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},

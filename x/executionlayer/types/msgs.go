@@ -502,29 +502,29 @@ func (msg MsgRedelegate) GetSigners() []sdk.AccAddress {
 
 //______________________________________________________________________
 type MsgVote struct {
-	ContractAddress string         `json:"contract_address" yaml:"contract_address"`
-	FromAddress     sdk.AccAddress `json:"from_address" yaml:"from_address"`
-	Hash            []byte         `json:"hash" yaml:"hash"`
-	Amount          string         `json:"amount" yaml:"amount"`
-	Fee             string         `json:"fee" yaml:"fee"`
-	GasPrice        uint64         `json:"gas_price" yaml:"gas_price"`
+	ContractAddress       string              `json:"contract_address" yaml:"contract_address"`
+	FromAddress           sdk.AccAddress      `json:"from_address" yaml:"from_address"`
+	TargetContractAddress sdk.ContractAddress `json:"target_contract_address" yaml:"target_contract_address"`
+	Amount                string              `json:"amount" yaml:"amount"`
+	Fee                   string              `json:"fee" yaml:"fee"`
+	GasPrice              uint64              `json:"gas_price" yaml:"gas_price"`
 }
 
 // NewMsgVote is a constructor function for MsgSetName
 func NewMsgVote(
 	tokenContractAddress string,
 	fromAddress sdk.AccAddress,
-	hash []byte,
+	targetContractAddress sdk.ContractAddress,
 	amount, fee string,
 	gasPrice uint64,
 ) MsgVote {
 	return MsgVote{
-		ContractAddress: tokenContractAddress,
-		FromAddress:     fromAddress,
-		Hash:            hash,
-		Amount:          amount,
-		Fee:             fee,
-		GasPrice:        gasPrice,
+		ContractAddress:       tokenContractAddress,
+		FromAddress:           fromAddress,
+		TargetContractAddress: targetContractAddress,
+		Amount:                amount,
+		Fee:                   fee,
+		GasPrice:              gasPrice,
 	}
 }
 
@@ -539,7 +539,7 @@ func (msg MsgVote) ValidateBasic() sdk.Error {
 	if msg.FromAddress.Equals(sdk.AccAddress("")) {
 		return sdk.ErrUnknownRequest("Address cannot be empty")
 	}
-	if len(msg.Hash) != 32 {
+	if len(msg.TargetContractAddress.Bytes()) != 32 {
 		return sdk.ErrUnknownRequest("Hash must be 32 bytes")
 	}
 	return nil
@@ -557,29 +557,29 @@ func (msg MsgVote) GetSigners() []sdk.AccAddress {
 
 //______________________________________________________________________
 type MsgUnvote struct {
-	ContractAddress string         `json:"contract_address" yaml:"contract_address"`
-	FromAddress     sdk.AccAddress `json:"from_address" yaml:"from_address"`
-	Hash            []byte         `json:"hash" yaml:"hash"`
-	Amount          string         `json:"amount" yaml:"amount"`
-	Fee             string         `json:"fee" yaml:"fee"`
-	GasPrice        uint64         `json:"gas_price" yaml:"gas_price"`
+	ContractAddress       string              `json:"contract_address" yaml:"contract_address"`
+	FromAddress           sdk.AccAddress      `json:"from_address" yaml:"from_address"`
+	TargetContractAddress sdk.ContractAddress `json:"target_contract_address" yaml:"target_contract_address"`
+	Amount                string              `json:"amount" yaml:"amount"`
+	Fee                   string              `json:"fee" yaml:"fee"`
+	GasPrice              uint64              `json:"gas_price" yaml:"gas_price"`
 }
 
 // NewMsgUnvote is a constructor function for MsgSetName
 func NewMsgUnvote(
 	tokenContractAddress string,
 	fromAddress sdk.AccAddress,
-	hash []byte,
+	targetContractAddress sdk.ContractAddress,
 	amount, fee string,
 	gasPrice uint64,
 ) MsgUnvote {
 	return MsgUnvote{
-		ContractAddress: tokenContractAddress,
-		FromAddress:     fromAddress,
-		Hash:            hash,
-		Amount:          amount,
-		Fee:             fee,
-		GasPrice:        gasPrice,
+		ContractAddress:       tokenContractAddress,
+		FromAddress:           fromAddress,
+		TargetContractAddress: targetContractAddress,
+		Amount:                amount,
+		Fee:                   fee,
+		GasPrice:              gasPrice,
 	}
 }
 
@@ -594,7 +594,7 @@ func (msg MsgUnvote) ValidateBasic() sdk.Error {
 	if msg.FromAddress.Equals(sdk.AccAddress("")) {
 		return sdk.ErrUnknownRequest("Address cannot be empty")
 	}
-	if len(msg.Hash) != 32 {
+	if len(msg.TargetContractAddress.Bytes()) != 32 {
 		return sdk.ErrUnknownRequest("Hash must be 32 bytes")
 	}
 	return nil
