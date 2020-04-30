@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
@@ -132,6 +134,20 @@ func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
 			if err != nil {
 				fmt.Printf("could not resolve data - %s %s %s\nerr : %s\n", dataType, data, path, err.Error())
 				return nil
+			}
+
+			if path == "" {
+				r := regexp.MustCompile(`\"uref\": \{[\s]+\"uref\": \"([a-zA-Z0-9+/]+={0,3})\"`)
+				for _, matchedGroup := range r.FindAllStringSubmatch(valueStr, -1) {
+					urefStr := matchedGroup[1]
+					valueStr = strings.Replace(valueStr, urefStr, sdk.MustGetBech32ContractUrefFromBase64(urefStr), -1)
+				}
+
+				r = regexp.MustCompile(`\"hash\": \{[\s]+\"hash\": \"([a-zA-Z0-9+/]+={0,3})\"`)
+				for _, matchedGroup := range r.FindAllStringSubmatch(valueStr, -1) {
+					hashStr := matchedGroup[1]
+					valueStr = strings.Replace(valueStr, hashStr, sdk.MustGetBech32ContractHashFromBase64(hashStr), -1)
+				}
 			}
 
 			_, err = fmt.Println(valueStr)
