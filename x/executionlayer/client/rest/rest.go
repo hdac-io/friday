@@ -1,14 +1,19 @@
 package rest
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 
+	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gorilla/mux"
+
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/types/rest"
 	"github.com/hdac-io/friday/x/auth/client/utils"
+	cliutil "github.com/hdac-io/friday/x/executionlayer/client/util"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 )
 
@@ -18,6 +23,9 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 		hdacSpecific = "hdac"
 		general      = "contract"
 	)
+
+	r.HandleFunc(fmt.Sprintf("/%s", general), contractRunHandler(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/%s", general), contractQueryHandler(cliCtx, storeName)).Methods("GET")
 
 	r.HandleFunc(fmt.Sprintf("/%s/transfer", hdacSpecific), transferHandler(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/%s/bond", hdacSpecific), bondHandler(cliCtx)).Methods("POST")
@@ -36,6 +44,48 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 	r.HandleFunc(fmt.Sprintf("/%s/validators", hdacSpecific), getValidatorHandler(cliCtx, storeName)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/%s/validators", hdacSpecific), createValidatorHandler(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/%s/validators", hdacSpecific), editValidatorHandler(cliCtx)).Methods("PUT")
+}
+
+func contractRunHandler(cliCtx context.CLIContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		baseReq, msgs, err := contractRunMsgCreator(w, cliCtx, r)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		utils.WriteGenerateStdTxResponse(w, cliCtx, baseReq, msgs)
+	}
+}
+
+func contractQueryHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		bz, path, err := getContractQuerying(w, cliCtx, r)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querydetail", types.ModuleName), bz)
+
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		value := &state.Value{}
+		err = jsonpb.Unmarshal(bytes.NewReader(res), value)
+
+		marshaler := jsonpb.Marshaler{Indent: "  "}
+		valueStr, err := marshaler.MarshalToString(value)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		valueStr = cliutil.ReplaceBase64HashToBech32(path, valueStr)
+
+		rest.PostProcessResponseBare(w, cliCtx, []byte(valueStr))
+	}
 }
 
 func transferHandler(cliCtx context.CLIContext) http.HandlerFunc {

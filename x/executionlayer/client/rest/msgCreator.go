@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"net/http"
@@ -11,7 +12,119 @@ import (
 	"github.com/hdac-io/friday/types/rest"
 	cliutil "github.com/hdac-io/friday/x/executionlayer/client/util"
 	"github.com/hdac-io/friday/x/executionlayer/types"
+
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 )
+
+type contractRunReq struct {
+	BaseReq                       rest.BaseReq `json:"base_req"`
+	ExecutionType                 string       `json:"type"`
+	TokenContractAddressOrKeyName string       `json:"token_contract_address_or_key_name"`
+	Base64EncodedBinary           string       `json:"base64_encoded_binary"`
+	Args                          string       `json:"args"`
+	Fee                           string       `json:"fee"`
+}
+
+func contractRunMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
+	var req contractRunReq
+
+	// Get body parameters
+	if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse request")
+	}
+
+	var senderAddr sdk.AccAddress
+	senderAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
+	if err != nil {
+		senderAddr, err = cliutil.GetAddress(cliCtx.Codec, cliCtx, req.BaseReq.From)
+		if err != nil {
+			return rest.BaseReq{}, nil, fmt.Errorf("failed to parse sender address or name: %s", req.BaseReq.From)
+		}
+	}
+
+	req.BaseReq.From = senderAddr.String()
+	if !req.BaseReq.ValidateBasic(w) {
+		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse base request")
+	}
+
+	sessionType := cliutil.GetContractType(req.ExecutionType)
+	var sessionCode []byte
+	var contractAddress string
+
+	switch sessionType {
+	case util.WASM:
+		contractAddress = "wasm_file_direct_execution"
+		sessionCode, err = base64.StdEncoding.DecodeString(req.Base64EncodedBinary)
+		if err != nil {
+			return rest.BaseReq{}, nil, fmt.Errorf("failed to decode WASM binary")
+		}
+	case util.HASH:
+		contractAddress = req.TokenContractAddressOrKeyName
+		contractHashAddr, err := sdk.ContractHashAddressFromBech32(req.TokenContractAddressOrKeyName)
+		if err != nil {
+			return rest.BaseReq{}, nil, fmt.Errorf("failed to decode given contract hash address")
+		}
+		sessionCode = contractHashAddr.Bytes()
+	case util.UREF:
+		contractAddress = req.TokenContractAddressOrKeyName
+		contractUrefAddr, err := sdk.ContractUrefAddressFromBech32(req.TokenContractAddressOrKeyName)
+		if err != nil {
+			return rest.BaseReq{}, nil, fmt.Errorf("failed to decode given contract uref address")
+		}
+		sessionCode = contractUrefAddr.Bytes()
+	case util.NAME:
+		contractAddress = fmt.Sprintf("%s:%s", senderAddr.String(), req.TokenContractAddressOrKeyName)
+		sessionCode = []byte(req.TokenContractAddressOrKeyName)
+	default:
+		return rest.BaseReq{}, nil, fmt.Errorf("type must be one of wasm, name, uref, or hash")
+	}
+
+	fee, err := cliutil.ToBigsun(cliutil.Hdac(req.Fee))
+	if err != nil {
+		return rest.BaseReq{}, nil, fmt.Errorf("error on conversion from bigsun to token")
+	}
+
+	gasPrice, err := strconv.ParseUint(req.BaseReq.Gas, 10, 64)
+	if err != nil {
+		return rest.BaseReq{}, nil, fmt.Errorf("error to parse into gas")
+	}
+
+	// build and sign the transaction, then broadcast to Tendermint
+	msg := types.NewMsgExecute(
+		contractAddress,
+		senderAddr,
+		sessionType,
+		sessionCode,
+		req.Args,
+		string(fee),
+		gasPrice,
+	)
+
+	err = msg.ValidateBasic()
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
+	return req.BaseReq, []sdk.Msg{msg}, nil
+}
+
+func getContractQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) ([]byte, string, error) {
+	vars := r.URL.Query()
+	dataType := vars.Get("data_type")
+	data := vars.Get("data")
+	path := vars.Get("path")
+	blockhash := vars.Get("blockhash")
+
+	queryData := types.QueryExecutionLayerDetail{
+		KeyType:   dataType,
+		KeyData:   data,
+		Path:      path,
+		BlockHash: blockhash,
+	}
+	bz := cliCtx.Codec.MustMarshalJSON(queryData)
+
+	return bz, path, nil
+}
 
 type transferReq struct {
 	BaseReq                    rest.BaseReq `json:"base_req"`

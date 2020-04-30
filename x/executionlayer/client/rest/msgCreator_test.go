@@ -2,11 +2,14 @@ package rest
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path"
 	"testing"
 
 	"github.com/hdac-io/friday/client/context"
@@ -15,6 +18,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/hdac-io/friday/x/executionlayer/types"
+
+	eeutil "github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
+)
+
+var (
+	contractPath      = os.ExpandEnv("$HOME/.nodef/contracts")
+	counterDefineWasm = "counter_define.wasm"
 )
 
 func prepare() (fromAddr, receipAddr string, w http.ResponseWriter, clictx context.CLIContext, basereq rest.BaseReq) {
@@ -33,6 +43,62 @@ func prepare() (fromAddr, receipAddr string, w http.ResponseWriter, clictx conte
 	}
 
 	return
+}
+
+func TestRESTContractRunWASMFile(t *testing.T) {
+	_, _, writer, clictx, basereq := prepare()
+	counterBinary := eeutil.LoadWasmFile(path.Join(contractPath, counterDefineWasm))
+
+	contractReq := contractRunReq{
+		BaseReq:                       basereq,
+		ExecutionType:                 "wasm",
+		TokenContractAddressOrKeyName: "",
+		Base64EncodedBinary:           base64.StdEncoding.EncodeToString(counterBinary),
+		Args:                          "",
+		Fee:                           "10000000",
+	}
+
+	body := clictx.Codec.MustMarshalJSON(contractReq)
+	req := mustNewRequest(t, "POST", "/contract", bytes.NewReader(body))
+
+	outputBasereq, msgs, err := contractRunMsgCreator(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.Equal(t, outputBasereq, basereq)
+	require.NotNil(t, msgs)
+}
+
+func TestRESTContractRunContractAddress(t *testing.T) {
+	_, _, writer, clictx, basereq := prepare()
+
+	contractReq := contractRunReq{
+		BaseReq:                       basereq,
+		ExecutionType:                 "uref",
+		TokenContractAddressOrKeyName: "fridaycontracturef1v4xev2kdy8hkzvwcadk4a3872lzcyyz8t44du5z2jhz636qduz3sf9mf96",
+		Base64EncodedBinary:           "",
+		Args:                          `[{"name": "method", "value": {"string_value": "mint"}},{"name": "address", "value": {"string_value": "friday1qt8k20h3hmdx0qulgpppnlsg92hjjtvn59qkyd"}},{"name": "amount", "value": {"big_int": {"value": "100000", "bit_width": 512}}}]`,
+		Fee:                           "10000000",
+	}
+
+	body := clictx.Codec.MustMarshalJSON(contractReq)
+	req := mustNewRequest(t, "POST", "/contract", bytes.NewReader(body))
+
+	outputBasereq, msgs, err := contractRunMsgCreator(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.Equal(t, outputBasereq, basereq)
+	require.NotNil(t, msgs)
+}
+
+func TestRESTContractQuery(t *testing.T) {
+	_, _, writer, clictx, _ := prepare()
+
+	req := mustNewRequest(t, "GET", fmt.Sprintf("/contract?data_type=%s&data=%s&path=", "address", "system"), nil)
+	res, path, err := getContractQuerying(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.NotNil(t, path)
 }
 
 func TestRESTTransfer(t *testing.T) {
