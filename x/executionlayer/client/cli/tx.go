@@ -45,22 +45,28 @@ func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 
 			sessionType := cliutil.GetContractType(args[0])
 			var sessionCode []byte
+			var contractAddress string
+
 			switch sessionType {
 			case util.WASM:
+				contractAddress = "wasm_file_direct_execution"
 				sessionCode = util.LoadWasmFile(args[1])
 			case util.HASH:
+				contractAddress = args[1]
 				contractHashAddr, err := sdk.ContractHashAddressFromBech32(args[1])
 				if err != nil {
 					return err
 				}
 				sessionCode = contractHashAddr.Bytes()
 			case util.UREF:
+				contractAddress = args[1]
 				contractUrefAddr, err := sdk.ContractUrefAddressFromBech32(args[1])
 				if err != nil {
 					return err
 				}
-				sessionCode = contractUrefAddr
+				sessionCode = contractUrefAddr.Bytes()
 			case util.NAME:
+				contractAddress = fmt.Sprintf("%s:%s", fromAddr.String(), args[1])
 				sessionCode = []byte(args[1])
 			default:
 				return fmt.Errorf("type must be one of wasm, name, uref, or hash")
@@ -77,9 +83,8 @@ func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			// TODO: Currently implementation of contract address is dummy
 			msg := types.NewMsgExecute(
-				"dummyAddress",
+				contractAddress,
 				fromAddr,
 				sessionType,
 				sessionCode,
