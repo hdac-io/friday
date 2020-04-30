@@ -155,8 +155,7 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
 
 			// build and sign the transaction, then broadcast to Tendermint
-			// TODO: Currently implementation of contract address is dummy
-			msg := types.NewMsgTransfer("dummyAddress", fromAddr, recipentAddr, string(amount), string(fee), gasPrice)
+			msg := types.NewMsgTransfer("system:transfer", fromAddr, recipentAddr, string(amount), string(fee), gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
@@ -209,8 +208,7 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			// TODO: Currently implementation of contract address is dummy
-			msg := types.NewMsgBond("dummyAddress", addr, string(amount), string(fee), gasPrice)
+			msg := types.NewMsgBond("system:bond", addr, string(amount), string(fee), gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
@@ -263,8 +261,7 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			// TODO: Currently implementation of contract address is dummy
-			msg := types.NewMsgUnBond("dummyAddress", addr, string(amount), string(fee), gasPrice)
+			msg := types.NewMsgUnBond("system:unbond", addr, string(amount), string(fee), gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
@@ -324,8 +321,7 @@ func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			// TODO: Currently implementation of contract address is dummy
-			msg := types.NewMsgDelegate("dummyAddress", addr, valAddress, string(amount), string(fee), gasPrice)
+			msg := types.NewMsgDelegate("system:delegate", addr, valAddress, string(amount), string(fee), gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
@@ -385,8 +381,7 @@ func GetCmdUndelegate(cdc *codec.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			// TODO: Currently implementation of contract address is dummy
-			msg := types.NewMsgUndelegate("dummyAddress", addr, valAddress, string(amount), string(fee), gasPrice)
+			msg := types.NewMsgUndelegate("system:undelegate", addr, valAddress, string(amount), string(fee), gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
@@ -454,8 +449,7 @@ func GetCmdRedelegate(cdc *codec.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			// TODO: Currently implementation of contract address is dummy
-			msg := types.NewMsgRedelegate("dummyAddress", addr, srcValAddress, destValAddress, string(amount), string(fee), gasPrice)
+			msg := types.NewMsgRedelegate("system:redelegate", addr, srcValAddress, destValAddress, string(amount), string(fee), gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
@@ -636,8 +630,7 @@ func GetCmdClaimReward(cdc *codec.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			// TODO: Currently implementation of contract address is dummy
-			msg := types.NewMsgClaim("dummyAddress", addr, isRewardOrCommission, string(fee), gasPrice)
+			msg := types.NewMsgClaim(fmt.Sprintf("system:claim_%s", args[0]), addr, isRewardOrCommission, string(fee), gasPrice)
 			txBldr = txBldr.WithGas(gasPrice)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
