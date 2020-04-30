@@ -128,7 +128,6 @@ func getContractQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *ht
 
 type transferReq struct {
 	BaseReq                    rest.BaseReq `json:"base_req"`
-	TokenContractAddress       string       `json:"token_contract_address"`
 	RecipientAddressOrNickname string       `json:"recipient_address_or_nickname"`
 	Amount                     string       `json:"amount"`
 	Fee                        string       `json:"fee"`
@@ -182,7 +181,7 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 	}
 
 	// create the message
-	eeMsg := types.NewMsgTransfer(req.TokenContractAddress, senderAddr, recipientAddr, string(amount), string(fee), gas)
+	eeMsg := types.NewMsgTransfer("system:transfer", senderAddr, recipientAddr, string(amount), string(fee), gas)
 	err = eeMsg.ValidateBasic()
 	if err != nil {
 		return rest.BaseReq{}, nil, err
@@ -192,10 +191,9 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 }
 
 type bondReq struct {
-	BaseReq              rest.BaseReq `json:"base_req"`
-	TokenContractAddress string       `json:"token_contract_address"`
-	Amount               string       `json:"amount"`
-	Fee                  string       `json:"fee"`
+	BaseReq rest.BaseReq `json:"base_req"`
+	Amount  string       `json:"amount"`
+	Fee     string       `json:"fee"`
 }
 
 func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
@@ -238,9 +236,9 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 	}
 
 	if bondIsTrue == true {
-		msg = types.NewMsgBond(req.TokenContractAddress, addr, string(amount), string(fee), gas)
+		msg = types.NewMsgBond("system:bond", addr, string(amount), string(fee), gas)
 	} else {
-		msg = types.NewMsgUnBond(req.TokenContractAddress, addr, string(amount), string(fee), gas)
+		msg = types.NewMsgUnBond("system:unbond", addr, string(amount), string(fee), gas)
 	}
 
 	// create the message
@@ -253,11 +251,10 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 }
 
 type delegateReq struct {
-	BaseReq              rest.BaseReq `json:"base_req"`
-	TokenContractAddress string       `json:"token_contract_address"`
-	ValidatorAddress     string       `json:"validator_address"`
-	Amount               string       `json:"amount"`
-	Fee                  string       `json:"fee"`
+	BaseReq          rest.BaseReq `json:"base_req"`
+	ValidatorAddress string       `json:"validator_address"`
+	Amount           string       `json:"amount"`
+	Fee              string       `json:"fee"`
 }
 
 func delegateUndelegateMsgCreator(delegateIsTrue bool, w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
@@ -308,9 +305,9 @@ func delegateUndelegateMsgCreator(delegateIsTrue bool, w http.ResponseWriter, cl
 	}
 
 	if delegateIsTrue == true {
-		msg = types.NewMsgDelegate(req.TokenContractAddress, addr, valAddress, string(amount), string(fee), gas)
+		msg = types.NewMsgDelegate("system:delegate", addr, valAddress, string(amount), string(fee), gas)
 	} else {
-		msg = types.NewMsgUndelegate(req.TokenContractAddress, addr, valAddress, string(amount), string(fee), gas)
+		msg = types.NewMsgUndelegate("system:undelegate", addr, valAddress, string(amount), string(fee), gas)
 	}
 
 	// create the message
@@ -324,7 +321,6 @@ func delegateUndelegateMsgCreator(delegateIsTrue bool, w http.ResponseWriter, cl
 
 type redelegateReq struct {
 	BaseReq              rest.BaseReq `json:"base_req"`
-	TokenContractAddress string       `json:"token_contract_address"`
 	SrcValidatorAddress  string       `json:"src_validator_address"`
 	DestValidatorAddress string       `json:"dest_validator_address"`
 	Amount               string       `json:"amount"`
@@ -386,7 +382,7 @@ func redelegateMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *h
 		return rest.BaseReq{}, nil, err
 	}
 
-	msg = types.NewMsgRedelegate(req.TokenContractAddress, addr, srcValAddress, destValAddress, string(amount), string(fee), gas)
+	msg = types.NewMsgRedelegate("system:redelegate", addr, srcValAddress, destValAddress, string(amount), string(fee), gas)
 
 	// create the message
 	err = msg.ValidateBasic()
@@ -472,11 +468,10 @@ func voteUnvoteMsgCreator(voteIsTrue bool, w http.ResponseWriter, cliCtx context
 }
 
 type claimReq struct {
-	BaseReq              rest.BaseReq `json:"base_req"`
-	TokenContractAddress string       `json:"token_contract_address"`
-	RewardOrCommission   bool         `json:"reward_or_commission"`
-	Amount               string       `json:"amount"`
-	Fee                  string       `json:"fee"`
+	BaseReq            rest.BaseReq `json:"base_req"`
+	RewardOrCommission bool         `json:"reward_or_commission"`
+	Amount             string       `json:"amount"`
+	Fee                string       `json:"fee"`
 }
 
 func claimMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
@@ -513,7 +508,14 @@ func claimMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.R
 		return rest.BaseReq{}, nil, err
 	}
 
-	msg = types.NewMsgClaim(req.TokenContractAddress, addr, req.RewardOrCommission, string(fee), gas)
+	var txname string
+	if req.RewardOrCommission == false {
+		txname = "commission"
+	} else {
+		txname = "reward"
+	}
+
+	msg = types.NewMsgClaim(fmt.Sprintf("system:claim_%s", txname), addr, req.RewardOrCommission, string(fee), gas)
 
 	// create the message
 	err = msg.ValidateBasic()
@@ -725,7 +727,6 @@ func getVoterQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.
 
 	contractStr := vars.Get("contract")
 
-	var contractAddress types.ContractAddress
 	var contractAddressUref types.ContractUrefAddress
 	var contractAddressHash types.ContractHashAddress
 	var queryData types.QueryVoterParams
@@ -745,14 +746,19 @@ func getVoterQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.
 		}
 		queryData = queryDataHash
 	} else {
-		err = fmt.Errorf("malformed contract address")
+		contractAddressUref = types.ContractUrefAddress{}
+		queryDataUref := types.QueryVoterParamsUref{
+			Contract: contractAddressUref,
+			Address:  address,
+		}
+		queryData = queryDataUref
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	if address.Empty() && len(contractAddress.Bytes()) == 0 {
+	if address.Empty() && contractStr == "" {
 		return nil, fmt.Errorf("requires hash or voter address")
 	}
 
