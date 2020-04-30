@@ -67,16 +67,52 @@ func NewQueryDelegatorParams(delegaatorAddr sdk.AccAddress, validatorAddr sdk.Ac
 
 // defines the params for the following queries:
 // - 'custom/%s/voter'
-type QueryVoterParams struct {
-	Address sdk.AccAddress `json:"address"`
-	Hash    []byte         `json:"hash"`
+type QueryVoterParams interface {
+	GetAddress() sdk.AccAddress
+	GetContract() ContractAddress
 }
 
-func NewQueryVoterParams(address sdk.AccAddress, hash []byte) QueryVoterParams {
-	return QueryVoterParams{
-		Address: address,
-		Hash:    hash,
+var _ QueryVoterParams = QueryVoterParamsUref{}
+var _ QueryVoterParams = QueryVoterParamsHash{}
+
+type QueryVoterParamsUref struct {
+	Address  sdk.AccAddress      `json:"address"`
+	Contract ContractUrefAddress `json:"contract_address"`
+}
+
+func NewQueryVoterUrefParams(address sdk.AccAddress, contractAddress ContractUrefAddress) QueryVoterParamsUref {
+	return QueryVoterParamsUref{
+		Address:  address,
+		Contract: contractAddress,
 	}
+}
+
+func (q QueryVoterParamsUref) GetAddress() sdk.AccAddress {
+	return q.Address
+}
+
+func (q QueryVoterParamsUref) GetContract() ContractAddress {
+	return q.Contract
+}
+
+type QueryVoterParamsHash struct {
+	Address  sdk.AccAddress      `json:"address"`
+	Contract ContractHashAddress `json:"contract_address"`
+}
+
+func NewQueryVoterHashParams(address sdk.AccAddress, contractAddress ContractHashAddress) QueryVoterParamsHash {
+	return QueryVoterParamsHash{
+		Address:  address,
+		Contract: contractAddress,
+	}
+}
+
+func (q QueryVoterParamsHash) GetAddress() sdk.AccAddress {
+	return q.Address
+}
+
+func (q QueryVoterParamsHash) GetContract() ContractAddress {
+	return q.Contract
 }
 
 // QueryGetReward payload for reward query

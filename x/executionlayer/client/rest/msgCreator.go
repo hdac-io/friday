@@ -2,7 +2,6 @@ package rest
 
 import (
 	"encoding/base64"
-	"encoding/hex"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -428,7 +427,7 @@ func voteUnvoteMsgCreator(voteIsTrue bool, w http.ResponseWriter, cliCtx context
 		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse base request")
 	}
 
-	var contractAddress sdk.ContractAddress
+	var contractAddress types.ContractAddress
 	if strings.HasPrefix(req.TargetContrractAddress, sdk.Bech32PrefixContractURef) {
 		contractAddress, err = sdk.ContractUrefAddressFromBech32(req.TargetContrractAddress)
 	} else if strings.HasPrefix(req.TargetContrractAddress, sdk.Bech32PrefixContractHash) {
@@ -701,7 +700,7 @@ func getDelegatorQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *h
 	}
 
 	if validatorAddress.Empty() && delegatorAddress.Empty() {
-		return nil, fmt.Errorf("Requires validator or delegate address.")
+		return nil, fmt.Errorf("requires validator or delegate address")
 	}
 
 	queryData := types.QueryDelegatorParams{
@@ -716,25 +715,45 @@ func getDelegatorQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *h
 
 func getVoterQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) ([]byte, error) {
 	vars := r.URL.Query()
-	hashStr := vars.Get("hash")
-	hash, err := hex.DecodeString(hashStr)
-	if err != nil {
-		return nil, err
-	}
 
+	var err error
 	addressStr := vars.Get("address")
 	address, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, addressStr)
 	if err != nil {
 		return nil, err
 	}
 
-	if address.Empty() && len(hash) == 0 {
-		return nil, fmt.Errorf("Requires hash or voter address.")
+	contractStr := vars.Get("contract")
+
+	var contractAddress types.ContractAddress
+	var contractAddressUref types.ContractUrefAddress
+	var contractAddressHash types.ContractHashAddress
+	var queryData types.QueryVoterParams
+
+	if strings.HasPrefix(contractStr, sdk.Bech32PrefixContractURef) {
+		contractAddressUref, err = sdk.ContractUrefAddressFromBech32(contractStr)
+		queryDataUref := types.QueryVoterParamsUref{
+			Contract: contractAddressUref,
+			Address:  address,
+		}
+		queryData = queryDataUref
+	} else if strings.HasPrefix(contractStr, sdk.Bech32PrefixContractHash) {
+		contractAddressHash, err = sdk.ContractHashAddressFromBech32(contractStr)
+		queryDataHash := types.QueryVoterParamsHash{
+			Contract: contractAddressHash,
+			Address:  address,
+		}
+		queryData = queryDataHash
+	} else {
+		err = fmt.Errorf("malformed contract address")
 	}
 
-	queryData := types.QueryVoterParams{
-		Hash:    hash,
-		Address: address,
+	if err != nil {
+		return nil, err
+	}
+
+	if address.Empty() && len(contractAddress.Bytes()) == 0 {
+		return nil, fmt.Errorf("requires hash or voter address")
 	}
 
 	bz := cliCtx.Codec.MustMarshalJSON(queryData)

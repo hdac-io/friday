@@ -494,7 +494,11 @@ func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 			} else if strings.HasPrefix(args[0], sdk.Bech32PrefixContractHash) {
 				contractAddress, err = sdk.ContractHashAddressFromBech32(args[0])
 			} else {
-				return fmt.Errorf("Malformed contract address")
+				err = fmt.Errorf("Malformed contract address")
+			}
+
+			if err != nil {
+				return err
 			}
 
 			amount, err := cliutil.ToBigsun(cliutil.Hdac(args[1]))

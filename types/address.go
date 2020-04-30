@@ -95,7 +95,7 @@ type Address interface {
 	Format(s fmt.State, verb rune)
 }
 
-// ContractAddress is a specific interface for contract address
+// ContractAddress is a specific interface for control types for contract
 type ContractAddress interface {
 	Equals(Address) bool
 	Empty() bool

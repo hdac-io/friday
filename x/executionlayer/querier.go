@@ -263,28 +263,37 @@ func queryDelegator(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLaye
 }
 
 func queryVoter(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
+	var paramUref QueryVoterParamsUref
+	var paramHash QueryVoterParamsHash
 	var param QueryVoterParams
-	err := types.ModuleCdc.UnmarshalJSON(req.Data, &param)
+
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &paramUref)
 	if err != nil {
-		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
+		err = types.ModuleCdc.UnmarshalJSON(req.Data, &paramHash)
+		if err != nil {
+			return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
+		}
+		param = paramHash
+	} else {
+		param = paramUref
 	}
 
 	storedValue, err := getQueryResult(ctx, keeper, "", types.ADDRESS, types.SYSTEM, types.PosContractName)
 
 	var resMap map[string]string
-	if !param.Address.Empty() {
-		resMap = storedValue.Contract.NamedKeys.GetVotingDappFromUser(param.Address)
+	if !param.GetAddress().Empty() {
+		resMap = storedValue.Contract.NamedKeys.GetVotingDappFromUser(param.GetAddress())
 
-		if len(param.Hash) > 0 {
-			hashStr := hex.EncodeToString(param.Hash)
+		if !param.GetContract().Empty() {
+			hashStr := hex.EncodeToString(param.GetContract().Bytes())
 			resMap = map[string]string{hashStr: resMap[hashStr]}
 		}
 	}
-	if len(param.Hash) > 0 {
-		resMap = storedValue.Contract.NamedKeys.GetVotingUserFromDapp(param.Hash)
+	if !param.GetContract().Empty() {
+		resMap = storedValue.Contract.NamedKeys.GetVotingUserFromDapp(param.GetContract().Bytes())
 
-		if !param.Address.Empty() {
-			addressStr := hex.EncodeToString(param.Address)
+		if !param.GetAddress().Empty() {
+			addressStr := hex.EncodeToString(param.GetAddress())
 			resMap = map[string]string{addressStr: resMap[addressStr]}
 		}
 	}

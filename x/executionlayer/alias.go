@@ -36,4 +36,6 @@ type (
 	QueryValidatorParams      = types.QueryValidatorParams
 	QueryDelegatorParams      = types.QueryDelegatorParams
 	QueryVoterParams          = types.QueryVoterParams
+	QueryVoterParamsUref      = types.QueryVoterParamsUref
+	QueryVoterParamsHash      = types.QueryVoterParamsHash
 )
