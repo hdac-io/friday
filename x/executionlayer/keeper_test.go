@@ -24,17 +24,21 @@ func TestQueryKeyToBytes(t *testing.T) {
 	_, err = toBytes("address", "invalid address", input.elk.NicknameKeeper, input.ctx)
 	assert.NotNil(t, err)
 
-	expected := []byte("test-data")
+	bech32ContractUrefAddress := "fridaycontracturef1p34neafykpfzfpech8lertgt2dllwuu8f96dsgm2ge2x7evnjexqa4cups"
+	bech32ContractHashAddress := "fridaycontracthash1dl45lfet0wrsduxfeegwmskmmr8yhlpk6lk4qdpyhpjsffkymstq6ajv0a"
+	bech32ContractUrefAddressByte, _ := sdk.ContractUrefAddressFromBech32(bech32ContractUrefAddress)
+	bech32ContractHashAddressByte, _ := sdk.ContractHashAddressFromBech32(bech32ContractHashAddress)
+	localKeyStr := []byte("test-data")
 
-	got, err := toBytes("uref", hex.EncodeToString(expected), input.elk.NicknameKeeper, input.ctx)
+	got, err := toBytes("uref", bech32ContractUrefAddress, input.elk.NicknameKeeper, input.ctx)
 	assert.Nil(t, err)
-	assert.Equal(t, expected, got)
-	_, err = toBytes("hash", hex.EncodeToString(expected), input.elk.NicknameKeeper, input.ctx)
+	assert.Equal(t, bech32ContractUrefAddressByte.Bytes(), got)
+	got, err = toBytes("hash", bech32ContractHashAddress, input.elk.NicknameKeeper, input.ctx)
 	assert.Nil(t, err)
-	assert.Equal(t, expected, got)
-	_, err = toBytes("local", hex.EncodeToString(expected), input.elk.NicknameKeeper, input.ctx)
+	assert.Equal(t, bech32ContractHashAddressByte.Bytes(), got)
+	got, err = toBytes("local", hex.EncodeToString(localKeyStr), input.elk.NicknameKeeper, input.ctx)
 	assert.Nil(t, err)
-	assert.Equal(t, expected, got)
+	assert.Equal(t, localKeyStr, got)
 
 	_, err = toBytes("invalid key type", "", input.elk.NicknameKeeper, input.ctx)
 	assert.True(t, strings.Contains(err.Error(), "Unknown QueryKey type:"))
