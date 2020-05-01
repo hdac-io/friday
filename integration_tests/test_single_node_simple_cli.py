@@ -38,21 +38,21 @@ class TestSingleNode():
     basic_coin_amount = int(int(basic_coin) / multiplier)
 
     basic_bond = "1"
-    bonding_fee = "0.001"
+    bonding_fee = "0.01"
     bonding_gas = 50000000
 
     delegate_amount = "1"
     delegate_amount_bigsun = "1000000000000000000"
-    delegate_fee = "0.005"
+    delegate_fee = "0.01"
     delegate_gas = 50000000
 
     vote_amount = "1"
     vote_amount_bigsun = "1000000000000000000"
-    vote_fee = "0.003"
+    vote_fee = "0.01"
     vote_gas = 50000000
 
     transfer_amount = "1"
-    transfer_fee = "0.001"
+    transfer_fee = "0.01"
     transfer_gas = 30000000
 
     tx_block_time = 6
@@ -358,7 +358,7 @@ class TestSingleNode():
                 }
             }
         ])
-        tx_hash_store_contract = cmd.run_contract(self.wallet_password, "wasm", wasm_path, param, 0.001, 50000000, self.wallet_anna)
+        tx_hash_store_contract = cmd.run_contract(self.wallet_password, "wasm", wasm_path, param, 0.01, 50000000, self.wallet_anna)
         print("Tx sent. Waiting for validation")
         time.sleep(self.tx_block_time * 3 + 1)
 
