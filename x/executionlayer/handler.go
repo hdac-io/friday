@@ -476,28 +476,31 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) (boo
 
 			effects = append(effects, res.GetExecutionResult().GetEffects().GetTransformMap()...)
 			if err != nil {
-				log = fmt.Sprintf(log, err.Error())
+				log += fmt.Sprintf(log, err.Error())
 			}
 		}
 	case *ipc.ExecuteResponse_MissingParent:
 		err = types.ErrGRpcExecuteMissingParent(types.DefaultCodespace, util.EncodeToHexString(resExecute.GetMissingParent().GetHash()))
-		return false, err.Error()
+		log += err.Error()
 	default:
 		err = fmt.Errorf("Unknown result : %s", resExecute.String())
-		return false, err.Error()
+		log += err.Error()
 	}
 
 	// Commit
 	postStateHash, bonds, errGrpc := grpc.Commit(k.client, stateHash, effects, &protocolVersion)
-	if errGrpc != "" {
-		return false, errGrpc
-	}
+	log += errGrpc
 
 	candidateBlock := ctx.CandidateBlock()
 	candidateBlock.State = postStateHash
 	candidateBlock.Bonds = bonds
 
-	return true, log
+	result := false
+	if log == "" {
+		result = true
+	}
+
+	return result, log
 }
 
 func getResult(ok bool, log string) sdk.Result {
