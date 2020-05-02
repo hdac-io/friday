@@ -87,7 +87,7 @@ class TestMultiNodeSimple:
             val_tx_hashes.append(unit_val_tx_hash)
 
         print("Wait for switching next block...")
-        time.sleep(self.tx_blocktime + 1)
+        time.sleep(60)
 
         print("Bonding for validators..")
         bond_hashes = []
@@ -99,7 +99,7 @@ class TestMultiNodeSimple:
             bond_hashes.append(unit_bond_hash)
 
         print("Wait for switching next block...")
-        time.sleep(self.tx_blocktime * 3 + 1)
+        time.sleep(30)
 
         cmd._process_executor("curl http://localhost:26657/num_unconfirmed_txs", need_output=True)
         print("Check whether all txs are valid or not..")
