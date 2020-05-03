@@ -86,6 +86,8 @@ class TestSingleNode():
 
         print("Init chain")
         cmd.init_chain(self.moniker, self.chain_id)
+        cmd.unsafe_reset_all()
+        
         print("Copy manifest file")
         cmd.copy_manifest()
 
