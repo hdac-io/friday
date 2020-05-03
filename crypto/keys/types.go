@@ -25,7 +25,7 @@ type Keybase interface {
 	// key from that.
 	CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, seed string, err error)
 
-	// CreateAccount creates an account based using the BIP44 path (44'/118'/{account}'/0/{index}
+	// CreateAccount creates an account based using the BIP44 path (44'/1217'/{account}'/0/{index}
 	CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error)
 
 	// Derive computes a BIP39 seed from th mnemonic and bip39Passwd.
