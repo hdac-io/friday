@@ -101,6 +101,8 @@ func TestYAMLMarshalers(t *testing.T) {
 	acc := types.AccAddress(addr)
 	val := types.ValAddress(addr)
 	cons := types.ConsAddress(addr)
+	conthash := types.ContractHashAddress(addr)
+	conturef := types.ContractUrefAddress(addr)
 
 	got, _ := yaml.Marshal(&acc)
 	require.Equal(t, acc.String()+"\n", string(got))
@@ -110,6 +112,12 @@ func TestYAMLMarshalers(t *testing.T) {
 
 	got, _ = yaml.Marshal(&cons)
 	require.Equal(t, cons.String()+"\n", string(got))
+
+	got, _ = yaml.Marshal(&conthash)
+	require.Equal(t, conthash.String()+"\n", string(got))
+
+	got, _ = yaml.Marshal(&conturef)
+	require.Equal(t, conturef.String()+"\n", string(got))
 }
 
 func TestRandBech32AccAddrConsistency(t *testing.T) {
@@ -347,7 +355,7 @@ func TestCustomAddressVerifier(t *testing.T) {
 	require.Nil(t, err)
 }
 
-func TestContractAddress(t *testing.T) {
+func TestContractAddressBasic(t *testing.T) {
 	urefString := "ZU2WKs0h72Ex2OttXsT+V8WCEEddat5QSpXFqOgN4KM="
 	urefAddr, err := types.ContractUrefAddressFromBase64(urefString)
 	require.NoError(t, err)
@@ -367,4 +375,72 @@ func TestContractAddress(t *testing.T) {
 
 	fmt.Println(hashAddr.Bytes())
 	require.NotEqual(t, len(hashAddr), 0)
+
+	hashStringWithError := "DoXyO5zPuhxqpaxGdgiBDtiJxibh1jgf/IFH5ftRxyk"
+	_, err = types.ContractHashAddressFromBase64(hashStringWithError)
+	require.Error(t, err)
+
+	urefStringWithError := "ZU2WKs0h72Ex2OttXsT+V8WCEEddat5QSpXFqOgN4KM"
+	_, err = types.ContractHashAddressFromBase64(urefStringWithError)
+	require.Error(t, err)
+}
+
+func TestContractAddressFromBech32String(t *testing.T) {
+	addr := secp256k1.GenPrivKey().PubKey().Address()
+
+	hashAddr := types.ContractHashAddress(addr)
+	hashBech32String := hashAddr.String()
+	anotherHashAddr, err := types.ContractHashAddressFromBech32(hashBech32String)
+
+	require.NoError(t, err)
+
+	fmt.Println(hashAddr.String())
+	require.NotEqual(t, hashAddr, "")
+
+	fmt.Println(hashAddr.Bytes())
+	require.NotEqual(t, len(hashAddr), 0)
+	require.True(t, hashAddr.Equals(anotherHashAddr))
+
+	urefAddr := types.ContractUrefAddress(addr)
+	urefBech32String := urefAddr.String()
+	anotherUrefAddr, err := types.ContractUrefAddressFromBech32(urefBech32String)
+
+	require.NoError(t, err)
+
+	fmt.Println(urefAddr.String())
+	require.NotEqual(t, urefAddr, "")
+
+	fmt.Println(urefAddr.Bytes())
+	require.NotEqual(t, len(urefAddr), 0)
+	require.True(t, urefAddr.Equals(anotherUrefAddr))
+
+	hashBech32StringWithError := "fridaycontracthash1dl45lfet0wrsduxfeegwmskmmr8yhlpk6lk4qdpyhpjsffkymstq6aj"
+	_, err = types.ContractHashAddressFromBech32(hashBech32StringWithError)
+
+	require.Error(t, err)
+
+	urefBech32StringWithError := "fridaycontracturef1v4xev2kdy8hkzvwcadk4a3872lzcyyz8t44du5z2jhz636qduz3sf9m"
+	_, err = types.ContractUrefAddressFromBech32(urefBech32StringWithError)
+
+	require.Error(t, err)
+}
+
+func TestContractAddressMarshalAndUnmarshal(t *testing.T) {
+	addr := secp256k1.GenPrivKey().PubKey().Address()
+
+	hashAddr := types.ContractHashAddress(addr)
+	jsonHashAddr, err := hashAddr.MarshalJSON()
+	require.NoError(t, err)
+
+	newHashAddr := types.ContractHashAddress{}
+	newHashAddr.UnmarshalJSON(jsonHashAddr)
+	require.True(t, hashAddr.Equals(newHashAddr))
+
+	urefAddr := types.ContractUrefAddress(addr)
+	jsonUrefAddr, err := urefAddr.MarshalJSON()
+	require.NoError(t, err)
+
+	newUrefAddr := types.ContractUrefAddress{}
+	newUrefAddr.UnmarshalJSON(jsonUrefAddr)
+	require.True(t, urefAddr.Equals(newUrefAddr))
 }
