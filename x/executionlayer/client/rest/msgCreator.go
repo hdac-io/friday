@@ -470,7 +470,6 @@ func voteUnvoteMsgCreator(voteIsTrue bool, w http.ResponseWriter, cliCtx context
 type claimReq struct {
 	BaseReq            rest.BaseReq `json:"base_req"`
 	RewardOrCommission bool         `json:"reward_or_commission"`
-	Amount             string       `json:"amount"`
 	Fee                string       `json:"fee"`
 }
 

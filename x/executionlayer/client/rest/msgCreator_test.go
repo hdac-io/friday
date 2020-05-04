@@ -290,7 +290,6 @@ func TestRESTClaimReward(t *testing.T) {
 	claimReq := claimReq{
 		BaseReq:            basereq,
 		RewardOrCommission: types.RewardValue,
-		Amount:             "100000000",
 		Fee:                "10000000",
 	}
 
@@ -312,7 +311,6 @@ func TestRESTClaimCommission(t *testing.T) {
 	claimReq := claimReq{
 		BaseReq:            basereq,
 		RewardOrCommission: types.CommissionValue,
-		Amount:             "100000000",
 		Fee:                "10000000",
 	}
 
