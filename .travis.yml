@@ -50,4 +50,4 @@ install:
   - npm install -g assemblyscript@0.9.1
   - make install
 before_script:
-  - ./CasperLabs/execution-engine/target/release/casperlabs-engine-grpc-server $HOME/.casperlabs/.casper-node.sock& # for integration test.
+  - ./CasperLabs/execution-engine/target/release/casperlabs-engine-grpc-server $HOME/.casperlabs/.casper-node.sock -z& # for integration test.

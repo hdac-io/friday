@@ -64,7 +64,8 @@ func queryEEDetail(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
-	storedValue, err := getQueryResult(ctx, keeper, req.GetHeight(), param.KeyType, param.KeyData, param.Path)
+	ctx.WithBlockHeight(req.Height)
+	storedValue, err := getQueryResult(ctx, keeper, param.KeyType, param.KeyData, param.Path)
 	if err != nil {
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, err.Error())
 	}
@@ -127,7 +128,7 @@ func queryValidator(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLaye
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, err.Error())
 	}
 
-	storedValue, err := getQueryResult(ctx, keeper, ctx.BlockHeight(), types.ADDRESS, types.SYSTEM, types.PosContractName)
+	storedValue, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
 	if err != nil {
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
@@ -145,7 +146,7 @@ func queryValidator(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLaye
 func queryAllValidator(ctx sdk.Context, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
 	validators := keeper.GetAllValidators(ctx)
 
-	storedValue, err := getQueryResult(ctx, keeper, ctx.BlockHeight(), types.ADDRESS, types.SYSTEM, types.PosContractName)
+	storedValue, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
 	if err != nil {
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
@@ -167,14 +168,14 @@ func queryAllValidator(ctx sdk.Context, keeper ExecutionLayerKeeper) ([]byte, sd
 
 // GetQueryResult queries with whole parameters
 func getQueryResult(ctx sdk.Context, k ExecutionLayerKeeper,
-	height int64, keyType string, keyData string, path string) (storedvalue.StoredValue, error) {
+	keyType string, keyData string, path string) (storedvalue.StoredValue, error) {
 	arrPath := []string{}
 	if path != "" {
 		arrPath = strings.Split(path, "/")
 	}
 
 	protocolVersion := k.MustGetProtocolVersion(ctx)
-	unitHash := k.GetUnitHashMap(ctx, height)
+	unitHash := k.GetUnitHashMap(ctx, ctx.BlockHeight())
 	keyDataBytes, err := toBytes(keyType, keyData, k.NicknameKeeper, ctx)
 	if err != nil {
 		return storedvalue.StoredValue{}, err
@@ -200,7 +201,7 @@ func queryDelegator(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLaye
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
-	storedValue, err := getQueryResult(ctx, keeper, ctx.BlockHeight(), types.ADDRESS, types.SYSTEM, types.PosContractName)
+	storedValue, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
 
 	var resMap map[string]string
 	if !param.ValidatorAddr.Empty() {
@@ -248,7 +249,7 @@ func queryVoter(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKee
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
-	storedValue, err := getQueryResult(ctx, keeper, ctx.BlockHeight(), types.ADDRESS, types.SYSTEM, types.PosContractName)
+	storedValue, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
 
 	var resMap map[string]string
 	if !param.Address.Empty() {
@@ -297,7 +298,8 @@ func queryReward(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKe
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
-	storedValue, err := getQueryResult(ctx, keeper, req.Height, types.ADDRESS, types.SYSTEM, types.PosContractName)
+	ctx.WithBlockHeight(req.Height)
+	storedValue, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not find system account info", err.Error()))
 	}
@@ -322,7 +324,8 @@ func queryCommission(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLay
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
-	storedValue, err := getQueryResult(ctx, keeper, req.Height, types.ADDRESS, types.SYSTEM, types.PosContractName)
+	ctx.WithBlockHeight(req.Height)
+	storedValue, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not find system account info", err.Error()))
 	}

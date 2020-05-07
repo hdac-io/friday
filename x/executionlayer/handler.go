@@ -59,18 +59,24 @@ func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTr
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_StringValue{
-					StringValue: types.TransferMethodName}}},
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_StrValue{
+						StrValue: types.TransferMethodName}}}},
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_BytesValue{
-					BytesValue: msg.ToAddress.ToEEAddress()}}},
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_ListType{ListType: &state.CLType_List{Inner: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U8}}}}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_BytesValue{
+						BytesValue: msg.ToAddress.ToEEAddress()}}}},
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_BigInt{
-					BigInt: &state.BigInt{Value: msg.Amount, BitWidth: 512}}}},
-	}
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_U512{
+						U512: &state.CLValueInstance_U512{
+							Value: msg.Amount}}}}}}
 
 	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
 	if err != nil {
@@ -138,13 +144,18 @@ func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) 
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_StringValue{
-					StringValue: types.BondMethodName}}},
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_StrValue{
+						StrValue: types.BondMethodName}}}},
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_BigInt{
-					BigInt: &state.BigInt{Value: msg.Amount, BitWidth: 512}}}}}
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_U512{
+						U512: &state.CLValueInstance_U512{
+							Value: msg.Amount}}}}}}
 
 	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
 	if err != nil {
@@ -168,15 +179,23 @@ func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBo
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_StringValue{
-					StringValue: types.UnbondMethodName}}},
+			Name: "method",
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_StrValue{
+						StrValue: types.UnbondMethodName}}}},
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_OptionalValue{
-					OptionalValue: &consensus.Deploy_Arg_Value{
-						Value: &consensus.Deploy_Arg_Value_BigInt{
-							BigInt: &state.BigInt{Value: string(msg.Amount), BitWidth: 512}}}}}}}
+			Name: "amount",
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_OptionType{OptionType: &state.CLType_Option{Inner: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}}}}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_OptionValue{
+						OptionValue: &state.CLValueInstance_Option{
+							Value: &state.CLValueInstance_Value{
+								Value: &state.CLValueInstance_Value_U512{
+									U512: &state.CLValueInstance_U512{
+										Value: string(msg.Amount)}}}}}}}}}
 
 	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
 	if err != nil {
@@ -201,17 +220,24 @@ func handlerMsgDelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgDe
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_StringValue{
-					StringValue: types.DelegateMethodName}}},
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_StrValue{
+						StrValue: types.DelegateMethodName}}}},
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_BytesValue{
-					BytesValue: msg.ValAddress.ToEEAddress()}}},
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_ListType{ListType: &state.CLType_List{Inner: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U8}}}}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_BytesValue{
+						BytesValue: msg.ValAddress.ToEEAddress()}}}},
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_BigInt{
-					BigInt: &state.BigInt{Value: msg.Amount, BitWidth: 512}}}}}
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_U512{
+						U512: &state.CLValueInstance_U512{
+							Value: msg.Amount}}}}}}
 
 	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
 	if err != nil {
@@ -236,19 +262,27 @@ func handlerMsgUndelgate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgU
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_StringValue{
-					StringValue: types.UndelegateMethodName}}},
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_StrValue{
+						StrValue: types.UndelegateMethodName}}}},
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_BytesValue{
-					BytesValue: msg.ValAddress.ToEEAddress()}}},
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_ListType{ListType: &state.CLType_List{Inner: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U8}}}}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_BytesValue{
+						BytesValue: msg.ValAddress.ToEEAddress()}}}},
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_OptionalValue{
-					OptionalValue: &consensus.Deploy_Arg_Value{
-						Value: &consensus.Deploy_Arg_Value_BigInt{
-							BigInt: &state.BigInt{Value: msg.Amount, BitWidth: 512}}}}}}}
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_OptionType{OptionType: &state.CLType_Option{Inner: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}}}}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_OptionValue{
+						OptionValue: &state.CLValueInstance_Option{
+							Value: &state.CLValueInstance_Value{
+								Value: &state.CLValueInstance_Value_U512{
+									U512: &state.CLValueInstance_U512{
+										Value: msg.Amount}}}}}}}}}
 
 	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
 	if err != nil {
@@ -273,21 +307,30 @@ func handlerMsgRedelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.Msg
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_StringValue{
-					StringValue: types.RedelegateMethodName}}},
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_StrValue{
+						StrValue: types.RedelegateMethodName}}}},
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_BytesValue{
-					BytesValue: msg.SrcValAddress.ToEEAddress()}}},
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_ListType{ListType: &state.CLType_List{Inner: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U8}}}}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_BytesValue{
+						BytesValue: msg.SrcValAddress.ToEEAddress()}}}},
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_BytesValue{
-					BytesValue: msg.DestValAddress.ToEEAddress()}}},
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_ListType{ListType: &state.CLType_List{Inner: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U8}}}}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_BytesValue{
+						BytesValue: msg.DestValAddress.ToEEAddress()}}}},
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_BigInt{
-					BigInt: &state.BigInt{Value: msg.Amount, BitWidth: 512}}}}}
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_U512{
+						U512: &state.CLValueInstance_U512{
+							Value: msg.Amount}}}}}}
 
 	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
 	if err != nil {
@@ -312,19 +355,24 @@ func handlerMsgVote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgVote) 
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_StringValue{
-					StringValue: types.VoteMethodName}}},
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_StrValue{
+						StrValue: types.VoteMethodName}}}},
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_Key{
-					Key: &state.Key{Value: &state.Key_Hash_{
-						Hash: &state.Key_Hash{
-							Hash: msg.Hash}}}}}},
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_KEY}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_Key{
+						Key: &state.Key{Value: &state.Key_Hash_{Hash: &state.Key_Hash{Hash: msg.Hash}}}}}}},
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_BigInt{
-					BigInt: &state.BigInt{Value: msg.Amount, BitWidth: 512}}}}}
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_U512{
+						U512: &state.CLValueInstance_U512{
+							Value: msg.Amount}}}}}}
 
 	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
 	if err != nil {
@@ -349,21 +397,27 @@ func handlerMsgUnvote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnvo
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_StringValue{
-					StringValue: types.UnvoteMethodName}}},
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_StrValue{
+						StrValue: types.UnvoteMethodName}}}},
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_Key{
-					Key: &state.Key{Value: &state.Key_Hash_{
-						Hash: &state.Key_Hash{
-							Hash: msg.Hash}}}}}},
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_KEY}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_Key{
+						Key: &state.Key{Value: &state.Key_Hash_{Hash: &state.Key_Hash{Hash: msg.Hash}}}}}}},
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_OptionalValue{
-					OptionalValue: &consensus.Deploy_Arg_Value{
-						Value: &consensus.Deploy_Arg_Value_BigInt{
-							BigInt: &state.BigInt{Value: msg.Amount, BitWidth: 512}}}}}}}
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_OptionType{OptionType: &state.CLType_Option{Inner: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}}}}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_OptionValue{
+						OptionValue: &state.CLValueInstance_Option{
+							Value: &state.CLValueInstance_Value{
+								Value: &state.CLValueInstance_Value_U512{
+									U512: &state.CLValueInstance_U512{
+										Value: msg.Amount}}}}}}}}}
 
 	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
 	if err != nil {
@@ -398,9 +452,11 @@ func handlerMsgClaim(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgClaim
 
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_StringValue{
-					StringValue: methodName}}}}
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_StrValue{
+						StrValue: methodName}}}}}
 
 	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
 	if err != nil {
@@ -430,13 +486,18 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) (boo
 
 	paymentArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_StringValue{
-					StringValue: types.PaymentMethodName}}},
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_StrValue{
+						StrValue: types.PaymentMethodName}}}},
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_BigInt{
-					BigInt: &state.BigInt{Value: string(msg.Fee), BitWidth: 512}}}}}
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_U512{
+						U512: &state.CLValueInstance_U512{
+							Value: string(msg.Fee)}}}}}}
 
 	paymentArgsJson, err := DeployArgsToJsonString(paymentArgs)
 	if err != nil {

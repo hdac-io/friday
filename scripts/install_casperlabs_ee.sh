@@ -7,7 +7,7 @@ if [ ${PWD##*/} != "friday" ]; then
   exit 1
 fi
 
-COMMIT_HASH="cab1fd6f154e54d21bf86200fc02b74bc28c1de5"
+COMMIT_HASH="e9b1d1a13f691ea5da7a6b00796c2d2448ed5946"
 if [ ! -d "CasperLabs/.git" ]; then
   git clone https://github.com/hdac-io/CasperLabs.git
 fi
@@ -26,6 +26,7 @@ declare -a TARGET_CONTRACTS=(
   "counter-call"
   "counter-define"
   "bonding"
+  "standard-payment-install"
 )
 
 declare -a WASM_FILES=(
@@ -34,6 +35,7 @@ declare -a WASM_FILES=(
   "counter_call.wasm"
   "counter_define.wasm"
   "bonding.wasm"
+  "standard_payment_install.wasm"
 )
 
 for pkg in "${TARGET_CONTRACTS[@]}"; do

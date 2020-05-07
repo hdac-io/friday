@@ -18,10 +18,11 @@ const (
 func genesisConfigMock() types.GenesisConf {
 	return types.GenesisConf{
 		Genesis: types.Genesis{
-			Timestamp:       1568805354071,
-			MintWasm:        []byte("mint contract bytes"),
-			PosWasm:         []byte("pos contract bytes"),
-			ProtocolVersion: "1.0.0",
+			Timestamp:           1568805354071,
+			MintWasm:            []byte("mint contract bytes"),
+			PosWasm:             []byte("pos contract bytes"),
+			StandardPaymentWasm: []byte("standard payment contract bytes"),
+			ProtocolVersion:     "1.0.0",
 		},
 		WasmCosts: types.WasmCosts{
 			Regular:           1,
@@ -36,8 +37,10 @@ func genesisConfigMock() types.GenesisConf {
 			OpcodesDivisor:    10,
 		},
 		DeployConfig: types.DeployConfig{
-			MaxTtlMillis:    1,
-			MaxDependencies: 2,
+			MaxTtlMillis:      1,
+			MaxDependencies:   2,
+			MaxBlockSizeBytes: 3,
+			MaxBlockCost:      4,
 		},
 	}
 }

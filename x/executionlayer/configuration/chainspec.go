@@ -47,6 +47,19 @@ func ParseGenesisChainSpec(chainSpecPath string) (*types.GenesisConf, error) {
 		return nil, err
 	}
 
+	// Get Highway
+	subTree = tree.Get("highway").(*toml.Tree)
+	if subTree == nil {
+		return nil, types.ErrTomlParse(types.DefaultCodespace, "highway")
+	}
+	if err != nil {
+		return nil, err
+	}
+	err = subTree.Unmarshal(&genesisConf.HighwayConfig)
+	if err != nil {
+		return nil, err
+	}
+
 	return &genesisConf, nil
 }
 
@@ -88,6 +101,19 @@ func parseGenesisTable(genesisTable *toml.Tree, chainSpecPath string) (*types.Ge
 		return nil, err
 	}
 	genesis.PosWasm = posWasm
+
+	if genesisTable.Get("standard-payment-code-path") == nil {
+		return nil, types.ErrTomlParse(types.DefaultCodespace, "standard-payment-code-path")
+	}
+	standardPaymentCodePath := genesisTable.Get("standard-payment-code-path").(string)
+	if !path.IsAbs(standardPaymentCodePath) {
+		standardPaymentCodePath = path.Join(path.Dir(chainSpecPath), standardPaymentCodePath)
+	}
+	standardPaymentWasm, err := ioutil.ReadFile(standardPaymentCodePath)
+	if err != nil {
+		return nil, err
+	}
+	genesis.StandardPaymentWasm = standardPaymentWasm
 
 	return &genesis, nil
 }

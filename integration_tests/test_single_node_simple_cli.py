@@ -43,7 +43,7 @@ class TestSingleNode():
 
     delegate_amount = "1"
     delegate_amount_bigsun = "1000000000000000000"
-    delegate_fee = "0.005"
+    delegate_fee = "0.01"
     delegate_gas = 50000000
 
     vote_amount = "1"
@@ -345,18 +345,7 @@ class TestSingleNode():
         print("Try to run bond function by wasm path")
         wasm_path = os.path.join(os.environ['HOME'], ".nodef", "contracts", "bonding.wasm")
         param = json.dumps([
-            # {
-            #       "name": "method_name",
-            #       "value": {
-            #         "string_value": "bond"
-            #       }
-            # },
-            {
-                "name": "amount",
-                "value": {
-                    "int_value":1000000
-                }
-            }
+            {"value":{"clType":{"simpleType":"U512"},"value":{"u512":{"value":"1000000"}}}}
         ])
         tx_hash_store_contract = cmd.run_contract(self.wallet_password, "wasm", wasm_path, param, 0.001, 50000000, self.wallet_anna)
         print("Tx sent. Waiting for validation")
