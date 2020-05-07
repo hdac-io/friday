@@ -40,26 +40,24 @@ class TestSingleNode():
     basic_coin_amount = int(int(basic_coin) / multiplier)
 
     basic_bond = "1"
-    bonding_fee = "0.1"
+    bonding_fee = "0.01"
     bonding_gas = 50000000
 
     delegate_amount = "1"
     delegate_amount_bigsun = "1000000000000000000"
-    delegate_fee = "0.1"
+    delegate_fee = "0.05"
     delegate_gas = 50000000
 
-    vote_amount = "0.1"
-    vote_amount_bigsun = "100000000000000000"
-    vote_fee = "0.1"
+    vote_amount = "1"
+    vote_amount_bigsun = "1000000000000000000"
+    vote_fee = "0.03"
     vote_gas = 50000000
 
     transfer_amount = "1"
-    transfer_fee = "0.1"
+    transfer_fee = "0.01"
     transfer_gas = 30000000
 
-    short_gas = 10000000
-
-    tx_block_time = 6
+    tx_block_time = 2
 
 
     def daemon_healthcheck(self):
