@@ -1,6 +1,7 @@
 package executionlayer
 
 import (
+	"encoding/hex"
 	"fmt"
 	"reflect"
 	"strings"
@@ -41,40 +42,46 @@ func InitGenesis(
 		panic(response.GetResult())
 	}
 
-	stateHash, bonds, errStr := grpc.Commit(keeper.client, util.DecodeHexString(util.StrEmptyStateHash), response.GetSuccess().GetEffect().GetTransformMap(), genesisConfig.GetProtocolVersion())
-	if errStr != "" {
-		panic(errStr)
-	}
-
 	if data.Accounts != nil {
 		keeper.SetGenesisAccounts(ctx, data.Accounts)
 	}
+
+	candidateBlock := ctx.CandidateBlock()
+	candidateBlock.State = response.GetSuccess().PoststateHash
+
 	keeper.SetChainName(ctx, data.ChainName)
 	keeper.SetGenesisConf(ctx, data.GenesisConf)
+	keeper.SetUnitHashMap(ctx, types.NewUnitHashMap(ctx.CandidateBlock().State))
+
+	// Query to current validator information.
+	posInfos, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
+	if err != nil {
+		panic(err)
+	}
+
+	bonds := []*ipc.Bond{}
+	validatorStakeInfos := posInfos.Contract.NamedKeys.GetAllValidators()
 
 	for _, validator := range data.Validators {
+		bond := &ipc.Bond{
+			ValidatorPublicKey: validator.OperatorAddress,
+			Stake:              &state.BigInt{Value: validatorStakeInfos[hex.EncodeToString(validator.OperatorAddress.ToEEAddress())], BitWidth: 512},
+		}
+		bonds = append(bonds, bond)
+
 		validator.Stake = ""
 		keeper.SetValidator(ctx, validator.OperatorAddress, validator)
 	}
-
-	candidateBlock := ctx.CandidateBlock()
-	candidateBlock.State = stateHash
 	candidateBlock.Bonds = bonds
 
 	// initial proxy contract
-	res, errStr := grpc.Query(keeper.client, stateHash, "address", types.SYSTEM_ACCOUNT, []string{}, genesisConfig.GetProtocolVersion())
-	if errStr != "" {
-		panic(errStr)
-	}
-
-	var storedValue storedvalue.StoredValue
-	storedValue, err, _ = storedValue.FromBytes(res)
+	storedValueSystemAccount, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, "")
 	if err != nil {
 		panic(err)
 	}
 
 	proxyContractHash := []byte{}
-	for _, namedKey := range storedValue.Account.NamedKeys {
+	for _, namedKey := range storedValueSystemAccount.Account.NamedKeys {
 		if namedKey.Name == types.ProxyContractName {
 			proxyContractHash = namedKey.Key.Hash
 			break
@@ -90,18 +97,24 @@ func InitGenesis(
 	// send to system account from temp account
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_StringValue{
-					StringValue: types.TransferMethodName}}},
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_StrValue{
+						StrValue: types.TransferMethodName}}}},
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_BytesValue{
-					BytesValue: types.SYSTEM_ACCOUNT}}},
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_ListType{ListType: &state.CLType_List{Inner: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U8}}}}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_BytesValue{
+						BytesValue: types.SYSTEM_ACCOUNT}}}},
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_BigInt{
-					BigInt: &state.BigInt{Value: types.TRANSFER_BALANCE, BitWidth: 512}}}},
-	}
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_U512{
+						U512: &state.CLValueInstance_U512{
+							Value: types.TRANSFER_BALANCE}}}}}}
 	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
 	if err != nil {
 		getResult(false, err.Error())
@@ -154,6 +167,23 @@ func ExportGenesis(ctx sdk.Context, keeper ExecutionLayerKeeper) types.GenesisSt
 		accounts = append(accounts, account)
 	}
 
+	stateInfos := []string{}
+	if len(stateHash) != 0 {
+		systeAccountInfo, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
+		if err != nil {
+			panic(err)
+		}
+
+		for _, namedKey := range systeAccountInfo.Contract.NamedKeys {
+			switch namedKey.Name[:2] {
+			case storedvalue.DELEGATE_PREFIX + "_", storedvalue.VOTE_PREFIX + "_", storedvalue.REWARD_PREFIX + "_", storedvalue.COMMISSION_PREFIX + "_":
+				stateInfos = append(stateInfos, namedKey.Name)
+			default:
+				continue
+			}
+		}
+	}
+
 	return types.NewGenesisState(
-		keeper.GetGenesisConf(ctx), accounts, keeper.GetChainName(ctx), validators)
+		keeper.GetGenesisConf(ctx), accounts, keeper.GetChainName(ctx), validators, stateInfos)
 }

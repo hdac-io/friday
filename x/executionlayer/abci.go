@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	sdk "github.com/hdac-io/friday/types"
@@ -27,9 +28,11 @@ func EndBlocker(ctx sdk.Context, req abci.RequestEndBlock, k ExecutionLayerKeepe
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_StringValue{
-					StringValue: types.StepMethodName}}}}
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_StrValue{
+						StrValue: types.StepMethodName}}}}}
 
 	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
 	if err != nil {
