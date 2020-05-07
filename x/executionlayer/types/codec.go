@@ -14,6 +14,8 @@ func init() {
 
 // RegisterCodec registers concrete types on the Amino codec
 func RegisterCodec(cdc *codec.Codec) {
+	cdc.RegisterInterface((*ContractAddress)(nil), nil)
+
 	cdc.RegisterConcrete(MsgCreateValidator{}, "executionengine/CreateValidator", nil)
 	cdc.RegisterConcrete(MsgEditValidator{}, "executionengine/EditValidator", nil)
 	cdc.RegisterConcrete(MsgExecute{}, "executionengine/Execute", nil)
@@ -26,4 +28,6 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgVote{}, "executionengine/Vote", nil)
 	cdc.RegisterConcrete(MsgUnvote{}, "executionengine/Unvote", nil)
 	cdc.RegisterConcrete(MsgClaim{}, "executionengine/Claim", nil)
+	cdc.RegisterConcrete(ContractHashAddress{}, "types/ContractHashAddress", nil)
+	cdc.RegisterConcrete(ContractUrefAddress{}, "types/ContractUrefAddress", nil)
 }

@@ -320,7 +320,7 @@ func handlerMsgVote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgVote) 
 				Value: &consensus.Deploy_Arg_Value_Key{
 					Key: &state.Key{Value: &state.Key_Hash_{
 						Hash: &state.Key_Hash{
-							Hash: msg.Hash}}}}}},
+							Hash: msg.TargetContractAddress.Bytes()}}}}}},
 		&consensus.Deploy_Arg{
 			Value: &consensus.Deploy_Arg_Value{
 				Value: &consensus.Deploy_Arg_Value_BigInt{
@@ -357,7 +357,7 @@ func handlerMsgUnvote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnvo
 				Value: &consensus.Deploy_Arg_Value_Key{
 					Key: &state.Key{Value: &state.Key_Hash_{
 						Hash: &state.Key_Hash{
-							Hash: msg.Hash}}}}}},
+							Hash: msg.TargetContractAddress.Bytes()}}}}}},
 		&consensus.Deploy_Arg{
 			Value: &consensus.Deploy_Arg_Value{
 				Value: &consensus.Deploy_Arg_Value_OptionalValue{

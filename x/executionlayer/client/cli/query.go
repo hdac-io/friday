@@ -2,8 +2,8 @@ package cli
 
 import (
 	"bytes"
-	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
@@ -133,6 +133,8 @@ func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
 				fmt.Printf("could not resolve data - %s %s %s\nerr : %s\n", dataType, data, path, err.Error())
 				return nil
 			}
+
+			valueStr = cliutil.ReplaceBase64HashToBech32(path, valueStr)
 
 			_, err = fmt.Println(valueStr)
 			return err
@@ -291,7 +293,7 @@ func GetCmdQueryDelegator(cdc *codec.Codec) *cobra.Command {
 // GetCmdQueryVoter implements the validator query command.
 func GetCmdQueryVoter(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "voter [<dapp-hash>] [--from <from>]",
+		Use:   "voter [<contract_address>] [--from <from>]",
 		Short: "Query a voter",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -317,24 +319,42 @@ func GetCmdQueryVoter(cdc *codec.Codec) *cobra.Command {
 				}
 			}
 
-			var hash []byte
+			var bz []byte
+			var contractAddressUref types.ContractUrefAddress
+			var contractAddressHash types.ContractHashAddress
+			var contractAddress types.ContractAddress
 			if len(args) > 0 {
-				hash, err = hex.DecodeString(args[0])
+				if strings.HasPrefix(args[0], sdk.Bech32PrefixContractURef) {
+					contractAddressUref, err = sdk.ContractUrefAddressFromBech32(args[0])
+					queryData := types.NewQueryVoterUrefParams(addr, contractAddressUref)
+					bz = cdc.MustMarshalJSON(queryData)
+					contractAddress = contractAddressUref
+				} else if strings.HasPrefix(args[0], sdk.Bech32PrefixContractHash) {
+					contractAddressHash, err = sdk.ContractHashAddressFromBech32(args[0])
+					queryData := types.NewQueryVoterHashParams(addr, contractAddressHash)
+					bz = cdc.MustMarshalJSON(queryData)
+					contractAddress = contractAddressHash
+				} else {
+					err = fmt.Errorf("malformed contract address")
+				}
+
 				if err != nil {
 					return err
 				}
+			} else {
+				contractAddressUref = types.ContractUrefAddress{}
+				queryData := types.NewQueryVoterUrefParams(addr, contractAddressUref)
+				bz = cdc.MustMarshalJSON(queryData)
+				contractAddress = contractAddressHash
 			}
 
-			if addr.Empty() && len(hash) == 0 {
-				return fmt.Errorf("Requires voter address or dapp hash.")
+			if addr.Empty() && contractAddress.Empty() {
+				return fmt.Errorf("requires voter address or dapp hash")
 			}
-
-			queryData := types.NewQueryVoterParams(addr, hash)
-			bz := cdc.MustMarshalJSON(queryData)
 
 			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/queryvoter", types.ModuleName), bz)
 			if err != nil {
-				fmt.Printf("could not resolve data - %s\n", addr.String())
+				fmt.Printf("could not resolve data - %s %s\n", contractAddress.String(), addr.String())
 				return nil
 			}
 
@@ -343,7 +363,7 @@ func GetCmdQueryVoter(cdc *codec.Codec) *cobra.Command {
 				if !addr.Empty() {
 					errStr += (" address " + valueFromFromFlag)
 				}
-				if len(hash) > 0 {
+				if !contractAddress.Empty() {
 					if !addr.Empty() {
 						errStr += " and "
 					}

@@ -275,9 +275,9 @@ def query_tx(tx_hash, client_home: str = ".test_clif"):
 def is_tx_ok(tx_hash):
     res = query_tx(tx_hash)
     is_success = res['logs'][0]['success']
-    if is_success == False:
+    if is_success == False or "ERROR" in res['raw_log']:
         print(res['logs'])
-    return res['logs'][0]['success']
+    return res['logs'][0]['success'] and "ERROR" not in res['raw_log']
 
 
 def get_bls_pubkey_remote(remote_address):

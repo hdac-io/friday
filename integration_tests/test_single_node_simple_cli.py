@@ -15,6 +15,8 @@ class TestSingleNode():
     moniker = "testnode"
 
     system_contract = "0000000000000000000000000000000000000000000000000000000000000000"
+    anonymous_contract_address_hash = "fridaycontracthash1dl45lfet0wrsduxfeegwmskmmr8yhlpk6lk4qdpyhpjsffkymstq6ajv0a"
+    anonymous_contract_address_uref = "fridaycontracturef1v4xev2kdy8hkzvwcadk4a3872lzcyyz8t44du5z2jhz636qduz3sf9mf96"
 
     wallet_elsa = "elsa"
     wallet_anna = "anna"
@@ -38,22 +40,24 @@ class TestSingleNode():
     basic_coin_amount = int(int(basic_coin) / multiplier)
 
     basic_bond = "1"
-    bonding_fee = "0.001"
+    bonding_fee = "0.1"
     bonding_gas = 50000000
 
     delegate_amount = "1"
     delegate_amount_bigsun = "1000000000000000000"
-    delegate_fee = "0.005"
+    delegate_fee = "0.1"
     delegate_gas = 50000000
 
-    vote_amount = "1"
-    vote_amount_bigsun = "1000000000000000000"
-    vote_fee = "0.003"
+    vote_amount = "0.1"
+    vote_amount_bigsun = "100000000000000000"
+    vote_fee = "0.1"
     vote_gas = 50000000
 
     transfer_amount = "1"
-    transfer_fee = "0.001"
+    transfer_fee = "0.1"
     transfer_gas = 30000000
+
+    short_gas = 10000000
 
     tx_block_time = 6
 
@@ -187,12 +191,11 @@ class TestSingleNode():
         print("======================Done test01_transfer_to======================")
 
 
-    @pytest.mark.skip(reason="Bond/Unbond tx itself works, but not effective now")
     def test02_bond_and_unbond(self):
         print("======================Start test02_bond_and_unbond======================")
 
         print("Bonding token")
-        bond_tx_hash = cmd.bond(self.wallet_password, self.basic_bond, self.bonding_fee, self.bonding_gas, self.wallet_anna)
+        bond_tx_hash = cmd.bond(self.wallet_password, self.basic_coin_amount / 3, self.bonding_fee, self.bonding_gas, self.wallet_anna)
         print("Tx sent. Waiting for validation")
 
         time.sleep(self.tx_block_time * 3 + 1)
@@ -205,7 +208,7 @@ class TestSingleNode():
         res_before = cmd.get_balance(self.wallet_anna)
 
         print("Try to send more money than bonding. Invalid tx expected")
-        tx_hash_after_bond = cmd.transfer_to(self.wallet_password, self.info_elsa['address'], int(int(res_before) - self.basic_bond / 2),
+        tx_hash_after_bond = cmd.transfer_to(self.wallet_password, self.info_elsa['address'], self.basic_coin_amount * 2 / 3,
                                              self.transfer_fee, self.transfer_gas, self.wallet_anna)
         
         print("Tx sent. Waiting for validation")
@@ -213,16 +216,16 @@ class TestSingleNode():
         
         print("Check whether tx is ok or not")
         is_ok = cmd.is_tx_ok(tx_hash_after_bond)
-        #assert(is_ok == False)
+        assert(is_ok == False)
 
         print("Balance checking after bonding")
         res_after = cmd.get_balance(self.wallet_anna)
         # Reason: Just enough value to ensure that tx become invalid
-        assert(self.basic_bond < int(res_after))
+        assert(self.basic_coin_amount / 3 < int(res_after))
 
         print("Unbond and try to transfer")
         print("Unbond first")
-        tx_hash_unbond = cmd.unbond(self.wallet_password, self.basic_bond, self.bonding_fee, self.bonding_gas, self.wallet_anna)
+        tx_hash_unbond = cmd.unbond(self.wallet_password, self.basic_coin_amount / 30, self.bonding_fee, self.bonding_gas, self.wallet_anna)
         print("Tx sent. Waiting for validation")
 
         time.sleep(self.tx_block_time * 3 + 1)
@@ -232,7 +235,7 @@ class TestSingleNode():
         assert(is_ok == True)
 
         print("Try to transfer. Will be confirmed in this time")
-        tx_hash_after_unbond = cmd.transfer_to(self.wallet_password, self.info_elsa['address'], int(int(res_before) - self.basic_bond / 2),
+        tx_hash_after_unbond = cmd.transfer_to(self.wallet_password, self.info_elsa['address'], self.basic_coin_amount * 2 / 3,
                                                self.transfer_fee, self.transfer_gas, self.wallet_anna)
         
         print("Tx sent. Waiting for validation")
@@ -244,36 +247,9 @@ class TestSingleNode():
 
         print("Balance checking after bonding")
         res_after_after = cmd.get_balance(self.wallet_anna)
-        # Reason: Just enough value to ensure that tx become invalid
-        assert(int(res_after_after) == self.basic_coin + int(res_before) - self.basic_bond)
+        assert(int(res_after_after) < self.basic_coin_amount * 29 / 30)
 
         print("======================Done test02_bond_and_unbond======================")
-
-
-    def test02_1_simple_bond_unbond(self):
-        print("======================Start test02_1_simple_bond_unbond======================")
-
-        print("Bonding token")
-        bond_tx_hash = cmd.bond(self.wallet_password, self.basic_bond, self.bonding_fee, self.bonding_gas, self.wallet_anna)
-        print("Tx sent. Waiting for validation")
-
-        time.sleep(self.tx_block_time * 3 + 1)
-
-        print("Check whether tx is ok or not")
-        is_ok = cmd.is_tx_ok(bond_tx_hash)
-        assert(is_ok == True)
-
-        print("Unbonding token")
-        tx_hash_unbond = cmd.unbond(self.wallet_password, self.basic_bond, self.bonding_fee, self.bonding_gas, self.wallet_anna)
-        print("Tx sent. Waiting for validation")
-
-        time.sleep(self.tx_block_time * 3 + 1)
-
-        print("Check whether tx is ok or not")
-        is_ok = cmd.is_tx_ok(tx_hash_unbond)
-        assert(is_ok == True)
-
-        print("======================Done test02_1_simple_bond_unbond======================")
 
 
     def _register_nickname(self):
@@ -354,11 +330,11 @@ class TestSingleNode():
             {
                 "name": "amount",
                 "value": {
-                    "int_value":1000000
+                    "long_value":10
                 }
             }
         ])
-        tx_hash_store_contract = cmd.run_contract(self.wallet_password, "wasm", wasm_path, param, 0.001, 50000000, self.wallet_anna)
+        tx_hash_store_contract = cmd.run_contract(self.wallet_password, "wasm", wasm_path, param, self.bonding_fee, self.bonding_gas, self.wallet_anna)
         print("Tx sent. Waiting for validation")
         time.sleep(self.tx_block_time * 3 + 1)
 
@@ -413,8 +389,8 @@ class TestSingleNode():
     def test07_simple_vote_and_unvote(self):
         print("======================Start test07_simple_vote_and_unvote======================")
 
-        print("Vote token")
-        vote_tx_hash = cmd.vote(self.wallet_password, self.system_contract, self.vote_amount, self.vote_fee, self.vote_gas, self.wallet_anna)
+        print("Vote token: uref")
+        vote_tx_hash = cmd.vote(self.wallet_password, self.anonymous_contract_address_uref, self.vote_amount, self.vote_fee, self.vote_gas, self.wallet_anna)
         print("Tx sent. Waiting for vote")
 
         time.sleep(self.tx_block_time * 3 + 1)
@@ -423,12 +399,26 @@ class TestSingleNode():
         is_ok = cmd.is_tx_ok(vote_tx_hash)
         assert(is_ok == True)
 
-        res = cmd.get_voter(self.system_contract, self.info_anna['address'])
+        res = cmd.get_voter(self.anonymous_contract_address_uref, self.info_anna['address'])
+        print("Output: ", res)
+        assert(res[0]["amount"] == self.vote_amount_bigsun)
+
+        print("Vote token: hash")
+        vote_tx_hash = cmd.vote(self.wallet_password, self.anonymous_contract_address_hash, self.vote_amount, self.vote_fee, self.vote_gas, self.wallet_anna)
+        print("Tx sent. Waiting for vote")
+
+        time.sleep(self.tx_block_time * 3 + 1)
+
+        print("Check whether tx is ok or not")
+        is_ok = cmd.is_tx_ok(vote_tx_hash)
+        assert(is_ok == True)
+
+        res = cmd.get_voter(self.anonymous_contract_address_hash, self.info_anna['address'])
         print("Output: ", res)
         assert(res[0]["amount"] == self.vote_amount_bigsun) 
 
         print("Unvote token")
-        unvote_tx_hash = cmd.unvote(self.wallet_password, self.system_contract, self.vote_amount, self.vote_fee, self.vote_gas, self.wallet_anna)
+        unvote_tx_hash = cmd.unvote(self.wallet_password, self.anonymous_contract_address_hash, self.vote_amount, self.vote_fee, self.vote_gas, self.wallet_anna)
         print("Tx sent. Waiting for unvote")
 
         time.sleep(self.tx_block_time * 3 + 1)
@@ -436,6 +426,14 @@ class TestSingleNode():
         print("Check whether tx is ok or not")
         is_ok = cmd.is_tx_ok(unvote_tx_hash)
         assert(is_ok == True)
+
+        print("Check malfunction: wrong address")
+        try:
+            vote_tx_hash = cmd.vote(self.wallet_password, self.system_contract, self.vote_amount, self.vote_fee, self.vote_gas, self.wallet_anna)
+            raise Exception("Executed. Test fails")
+
+        except:
+            print("Expected error occurred. Success")
 
         print("======================Done test07_simple_vote_and_unvote======================")
 
@@ -481,3 +479,21 @@ class TestSingleNode():
         assert(float(add_reward_balance) < float(add_reward_and_commission_balance))
 
         print("======================Done test08_simple_claim_reward_and_commission======================")
+
+
+    @pytest.mark.skip("@joowon please delete this line and activate this test at your PR")
+    def test09_transfer_should_fail_due_to_gas_shortage(self):
+        print("======================Start test09_transfer_should_fail_due_to_gas_shortage======================")
+
+        print("Try to transfer token from elsa to anna. This tx should fail due to gas limit shortage in execution engine")
+        tx_hash = cmd.transfer_to(self.wallet_password, self.info_anna['address'], self.transfer_amount,
+                        self.transfer_fee, self.short_gas, self.info_elsa['address'])
+        
+        print("Tx sent. Waiting for validation")
+        time.sleep(self.tx_block_time * 3 + 1)
+
+        print("Check whether tx is ok or not")
+        is_ok = cmd.is_tx_ok(tx_hash)
+        assert(is_ok == False)
+
+        print("======================Done test09_transfer_should_fail_due_to_gas_shortage======================")

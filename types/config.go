@@ -27,6 +27,8 @@ var (
 			"account_pub":    Bech32PrefixAccPub,
 			"validator_pub":  Bech32PrefixValPub,
 			"consensus_pub":  Bech32PrefixConsPub,
+			"contract_hash":  Bech32PrefixContractHash,
+			"contract_uref":  Bech32PrefixContractURef,
 		},
 		coinType:           CoinType,
 		fullFundraiserPath: FullFundraiserPath,
@@ -70,6 +72,14 @@ func (config *Config) SetBech32PrefixForConsensusNode(addressPrefix, pubKeyPrefi
 	config.assertNotSealed()
 	config.bech32AddressPrefix["consensus_addr"] = addressPrefix
 	config.bech32AddressPrefix["consensus_pub"] = pubKeyPrefix
+}
+
+// SetBech32PrefixForContract builds the Config with Bech32 contracthashPrefix and contracturefPrefix for contract
+// and returns the config instance
+func (config *Config) SetBech32PrefixForContract(contracthashPrefix, contracturefPrefix string) {
+	config.assertNotSealed()
+	config.bech32AddressPrefix["contract_hash"] = contracthashPrefix
+	config.bech32AddressPrefix["contract_uref"] = contracturefPrefix
 }
 
 // SetTxEncoder builds the Config with TxEncoder used to marshal StdTx to bytes
@@ -134,6 +144,16 @@ func (config *Config) GetBech32ValidatorPubPrefix() string {
 // GetBech32ConsensusPubPrefix returns the Bech32 prefix for consensus node public key
 func (config *Config) GetBech32ConsensusPubPrefix() string {
 	return config.bech32AddressPrefix["consensus_pub"]
+}
+
+// GetBech32ContractHashPrefix returns the Bech32 prefix for contract hash
+func (config *Config) GetBech32ContractHashPrefix() string {
+	return config.bech32AddressPrefix["contract_hash"]
+}
+
+// GetBech32ContractUrefPrefix returns the Bech32 prefix for contract uref
+func (config *Config) GetBech32ContractUrefPrefix() string {
+	return config.bech32AddressPrefix["contract_uref"]
 }
 
 // GetTxEncoder return function to encode transactions

@@ -2,19 +2,34 @@ package rest
 
 import (
 	"bytes"
-	"encoding/hex"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path"
 	"testing"
 
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/codec"
+	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/types/rest"
 	"github.com/stretchr/testify/require"
 
 	"github.com/hdac-io/friday/x/executionlayer/types"
+
+	eeutil "github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
+)
+
+const (
+	hdacSpecific = "hdac"
+	general      = "contract"
+)
+
+var (
+	contractPath      = os.ExpandEnv("$HOME/.nodef/contracts")
+	counterDefineWasm = "counter_define.wasm"
 )
 
 func prepare() (fromAddr, receipAddr string, w http.ResponseWriter, clictx context.CLIContext, basereq rest.BaseReq) {
@@ -35,13 +50,68 @@ func prepare() (fromAddr, receipAddr string, w http.ResponseWriter, clictx conte
 	return
 }
 
+func TestRESTContractRunWASMFile(t *testing.T) {
+	_, _, writer, clictx, basereq := prepare()
+	counterBinary := eeutil.LoadWasmFile(path.Join(contractPath, counterDefineWasm))
+
+	contractReq := contractRunReq{
+		BaseReq:                       basereq,
+		ExecutionType:                 "wasm",
+		TokenContractAddressOrKeyName: "",
+		Base64EncodedBinary:           base64.StdEncoding.EncodeToString(counterBinary),
+		Args:                          "",
+		Fee:                           "10000000",
+	}
+
+	body := clictx.Codec.MustMarshalJSON(contractReq)
+	req := mustNewRequest(t, "POST", "/contract", bytes.NewReader(body))
+
+	outputBasereq, msgs, err := contractRunMsgCreator(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.Equal(t, outputBasereq, basereq)
+	require.NotNil(t, msgs)
+}
+
+func TestRESTContractRunContractAddress(t *testing.T) {
+	_, _, writer, clictx, basereq := prepare()
+
+	contractReq := contractRunReq{
+		BaseReq:                       basereq,
+		ExecutionType:                 "uref",
+		TokenContractAddressOrKeyName: "fridaycontracturef1v4xev2kdy8hkzvwcadk4a3872lzcyyz8t44du5z2jhz636qduz3sf9mf96",
+		Base64EncodedBinary:           "",
+		Args:                          `[{"name": "method", "value": {"string_value": "mint"}},{"name": "address", "value": {"string_value": "friday1qt8k20h3hmdx0qulgpppnlsg92hjjtvn59qkyd"}},{"name": "amount", "value": {"big_int": {"value": "100000", "bit_width": 512}}}]`,
+		Fee:                           "10000000",
+	}
+
+	body := clictx.Codec.MustMarshalJSON(contractReq)
+	req := mustNewRequest(t, "POST", "/contract", bytes.NewReader(body))
+
+	outputBasereq, msgs, err := contractRunMsgCreator(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.Equal(t, outputBasereq, basereq)
+	require.NotNil(t, msgs)
+}
+
+func TestRESTContractQuery(t *testing.T) {
+	_, _, writer, clictx, _ := prepare()
+
+	req := mustNewRequest(t, "GET", fmt.Sprintf("/contract?data_type=%s&data=%s&path=", "address", "system"), nil)
+	res, path, err := getContractQuerying(writer, clictx, req)
+
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.NotNil(t, path)
+}
+
 func TestRESTTransfer(t *testing.T) {
-	fromAddr, receipAddr, writer, clictx, basereq := prepare()
+	_, receipAddr, writer, clictx, basereq := prepare()
 
 	// Body
 	transReq := transferReq{
 		BaseReq:                    basereq,
-		TokenContractAddress:       fromAddr,
 		RecipientAddressOrNickname: receipAddr,
 		Amount:                     "20000000",
 		Fee:                        "10000000",
@@ -49,7 +119,7 @@ func TestRESTTransfer(t *testing.T) {
 
 	// http.request
 	body := clictx.Codec.MustMarshalJSON(transReq)
-	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/transfer", types.ModuleName), bytes.NewReader(body))
+	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/transfer", hdacSpecific), bytes.NewReader(body))
 
 	outputBasereq, msgs, err := transferMsgCreator(writer, clictx, req)
 
@@ -70,7 +140,7 @@ func TestRESTBond(t *testing.T) {
 
 	// http.request
 	body := clictx.Codec.MustMarshalJSON(bondReq)
-	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/bond", types.ModuleName), bytes.NewReader(body))
+	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/bond", hdacSpecific), bytes.NewReader(body))
 
 	outputBasereq, msgs, err := bondUnbondMsgCreator(true, writer, clictx, req)
 
@@ -91,7 +161,7 @@ func TestRESTUnbond(t *testing.T) {
 
 	// http.request
 	body := clictx.Codec.MustMarshalJSON(bondReq)
-	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/unbond", types.ModuleName), bytes.NewReader(body))
+	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/unbond", hdacSpecific), bytes.NewReader(body))
 
 	outputBasereq, msgs, err := bondUnbondMsgCreator(false, writer, clictx, req)
 
@@ -113,7 +183,7 @@ func TestRESTDelegate(t *testing.T) {
 
 	// http.request
 	body := clictx.Codec.MustMarshalJSON(delegateReq)
-	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/delegate", types.ModuleName), bytes.NewReader(body))
+	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/delegate", hdacSpecific), bytes.NewReader(body))
 
 	outputBasereq, msgs, err := delegateUndelegateMsgCreator(true, writer, clictx, req)
 
@@ -135,7 +205,7 @@ func TestRESTUndelegate(t *testing.T) {
 
 	// http.request
 	body := clictx.Codec.MustMarshalJSON(delegateReq)
-	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/undelegate", types.ModuleName), bytes.NewReader(body))
+	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/undelegate", hdacSpecific), bytes.NewReader(body))
 
 	outputBasereq, msgs, err := delegateUndelegateMsgCreator(false, writer, clictx, req)
 
@@ -158,7 +228,7 @@ func TestRESTRedelegate(t *testing.T) {
 
 	// http.request
 	body := clictx.Codec.MustMarshalJSON(delegateReq)
-	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/undelegate", types.ModuleName), bytes.NewReader(body))
+	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/undelegate", hdacSpecific), bytes.NewReader(body))
 
 	outputBasereq, msgs, err := delegateUndelegateMsgCreator(false, writer, clictx, req)
 
@@ -169,19 +239,19 @@ func TestRESTRedelegate(t *testing.T) {
 
 func TestRESTVote(t *testing.T) {
 	_, _, writer, clictx, basereq := prepare()
-	hash := hex.EncodeToString(types.SYSTEM_ACCOUNT)
+	targetContractAddress := sdk.ContractHashAddress(types.SYSTEM_ACCOUNT)
 
 	// Body
 	delegateReq := voteReq{
-		BaseReq: basereq,
-		Hash:    hash,
-		Amount:  "100000000",
-		Fee:     "10000000",
+		BaseReq:                basereq,
+		TargetContrractAddress: targetContractAddress.String(),
+		Amount:                 "100000000",
+		Fee:                    "10000000",
 	}
 
 	// http.request
 	body := clictx.Codec.MustMarshalJSON(delegateReq)
-	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/vote", types.ModuleName), bytes.NewReader(body))
+	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/vote", hdacSpecific), bytes.NewReader(body))
 
 	outputBasereq, msgs, err := voteUnvoteMsgCreator(true, writer, clictx, req)
 
@@ -192,19 +262,19 @@ func TestRESTVote(t *testing.T) {
 
 func TestRESTUnvote(t *testing.T) {
 	_, _, writer, clictx, basereq := prepare()
-	hash := hex.EncodeToString(types.SYSTEM_ACCOUNT)
+	targetContractAddress := sdk.ContractHashAddress(types.SYSTEM_ACCOUNT)
 
 	// Body
 	delegateReq := voteReq{
-		BaseReq: basereq,
-		Hash:    hash,
-		Amount:  "100000000",
-		Fee:     "10000000",
+		BaseReq:                basereq,
+		TargetContrractAddress: targetContractAddress.String(),
+		Amount:                 "100000000",
+		Fee:                    "10000000",
 	}
 
 	// http.request
 	body := clictx.Codec.MustMarshalJSON(delegateReq)
-	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/unvote", types.ModuleName), bytes.NewReader(body))
+	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/unvote", hdacSpecific), bytes.NewReader(body))
 
 	outputBasereq, msgs, err := voteUnvoteMsgCreator(false, writer, clictx, req)
 
@@ -220,13 +290,12 @@ func TestRESTClaimReward(t *testing.T) {
 	claimReq := claimReq{
 		BaseReq:            basereq,
 		RewardOrCommission: types.RewardValue,
-		Amount:             "100000000",
 		Fee:                "10000000",
 	}
 
 	// http.request
 	body := clictx.Codec.MustMarshalJSON(claimReq)
-	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/claim", types.ModuleName), bytes.NewReader(body))
+	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/claim", hdacSpecific), bytes.NewReader(body))
 
 	outputBasereq, msgs, err := claimMsgCreator(writer, clictx, req)
 
@@ -242,13 +311,12 @@ func TestRESTClaimCommission(t *testing.T) {
 	claimReq := claimReq{
 		BaseReq:            basereq,
 		RewardOrCommission: types.CommissionValue,
-		Amount:             "100000000",
 		Fee:                "10000000",
 	}
 
 	// http.request
 	body := clictx.Codec.MustMarshalJSON(claimReq)
-	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/claim", types.ModuleName), bytes.NewReader(body))
+	req := mustNewRequest(t, "POST", fmt.Sprintf("/%s/claim", hdacSpecific), bytes.NewReader(body))
 
 	outputBasereq, msgs, err := claimMsgCreator(writer, clictx, req)
 
@@ -260,8 +328,8 @@ func TestRESTClaimCommission(t *testing.T) {
 func TestRESTBalance(t *testing.T) {
 	fromAddr, _, writer, clictx, _ := prepare()
 
-	req := mustNewRequest(t, "GET", fmt.Sprintf("/%s/balance?address=%s", types.ModuleName, fromAddr), nil)
-	res, err := getBalanceQuerying(writer, clictx, req, types.ModuleName)
+	req := mustNewRequest(t, "GET", fmt.Sprintf("/%s/balance?address=%s", hdacSpecific, fromAddr), nil)
+	res, err := getBalanceQuerying(writer, clictx, req, hdacSpecific)
 
 	require.NoError(t, err)
 	require.NotNil(t, res)
@@ -270,7 +338,7 @@ func TestRESTBalance(t *testing.T) {
 func TestRESTGetValidator(t *testing.T) {
 	fromAddr, _, writer, clictx, _ := prepare()
 
-	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/validator?address=%s", types.ModuleName, fromAddr), nil)
+	req := mustNewRequest(t, "GET", fmt.Sprintf("/%s/validator?address=%s", hdacSpecific, fromAddr), nil)
 	res, err := getValidatorQuerying(writer, clictx, req)
 
 	require.NoError(t, err)
@@ -280,7 +348,7 @@ func TestRESTGetValidator(t *testing.T) {
 func TestRESTGetValidators(t *testing.T) {
 	_, _, writer, clictx, _ := prepare()
 
-	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/validator", types.ModuleName), nil)
+	req := mustNewRequest(t, "GET", fmt.Sprintf("/%s/validator", hdacSpecific), nil)
 	res, err := getValidatorQuerying(writer, clictx, req)
 
 	require.NoError(t, err)
@@ -290,7 +358,7 @@ func TestRESTGetValidators(t *testing.T) {
 func TestRESTGetDelegatorFromValidator(t *testing.T) {
 	fromAddr, _, writer, clictx, _ := prepare()
 
-	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/delegator?validator=%s", types.ModuleName, fromAddr), nil)
+	req := mustNewRequest(t, "GET", fmt.Sprintf("/%s/delegator?validator=%s", hdacSpecific, fromAddr), nil)
 	res, err := getDelegatorQuerying(writer, clictx, req)
 
 	require.NoError(t, err)
@@ -300,7 +368,7 @@ func TestRESTGetDelegatorFromValidator(t *testing.T) {
 func TestRESTGetDelegatorFromDelegator(t *testing.T) {
 	fromAddr, _, writer, clictx, _ := prepare()
 
-	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/delegator?delegator=%s", types.ModuleName, fromAddr), nil)
+	req := mustNewRequest(t, "GET", fmt.Sprintf("/%s/delegator?delegator=%s", hdacSpecific, fromAddr), nil)
 	res, err := getDelegatorQuerying(writer, clictx, req)
 
 	require.NoError(t, err)
@@ -310,7 +378,7 @@ func TestRESTGetDelegatorFromDelegator(t *testing.T) {
 func TestRESTGetDelegatorFromAll(t *testing.T) {
 	fromAddr, _, writer, clictx, _ := prepare()
 
-	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/delegator?validator=%s&delegator=%s", types.ModuleName, fromAddr, fromAddr), nil)
+	req := mustNewRequest(t, "GET", fmt.Sprintf("/%s/delegator?validator=%s&delegator=%s", hdacSpecific, fromAddr, fromAddr), nil)
 	res, err := getDelegatorQuerying(writer, clictx, req)
 
 	require.NoError(t, err)
@@ -320,7 +388,7 @@ func TestRESTGetDelegatorFromAll(t *testing.T) {
 func TestRESTGetVoterFromAddress(t *testing.T) {
 	fromAddr, _, writer, clictx, _ := prepare()
 
-	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/voter?address=%s", types.ModuleName, fromAddr), nil)
+	req := mustNewRequest(t, "GET", fmt.Sprintf("/%s/voter?address=%s", hdacSpecific, fromAddr), nil)
 	res, err := getVoterQuerying(writer, clictx, req)
 
 	require.NoError(t, err)
@@ -329,9 +397,9 @@ func TestRESTGetVoterFromAddress(t *testing.T) {
 
 func TestRESTGetVoterFromDapp(t *testing.T) {
 	_, _, writer, clictx, _ := prepare()
-	hash := hex.EncodeToString(types.SYSTEM_ACCOUNT)
+	contractUrefAddress := sdk.ContractUrefAddress(types.SYSTEM_ACCOUNT)
 
-	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/voter?hash=%s", types.ModuleName, hash), nil)
+	req := mustNewRequest(t, "GET", fmt.Sprintf("/%s/voter?contract=%s", hdacSpecific, contractUrefAddress.String()), nil)
 	res, err := getVoterQuerying(writer, clictx, req)
 
 	require.NoError(t, err)
@@ -340,9 +408,9 @@ func TestRESTGetVoterFromDapp(t *testing.T) {
 
 func TestRESTGetVoterFromAll(t *testing.T) {
 	fromAddr, _, writer, clictx, _ := prepare()
-	hash := hex.EncodeToString(types.SYSTEM_ACCOUNT)
+	contractUrefAddress := sdk.ContractUrefAddress(types.SYSTEM_ACCOUNT)
 
-	req := mustNewRequest(t, "GET", fmt.Sprintf("%s/voter?hash=%s&address=%s", types.ModuleName, hash, fromAddr), nil)
+	req := mustNewRequest(t, "GET", fmt.Sprintf("/%s/voter?contract=%s&address=%s", hdacSpecific, contractUrefAddress.String(), fromAddr), nil)
 	res, err := getVoterQuerying(writer, clictx, req)
 
 	require.NoError(t, err)

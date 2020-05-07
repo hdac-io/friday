@@ -169,3 +169,23 @@ func ToHdac(Bigsun Bigsun) Hdac {
 
 	return Hdac(strings.Join(res, "."))
 }
+
+// ReplaceBase64HashToBech32 for replace hashes for empty path query
+func ReplaceBase64HashToBech32(path, valueStr string) string {
+	res := valueStr
+	if path == "" {
+		r := regexp.MustCompile(`\"uref\": \{[\s]+\"uref\": \"([a-zA-Z0-9+/]+={0,3})\"`)
+		for _, matchedGroup := range r.FindAllStringSubmatch(valueStr, -1) {
+			urefStr := matchedGroup[1]
+			res = strings.Replace(res, urefStr, sdk.MustGetBech32ContractUrefFromBase64(urefStr), -1)
+		}
+
+		r = regexp.MustCompile(`\"hash\": \{[\s]+\"hash\": \"([a-zA-Z0-9+/]+={0,3})\"`)
+		for _, matchedGroup := range r.FindAllStringSubmatch(valueStr, -1) {
+			hashStr := matchedGroup[1]
+			res = strings.Replace(res, hashStr, sdk.MustGetBech32ContractHashFromBase64(hashStr), -1)
+		}
+	}
+
+	return res
+}

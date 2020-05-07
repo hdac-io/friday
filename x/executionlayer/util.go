@@ -38,7 +38,21 @@ func toBytes(keyType string, key string,
 		}
 		bytes = addr.Bytes()
 
-	case types.UREF, types.LOCAL, types.HASH:
+	case types.UREF:
+		urefbytes, err := sdk.ContractUrefAddressFromBech32(key)
+		if err != nil {
+			break
+		}
+		bytes = urefbytes.Bytes()
+
+	case types.HASH:
+		hashbytes, err := sdk.ContractHashAddressFromBech32(key)
+		if err != nil {
+			break
+		}
+		bytes = hashbytes.Bytes()
+
+	case types.LOCAL:
 		bytes, err = hex.DecodeString(key)
 
 	default:

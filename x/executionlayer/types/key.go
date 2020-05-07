@@ -24,6 +24,12 @@ var (
 	ValidatorKey = []byte{0x21}
 )
 
+type (
+	ContractAddress     = sdk.ContractAddress
+	ContractHashAddress = sdk.ContractHashAddress
+	ContractUrefAddress = sdk.ContractUrefAddress
+)
+
 func GetEEStateKey(eeState []byte) []byte {
 	return append(EEStateKey, eeState...)
 }

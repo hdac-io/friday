@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -56,6 +57,15 @@ const (
 	// PrefixAddress is the prefix for addresses
 	PrefixAddress = "addr"
 
+	// PrefixContract is the prefix for contract hash
+	PrefixContract = "contract"
+
+	// PrefixHash is the prefix for contract hash
+	PrefixHash = "hash"
+
+	// PrefixURef is the prefix for URef hash
+	PrefixURef = "uref"
+
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
 	Bech32PrefixAccAddr = Bech32MainPrefix
 	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
@@ -68,6 +78,10 @@ const (
 	Bech32PrefixConsAddr = Bech32MainPrefix + PrefixValidator + PrefixConsensus
 	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
 	Bech32PrefixConsPub = Bech32MainPrefix + PrefixValidator + PrefixConsensus + PrefixPublic
+	// Bech32PrefixContractHash defines the Bech32 prefix of a contract hash
+	Bech32PrefixContractHash = Bech32MainPrefix + PrefixContract + PrefixHash
+	// Bech32PrefixContractURef defines the Bech32 prefix of a contract URef
+	Bech32PrefixContractURef = Bech32MainPrefix + PrefixContract + PrefixURef
 )
 
 // Address is a common interface for different types of addresses used by the SDK
@@ -81,14 +95,32 @@ type Address interface {
 	Format(s fmt.State, verb rune)
 }
 
+// ContractAddress is a specific interface for control types for contract
+type ContractAddress interface {
+	Equals(Address) bool
+	Empty() bool
+	Marshal() ([]byte, error)
+	MarshalJSON() ([]byte, error)
+	Bytes() []byte
+	String() string
+	Format(s fmt.State, verb rune)
+}
+
 // Ensure that different address types implement the interface
 var _ Address = AccAddress{}
 var _ Address = ValAddress{}
 var _ Address = ConsAddress{}
+var _ Address = ContractHashAddress{}
+var _ Address = ContractUrefAddress{}
 
 var _ yaml.Marshaler = AccAddress{}
 var _ yaml.Marshaler = ValAddress{}
 var _ yaml.Marshaler = ConsAddress{}
+var _ yaml.Marshaler = ContractHashAddress{}
+var _ yaml.Marshaler = ContractUrefAddress{}
+
+var _ ContractAddress = ContractHashAddress{}
+var _ ContractAddress = ContractUrefAddress{}
 
 // ----------------------------------------------------------------------------
 // account
@@ -573,6 +605,306 @@ func (ca ConsAddress) Format(s fmt.State, verb rune) {
 }
 
 // ----------------------------------------------------------------------------
+// contract hash
+// ----------------------------------------------------------------------------
+
+// ContractHashAddress defines a wrapper around bytes meant to present a contract hash.
+// When marshaled to a string or JSON, it uses Bech32.
+type ContractHashAddress []byte
+
+// ContractHashAddressFromBase64 creates a ContractHashAddress from a hex string.
+func ContractHashAddressFromBase64(address string) (addr ContractHashAddress, err error) {
+	if len(address) == 0 {
+		return addr, errors.New("decoding Bech32 address failed: must provide an address")
+	}
+
+	bz, err := base64.StdEncoding.DecodeString(address)
+	if err != nil {
+		return nil, err
+	}
+
+	return ContractHashAddress(bz), nil
+}
+
+// ContractHashAddressFromBech32 creates a ContractHashAddress from a Bech32 string.
+func ContractHashAddressFromBech32(address string) (addr ContractHashAddress, err error) {
+	if len(strings.TrimSpace(address)) == 0 {
+		return ContractHashAddress{}, nil
+	}
+
+	bech32PrefixContractHashAddr := GetConfig().GetBech32ContractHashPrefix()
+
+	bz, err := GetFromBech32(address, bech32PrefixContractHashAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	return ContractHashAddress(bz), nil
+}
+
+// Returns boolean for whether two ConsAddress are Equal
+func (ch ContractHashAddress) Equals(ch2 Address) bool {
+	if ch.Empty() && ch2.Empty() {
+		return true
+	}
+
+	return bytes.Equal(ch.Bytes(), ch2.Bytes())
+}
+
+// Returns boolean for whether an ConsAddress is empty
+func (ch ContractHashAddress) Empty() bool {
+	if ch == nil {
+		return true
+	}
+
+	ch2 := ContractHashAddress{}
+	return bytes.Equal(ch.Bytes(), ch2.Bytes())
+}
+
+// Marshal returns the raw address bytes. It is needed for protobuf
+// compatibility.
+func (ch ContractHashAddress) Marshal() ([]byte, error) {
+	return ch, nil
+}
+
+// Unmarshal sets the address to the given data. It is needed for protobuf
+// compatibility.
+func (ch *ContractHashAddress) Unmarshal(data []byte) error {
+	*ch = data
+	return nil
+}
+
+// MarshalJSON marshals to JSON using Bech32.
+func (ch ContractHashAddress) MarshalJSON() ([]byte, error) {
+	return json.Marshal(ch.String())
+}
+
+// MarshalYAML marshals to YAML using Bech32.
+func (ch ContractHashAddress) MarshalYAML() (interface{}, error) {
+	return ch.String(), nil
+}
+
+// UnmarshalJSON unmarshals from JSON assuming Bech32 encoding.
+func (ch *ContractHashAddress) UnmarshalJSON(data []byte) error {
+	var s string
+
+	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return err
+	}
+
+	ch2, err := ContractHashAddressFromBech32(s)
+	if err != nil {
+		return err
+	}
+
+	*ch = ch2
+	return nil
+}
+
+// UnmarshalYAML unmarshals from YAML assuming Bech32 encoding.
+func (ch *ContractHashAddress) UnmarshalYAML(data []byte) error {
+	var s string
+
+	err := yaml.Unmarshal(data, &s)
+	if err != nil {
+		return err
+	}
+
+	ch2, err := ContractHashAddressFromBech32(s)
+	if err != nil {
+		return err
+	}
+
+	*ch = ch2
+	return nil
+}
+
+// Bytes returns the raw address bytes.
+func (ch ContractHashAddress) Bytes() []byte {
+	return ch
+}
+
+// String implements the Stringer interface.
+func (ch ContractHashAddress) String() string {
+	if ch.Empty() {
+		return ""
+	}
+
+	bech32PrefixContractHash := GetConfig().GetBech32ContractHashPrefix()
+
+	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixContractHash, ch.Bytes())
+	if err != nil {
+		panic(err)
+	}
+
+	return bech32Addr
+}
+
+// Format implements the fmt.Formatter interface.
+// nolint: errcheck
+func (ch ContractHashAddress) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 's':
+		s.Write([]byte(ch.String()))
+	case 'p':
+		s.Write([]byte(fmt.Sprintf("%p", ch)))
+	default:
+		s.Write([]byte(fmt.Sprintf("%X", []byte(ch))))
+	}
+}
+
+// ----------------------------------------------------------------------------
+// contract uref
+// ----------------------------------------------------------------------------
+
+// ContractHashAddress defines a wrapper around bytes meant to present a contract hash.
+// When marshaled to a string or JSON, it uses Bech32.
+type ContractUrefAddress []byte
+
+// ContractUrefAddressFromBase64 creates a ContractUrefAddress from a hex string.
+func ContractUrefAddressFromBase64(address string) (addr ContractUrefAddress, err error) {
+	if len(address) == 0 {
+		return addr, errors.New("decoding Bech32 address failed: must provide an address")
+	}
+
+	bz, err := base64.StdEncoding.DecodeString(address)
+	if err != nil {
+		return nil, err
+	}
+
+	return ContractUrefAddress(bz), nil
+}
+
+// ContractHashAddressFromBech32 creates a ConsAddress from a Bech32 string.
+func ContractUrefAddressFromBech32(address string) (addr ContractUrefAddress, err error) {
+	if len(strings.TrimSpace(address)) == 0 {
+		return ContractUrefAddress{}, nil
+	}
+
+	bech32PrefixContractHashURef := GetConfig().GetBech32ContractUrefPrefix()
+
+	bz, err := GetFromBech32(address, bech32PrefixContractHashURef)
+	if err != nil {
+		return nil, err
+	}
+
+	return ContractUrefAddress(bz), nil
+}
+
+// Returns boolean for whether two ConsAddress are Equal
+func (cu ContractUrefAddress) Equals(cu2 Address) bool {
+	if cu.Empty() && cu2.Empty() {
+		return true
+	}
+
+	return bytes.Equal(cu.Bytes(), cu2.Bytes())
+}
+
+// Returns boolean for whether an ConsAddress is empty
+func (cu ContractUrefAddress) Empty() bool {
+	if cu == nil {
+		return true
+	}
+
+	cu2 := ContractHashAddress{}
+	return bytes.Equal(cu.Bytes(), cu2.Bytes())
+}
+
+// Marshal returns the raw address bytes. It is needed for protobuf
+// compatibility.
+func (cu ContractUrefAddress) Marshal() ([]byte, error) {
+	return cu, nil
+}
+
+// Unmarshal sets the address to the given data. It is needed for protobuf
+// compatibility.
+func (cu *ContractUrefAddress) Unmarshal(data []byte) error {
+	*cu = data
+	return nil
+}
+
+// MarshalJSON marshals to JSON using Bech32.
+func (cu ContractUrefAddress) MarshalJSON() ([]byte, error) {
+	return json.Marshal(cu.String())
+}
+
+// MarshalYAML marshals to YAML using Bech32.
+func (cu ContractUrefAddress) MarshalYAML() (interface{}, error) {
+	return cu.String(), nil
+}
+
+// UnmarshalJSON unmarshals from JSON assuming Bech32 encoding.
+func (cu *ContractUrefAddress) UnmarshalJSON(data []byte) error {
+	var s string
+
+	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return err
+	}
+
+	cu2, err := ContractUrefAddressFromBech32(s)
+	if err != nil {
+		return err
+	}
+
+	*cu = cu2
+	return nil
+}
+
+// UnmarshalYAML unmarshals from YAML assuming Bech32 encoding.
+func (cu *ContractUrefAddress) UnmarshalYAML(data []byte) error {
+	var s string
+
+	err := yaml.Unmarshal(data, &s)
+	if err != nil {
+		return err
+	}
+
+	cu2, err := ContractUrefAddressFromBech32(s)
+	if err != nil {
+		return err
+	}
+
+	*cu = cu2
+	return nil
+}
+
+// Bytes returns the raw address bytes.
+func (cu ContractUrefAddress) Bytes() []byte {
+	return cu
+}
+
+// String implements the Stringer interface.
+func (cu ContractUrefAddress) String() string {
+	if cu.Empty() {
+		return ""
+	}
+
+	bech32PrefixContractUref := GetConfig().GetBech32ContractUrefPrefix()
+
+	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixContractUref, cu.Bytes())
+	if err != nil {
+		panic(err)
+	}
+
+	return bech32Addr
+}
+
+// Format implements the fmt.Formatter interface.
+// nolint: errcheck
+func (cu ContractUrefAddress) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 's':
+		s.Write([]byte(cu.String()))
+	case 'p':
+		s.Write([]byte(fmt.Sprintf("%p", cu)))
+	default:
+		s.Write([]byte(fmt.Sprintf("%X", []byte(cu))))
+	}
+}
+
+// ----------------------------------------------------------------------------
 // auxiliary
 // ----------------------------------------------------------------------------
 
@@ -728,4 +1060,42 @@ func GetFromBech32(bech32str, prefix string) ([]byte, error) {
 	}
 
 	return bz, nil
+}
+
+// GetBech32ContractHashFromBase64 returns bech32 contract hash string from base64 encoded hash
+func GetBech32ContractHashFromBase64(base64String string) (string, error) {
+	conhashAddr, err := ContractHashAddressFromBase64(base64String)
+	if err != nil {
+		return "", err
+	}
+
+	return conhashAddr.String(), nil
+}
+
+// GetBech32ContractUrefFromBase64 returns bech32 contract uref string from base64 encoded hash
+func GetBech32ContractUrefFromBase64(base64String string) (string, error) {
+	conurefAddr, err := ContractUrefAddressFromBase64(base64String)
+	if err != nil {
+		return "", err
+	}
+
+	return conurefAddr.String(), nil
+}
+
+// MustGetBech32ContractHashFromBase64 is must-get form
+func MustGetBech32ContractHashFromBase64(base64String string) string {
+	res, err := GetBech32ContractHashFromBase64(base64String)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+// MustGetBech32ContractUrefFromBase64 is must-get form
+func MustGetBech32ContractUrefFromBase64(base64String string) string {
+	res, err := GetBech32ContractUrefFromBase64(base64String)
+	if err != nil {
+		panic(err)
+	}
+	return res
 }
