@@ -78,7 +78,7 @@ class TestSingleNode():
         if is_friday_alive:
             for _ in range(10):
                 print("Friday alive")
-                self.proc_friday.terminate()
+                self.proc_friday.kill()
                 time.sleep(10)
                 is_friday_alive = cmd.daemon_check(self.proc_friday)
                 if not is_friday_alive:
@@ -91,7 +91,7 @@ class TestSingleNode():
         if is_ee_alive:
             for _ in range(10):
                 print("EE alive")
-                self.proc_ee.terminate()
+                self.proc_ee.kill()
                 time.sleep(10)
                 is_ee_alive = cmd.daemon_check(self.proc_ee)
                 if not is_ee_alive:
