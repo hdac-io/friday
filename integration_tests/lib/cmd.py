@@ -78,8 +78,11 @@ def daemon_check(proc: subprocess.Popen):
     """
     Get proc object and check whether given daemon is running or not
     """
-    is_alive = proc.poll() is None
-    return is_alive
+    if proc is None:
+        return True
+    else:
+        is_alive = proc.poll() is None
+        return is_alive
 
 
 

@@ -73,22 +73,26 @@ class TestSingleNode():
     def daemon_downcheck(self):
         is_ee_alive = cmd.daemon_check(self.proc_ee)
         is_friday_alive = cmd.daemon_check(self.proc_friday)
-        if is_ee_alive or is_friday_alive:
+        if is_friday_alive:
             for _ in range(10):
-                print("EE alive")
-                self.proc_ee.terminate()
-                is_ee_alive = cmd.daemon_check(self.proc_ee)
-                if not is_ee_alive:
+                print("Friday alive")
+                self.proc_friday.terminate()
+                time.sleep(10)
+                is_friday_alive = cmd.daemon_check(self.proc_friday)
+                if not is_friday_alive:
                     break
 
             else:
                 raise DeadDaemonException
 
+
+        if is_ee_alive:
             for _ in range(10):
-                print("Friday alive")
-                self.proc_friday.terminate()
-                is_friday_alive = cmd.daemon_check(self.proc_friday)
-                if not is_friday_alive:
+                print("EE alive")
+                self.proc_ee.terminate()
+                time.sleep(10)
+                is_ee_alive = cmd.daemon_check(self.proc_ee)
+                if not is_ee_alive:
                     break
 
             else:
@@ -156,7 +160,6 @@ class TestSingleNode():
 
 
     def setup_method(self):
-        self.daemon_downcheck()
         print("Running CasperLabs EE..")
         self.proc_ee = cmd.run_casperlabsEE()
         print("Running friday node..")
