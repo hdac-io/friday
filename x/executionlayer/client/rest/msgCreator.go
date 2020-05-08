@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/hdac-io/friday/client/context"
@@ -84,11 +83,6 @@ func contractRunMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *
 		return rest.BaseReq{}, nil, fmt.Errorf("error on conversion from bigsun to token")
 	}
 
-	gasPrice, err := strconv.ParseUint(req.BaseReq.Gas, 10, 64)
-	if err != nil {
-		return rest.BaseReq{}, nil, fmt.Errorf("error to parse into gas")
-	}
-
 	// build and sign the transaction, then broadcast to Tendermint
 	msg := types.NewMsgExecute(
 		contractAddress,
@@ -97,7 +91,6 @@ func contractRunMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *
 		sessionCode,
 		req.Args,
 		string(fee),
-		gasPrice,
 	)
 
 	err = msg.ValidateBasic()
@@ -175,13 +168,8 @@ func transferMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 		return rest.BaseReq{}, nil, err
 	}
 
-	gas, err := strconv.ParseUint(req.BaseReq.Gas, 10, 64)
-	if err != nil {
-		return rest.BaseReq{}, nil, err
-	}
-
 	// create the message
-	eeMsg := types.NewMsgTransfer("system:transfer", senderAddr, recipientAddr, string(amount), string(fee), gas)
+	eeMsg := types.NewMsgTransfer("system:transfer", senderAddr, recipientAddr, string(amount), string(fee))
 	err = eeMsg.ValidateBasic()
 	if err != nil {
 		return rest.BaseReq{}, nil, err
@@ -230,15 +218,10 @@ func bondUnbondMsgCreator(bondIsTrue bool, w http.ResponseWriter, cliCtx context
 	}
 
 	var msg sdk.Msg
-	gas, err := strconv.ParseUint(req.BaseReq.Gas, 10, 64)
-	if err != nil {
-		return rest.BaseReq{}, nil, err
-	}
-
 	if bondIsTrue == true {
-		msg = types.NewMsgBond("system:bond", addr, string(amount), string(fee), gas)
+		msg = types.NewMsgBond("system:bond", addr, string(amount), string(fee))
 	} else {
-		msg = types.NewMsgUnBond("system:unbond", addr, string(amount), string(fee), gas)
+		msg = types.NewMsgUnBond("system:unbond", addr, string(amount), string(fee))
 	}
 
 	// create the message
@@ -299,15 +282,11 @@ func delegateUndelegateMsgCreator(delegateIsTrue bool, w http.ResponseWriter, cl
 	}
 
 	var msg sdk.Msg
-	gas, err := strconv.ParseUint(req.BaseReq.Gas, 10, 64)
-	if err != nil {
-		return rest.BaseReq{}, nil, err
-	}
 
 	if delegateIsTrue == true {
-		msg = types.NewMsgDelegate("system:delegate", addr, valAddress, string(amount), string(fee), gas)
+		msg = types.NewMsgDelegate("system:delegate", addr, valAddress, string(amount), string(fee))
 	} else {
-		msg = types.NewMsgUndelegate("system:undelegate", addr, valAddress, string(amount), string(fee), gas)
+		msg = types.NewMsgUndelegate("system:undelegate", addr, valAddress, string(amount), string(fee))
 	}
 
 	// create the message
@@ -377,12 +356,7 @@ func redelegateMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *h
 	}
 
 	var msg sdk.Msg
-	gas, err := strconv.ParseUint(req.BaseReq.Gas, 10, 64)
-	if err != nil {
-		return rest.BaseReq{}, nil, err
-	}
-
-	msg = types.NewMsgRedelegate("system:redelegate", addr, srcValAddress, destValAddress, string(amount), string(fee), gas)
+	msg = types.NewMsgRedelegate("system:redelegate", addr, srcValAddress, destValAddress, string(amount), string(fee))
 
 	// create the message
 	err = msg.ValidateBasic()
@@ -447,15 +421,11 @@ func voteUnvoteMsgCreator(voteIsTrue bool, w http.ResponseWriter, cliCtx context
 	}
 
 	var msg sdk.Msg
-	gas, err := strconv.ParseUint(req.BaseReq.Gas, 10, 64)
-	if err != nil {
-		return rest.BaseReq{}, nil, err
-	}
 
 	if voteIsTrue == true {
-		msg = types.NewMsgVote("system:vote", addr, contractAddress, string(amount), string(fee), gas)
+		msg = types.NewMsgVote("system:vote", addr, contractAddress, string(amount), string(fee))
 	} else {
-		msg = types.NewMsgUnvote("system:unvote", addr, contractAddress, string(amount), string(fee), gas)
+		msg = types.NewMsgUnvote("system:unvote", addr, contractAddress, string(amount), string(fee))
 	}
 
 	// create the message
@@ -502,10 +472,6 @@ func claimMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.R
 	}
 
 	var msg sdk.Msg
-	gas, err := strconv.ParseUint(req.BaseReq.Gas, 10, 64)
-	if err != nil {
-		return rest.BaseReq{}, nil, err
-	}
 
 	var txname string
 	if req.RewardOrCommission == false {
@@ -514,7 +480,7 @@ func claimMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.R
 		txname = "reward"
 	}
 
-	msg = types.NewMsgClaim(fmt.Sprintf("system:claim_%s", txname), addr, req.RewardOrCommission, string(fee), gas)
+	msg = types.NewMsgClaim(fmt.Sprintf("system:claim_%s", txname), addr, req.RewardOrCommission, string(fee))
 
 	// create the message
 	err = msg.ValidateBasic()

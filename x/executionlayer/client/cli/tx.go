@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
@@ -21,11 +20,11 @@ import (
 
 func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "run <type> <wasm-path>|<uref>|<name>|<hash> <argument> <fee> <gas_price> --from <from>",
+		Use:   "run <type> <wasm-path>|<uref>|<name>|<hash> <argument> <fee> --from <from>",
 		Short: "Run contract",
 		Long: "Run contract\n" +
 			"There are 4 types of contract run. ('wasm', 'uref', 'name', 'hash)",
-		Args: cobra.ExactArgs(5),
+		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -77,11 +76,6 @@ func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			gasPrice, err := strconv.ParseUint(args[4], 10, 64)
-			if err != nil {
-				return err
-			}
-
 			// build and sign the transaction, then broadcast to Tendermint
 			msg := types.NewMsgExecute(
 				contractAddress,
@@ -90,9 +84,8 @@ func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 				sessionCode,
 				args[2],
 				string(fee),
-				gasPrice,
 			)
-			txBldr = txBldr.WithGas(gasPrice)
+
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
@@ -106,10 +99,10 @@ func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 // GetCmdTransfer is the CLI command for transfer
 func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "transfer-to <recipient_nickname>|<address> <amount> <fee> <gas_price> --from <from>",
+		Use:   "transfer-to <recipient_nickname>|<address> <amount> <fee> --from <from>",
 		Short: "Transfer Hdac token",
 		Long:  "Transfer Hdac token",
-		Args:  cobra.ExactArgs(4),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -134,12 +127,6 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			// Numbers parsing
-			gasPrice, err := strconv.ParseUint(args[3], 10, 64)
-			if err != nil {
-				return err
-			}
-
 			kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
 			if err != nil {
 				return err
@@ -155,8 +142,7 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgTransfer("system:transfer", fromAddr, recipentAddr, string(amount), string(fee), gasPrice)
-			txBldr = txBldr.WithGas(gasPrice)
+			msg := types.NewMsgTransfer("transfer", fromAddr, recipentAddr, string(amount), string(fee))
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
@@ -170,10 +156,10 @@ func GetCmdTransfer(cdc *codec.Codec) *cobra.Command {
 // GetCmdBonding is the CLI command for bonding
 func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "bond --from <from> <amount> <fee> <gas-price>",
+		Use:   "bond --from <from> <amount> <fee>",
 		Short: "Bond token",
 		Long:  "Bond token for useful activity",
-		Args:  cobra.ExactArgs(3),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -202,14 +188,8 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
 			addr := keyInfo.GetAddress()
 
-			gasPrice, err := strconv.ParseUint(args[2], 10, 64)
-			if err != nil {
-				return err
-			}
-
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgBond("system:bond", addr, string(amount), string(fee), gasPrice)
-			txBldr = txBldr.WithGas(gasPrice)
+			msg := types.NewMsgBond("system:bond", addr, string(amount), string(fee))
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
@@ -223,10 +203,10 @@ func GetCmdBonding(cdc *codec.Codec) *cobra.Command {
 // GetCmdUnbonding is the CLI command for unbonding
 func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unbond --from <from> <amount> <fee> <gas-price>",
+		Use:   "unbond --from <from> <amount> <fee>",
 		Short: "Unbond token",
 		Long:  "Unbond token for converts tokens as a freedom",
-		Args:  cobra.ExactArgs(3),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -255,14 +235,8 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
 			addr := keyInfo.GetAddress()
 
-			gasPrice, err := strconv.ParseUint(args[2], 10, 64)
-			if err != nil {
-				return err
-			}
-
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgUnBond("system:unbond", addr, string(amount), string(fee), gasPrice)
-			txBldr = txBldr.WithGas(gasPrice)
+			msg := types.NewMsgUnBond("system:unbond", addr, string(amount), string(fee))
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
@@ -275,10 +249,10 @@ func GetCmdUnbonding(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delegate <validator-address> <amount> <fee> <gas-price> --from <from>",
+		Use:   "delegate <validator-address> <amount> <fee> --from <from>",
 		Short: "Delegate token",
 		Long:  "Delegate token for converts tokens as a freedom",
-		Args:  cobra.ExactArgs(4),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -315,14 +289,8 @@ func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
 			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
 			addr := keyInfo.GetAddress()
 
-			gasPrice, err := strconv.ParseUint(args[3], 10, 64)
-			if err != nil {
-				return err
-			}
-
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgDelegate("system:delegate", addr, valAddress, string(amount), string(fee), gasPrice)
-			txBldr = txBldr.WithGas(gasPrice)
+			msg := types.NewMsgDelegate("system:delegate", addr, valAddress, string(amount), string(fee))
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
@@ -335,10 +303,10 @@ func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdUndelegate(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "undelegate <validator-address> <amount> <fee> <gas-price> --from <from>",
+		Use:   "undelegate <validator-address> <amount> <fee> --from <from>",
 		Short: "Undelegate token",
 		Long:  "Undelegate token for converts tokens as a freedom",
-		Args:  cobra.ExactArgs(4),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -375,14 +343,8 @@ func GetCmdUndelegate(cdc *codec.Codec) *cobra.Command {
 			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
 			addr := keyInfo.GetAddress()
 
-			gasPrice, err := strconv.ParseUint(args[3], 10, 64)
-			if err != nil {
-				return err
-			}
-
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgUndelegate("system:undelegate", addr, valAddress, string(amount), string(fee), gasPrice)
-			txBldr = txBldr.WithGas(gasPrice)
+			msg := types.NewMsgUndelegate("system:undelegate", addr, valAddress, string(amount), string(fee))
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
@@ -395,10 +357,10 @@ func GetCmdUndelegate(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdRedelegate(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "redelegate <src-validator-address> <dest-validator-address> <amount> <fee> <gas-price> --from <from>",
+		Use:   "redelegate <src-validator-address> <dest-validator-address> <amount> <fee> --from <from>",
 		Short: "Redelegate token",
 		Long:  "Redelegate token for converts tokens as a freedom",
-		Args:  cobra.ExactArgs(5),
+		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -443,14 +405,8 @@ func GetCmdRedelegate(cdc *codec.Codec) *cobra.Command {
 			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
 			addr := keyInfo.GetAddress()
 
-			gasPrice, err := strconv.ParseUint(args[4], 10, 64)
-			if err != nil {
-				return err
-			}
-
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgRedelegate("system:redelegate", addr, srcValAddress, destValAddress, string(amount), string(fee), gasPrice)
-			txBldr = txBldr.WithGas(gasPrice)
+			msg := types.NewMsgRedelegate("system:redelegate", addr, srcValAddress, destValAddress, string(amount), string(fee))
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
@@ -463,10 +419,10 @@ func GetCmdRedelegate(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "vote <contract_address> <amount> <fee> <gas-price> --from <from>",
+		Use:   "vote <contract_address> <amount> <fee> --from <from>",
 		Short: "Vote token",
 		Long:  "Vote token for converts tokens as a freedom",
-		Args:  cobra.ExactArgs(4),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -508,14 +464,8 @@ func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
 			addr := keyInfo.GetAddress()
 
-			gasPrice, err := strconv.ParseUint(args[3], 10, 64)
-			if err != nil {
-				return err
-			}
-
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgVote("system:vote", addr, contractAddress, string(amount), string(fee), gasPrice)
-			txBldr = txBldr.WithGas(gasPrice)
+			msg := types.NewMsgVote("system:vote", addr, contractAddress, string(amount), string(fee))
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
@@ -528,10 +478,10 @@ func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdUnvote(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unvote <contract_address> <amount> <fee> <gas-price> --from <from>",
+		Use:   "unvote <contract_address> <amount> <fee> --from <from>",
 		Short: "Unvote token",
 		Long:  "Unvote token for converts tokens as a freedom",
-		Args:  cobra.ExactArgs(4),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -569,14 +519,8 @@ func GetCmdUnvote(cdc *codec.Codec) *cobra.Command {
 			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
 			addr := keyInfo.GetAddress()
 
-			gasPrice, err := strconv.ParseUint(args[3], 10, 64)
-			if err != nil {
-				return err
-			}
-
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgUnvote("system:unvote", addr, contractAddress, string(amount), string(fee), gasPrice)
-			txBldr = txBldr.WithGas(gasPrice)
+			msg := types.NewMsgUnvote("system:unvote", addr, contractAddress, string(amount), string(fee))
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
@@ -589,10 +533,10 @@ func GetCmdUnvote(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdClaimReward(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "claim reward|commission <fee> <gas-price> --from <from>",
+		Use:   "claim reward|commission <fee> --from <from>",
 		Short: "Reward or commission token",
 		Long:  "Reward for delegated quantity",
-		Args:  cobra.ExactArgs(3),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -624,14 +568,8 @@ func GetCmdClaimReward(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			gasPrice, err := strconv.ParseUint(args[2], 10, 64)
-			if err != nil {
-				return err
-			}
-
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := types.NewMsgClaim(fmt.Sprintf("system:claim_%s", args[0]), addr, isRewardOrCommission, string(fee), gasPrice)
-			txBldr = txBldr.WithGas(gasPrice)
+			msg := types.NewMsgClaim(fmt.Sprintf("system:claim_%s", args[0]), addr, isRewardOrCommission, string(fee))
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}

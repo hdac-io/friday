@@ -84,7 +84,6 @@ func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTr
 		proxyContractHash,
 		sessionArgsStr,
 		msg.Fee,
-		msg.GasPrice,
 	)
 	result, log := execute(ctx, k, msgExecute)
 	if result == true {
@@ -158,7 +157,6 @@ func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) 
 		proxyContractHash,
 		sessionArgsStr,
 		msg.Fee,
-		msg.GasPrice,
 	)
 	result, log := execute(ctx, k, msgExecute)
 	return getResult(result, log)
@@ -190,7 +188,6 @@ func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBo
 		proxyContractHash,
 		sessionArgsStr,
 		msg.Fee,
-		msg.GasPrice,
 	)
 	result, log := execute(ctx, k, msgExecute)
 
@@ -225,7 +222,6 @@ func handlerMsgDelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgDe
 		proxyContractHash,
 		sessionArgsStr,
 		msg.Fee,
-		msg.GasPrice,
 	)
 	result, log := execute(ctx, k, msgExecute)
 
@@ -262,7 +258,6 @@ func handlerMsgUndelgate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgU
 		proxyContractHash,
 		sessionArgsStr,
 		msg.Fee,
-		msg.GasPrice,
 	)
 	result, log := execute(ctx, k, msgExecute)
 
@@ -301,7 +296,6 @@ func handlerMsgRedelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.Msg
 		proxyContractHash,
 		sessionArgsStr,
 		msg.Fee,
-		msg.GasPrice,
 	)
 	result, log := execute(ctx, k, msgExecute)
 
@@ -338,7 +332,6 @@ func handlerMsgVote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgVote) 
 		proxyContractHash,
 		sessionArgsStr,
 		msg.Fee,
-		msg.GasPrice,
 	)
 	result, log := execute(ctx, k, msgExecute)
 
@@ -377,7 +370,6 @@ func handlerMsgUnvote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnvo
 		proxyContractHash,
 		sessionArgsStr,
 		msg.Fee,
-		msg.GasPrice,
 	)
 	result, log := execute(ctx, k, msgExecute)
 
@@ -414,7 +406,6 @@ func handlerMsgClaim(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgClaim
 		proxyContractHash,
 		sessionArgsStr,
 		msg.Fee,
-		msg.GasPrice,
 	)
 	result, log := execute(ctx, k, msgExecute)
 
@@ -456,7 +447,7 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) (boo
 		executeAddress,
 		msg.SessionType, msg.SessionCode, msg.SessionArgs,
 		util.HASH, proxyContractHash, paymentArgsJson,
-		msg.GasPrice, ctx.BlockTime().Unix(), ctx.ChainID())
+		types.BASIC_GAS, ctx.BlockTime().Unix(), ctx.ChainID())
 	if err != nil {
 		return false, err.Error()
 	}
