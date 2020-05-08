@@ -444,6 +444,9 @@ func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 	vars := r.URL.Query()
 	straddr := vars.Get("address")
 	heightStr := vars.Get("height")
+	if len(heightStr) == 0 {
+		heightStr = "0"
+	}
 	height, err := strconv.ParseInt(heightStr, 10, 64)
 	if err != nil {
 		return nil, err
