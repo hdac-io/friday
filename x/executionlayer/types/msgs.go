@@ -19,7 +19,6 @@ type MsgExecute struct {
 	SessionCode     []byte            `json:"session_code"`
 	SessionArgs     string            `json:"session_args"`
 	Fee             string            `json:"fee"`
-	GasPrice        uint64            `json:"gas_price"`
 }
 
 // NewMsgExecute is a constructor function for MsgSetName
@@ -30,7 +29,6 @@ func NewMsgExecute(
 	sessionCode []byte,
 	sessionArgs string,
 	fee string,
-	gasPrice uint64,
 ) MsgExecute {
 	return MsgExecute{
 		ExecAddress:     execAddress,
@@ -39,7 +37,6 @@ func NewMsgExecute(
 		SessionCode:     sessionCode,
 		SessionArgs:     sessionArgs,
 		Fee:             fee,
-		GasPrice:        gasPrice,
 	}
 }
 
@@ -74,7 +71,6 @@ type MsgTransfer struct {
 	ToAddress       sdk.AccAddress `json:"to_address" yaml:"to_address"`
 	Amount          string         `json:"amount" yaml:"amount"`
 	Fee             string         `json:"fee" yaml:"fee"`
-	GasPrice        uint64         `json:"gas_price" yaml:"gas_price"`
 }
 
 // NewMsgTransfer is a constructor function for MsgSetName
@@ -82,7 +78,6 @@ func NewMsgTransfer(
 	tokenContractAddress string,
 	fromAddress, toAddress sdk.AccAddress,
 	amount, fee string,
-	gasPrice uint64,
 ) MsgTransfer {
 	return MsgTransfer{
 		ContractAddress: tokenContractAddress,
@@ -90,7 +85,6 @@ func NewMsgTransfer(
 		ToAddress:       toAddress,
 		Amount:          amount,
 		Fee:             fee,
-		GasPrice:        gasPrice,
 	}
 }
 
@@ -253,7 +247,6 @@ type MsgBond struct {
 	FromAddress     sdk.AccAddress `json:"from_address" yaml:"from_address"`
 	Amount          string         `json:"amount" yaml:"amount"`
 	Fee             string         `json:"fee" yaml:"fee"`
-	GasPrice        uint64         `json:"gas_price" yaml:"gas_price"`
 }
 
 // NewMsgBond is a constructor function for MsgSetName
@@ -261,14 +254,12 @@ func NewMsgBond(
 	tokenContractAddress string,
 	bonderAddress sdk.AccAddress,
 	amount, fee string,
-	gasPrice uint64,
 ) MsgBond {
 	return MsgBond{
 		ContractAddress: tokenContractAddress,
 		FromAddress:     bonderAddress,
 		Amount:          amount,
 		Fee:             fee,
-		GasPrice:        gasPrice,
 	}
 }
 
@@ -302,7 +293,6 @@ type MsgUnBond struct {
 	FromAddress     sdk.AccAddress `json:"from_address" yaml:"from_address"`
 	Amount          string         `json:"amount" yaml:"amount"`
 	Fee             string         `json:"fee" yaml:"fee"`
-	GasPrice        uint64         `json:"gas_price" yaml:"gas_price"`
 }
 
 // NewMsgUnBond is a constructor function for MsgSetName
@@ -310,14 +300,12 @@ func NewMsgUnBond(
 	tokenContractAddress string,
 	unbonderAddress sdk.AccAddress,
 	amount, fee string,
-	gasPrice uint64,
 ) MsgUnBond {
 	return MsgUnBond{
 		ContractAddress: tokenContractAddress,
 		FromAddress:     unbonderAddress,
 		Amount:          amount,
 		Fee:             fee,
-		GasPrice:        gasPrice,
 	}
 }
 
@@ -352,7 +340,6 @@ type MsgDelegate struct {
 	ValAddress      sdk.AccAddress `json:"val_address" yaml:"val_address"`
 	Amount          string         `json:"amount" yaml:"amount"`
 	Fee             string         `json:"fee" yaml:"fee"`
-	GasPrice        uint64         `json:"gas_price" yaml:"gas_price"`
 }
 
 // NewMsgDelegate is a constructor function for MsgSetName
@@ -360,7 +347,6 @@ func NewMsgDelegate(
 	tokenContractAddress string,
 	fromAddress, vaildatorAddress sdk.AccAddress,
 	amount, fee string,
-	gasPrice uint64,
 ) MsgDelegate {
 	return MsgDelegate{
 		ContractAddress: tokenContractAddress,
@@ -368,7 +354,6 @@ func NewMsgDelegate(
 		ValAddress:      vaildatorAddress,
 		Amount:          amount,
 		Fee:             fee,
-		GasPrice:        gasPrice,
 	}
 }
 
@@ -403,7 +388,6 @@ type MsgUndelegate struct {
 	ValAddress      sdk.AccAddress `json:"val_address" yaml:"val_address"`
 	Amount          string         `json:"amount" yaml:"amount"`
 	Fee             string         `json:"fee" yaml:"fee"`
-	GasPrice        uint64         `json:"gas_price" yaml:"gas_price"`
 }
 
 // NewMsgUndelegate is a constructor function for MsgSetName
@@ -411,7 +395,6 @@ func NewMsgUndelegate(
 	tokenContractAddress string,
 	fromAddress, vaildatorAddress sdk.AccAddress,
 	amount, fee string,
-	gasPrice uint64,
 ) MsgUndelegate {
 	return MsgUndelegate{
 		ContractAddress: tokenContractAddress,
@@ -419,7 +402,6 @@ func NewMsgUndelegate(
 		ValAddress:      vaildatorAddress,
 		Amount:          amount,
 		Fee:             fee,
-		GasPrice:        gasPrice,
 	}
 }
 
@@ -455,7 +437,6 @@ type MsgRedelegate struct {
 	DestValAddress  sdk.AccAddress `json:"dest_val_address" yaml:"dest_val_address"`
 	Amount          string         `json:"amount" yaml:"amount"`
 	Fee             string         `json:"fee" yaml:"fee"`
-	GasPrice        uint64         `json:"gas_price" yaml:"gas_price"`
 }
 
 // MsgRedelegate is a constructor function for MsgSetName
@@ -463,7 +444,6 @@ func NewMsgRedelegate(
 	tokenContractAddress string,
 	fromAddress, srcVaildatorAddress, descVaildatorAddress sdk.AccAddress,
 	amount, fee string,
-	gasPrice uint64,
 ) MsgRedelegate {
 	return MsgRedelegate{
 		ContractAddress: tokenContractAddress,
@@ -472,7 +452,6 @@ func NewMsgRedelegate(
 		DestValAddress:  descVaildatorAddress,
 		Amount:          amount,
 		Fee:             fee,
-		GasPrice:        gasPrice,
 	}
 }
 
@@ -507,7 +486,6 @@ type MsgVote struct {
 	TargetContractAddress sdk.ContractAddress `json:"target_contract_address" yaml:"target_contract_address"`
 	Amount                string              `json:"amount" yaml:"amount"`
 	Fee                   string              `json:"fee" yaml:"fee"`
-	GasPrice              uint64              `json:"gas_price" yaml:"gas_price"`
 }
 
 // NewMsgVote is a constructor function for MsgSetName
@@ -516,7 +494,6 @@ func NewMsgVote(
 	fromAddress sdk.AccAddress,
 	targetContractAddress sdk.ContractAddress,
 	amount, fee string,
-	gasPrice uint64,
 ) MsgVote {
 	return MsgVote{
 		ContractAddress:       tokenContractAddress,
@@ -524,7 +501,6 @@ func NewMsgVote(
 		TargetContractAddress: targetContractAddress,
 		Amount:                amount,
 		Fee:                   fee,
-		GasPrice:              gasPrice,
 	}
 }
 
@@ -562,7 +538,6 @@ type MsgUnvote struct {
 	TargetContractAddress sdk.ContractAddress `json:"target_contract_address" yaml:"target_contract_address"`
 	Amount                string              `json:"amount" yaml:"amount"`
 	Fee                   string              `json:"fee" yaml:"fee"`
-	GasPrice              uint64              `json:"gas_price" yaml:"gas_price"`
 }
 
 // NewMsgUnvote is a constructor function for MsgSetName
@@ -571,7 +546,6 @@ func NewMsgUnvote(
 	fromAddress sdk.AccAddress,
 	targetContractAddress sdk.ContractAddress,
 	amount, fee string,
-	gasPrice uint64,
 ) MsgUnvote {
 	return MsgUnvote{
 		ContractAddress:       tokenContractAddress,
@@ -579,7 +553,6 @@ func NewMsgUnvote(
 		TargetContractAddress: targetContractAddress,
 		Amount:                amount,
 		Fee:                   fee,
-		GasPrice:              gasPrice,
 	}
 }
 
@@ -616,7 +589,6 @@ type MsgClaim struct {
 	FromAddress        sdk.AccAddress `json:"from_address" yaml:"from_address"`
 	RewardOrCommission bool           `json:"reward_or_commission" yaml:"reward_or_commission"`
 	Fee                string         `json:"fee" yaml:"fee"`
-	GasPrice           uint64         `json:"gas_price" yaml:"gas_price"`
 }
 
 // NewMsgClaim is a constructor function for MsgSetName
@@ -625,14 +597,12 @@ func NewMsgClaim(
 	fromAddress sdk.AccAddress,
 	rewardOrCommission bool,
 	fee string,
-	gasPrice uint64,
 ) MsgClaim {
 	return MsgClaim{
 		ContractAddress:    tokenContractAddress,
 		FromAddress:        fromAddress,
 		RewardOrCommission: rewardOrCommission,
 		Fee:                fee,
-		GasPrice:           gasPrice,
 	}
 }
 

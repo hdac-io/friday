@@ -310,47 +310,47 @@ def get_address(nickname: str, node: str = "tcp://localhost:26657", client_home:
 ## Hdac custom CLI
 ##################
 
-def transfer_to(passphrase: str, recipient: str, amount: str, fee: str, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+def transfer_to(passphrase: str, recipient: str, amount: str, fee: str, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
     client_home = os.path.join(os.environ["HOME"], client_home)
-    return _tx_executor("clif hdac transfer-to {} {} {} {} --from {} --node {} --home {}", passphrase, recipient, amount, fee, gas_price, from_value, node, client_home)
+    return _tx_executor("clif hdac transfer-to {} {} {} --from {} --node {} --home {}", passphrase, recipient, amount, fee, from_value, node, client_home)
 
 
-def bond(passphrase: str, amount: str, fee: str, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+def bond(passphrase: str, amount: str, fee: str, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
     client_home = os.path.join(os.environ["HOME"], client_home)
-    return _tx_executor("clif hdac bond {} {} {} --from {} --node {} --home {}", passphrase, amount, fee, gas_price, from_value, node, client_home)
+    return _tx_executor("clif hdac bond {} {} --from {} --node {} --home {}", passphrase, amount, fee, from_value, node, client_home)
 
 
-def unbond(passphrase: str, amount: str, fee: str, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+def unbond(passphrase: str, amount: str, fee: str, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
     client_home = os.path.join(os.environ["HOME"], client_home)
-    return _tx_executor("clif hdac unbond {} {} {} --from {} --node {} --home {}", passphrase, amount, fee, gas_price, from_value, node, client_home)
+    return _tx_executor("clif hdac unbond {} {} --from {} --node {} --home {}", passphrase, amount, fee, from_value, node, client_home)
 
-def delegate(passphrase: str, validator_address: str, amount: str, fee: str, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+def delegate(passphrase: str, validator_address: str, amount: str, fee: str, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
     client_home = os.path.join(os.environ["HOME"], client_home)
-    return _tx_executor("clif hdac delegate {} {} {} {} --from {} --node {} --home {}", passphrase, validator_address, amount, fee, gas_price, from_value, node, client_home)
+    return _tx_executor("clif hdac delegate {} {} {} --from {} --node {} --home {}", passphrase, validator_address, amount, fee, from_value, node, client_home)
 
-def undelegate(passphrase: str, validator_address: str, amount: str, fee: str, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+def undelegate(passphrase: str, validator_address: str, amount: str, fee: str, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
     client_home = os.path.join(os.environ["HOME"], client_home)
-    return _tx_executor("clif hdac undelegate {} {} {} {} --from {} --node {} --home {}", passphrase, validator_address, amount, fee, gas_price, from_value, node, client_home)
+    return _tx_executor("clif hdac undelegate {} {} {} --from {} --node {} --home {}", passphrase, validator_address, amount, fee, from_value, node, client_home)
 
-def redelegate(passphrase: str, src_validator_address: str, dest_validator_address: str, amount: str, fee: str, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+def redelegate(passphrase: str, src_validator_address: str, dest_validator_address: str, amount: str, fee: str, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
     client_home = os.path.join(os.environ["HOME"], client_home)
-    return _tx_executor("clif hdac redelegate {} {} {} {} {} --from {} --node {} --home {}", passphrase, src_validator_address, dest_validator_address, amount, fee, gas_price, from_value, node, client_home)
+    return _tx_executor("clif hdac redelegate {} {} {} {} --from {} --node {} --home {}", passphrase, src_validator_address, dest_validator_address, amount, fee, from_value, node, client_home)
 
-def vote(passphrase: str, hash: str, amount: str, fee: str, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+def vote(passphrase: str, hash: str, amount: str, fee: str, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
     client_home = os.path.join(os.environ["HOME"], client_home)
-    return _tx_executor("clif hdac vote {} {} {} {} --from {} --node {} --home {}", passphrase, hash, amount, fee, gas_price, from_value, node, client_home)
+    return _tx_executor("clif hdac vote {} {} {} --from {} --node {} --home {}", passphrase, hash, amount, fee, from_value, node, client_home)
 
-def unvote(passphrase: str, hash: str, amount: str, fee: str, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+def unvote(passphrase: str, hash: str, amount: str, fee: str, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
     client_home = os.path.join(os.environ["HOME"], client_home)
-    return _tx_executor("clif hdac unvote {} {} {} {} --from {} --node {} --home {}", passphrase, hash, amount, fee, gas_price, from_value, node, client_home)
+    return _tx_executor("clif hdac unvote {} {} {} --from {} --node {} --home {}", passphrase, hash, amount, fee, from_value, node, client_home)
 
-def claim_reward(passphrase: str, fee: str, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+def claim_reward(passphrase: str, fee: str, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
     client_home = os.path.join(os.environ["HOME"], client_home)
-    return _tx_executor("clif hdac claim reward {} {} --from {} --node {} --home {}", passphrase, fee, gas_price, from_value, node, client_home)
+    return _tx_executor("clif hdac claim reward {} --from {} --node {} --home {}", passphrase, fee, from_value, node, client_home)
 
-def claim_commission(passphrase: str, fee: str, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+def claim_commission(passphrase: str, fee: str, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
     client_home = os.path.join(os.environ["HOME"], client_home)
-    return _tx_executor("clif hdac claim commission {} {} --from {} --node {} --home {}", passphrase, fee, gas_price, from_value, node, client_home)
+    return _tx_executor("clif hdac claim commission {} --from {} --node {} --home {}", passphrase, fee, from_value, node, client_home)
 
 def get_balance(from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
     client_home = os.path.join(os.environ["HOME"], client_home)
@@ -391,10 +391,10 @@ def create_validator(passphrase: str, from_value: str, pubkey: str, moniker: str
 ## Contract exec CLI
 ##################
 
-def run_contract(passphrase: str, run_type: str, run_type_value: str, args: str, fee: str, gas_price: int, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+def run_contract(passphrase: str, run_type: str, run_type_value: str, args: str, fee: str, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
     client_home = os.path.join(os.environ["HOME"], client_home)
     if run_type not in ["wasm", "uref", "hash", "name"]:
         raise InvalidContractRunType
 
-    return _tx_executor("clif contract run {} {} '{}' {} {} --from {} --node {} --home {}",
-                      passphrase, run_type, run_type_value, args, fee, gas_price, from_value, node, client_home)
+    return _tx_executor("clif contract run {} {} '{}' {} --from {} --node {} --home {}",
+                      passphrase, run_type, run_type_value, args, fee, from_value, node, client_home)

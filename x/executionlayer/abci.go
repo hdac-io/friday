@@ -44,7 +44,6 @@ func EndBlocker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate 
 		proxyContractHash,
 		sessionArgsStr,
 		types.BASIC_FEE,
-		types.BASIC_GAS,
 	)
 	result, log := execute(ctx, k, msgExecute)
 	if !result {

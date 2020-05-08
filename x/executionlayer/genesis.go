@@ -109,7 +109,6 @@ func InitGenesis(
 		proxyContractHash,
 		sessionArgsStr,
 		types.BASIC_FEE,
-		types.BASIC_GAS,
 	)
 	result, log := execute(ctx, keeper, msgExecute)
 	if !result {
