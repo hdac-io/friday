@@ -101,7 +101,7 @@ class TestMultiNodeSimple:
         print("Wait for switching next block...")
         time.sleep(30)
 
-        cmd._process_executor("curl http://localhost:26657/num_unconfirmed_txs", need_output=True)
+        cmd._process_executor("curl http://localhost:26657/num_unconfirmed_txs", need_output=True, need_json_res=False)
         print("Check whether all txs are valid or not..")
         for unit_val_tx, unit_bond_tx in zip(val_tx_hashes, bond_hashes):
             val_tx_ok = cmd.is_tx_ok(unit_val_tx)
