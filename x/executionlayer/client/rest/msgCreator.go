@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/hdac-io/friday/client/context"
@@ -106,13 +107,11 @@ func getContractQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *ht
 	dataType := vars.Get("data_type")
 	data := vars.Get("data")
 	path := vars.Get("path")
-	blockhash := vars.Get("blockhash")
 
 	queryData := types.QueryExecutionLayerDetail{
-		KeyType:   dataType,
-		KeyData:   data,
-		Path:      path,
-		BlockHash: blockhash,
+		KeyType: dataType,
+		KeyData: data,
+		Path:    path,
 	}
 	bz := cliCtx.Codec.MustMarshalJSON(queryData)
 
@@ -531,6 +530,9 @@ func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 	vars := r.URL.Query()
 	straddr := vars.Get("address")
 	heightStr := vars.Get("height")
+	if len(heightStr) == 0 {
+		heightStr = "0"
+	}
 	height, err := strconv.ParseInt(heightStr, 10, 64)
 	if err != nil {
 		return nil, err

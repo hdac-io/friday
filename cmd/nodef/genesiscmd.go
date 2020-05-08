@@ -62,7 +62,7 @@ the base64 encoded publickey and a list of initial coins.`,
 				InitialBondedAmount: args[2],
 			}
 
-			addrHex := hex.EncodeToString(addr.ToEEAddress())
+			addrHex := hex.EncodeToString(addr)
 			stateInfo := storedvalue.DELEGATE_PREFIX + "_" + addrHex + "_" + addrHex + "_" + args[2]
 
 			// get genesis file

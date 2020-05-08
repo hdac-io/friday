@@ -65,7 +65,7 @@ func InitGenesis(
 	for _, validator := range data.Validators {
 		bond := &ipc.Bond{
 			ValidatorPublicKey: validator.OperatorAddress,
-			Stake:              &state.BigInt{Value: validatorStakeInfos[hex.EncodeToString(validator.OperatorAddress.ToEEAddress())], BitWidth: 512},
+			Stake:              &state.BigInt{Value: validatorStakeInfos[hex.EncodeToString(validator.OperatorAddress)], BitWidth: 512},
 		}
 		bonds = append(bonds, bond)
 
@@ -154,7 +154,7 @@ func ExportGenesis(ctx sdk.Context, keeper ExecutionLayerKeeper) types.GenesisSt
 			continue
 		}
 
-		balance, err := grpc.QueryBalance(keeper.client, stateHash, existAccount.GetAddress().ToEEAddress(), &protocolVersion)
+		balance, err := grpc.QueryBalance(keeper.client, stateHash, existAccount.GetAddress(), &protocolVersion)
 		if err != "" {
 			panic(err)
 		}

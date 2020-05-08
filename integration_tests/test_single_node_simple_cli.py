@@ -319,18 +319,7 @@ class TestSingleNode():
         print("Try to run bond function by wasm path")
         wasm_path = os.path.join(os.environ['HOME'], ".nodef", "contracts", "bonding.wasm")
         param = json.dumps([
-            # {
-            #       "name": "method_name",
-            #       "value": {
-            #         "string_value": "bond"
-            #       }
-            # },
-            {
-                "name": "amount",
-                "value": {
-                    "long_value":1000000
-                }
-            }
+            {"name":"amount","value":{"clType":{"simpleType":"U512"},"value":{"u512":{"value":"10000000000000000"}}}}
         ])
         tx_hash_store_contract = cmd.run_contract(self.wallet_password, "wasm", wasm_path, param, self.bonding_fee, self.wallet_anna)
         print("Tx sent. Waiting for validation")
