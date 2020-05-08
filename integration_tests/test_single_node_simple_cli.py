@@ -169,6 +169,8 @@ class TestSingleNode():
 
         # Waiting for nodef process is up and ready for receiving tx...
         time.sleep(10)
+        cmd._process_executor("ps", "-al", need_output=True, need_json_res=False)
+
 
         self.daemon_healthcheck()
         print("Runup done. start testing")

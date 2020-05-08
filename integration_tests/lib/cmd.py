@@ -12,7 +12,8 @@ import pexpect
 
 from .errors import DeadDaemonException, FinishedWithError, InvalidContractRunType
 
-def _process_executor(cmd: str, *args, need_output=False):
+def _process_executor(cmd: str, *args, need_output=False, need_json_res=True):
+    res = None
     print(cmd.format(*args))
     child = pexpect.spawn(cmd.format(*args))    
     outs = child.read().decode('utf-8')
@@ -20,12 +21,14 @@ def _process_executor(cmd: str, *args, need_output=False):
     if need_output == True:
         try:
             print(outs)
-            res = json.loads(outs)
+            if need_json_res == True:
+                res = json.loads(outs)
         except Exception as e:
             print(e)
             raise e
 
-        return res
+
+    return res
 
 
 def _tx_executor(cmd: str, passphrase, *args):
