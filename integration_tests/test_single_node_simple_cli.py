@@ -55,6 +55,8 @@ class TestSingleNode():
 
     short_gas = 10000000
 
+    lack_fee = "0.000001"
+
     tx_block_time = 6
 
 
@@ -476,14 +478,12 @@ class TestSingleNode():
 
         print("======================Done test08_simple_claim_reward_and_commission======================")
 
+    def test09_fail_to_tx_lack_of_gas(self):
+        print("======================Start test09_fail_to_tx_lack_of_gas======================")
 
-    @pytest.mark.skip("@joowon please delete this line and activate this test at your PR")
-    def test09_transfer_should_fail_due_to_gas_shortage(self):
-        print("======================Start test09_transfer_should_fail_due_to_gas_shortage======================")
-
-        print("Try to transfer token from elsa to anna. This tx should fail due to gas limit shortage in execution engine")
+        print("Transfer token from elsa to anna")
         tx_hash = cmd.transfer_to(self.wallet_password, self.info_anna['address'], self.transfer_amount,
-                        self.transfer_fee, self.short_gas, self.info_elsa['address'])
+                        self.lack_fee, self.info_elsa['address'])
         
         print("Tx sent. Waiting for validation")
         time.sleep(self.tx_block_time * 3 + 1)
@@ -492,4 +492,4 @@ class TestSingleNode():
         is_ok = cmd.is_tx_ok(tx_hash)
         assert(is_ok == False)
 
-        print("======================Done test09_transfer_should_fail_due_to_gas_shortage======================")
+        print("======================Done test09_fail_to_tx_lack_of_gas======================")
