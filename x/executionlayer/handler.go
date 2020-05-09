@@ -2,6 +2,7 @@ package executionlayer
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus"
@@ -347,26 +348,63 @@ func handlerMsgRedelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.Msg
 
 func handlerMsgVote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgVote) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
-	sessionArgs := []*consensus.Deploy_Arg{
-		&consensus.Deploy_Arg{
-			Value: &state.CLValueInstance{
-				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
-				Value: &state.CLValueInstance_Value{
-					Value: &state.CLValueInstance_Value_StrValue{
-						StrValue: types.VoteMethodName}}}},
-		&consensus.Deploy_Arg{
-			Value: &state.CLValueInstance{
-				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_KEY}},
-				Value: &state.CLValueInstance_Value{
-					Value: &state.CLValueInstance_Value_Key{
-						Key: &state.Key{Value: &state.Key_Hash_{Hash: &state.Key_Hash{Hash: msg.TargetContractAddress.Bytes()}}}}}}},
-		&consensus.Deploy_Arg{
-			Value: &state.CLValueInstance{
-				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}},
-				Value: &state.CLValueInstance_Value{
-					Value: &state.CLValueInstance_Value_U512{
-						U512: &state.CLValueInstance_U512{
-							Value: msg.Amount}}}}}}
+	var sessionArgs []*consensus.Deploy_Arg
+
+	if strings.HasPrefix(msg.TargetContractAddress, sdk.Bech32PrefixContractURef) {
+		contractAddr, err := sdk.ContractUrefAddressFromBech32(msg.TargetContractAddress)
+		if err != nil {
+			getResult(false, err.Error())
+		}
+
+		sessionArgs = []*consensus.Deploy_Arg{
+			&consensus.Deploy_Arg{
+				Value: &state.CLValueInstance{
+					ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
+					Value: &state.CLValueInstance_Value{
+						Value: &state.CLValueInstance_Value_StrValue{
+							StrValue: types.VoteMethodName}}}},
+			&consensus.Deploy_Arg{
+				Value: &state.CLValueInstance{
+					ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_KEY}},
+					Value: &state.CLValueInstance_Value{
+						Value: &state.CLValueInstance_Value_Key{
+							Key: &state.Key{Value: &state.Key_Hash_{Hash: &state.Key_Hash{Hash: contractAddr.Bytes()}}}}}}},
+			&consensus.Deploy_Arg{
+				Value: &state.CLValueInstance{
+					ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}},
+					Value: &state.CLValueInstance_Value{
+						Value: &state.CLValueInstance_Value_U512{
+							U512: &state.CLValueInstance_U512{
+								Value: msg.Amount}}}}}}
+
+	} else if strings.HasPrefix(msg.TargetContractAddress, sdk.Bech32PrefixContractHash) {
+		contractAddr, err := sdk.ContractHashAddressFromBech32(msg.TargetContractAddress)
+		if err != nil {
+			getResult(false, err.Error())
+		}
+
+		sessionArgs = []*consensus.Deploy_Arg{
+			&consensus.Deploy_Arg{
+				Value: &state.CLValueInstance{
+					ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
+					Value: &state.CLValueInstance_Value{
+						Value: &state.CLValueInstance_Value_StrValue{
+							StrValue: types.VoteMethodName}}}},
+			&consensus.Deploy_Arg{
+				Value: &state.CLValueInstance{
+					ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_KEY}},
+					Value: &state.CLValueInstance_Value{
+						Value: &state.CLValueInstance_Value_Key{
+							Key: &state.Key{Value: &state.Key_Hash_{Hash: &state.Key_Hash{Hash: contractAddr.Bytes()}}}}}}},
+			&consensus.Deploy_Arg{
+				Value: &state.CLValueInstance{
+					ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}},
+					Value: &state.CLValueInstance_Value{
+						Value: &state.CLValueInstance_Value_U512{
+							U512: &state.CLValueInstance_U512{
+								Value: msg.Amount}}}}}}
+
+	}
 
 	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
 	if err != nil {
@@ -388,29 +426,69 @@ func handlerMsgVote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgVote) 
 
 func handlerMsgUnvote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnvote) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
-	sessionArgs := []*consensus.Deploy_Arg{
-		&consensus.Deploy_Arg{
-			Value: &state.CLValueInstance{
-				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
-				Value: &state.CLValueInstance_Value{
-					Value: &state.CLValueInstance_Value_StrValue{
-						StrValue: types.UnvoteMethodName}}}},
-		&consensus.Deploy_Arg{
-			Value: &state.CLValueInstance{
-				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_KEY}},
-				Value: &state.CLValueInstance_Value{
-					Value: &state.CLValueInstance_Value_Key{
-						Key: &state.Key{Value: &state.Key_Hash_{Hash: &state.Key_Hash{Hash: msg.TargetContractAddress.Bytes()}}}}}}},
-		&consensus.Deploy_Arg{
-			Value: &state.CLValueInstance{
-				ClType: &state.CLType{Variants: &state.CLType_OptionType{OptionType: &state.CLType_Option{Inner: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}}}}},
-				Value: &state.CLValueInstance_Value{
-					Value: &state.CLValueInstance_Value_OptionValue{
-						OptionValue: &state.CLValueInstance_Option{
-							Value: &state.CLValueInstance_Value{
-								Value: &state.CLValueInstance_Value_U512{
-									U512: &state.CLValueInstance_U512{
-										Value: msg.Amount}}}}}}}}}
+	var sessionArgs []*consensus.Deploy_Arg
+
+	if strings.HasPrefix(msg.TargetContractAddress, sdk.Bech32PrefixContractURef) {
+		contractAddr, err := sdk.ContractUrefAddressFromBech32(msg.TargetContractAddress)
+		if err != nil {
+			getResult(false, err.Error())
+		}
+
+		sessionArgs = []*consensus.Deploy_Arg{
+			&consensus.Deploy_Arg{
+				Value: &state.CLValueInstance{
+					ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
+					Value: &state.CLValueInstance_Value{
+						Value: &state.CLValueInstance_Value_StrValue{
+							StrValue: types.UnvoteMethodName}}}},
+			&consensus.Deploy_Arg{
+				Value: &state.CLValueInstance{
+					ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_KEY}},
+					Value: &state.CLValueInstance_Value{
+						Value: &state.CLValueInstance_Value_Key{
+							Key: &state.Key{Value: &state.Key_Hash_{Hash: &state.Key_Hash{Hash: contractAddr.Bytes()}}}}}}},
+			&consensus.Deploy_Arg{
+				Value: &state.CLValueInstance{
+					ClType: &state.CLType{Variants: &state.CLType_OptionType{OptionType: &state.CLType_Option{Inner: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}}}}},
+					Value: &state.CLValueInstance_Value{
+						Value: &state.CLValueInstance_Value_OptionValue{
+							OptionValue: &state.CLValueInstance_Option{
+								Value: &state.CLValueInstance_Value{
+									Value: &state.CLValueInstance_Value_U512{
+										U512: &state.CLValueInstance_U512{
+											Value: msg.Amount}}}}}}}}}
+
+	} else if strings.HasPrefix(msg.TargetContractAddress, sdk.Bech32PrefixContractHash) {
+		contractAddr, err := sdk.ContractHashAddressFromBech32(msg.TargetContractAddress)
+		if err != nil {
+			getResult(false, err.Error())
+		}
+
+		sessionArgs = []*consensus.Deploy_Arg{
+			&consensus.Deploy_Arg{
+				Value: &state.CLValueInstance{
+					ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
+					Value: &state.CLValueInstance_Value{
+						Value: &state.CLValueInstance_Value_StrValue{
+							StrValue: types.UnvoteMethodName}}}},
+			&consensus.Deploy_Arg{
+				Value: &state.CLValueInstance{
+					ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_KEY}},
+					Value: &state.CLValueInstance_Value{
+						Value: &state.CLValueInstance_Value_Key{
+							Key: &state.Key{Value: &state.Key_Hash_{Hash: &state.Key_Hash{Hash: contractAddr.Bytes()}}}}}}},
+			&consensus.Deploy_Arg{
+				Value: &state.CLValueInstance{
+					ClType: &state.CLType{Variants: &state.CLType_OptionType{OptionType: &state.CLType_Option{Inner: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}}}}},
+					Value: &state.CLValueInstance_Value{
+						Value: &state.CLValueInstance_Value_OptionValue{
+							OptionValue: &state.CLValueInstance_Option{
+								Value: &state.CLValueInstance_Value{
+									Value: &state.CLValueInstance_Value_U512{
+										U512: &state.CLValueInstance_U512{
+											Value: msg.Amount}}}}}}}}}
+
+	}
 
 	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
 	if err != nil {

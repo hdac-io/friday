@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	sdk "github.com/hdac-io/friday/types"
@@ -481,11 +482,11 @@ func (msg MsgRedelegate) GetSigners() []sdk.AccAddress {
 
 //______________________________________________________________________
 type MsgVote struct {
-	ContractAddress       string              `json:"contract_address" yaml:"contract_address"`
-	FromAddress           sdk.AccAddress      `json:"from_address" yaml:"from_address"`
-	TargetContractAddress sdk.ContractAddress `json:"target_contract_address" yaml:"target_contract_address"`
-	Amount                string              `json:"amount" yaml:"amount"`
-	Fee                   string              `json:"fee" yaml:"fee"`
+	ContractAddress       string         `json:"contract_address" yaml:"contract_address"`
+	FromAddress           sdk.AccAddress `json:"from_address" yaml:"from_address"`
+	TargetContractAddress string         `json:"target_contract_address" yaml:"target_contract_address"`
+	Amount                string         `json:"amount" yaml:"amount"`
+	Fee                   string         `json:"fee" yaml:"fee"`
 }
 
 // NewMsgVote is a constructor function for MsgSetName
@@ -498,7 +499,7 @@ func NewMsgVote(
 	return MsgVote{
 		ContractAddress:       tokenContractAddress,
 		FromAddress:           fromAddress,
-		TargetContractAddress: targetContractAddress,
+		TargetContractAddress: targetContractAddress.String(),
 		Amount:                amount,
 		Fee:                   fee,
 	}
@@ -515,7 +516,22 @@ func (msg MsgVote) ValidateBasic() sdk.Error {
 	if msg.FromAddress.Equals(sdk.AccAddress("")) {
 		return sdk.ErrUnknownRequest("Address cannot be empty")
 	}
-	if len(msg.TargetContractAddress.Bytes()) != 32 {
+
+	var contractAddr sdk.ContractAddress
+	var err error
+	if strings.HasPrefix(msg.TargetContractAddress, sdk.Bech32PrefixContractURef) {
+		contractAddr, err = sdk.ContractUrefAddressFromBech32(msg.TargetContractAddress)
+	} else if strings.HasPrefix(msg.TargetContractAddress, sdk.Bech32PrefixContractHash) {
+		contractAddr, err = sdk.ContractHashAddressFromBech32(msg.TargetContractAddress)
+	} else {
+		err = sdk.ErrUnknownRequest("Contract address is not valid")
+	}
+
+	if err != nil {
+		return sdk.ErrUnknownAddress(err.Error())
+	}
+
+	if len(contractAddr.Bytes()) != 32 {
 		return sdk.ErrUnknownRequest("Hash must be 32 bytes")
 	}
 	return nil
@@ -533,11 +549,11 @@ func (msg MsgVote) GetSigners() []sdk.AccAddress {
 
 //______________________________________________________________________
 type MsgUnvote struct {
-	ContractAddress       string              `json:"contract_address" yaml:"contract_address"`
-	FromAddress           sdk.AccAddress      `json:"from_address" yaml:"from_address"`
-	TargetContractAddress sdk.ContractAddress `json:"target_contract_address" yaml:"target_contract_address"`
-	Amount                string              `json:"amount" yaml:"amount"`
-	Fee                   string              `json:"fee" yaml:"fee"`
+	ContractAddress       string         `json:"contract_address" yaml:"contract_address"`
+	FromAddress           sdk.AccAddress `json:"from_address" yaml:"from_address"`
+	TargetContractAddress string         `json:"target_contract_address" yaml:"target_contract_address"`
+	Amount                string         `json:"amount" yaml:"amount"`
+	Fee                   string         `json:"fee" yaml:"fee"`
 }
 
 // NewMsgUnvote is a constructor function for MsgSetName
@@ -550,7 +566,7 @@ func NewMsgUnvote(
 	return MsgUnvote{
 		ContractAddress:       tokenContractAddress,
 		FromAddress:           fromAddress,
-		TargetContractAddress: targetContractAddress,
+		TargetContractAddress: targetContractAddress.String(),
 		Amount:                amount,
 		Fee:                   fee,
 	}
@@ -567,7 +583,22 @@ func (msg MsgUnvote) ValidateBasic() sdk.Error {
 	if msg.FromAddress.Equals(sdk.AccAddress("")) {
 		return sdk.ErrUnknownRequest("Address cannot be empty")
 	}
-	if len(msg.TargetContractAddress.Bytes()) != 32 {
+
+	var contractAddr sdk.ContractAddress
+	var err error
+	if strings.HasPrefix(msg.TargetContractAddress, sdk.Bech32PrefixContractURef) {
+		contractAddr, err = sdk.ContractUrefAddressFromBech32(msg.TargetContractAddress)
+	} else if strings.HasPrefix(msg.TargetContractAddress, sdk.Bech32PrefixContractHash) {
+		contractAddr, err = sdk.ContractHashAddressFromBech32(msg.TargetContractAddress)
+	} else {
+		err = sdk.ErrUnknownRequest("Contract address is not valid")
+	}
+
+	if err != nil {
+		return sdk.ErrUnknownAddress(err.Error())
+	}
+
+	if len(contractAddr.Bytes()) != 32 {
 		return sdk.ErrUnknownRequest("Hash must be 32 bytes")
 	}
 	return nil

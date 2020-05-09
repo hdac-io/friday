@@ -245,7 +245,7 @@ class TestSingleNode():
 
         print("Balance checking after bonding")
         res_after_after = cmd.get_balance(self.wallet_anna)
-        assert(int(res_after_after) < self.basic_coin_amount * 29 / 30)
+        assert(int(res_after_after) < self.basic_coin_amount / 30)
 
         print("======================Done test02_bond_and_unbond======================")
 
