@@ -118,8 +118,8 @@ github.com/hdac-io/casperlabs-ee-grpc-go-util v0.6.0/go.mod h1:WakxSanxTmCA9D/VB
 github.com/hdac-io/iavl v0.0.0-20191220074654-211e1bd34eef h1:2Agvbgr7rAy4OwBETZ6a4VAXLXCbPDdLWw8Mz9zQcLw=
 github.com/hdac-io/iavl v0.0.0-20191220074654-211e1bd34eef/go.mod h1:ry8RH8MNJJhiO1VJeosYAsKrPu7X8Xy0B5D5UQvEiVM=
 github.com/hdac-io/tendermint v0.0.0-20191220055750-d875915aea37/go.mod h1:BronDynhlemRSl99OCZ3owAs/cTcDuw0BrgFmzasWPk=
-github.com/hdac-io/tendermint v0.32.8-0.20200508022932-eb53ac7c4ab9 h1:SwJdKV6uFLgQI+jDlA4d92lSvZ45Qr8ERr7C6c2L2zw=
-github.com/hdac-io/tendermint v0.32.8-0.20200508022932-eb53ac7c4ab9/go.mod h1:lQzldj9uvA4kkM+GH9Ty/bXNzAl9wWJEAa8iKt0+bMQ=
+github.com/hdac-io/tendermint v0.32.8-0.20200510224311-bc74d177bea9 h1:cxlEGdlboScFGYKj/m6KSPvlFOqYcdwZ0f94Xd3kyhk=
+github.com/hdac-io/tendermint v0.32.8-0.20200510224311-bc74d177bea9/go.mod h1:lQzldj9uvA4kkM+GH9Ty/bXNzAl9wWJEAa8iKt0+bMQ=
 github.com/herumi/bls-go-binary v0.0.0-20191119080710-898950e1a520/go.mod h1:uTBfU/n3h1aOYIl5nNTbLn5dUfNkF1P97JTaz3bdvro=
 github.com/hpcloud/tail v1.0.0 h1:nfCOvKYfkgYP8hkirhJocXT2+zOD8yUNjXaWfTlyFKI=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=

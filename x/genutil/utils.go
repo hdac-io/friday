@@ -27,14 +27,15 @@ func ExportGenesisFile(genDoc *tmtypes.GenesisDoc, genFile string) error {
 // An error is returned if building or writing the configuration to file fails.
 func ExportGenesisFileWithTime(
 	genFile, chainID string, validators []tmtypes.GenesisValidator,
-	appState json.RawMessage, genTime time.Time,
+	appState json.RawMessage, genTime time.Time, consensusModule string,
 ) error {
 
 	genDoc := tmtypes.GenesisDoc{
-		GenesisTime: genTime,
-		ChainID:     chainID,
-		Validators:  validators,
-		AppState:    appState,
+		GenesisTime:     genTime,
+		ChainID:         chainID,
+		Validators:      validators,
+		AppState:        appState,
+		ConsensusModule: consensusModule,
 	}
 
 	if err := genDoc.ValidateAndComplete(); err != nil {
@@ -65,7 +66,12 @@ func InitializeNodeValidatorFiles(config *cfg.Config,
 		return nodeID, valPubKey, nil
 	}
 
-	valPubKey = privval.LoadOrGenFridayFilePV(pvKeyFile, pvStateFile).GetPubKey()
+	switch config.Consensus.Module {
+	case "friday":
+		valPubKey = privval.LoadOrGenFridayFilePV(pvKeyFile, pvStateFile).GetPubKey()
+	case "tendermint":
+		valPubKey = privval.LoadOrGenFilePV(pvKeyFile, pvStateFile).GetPubKey()
+	}
 
 	return nodeID, valPubKey, nil
 }

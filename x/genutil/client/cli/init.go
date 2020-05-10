@@ -61,11 +61,12 @@ func displayInfo(cdc *codec.Codec, info printInfo) error {
 func InitCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 	defaultNodeHome string) *cobra.Command { // nolint: golint
 	cmd := &cobra.Command{
-		Use:   "init [moniker]",
+		Use:   "init [moniker] [consensus-module]",
 		Short: "Initialize private validator, p2p, genesis, and application configuration files",
 		Long:  `Initialize validators's and node's configuration files.`,
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(_ *cobra.Command, args []string) error {
+			ctx.Config.Consensus.Module = args[1]
 			config := ctx.Config
 			config.SetRoot(viper.GetString(cli.HomeFlag))
 
@@ -102,6 +103,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 				}
 			}
 
+			genDoc.ConsensusModule = config.Consensus.Module
 			genDoc.ChainID = chainID
 			genDoc.Validators = nil
 			genDoc.AppState = appState
