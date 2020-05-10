@@ -13,6 +13,7 @@ class TestSingleNode():
 
     chain_id = "testchain"
     moniker = "testnode"
+    consensus_module = "friday"
 
     system_contract = "0000000000000000000000000000000000000000000000000000000000000000"
     anonymous_contract_address_hash = "fridaycontracthash1dl45lfet0wrsduxfeegwmskmmr8yhlpk6lk4qdpyhpjsffkymstq6ajv0a"
@@ -107,7 +108,7 @@ class TestSingleNode():
         cmd.whole_cleanup()
 
         print("Init chain")
-        cmd.init_chain(self.moniker, self.chain_id)
+        cmd.init_chain(self.moniker, self.consensus_module, self.chain_id)
         cmd.unsafe_reset_all()
         
         print("Copy manifest file")
