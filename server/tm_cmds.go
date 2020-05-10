@@ -13,6 +13,7 @@ import (
 	"github.com/hdac-io/tendermint/libs/cli"
 	"github.com/hdac-io/tendermint/p2p"
 	pvm "github.com/hdac-io/tendermint/privval"
+	"github.com/hdac-io/tendermint/types"
 	tversion "github.com/hdac-io/tendermint/version"
 
 	"github.com/hdac-io/friday/codec"
@@ -44,8 +45,15 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			cfg := ctx.Config
-			privValidator := pvm.LoadOrGenFridayFilePV(
-				cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
+
+			var privValidator types.PrivValidator
+			switch cfg.Consensus.Module {
+			case "friday":
+				privValidator = pvm.LoadOrGenFridayFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
+			case "tendermint":
+				UpgradeOldPrivValFile(cfg)
+				privValidator = pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
+			}
 			valPubKey := privValidator.GetPubKey()
 
 			if viper.GetString(cli.OutputFlag) == "json" {
@@ -74,9 +82,16 @@ func ShowAddressCmd(ctx *Context) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			cfg := ctx.Config
-			privValidator := pvm.LoadOrGenFridayFilePV(
-				cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
-			valConsAddr := (sdk.ConsAddress)(privValidator.GetAddress())
+			var valConsAddr sdk.ConsAddress
+			switch cfg.Consensus.Module {
+			case "friday":
+				privValidator := pvm.LoadOrGenFridayFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
+				valConsAddr = (sdk.ConsAddress)(privValidator.GetAddress())
+			case "tendermint":
+				UpgradeOldPrivValFile(cfg)
+				privValidator := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
+				valConsAddr = (sdk.ConsAddress)(privValidator.GetAddress())
+			}
 
 			if viper.GetString(cli.OutputFlag) == "json" {
 				return printlnJSON(valConsAddr)
