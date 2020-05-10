@@ -93,11 +93,11 @@ def daemon_check(proc: subprocess.Popen):
 ## Setup CLI
 #################
 
-def init_chain(moniker: str, chain_id: str) -> subprocess.Popen:
+def init_chain(moniker: str, consensus_module: str, chain_id: str) -> subprocess.Popen:
     """
     nodef init <moniker> --chain-id <chain-id>
     """
-    _ = _process_executor("nodef init {} --chain-id {}", moniker, chain_id)
+    _ = _process_executor("nodef init {} {} --chain-id {}", moniker, consensus_module, chain_id)
 
 
 def copy_manifest():
