@@ -2,11 +2,13 @@ package main
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/storedvalue"
 	"github.com/hdac-io/tendermint/libs/cli"
 
 	"github.com/hdac-io/friday/client/keys"
@@ -60,6 +62,9 @@ the base64 encoded publickey and a list of initial coins.`,
 				InitialBondedAmount: args[2],
 			}
 
+			addrHex := hex.EncodeToString(addr)
+			stateInfo := storedvalue.DELEGATE_PREFIX + "_" + addrHex + "_" + addrHex + "_" + args[2]
+
 			// get genesis file
 			genFile := config.GenesisFile()
 			appState, genDoc, err := genutil.GenesisStateFromGenFile(cdc, genFile)
@@ -82,6 +87,7 @@ the base64 encoded publickey and a list of initial coins.`,
 
 			// append an account
 			genesisState.Accounts = append(genesisState.Accounts, account)
+			genesisState.StateInfos = append(genesisState.StateInfos, stateInfo)
 			genesisStateBytes, err := cdc.MarshalJSON(genesisState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal executionlayer genesis state: %w", err)

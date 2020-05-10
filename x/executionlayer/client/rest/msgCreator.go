@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/hdac-io/friday/client/context"
@@ -106,13 +107,11 @@ func getContractQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *ht
 	dataType := vars.Get("data_type")
 	data := vars.Get("data")
 	path := vars.Get("path")
-	blockhash := vars.Get("blockhash")
 
 	queryData := types.QueryExecutionLayerDetail{
-		KeyType:   dataType,
-		KeyData:   data,
-		Path:      path,
-		BlockHash: blockhash,
+		KeyType: dataType,
+		KeyData: data,
+		Path:    path,
 	}
 	bz := cliCtx.Codec.MustMarshalJSON(queryData)
 
@@ -530,7 +529,14 @@ func getCommissionQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *
 func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error) {
 	vars := r.URL.Query()
 	straddr := vars.Get("address")
-	blockHashStr := vars.Get("block")
+	heightStr := vars.Get("height")
+	if len(heightStr) == 0 {
+		heightStr = "0"
+	}
+	height, err := strconv.ParseInt(heightStr, 10, 64)
+	if err != nil {
+		return nil, err
+	}
 
 	addr, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, straddr)
 	if err != nil {
@@ -541,9 +547,9 @@ func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 		return nil, err
 	}
 	queryData := types.QueryGetBalanceDetail{
-		Address:   addr,
-		BlockHash: blockHashStr,
+		Address: addr,
 	}
+	cliCtx = cliCtx.WithHeight(height)
 	bz := cliCtx.Codec.MustMarshalJSON(queryData)
 
 	return bz, nil

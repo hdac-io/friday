@@ -112,7 +112,7 @@ func genesis(input testInput) []byte {
 		panic(err)
 	}
 
-	input.elk.SetEEState(input.ctx, []byte{}, response.GetSuccess().PoststateHash)
+	input.elk.SetUnitHashMap(input.ctx, NewUnitHashMap(response.GetSuccess().PoststateHash))
 
 	candidateBlock := input.ctx.CandidateBlock()
 	candidateBlock.Hash = []byte{}
@@ -149,15 +149,18 @@ func counterDefine(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	timestamp := time.Now().Unix()
 	paymentArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_StringValue{
-					StringValue: types.PaymentMethodName}}},
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_StrValue{
+						StrValue: types.PaymentMethodName}}}},
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_BigInt{
-					BigInt: &state.BigInt{
-						Value:    "1000000000000000",
-						BitWidth: 512}}}}}
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_U512{
+						U512: &state.CLValueInstance_U512{
+							Value: "1000000000000000"}}}}}}
 	paymentArgsJson, err := DeployArgsToJsonString(paymentArgs)
 	if err != nil {
 		panic(err)
@@ -195,15 +198,18 @@ func counterCall(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 	timestamp := time.Now().Unix()
 	paymentArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_StringValue{
-					StringValue: types.PaymentMethodName}}},
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_StrValue{
+						StrValue: types.PaymentMethodName}}}},
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_BigInt{
-					BigInt: &state.BigInt{
-						Value:    "1000000000000000",
-						BitWidth: 512}}}}}
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_U512{
+						U512: &state.CLValueInstance_U512{
+							Value: "1000000000000000"}}}}}}
 	paymentArgsJson, err := DeployArgsToJsonString(paymentArgs)
 	if err != nil {
 		panic(err)

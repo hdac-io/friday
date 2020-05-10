@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	sdk "github.com/hdac-io/friday/types"
@@ -13,24 +14,25 @@ import (
 )
 
 func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, elk ExecutionLayerKeeper) {
-	preHash := req.Header.LastBlockId.Hash
-	unitHash := elk.GetUnitHashMap(ctx, preHash)
+	unitHash := elk.GetUnitHashMap(ctx, req.GetHeader().Height-1)
 
 	candidateBlock := ctx.CandidateBlock()
 	candidateBlock.Hash = req.GetHash()
 	candidateBlock.State = unitHash.EEState
 }
 
-func EndBlocker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
+func EndBlocker(ctx sdk.Context, req abci.RequestEndBlock, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
 	var validatorUpdates []abci.ValidatorUpdate
 
 	// step
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
-			Value: &consensus.Deploy_Arg_Value{
-				Value: &consensus.Deploy_Arg_Value_StringValue{
-					StringValue: types.StepMethodName}}}}
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_StrValue{
+						StrValue: types.StepMethodName}}}}}
 
 	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
 	if err != nil {
@@ -97,7 +99,9 @@ func EndBlocker(ctx sdk.Context, k ExecutionLayerKeeper) []abci.ValidatorUpdate 
 		}
 	}
 
-	k.SetEEState(ctx, ctx.CandidateBlock().Hash, ctx.CandidateBlock().State)
+	unitHash := NewUnitHashMap(ctx.CandidateBlock().State)
+
+	k.SetUnitHashMap(ctx, unitHash)
 
 	return validatorUpdates
 }

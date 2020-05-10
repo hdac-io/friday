@@ -17,21 +17,25 @@ type GenesisState struct {
 	GenesisConf GenesisConf `json:"genesis_conf"`
 	Accounts    []Account   `json:"accounts"`
 	ChainName   string      `json:"chain_name"`
+	Validators  []Validator `json:"validators"`
+	StateInfos  []string    `json:"state_infos"`
 }
 
 // GenesisConf : the executionlayer configuration that must be provided at genesis.
 type GenesisConf struct {
-	Genesis      Genesis      `json:"genesis"`
-	WasmCosts    WasmCosts    `json:"wasm_costs"`
-	DeployConfig DeployConfig `json:"deploy_config"`
+	Genesis       Genesis       `json:"genesis"`
+	WasmCosts     WasmCosts     `json:"wasm_costs"`
+	DeployConfig  DeployConfig  `json:"deploy_config"`
+	HighwayConfig HighwayConfig `json:"highway_config"`
 }
 
 // Genesis : Chain Genesis information
 type Genesis struct {
-	Timestamp       uint64 `json:"timestamp"`
-	MintWasm        []byte `json:"mint_wasm"`
-	PosWasm         []byte `json:"pos_wasm"`
-	ProtocolVersion string `json:"protocol_version"`
+	Timestamp           uint64 `json:"timestamp"`
+	MintWasm            []byte `json:"mint_wasm"`
+	PosWasm             []byte `json:"pos_wasm"`
+	StandardPaymentWasm []byte `json:"standrad_payment_wasm`
+	ProtocolVersion     string `json:"protocol_version"`
 }
 
 // Account : Genesis Account Information.
@@ -56,28 +60,42 @@ type WasmCosts struct {
 }
 
 type DeployConfig struct {
-	MaxTtlMillis    uint32 `json:"max-ttl-millis" toml:"max-ttl-millis"`
-	MaxDependencies uint32 `json:"max-dependencies" toml:"max-dependencies"`
+	MaxTtlMillis      uint32 `json:"max-ttl-millis" toml:"max-ttl-millis"`
+	MaxDependencies   uint32 `json:"max-dependencies" toml:"max-dependencies"`
+	MaxBlockSizeBytes uint32 `json:"max-block-size-bytes" toml:"max-block-size-bytes"`
+	MaxBlockCost      uint64 `json:"max-block-cost" toml:"max-block-cost"`
+}
+
+type HighwayConfig struct {
+	GenesisEraStartTimestamp   uint64 `json:"genesis-era-start" toml:"genesis-era-start"`
+	EraDurationMillis          uint64 `json:"era-duration" toml:"era-duration"`
+	BookingDurationMillis      uint64 `json:"booking-duration" toml:"booking-duration"`
+	EntropyDurationMillis      uint64 `json:"entropy-duration" toml:"entropy-duration"`
+	VotingPeriodDurationMillis uint64 `json:"voting-period-duration" toml:"voting-period-duration"`
+	VotingPeriodSummitLevel    uint32 `json:"voting-period-summit-level" toml:"voting-period-summit-level"`
+	Ftt                        uint32 `json:"ftt" toml:"ftt"`
 }
 
 const (
-	mintCodePath = "$HOME/.nodef/contracts/hdac_mint_install.wasm"
-	posCodePath  = "$HOME/.nodef/contracts/pop_install.wasm"
+	mintCodePath            = "$HOME/.nodef/contracts/hdac_mint_install.wasm"
+	posCodePath             = "$HOME/.nodef/contracts/pop_install.wasm"
+	standardPaymentCodePath = "$HOME/.nodef/contracts/standard_payment_install.wasm"
 )
 
 // NewGenesisState creates a new genesis state.
-func NewGenesisState(genesisConf GenesisConf, accounts []Account, chainName string) GenesisState {
-	return GenesisState{GenesisConf: genesisConf, Accounts: accounts, ChainName: chainName}
+func NewGenesisState(genesisConf GenesisConf, accounts []Account, chainName string, validators Validators, stateInfos []string) GenesisState {
+	return GenesisState{GenesisConf: genesisConf, Accounts: accounts, ChainName: chainName, Validators: validators, StateInfos: stateInfos}
 }
 
 // DefaultGenesisState returns a default genesis state
 func DefaultGenesisState() GenesisState {
 	genesisConf := GenesisConf{
 		Genesis: Genesis{
-			Timestamp:       0,
-			MintWasm:        util.LoadWasmFile(os.ExpandEnv(mintCodePath)),
-			PosWasm:         util.LoadWasmFile(os.ExpandEnv(posCodePath)),
-			ProtocolVersion: "1.0.0",
+			Timestamp:           0,
+			MintWasm:            util.LoadWasmFile(os.ExpandEnv(mintCodePath)),
+			PosWasm:             util.LoadWasmFile(os.ExpandEnv(posCodePath)),
+			StandardPaymentWasm: util.LoadWasmFile(os.ExpandEnv(standardPaymentCodePath)),
+			ProtocolVersion:     "1.0.0",
 		},
 		WasmCosts: WasmCosts{
 			Regular:           1,
@@ -92,11 +110,22 @@ func DefaultGenesisState() GenesisState {
 			OpcodesDivisor:    8,
 		},
 		DeployConfig: DeployConfig{
-			MaxTtlMillis:    86400000,
-			MaxDependencies: 10,
+			MaxTtlMillis:      86400000,
+			MaxDependencies:   10,
+			MaxBlockSizeBytes: 10485760,
+			MaxBlockCost:      0,
+		},
+		HighwayConfig: HighwayConfig{
+			GenesisEraStartTimestamp:   1583712000000,
+			EraDurationMillis:          604800000,
+			BookingDurationMillis:      864000000,
+			EntropyDurationMillis:      10800000,
+			VotingPeriodDurationMillis: 172800000,
+			VotingPeriodSummitLevel:    0,
+			Ftt:                        0,
 		},
 	}
-	return NewGenesisState(genesisConf, nil, "friday-devnet")
+	return NewGenesisState(genesisConf, nil, "friday-devnet", nil, nil)
 }
 
 // ValidateGenesis :
@@ -130,6 +159,8 @@ func ToChainSpecGenesisConfig(gs GenesisState) (*ipc.ChainSpec_GenesisConfig, er
 		Accounts:        accounts,
 		Costs:           toCostTable(config.WasmCosts),
 		DeployConfig:    toDeployConfig(config.DeployConfig),
+		HighwayConfig:   toHighwayConfig(config.HighwayConfig),
+		StateInfos:      gs.StateInfos,
 	}
 
 	return &chainSpecConfig, nil
@@ -189,8 +220,22 @@ func toCostTable(wasmCosts WasmCosts) *ipc.ChainSpec_CostTable {
 
 func toDeployConfig(deployConfig DeployConfig) *ipc.ChainSpec_DeployConfig {
 	return &ipc.ChainSpec_DeployConfig{
-		MaxTtlMillis:    deployConfig.MaxTtlMillis,
-		MaxDependencies: deployConfig.MaxDependencies,
+		MaxTtlMillis:      deployConfig.MaxTtlMillis,
+		MaxDependencies:   deployConfig.MaxDependencies,
+		MaxBlockSizeBytes: deployConfig.MaxBlockSizeBytes,
+		MaxBlockCost:      deployConfig.MaxBlockCost,
+	}
+}
+
+func toHighwayConfig(highwayConfig HighwayConfig) *ipc.ChainSpec_HighwayConfig {
+	return &ipc.ChainSpec_HighwayConfig{
+		GenesisEraStartTimestamp:   highwayConfig.GenesisEraStartTimestamp,
+		EraDurationMillis:          highwayConfig.EraDurationMillis,
+		BookingDurationMillis:      highwayConfig.BookingDurationMillis,
+		EntropyDurationMillis:      highwayConfig.EntropyDurationMillis,
+		VotingPeriodDurationMillis: highwayConfig.VotingPeriodDurationMillis,
+		VotingPeriodSummitLevel:    highwayConfig.VotingPeriodSummitLevel,
+		Ftt:                        float64(highwayConfig.Ftt),
 	}
 }
 

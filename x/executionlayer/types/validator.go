@@ -134,6 +134,7 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 
 // this is a helper struct used for JSON de- and encoding only
 type bechValidator struct {
+	Address     string      `json:"address", yaml:"address"`
 	ConsPubKey  string      `json:"consensus_pubkey" yaml:"consensus_pubkey"` // the bech32 consensus public key of the validator
 	Description Description `json:"description" yaml:"description"`           // description terms for the validator
 	Stake       string      `json:"stake" yaml:"stake"`
@@ -147,6 +148,7 @@ func (v Validator) MarshalJSON() ([]byte, error) {
 	}
 
 	return codec.Cdc.MarshalJSON(bechValidator{
+		Address:     v.OperatorAddress.String(),
 		ConsPubKey:  bechConsPubKey,
 		Description: v.Description,
 		Stake:       v.Stake,
@@ -159,14 +161,19 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 	if err := codec.Cdc.UnmarshalJSON(data, bv); err != nil {
 		return err
 	}
+	valAddress, err := sdk.AccAddressFromBech32(bv.Address)
+	if err != nil {
+		return err
+	}
 	consPubKey, err := sdk.GetConsPubKeyBech32(bv.ConsPubKey)
 	if err != nil {
 		return err
 	}
 	*v = Validator{
-		ConsPubKey:  consPubKey,
-		Description: bv.Description,
-		Stake:       bv.Stake,
+		OperatorAddress: valAddress,
+		ConsPubKey:      consPubKey,
+		Description:     bv.Description,
+		Stake:           bv.Stake,
 	}
 	return nil
 }

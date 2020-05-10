@@ -1,6 +1,9 @@
 package types
 
 import (
+	"bytes"
+	"encoding/binary"
+
 	sdk "github.com/hdac-io/friday/types"
 )
 
@@ -30,8 +33,11 @@ type (
 	ContractUrefAddress = sdk.ContractUrefAddress
 )
 
-func GetEEStateKey(eeState []byte) []byte {
-	return append(EEStateKey, eeState...)
+func GetEEStateKey(height int64) []byte {
+	heightBuffer := new(bytes.Buffer)
+	binary.Write(heightBuffer, binary.LittleEndian, height)
+
+	return append(EEStateKey, heightBuffer.Bytes()...)
 }
 
 func GetValidatorKey(operatorAddr sdk.AccAddress) []byte {

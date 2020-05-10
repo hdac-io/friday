@@ -62,11 +62,8 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 				addr = keyInfo.GetAddress()
 			}
 
-			blockhashstr := viper.GetString(FlagBlockHash)
-
 			queryData := types.QueryGetBalanceDetail{
-				Address:   addr,
-				BlockHash: blockhashstr,
+				Address: addr,
 			}
 			bz := cdc.MustMarshalJSON(queryData)
 
@@ -90,7 +87,6 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 
 	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
 	cmd.Flags().String(client.FlagFrom, "", "Executor's identity (one of wallet alias, address, nickname)")
-	cmd.Flags().String(FlagBlockHash, "", "Block hash at the moment")
 
 	return cmd
 }
@@ -107,13 +103,10 @@ func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
 			data := args[1]
 			path := args[2]
 
-			blockhash := viper.GetString(FlagBlockHash)
-
 			queryData := types.QueryExecutionLayerDetail{
-				KeyType:   dataType,
-				KeyData:   data,
-				Path:      path,
-				BlockHash: blockhash,
+				KeyType: dataType,
+				KeyData: data,
+				Path:    path,
 			}
 			bz := cdc.MustMarshalJSON(queryData)
 
@@ -140,8 +133,6 @@ func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
 			return err
 		},
 	}
-
-	cmd.Flags().String(FlagBlockHash, "", "Block hash at the moment")
 	return cmd
 }
 
