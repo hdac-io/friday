@@ -40,7 +40,7 @@ func TestInitCmd(t *testing.T) {
 	cdc := makeCodec()
 	cmd := InitCmd(ctx, cdc, testMbm, home)
 
-	require.NoError(t, cmd.RunE(nil, []string{"appnode-test"}))
+	require.NoError(t, cmd.RunE(nil, []string{"appnode-test", "friday"}))
 }
 
 func setupClientHome(t *testing.T) func() {
@@ -64,7 +64,7 @@ func TestEmptyState(t *testing.T) {
 	cdc := makeCodec()
 
 	cmd := InitCmd(ctx, cdc, testMbm, home)
-	require.NoError(t, cmd.RunE(nil, []string{"appnode-test"}))
+	require.NoError(t, cmd.RunE(nil, []string{"appnode-test", "friday"}))
 
 	old := os.Stdout
 	r, w, _ := os.Pipe()
@@ -104,7 +104,7 @@ func TestStartStandAlone(t *testing.T) {
 	ctx := server.NewContext(cfg, logger)
 	cdc := makeCodec()
 	initCmd := InitCmd(ctx, cdc, testMbm, home)
-	require.NoError(t, initCmd.RunE(nil, []string{"appnode-test"}))
+	require.NoError(t, initCmd.RunE(nil, []string{"appnode-test", "friday"}))
 
 	app, err := mock.NewApp(home, logger)
 	require.Nil(t, err)
