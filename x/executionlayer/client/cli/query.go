@@ -96,12 +96,15 @@ func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query address|uref|hash|local <data> <path> [--blockhash <blockhash_since>]",
 		Short: "Get query of the data",
-		Args:  cobra.ExactArgs(3),
+		Args:  cobra.MaximumNArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			dataType := args[0]
 			data := args[1]
-			path := args[2]
+			path := ""
+			if len(args) == 3 {
+				path = args[2]
+			}
 
 			queryData := types.QueryExecutionLayerDetail{
 				KeyType: dataType,
