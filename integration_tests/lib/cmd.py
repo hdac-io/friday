@@ -12,7 +12,8 @@ import pexpect
 
 from .errors import DeadDaemonException, FinishedWithError, InvalidContractRunType
 
-def _process_executor(cmd: str, *args, need_output=False):
+def _process_executor(cmd: str, *args, need_output=False, need_json_res=True):
+    res = None
     print(cmd.format(*args))
     child = pexpect.spawn(cmd.format(*args))    
     outs = child.read().decode('utf-8')
@@ -20,12 +21,14 @@ def _process_executor(cmd: str, *args, need_output=False):
     if need_output == True:
         try:
             print(outs)
-            res = json.loads(outs)
+            if need_json_res == True:
+                res = json.loads(outs)
         except Exception as e:
             print(e)
             raise e
 
-        return res
+
+    return res
 
 
 def _tx_executor(cmd: str, passphrase, *args):
@@ -62,7 +65,7 @@ def run_casperlabsEE(ee_bin="../CasperLabs/execution-engine/target/release/caspe
     ./casperlabs-engine-grpc-server $HOME/.casperlabs/.casper-node.sock
     """
     cmd = "{} {} {}".format(ee_bin, os.path.join(os.environ['HOME'], socket_path), "-z")
-    proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.DEVNULL)
     return proc
 
 
@@ -70,7 +73,7 @@ def run_node() -> subprocess.Popen:
     """
     nodef start
     """
-    proc = subprocess.Popen(shlex.split("nodef start"), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.Popen(shlex.split("nodef start"), stdout=subprocess.DEVNULL)
     return proc
 
 
@@ -78,8 +81,11 @@ def daemon_check(proc: subprocess.Popen):
     """
     Get proc object and check whether given daemon is running or not
     """
-    is_alive = proc.poll() is None
-    return is_alive
+    if proc is None:
+        return True
+    else:
+        is_alive = proc.poll() is None
+        return is_alive
 
 
 
@@ -87,11 +93,11 @@ def daemon_check(proc: subprocess.Popen):
 ## Setup CLI
 #################
 
-def init_chain(moniker: str, chain_id: str) -> subprocess.Popen:
+def init_chain(moniker: str, consensus_module: str, chain_id: str) -> subprocess.Popen:
     """
     nodef init <moniker> --chain-id <chain-id>
     """
-    _ = _process_executor("nodef init {} --chain-id {}", moniker, chain_id)
+    _ = _process_executor("nodef init {} {} --chain-id {}", moniker, consensus_module, chain_id)
 
 
 def copy_manifest():

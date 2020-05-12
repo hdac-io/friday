@@ -13,6 +13,7 @@ class TestSingleNode():
 
     chain_id = "testchain"
     moniker = "testnode"
+    consensus_module = "friday"
 
     system_contract = "0000000000000000000000000000000000000000000000000000000000000000"
     anonymous_contract_address_hash = "fridaycontracthash1dl45lfet0wrsduxfeegwmskmmr8yhlpk6lk4qdpyhpjsffkymstq6ajv0a"
@@ -33,31 +34,29 @@ class TestSingleNode():
     info_hans = None
 
     basic_coin = "1000000000000000000000000000"
-    basic_stake = "1000000000000000000"
+    basic_stake = "10000000000000000000"
 
     multiplier = 10 ** 18
 
     basic_coin_amount = int(int(basic_coin) / multiplier)
 
     basic_bond = "1"
-    bonding_fee = "0.1"
+    bonding_fee = "0.01"
 
     delegate_amount = "1"
     delegate_amount_bigsun = "1000000000000000000"
-    delegate_fee = "0.1"
+    delegate_fee = "0.05"
 
-    vote_amount = "0.1"
-    vote_amount_bigsun = "100000000000000000"
-    vote_fee = "0.1"
+    vote_amount = "1"
+    vote_amount_bigsun = "1000000000000000000"
+    vote_fee = "0.03"
 
     transfer_amount = "1"
-    transfer_fee = "0.1"
+    transfer_fee = "0.01"
 
-    short_gas = 10000000
+    tx_block_time = 2
 
     lack_fee = "0.000001"
-
-    tx_block_time = 6
 
 
     def daemon_healthcheck(self):
@@ -72,6 +71,34 @@ class TestSingleNode():
 
             raise DeadDaemonException
 
+    def daemon_downcheck(self):
+        is_ee_alive = cmd.daemon_check(self.proc_ee)
+        is_friday_alive = cmd.daemon_check(self.proc_friday)
+        if is_friday_alive:
+            for _ in range(10):
+                print("Friday alive")
+                self.proc_friday.kill()
+                time.sleep(10)
+                is_friday_alive = cmd.daemon_check(self.proc_friday)
+                if not is_friday_alive:
+                    break
+
+            else:
+                raise DeadDaemonException
+
+
+        if is_ee_alive:
+            for _ in range(10):
+                print("EE alive")
+                self.proc_ee.kill()
+                time.sleep(10)
+                is_ee_alive = cmd.daemon_check(self.proc_ee)
+                if not is_ee_alive:
+                    break
+
+            else:
+                raise DeadDaemonException
+
 
     def setup_class(self):
         """
@@ -83,7 +110,9 @@ class TestSingleNode():
         cmd.whole_cleanup()
 
         print("Init chain")
-        cmd.init_chain(self.moniker, self.chain_id)
+        cmd.init_chain(self.moniker, self.consensus_module, self.chain_id)
+        cmd.unsafe_reset_all()
+        
         print("Copy manifest file")
         cmd.copy_manifest()
 
@@ -139,6 +168,8 @@ class TestSingleNode():
 
         # Waiting for nodef process is up and ready for receiving tx...
         time.sleep(10)
+        cmd._process_executor("ps", "-al", need_output=True, need_json_res=False)
+
 
         self.daemon_healthcheck()
         print("Runup done. start testing")
@@ -148,6 +179,7 @@ class TestSingleNode():
         print("Terminating daemons..")
         self.proc_friday.terminate()
         self.proc_ee.terminate()
+        self.daemon_downcheck()
 
         print("Reset blocks")
         cmd.unsafe_reset_all()

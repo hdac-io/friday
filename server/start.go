@@ -16,6 +16,7 @@ import (
 	"github.com/hdac-io/tendermint/p2p"
 	pvm "github.com/hdac-io/tendermint/privval"
 	"github.com/hdac-io/tendermint/proxy"
+	"github.com/hdac-io/tendermint/types"
 )
 
 // Tendermint full-node start flags
@@ -146,12 +147,19 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 		return nil, err
 	}
 
-	UpgradeOldPrivValFile(cfg)
+	var privVal types.PrivValidator
+	switch cfg.Consensus.Module {
+	case "friday":
+		privVal = pvm.LoadOrGenFridayFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
+	case "tendermint":
+		UpgradeOldPrivValFile(cfg)
+		privVal = pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
+	}
 
 	// create & start tendermint node
 	tmNode, err := node.NewNode(
 		cfg,
-		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
+		privVal,
 		nodeKey,
 		proxy.NewLocalClientCreator(app),
 		node.DefaultGenesisDocProviderFunc(cfg),

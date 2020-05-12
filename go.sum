@@ -115,12 +115,10 @@ github.com/hdac-io/btcutil v0.0.0-20191220081549-27e3c0391404 h1:9FvbWqlHq6n2ciD
 github.com/hdac-io/btcutil v0.0.0-20191220081549-27e3c0391404/go.mod h1:PQwlReOMYFpmYFt9Mtnw06XeVTjkjFZLs8/v0gwoW+0=
 github.com/hdac-io/casperlabs-ee-grpc-go-util v0.7.0 h1:rHhva5ka9lMuGnf9RBGpk0yq+h5JVMeL2hg08oNtCCY=
 github.com/hdac-io/casperlabs-ee-grpc-go-util v0.7.0/go.mod h1:0T62kfiEVNVgdUJuCFQS7zkyHhf/gGgqXxCDoV9/XrQ=
-github.com/hdac-io/iavl v0.0.0-20191220074654-211e1bd34eef h1:2Agvbgr7rAy4OwBETZ6a4VAXLXCbPDdLWw8Mz9zQcLw=
-github.com/hdac-io/iavl v0.0.0-20191220074654-211e1bd34eef/go.mod h1:ry8RH8MNJJhiO1VJeosYAsKrPu7X8Xy0B5D5UQvEiVM=
-github.com/hdac-io/tendermint v0.0.0-20191220055750-d875915aea37/go.mod h1:BronDynhlemRSl99OCZ3owAs/cTcDuw0BrgFmzasWPk=
-github.com/hdac-io/tendermint v0.32.8-0.20200507142637-8c1454912aa4 h1:kzcOknvwrS9MGUAYefZBNCi48x9F8/c13WJU1ihxNFo=
-github.com/hdac-io/tendermint v0.32.8-0.20200507142637-8c1454912aa4/go.mod h1:lQzldj9uvA4kkM+GH9Ty/bXNzAl9wWJEAa8iKt0+bMQ=
-github.com/herumi/bls-go-binary v0.0.0-20191119080710-898950e1a520/go.mod h1:uTBfU/n3h1aOYIl5nNTbLn5dUfNkF1P97JTaz3bdvro=
+github.com/hdac-io/iavl v0.12.5-0.20200512093536-0d4c78794c60 h1:UDEY7xEPb95TkG9ROJY0JcvlAdafhd0x79/pWVyg1nQ=
+github.com/hdac-io/iavl v0.12.5-0.20200512093536-0d4c78794c60/go.mod h1:J/UOUqp8yBUg1fQvGEm3flEFgQ37B9gXhmvr3KGti38=
+github.com/hdac-io/tendermint v0.32.8-0.20200512022919-d1fd21afc393 h1:QcvwUc4k0phg+lwyh6XMF6LLbeST7XkjvwUkGP8wk4M=
+github.com/hdac-io/tendermint v0.32.8-0.20200512022919-d1fd21afc393/go.mod h1:lQzldj9uvA4kkM+GH9Ty/bXNzAl9wWJEAa8iKt0+bMQ=
 github.com/hpcloud/tail v1.0.0 h1:nfCOvKYfkgYP8hkirhJocXT2+zOD8yUNjXaWfTlyFKI=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
 github.com/inconshreveable/mousetrap v1.0.0 h1:Z8tu5sraLXCXIcARxBp/8cbvlwVa7Z1NHg9XEKhtSvM=

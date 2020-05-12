@@ -39,7 +39,7 @@ class TestMultiNodeSimple:
     info_bryan = None
 
     basic_coin = "1000000000000000000000000000"
-    basic_stake = "1000000000000000000"
+    basic_stake = "10000000000000000000"
 
     multiplier = 10 ** 18
 
@@ -87,7 +87,7 @@ class TestMultiNodeSimple:
             val_tx_hashes.append(unit_val_tx_hash)
 
         print("Wait for switching next block...")
-        time.sleep(self.tx_blocktime + 1)
+        time.sleep(60)
 
         print("Bonding for validators..")
         bond_hashes = []
@@ -99,8 +99,9 @@ class TestMultiNodeSimple:
             bond_hashes.append(unit_bond_hash)
 
         print("Wait for switching next block...")
-        time.sleep(self.tx_blocktime * 3 + 1)
+        time.sleep(30)
 
+        cmd._process_executor("curl http://localhost:26657/num_unconfirmed_txs", need_output=True, need_json_res=False)
         print("Check whether all txs are valid or not..")
         for unit_val_tx, unit_bond_tx in zip(val_tx_hashes, bond_hashes):
             val_tx_ok = cmd.is_tx_ok(unit_val_tx)
