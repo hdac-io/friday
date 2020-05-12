@@ -119,27 +119,35 @@ func (msg MsgTransfer) GetSigners() []sdk.AccAddress {
 //______________________________________________________________________
 // MsgCreateValidator - struct for bonding transactions
 type MsgCreateValidator struct {
+	ContractAddress  string         `json:"contract_address" yaml:"contract_address"`
 	ValidatorAddress sdk.AccAddress `json:"validator_address" yaml:"validator_address"`
 	ConsPubKey       crypto.PubKey  `json:"cons_pubkey" yaml:"cons_pubkey"`
 	Description      Description    `json:"description" yaml:"description"`
+	Fee              string         `json:"fee" yaml:"fee"`
 }
 
 type msgCreateValidatorJSON struct {
+	ContractAddress  string         `json:"contract_address" yaml:"contarct_address"`
 	ValidatorAddress sdk.AccAddress `json:"validator_address" yaml:"validator_address"`
 	ConsPubKey       string         `json:"cons_pubkey" yaml:"cons_pubkey"`
 	Description      Description    `json:"description" yaml:"description"`
+	Fee              string         `json:"fee" yaml:"fee"`
 }
 
 // Default way to create validator. Delegator address and validator address are the same
 func NewMsgCreateValidator(
+	contractAddress string,
 	valAddress sdk.AccAddress,
 	consPubKey crypto.PubKey,
 	description Description,
+	fee string,
 ) MsgCreateValidator {
 	return MsgCreateValidator{
+		ContractAddress:  contractAddress,
 		ValidatorAddress: valAddress,
 		ConsPubKey:       consPubKey,
 		Description:      description,
+		Fee:              fee,
 	}
 }
 
@@ -159,9 +167,11 @@ func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
 // serialization of the MsgCreateValidator type.
 func (msg MsgCreateValidator) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msgCreateValidatorJSON{
+		ContractAddress:  msg.ContractAddress,
 		ValidatorAddress: msg.ValidatorAddress,
 		ConsPubKey:       sdk.MustBech32ifyConsPub(msg.ConsPubKey),
 		Description:      msg.Description,
+		Fee:              msg.Fee,
 	})
 }
 
@@ -177,6 +187,8 @@ func (msg *MsgCreateValidator) UnmarshalJSON(bz []byte) error {
 	msg.ValidatorAddress = msgCreateValJSON.ValidatorAddress
 	var err error
 	msg.ConsPubKey, err = sdk.GetConsPubKeyBech32(msgCreateValJSON.ConsPubKey)
+	msg.ContractAddress = msgCreateValJSON.ContractAddress
+	msg.Fee = msgCreateValJSON.Fee
 	if err != nil {
 		return err
 	}
@@ -206,14 +218,18 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 //______________________________________________________________________
 // MsgEditValidator - struct for editing a validator
 type MsgEditValidator struct {
+	ContractAddress  string         `json:"contract_address" yaml:"contract_address"`
 	ValidatorAddress sdk.AccAddress `json:"address" yaml:"address"`
-	Description
+	Description      Description    `json:"description" yaml:"description"`
+	Fee              string         `json:"fee" yaml:"fee"`
 }
 
-func NewMsgEditValidator(valAddr sdk.AccAddress, description Description) MsgEditValidator {
+func NewMsgEditValidator(contractAddress string, valAddr sdk.AccAddress, description Description, fee string) MsgEditValidator {
 	return MsgEditValidator{
+		ContractAddress:  contractAddress,
 		ValidatorAddress: valAddr,
 		Description:      description,
+		Fee:              fee,
 	}
 }
 

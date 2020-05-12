@@ -388,10 +388,10 @@ def get_commission(from_value: str, node: str = "tcp://localhost:26657", client_
     res = _process_executor("clif hdac getcommission --from {} --node {} --home {}", from_value, node, client_home, need_output=True)
     return res
 
-def create_validator(passphrase: str, from_value: str, pubkey: str, moniker: str, identity: str='""', website: str='""', details: str='""', node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+def create_validator(passphrase: str, fee: str, from_value: str, pubkey: str, moniker: str, identity: str='""', website: str='""', details: str='""', node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
     client_home = os.path.join(os.environ["HOME"], client_home)
-    return _tx_executor("clif hdac create-validator --from {} --pubkey {} --moniker {} --identity {} --website {} --details {} --node {} --home {}",
-                      passphrase, from_value, pubkey, moniker, identity, website, details, node, client_home)
+    return _tx_executor("clif hdac create-validator {} --from {} --pubkey {} --moniker {} --identity {} --website {} --details {} --node {} --home {}",
+                      passphrase, fee, from_value, pubkey, moniker, identity, website, details, node, client_home)
 
 ##################
 ## Contract exec CLI

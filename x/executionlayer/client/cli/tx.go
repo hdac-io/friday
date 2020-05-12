@@ -583,9 +583,10 @@ func GetCmdClaimReward(cdc *codec.Codec) *cobra.Command {
 // GetCmdCreateValidator implements the create validator command handler.
 func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "create-validator --from <from> --pubkey <validator_cons_pubkey> " +
+		Use: "create-validator <fee> --from <from> --pubkey <validator_cons_pubkey> " +
 			"[--moniker <moniker>] [--identity <identity>] [--website <site_address>] [--details <detail_description>]",
 		Short: "create new validator initialized with a self-delegation to it",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -600,10 +601,30 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-
 			cliCtx = cliCtx.WithFromAddress(keyInfo.GetAddress()).WithFromName(keyInfo.GetName())
 
-			msg, err := BuildCreateValidatorMsg(cliCtx)
+			valAddr := cliCtx.GetFromAddress()
+
+			consPubKeyStr := viper.GetString(FlagPubKey)
+			consPubKey, err := sdk.GetConsPubKeyBech32(consPubKeyStr)
+			if err != nil {
+				return err
+			}
+
+			description := types.NewDescription(
+				viper.GetString(FlagMoniker),
+				viper.GetString(FlagIdentity),
+				viper.GetString(FlagWebsite),
+				viper.GetString(FlagDetails),
+			)
+
+			fee, err := cliutil.ToBigsun(cliutil.Hdac(args[0]))
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgCreateValidator("system:create_validator", valAddr, consPubKey, description, string(fee))
+
 			if err != nil {
 				return err
 			}
@@ -626,9 +647,10 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 // GetCmdEditValidator implements the create edit validator command.
 func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "edit-validator --from <from> " +
+		Use: "edit-validator <fee> --from <from> " +
 			"[--moniker <moniker>] [--identity <identity>] [--website <site_address>] [--details <detail_description>]",
 		Short: "edit an existing validator account",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -653,7 +675,12 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 				Details:  viper.GetString(FlagDetails),
 			}
 
-			msg := types.NewMsgEditValidator(valAddr, description)
+			fee, err := cliutil.ToBigsun(cliutil.Hdac(args[0]))
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgEditValidator("system:edit_validator", valAddr, description, string(fee))
 
 			// build and sign the transaction, then broadcast to Tendermint
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
@@ -687,7 +714,7 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext) (sdk.Msg, error) {
 		viper.GetString(FlagDetails),
 	)
 
-	msg := types.NewMsgCreateValidator(valAddr, consPubKey, description)
+	msg := types.NewMsgCreateValidator("system:create_validator", valAddr, consPubKey, description, types.BASIC_FEE)
 
 	return msg, nil
 }
