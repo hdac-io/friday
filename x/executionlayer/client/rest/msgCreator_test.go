@@ -444,6 +444,7 @@ func TestRESTCreateValidator(t *testing.T) {
 		BaseReq:     basereq,
 		ConsPubKey:  "fridayvalconspub16jrl8jvqq9k957nfd43n2dnyxc6nsazpgf5yuwtzfe6kku63ga6nvtmcdeg92vj4gy4kkd62vd69vvnhx935w5zpw9ex7733tft8we6evemzke66xv4ks56gfdvx66ndfye5x5z9fs6j74z6g3u4zdzd0p8hw6mr24k8wjzx0ghhz5z8vdm92vjs2e8xwdn5xpvxu56fvejnj7t6wsens5gwxlen9",
 		Description: types.NewDescription("moniker", "identity", "https://test.io", "details"),
+		Fee:         "10000000",
 	}
 
 	body := clictx.Codec.MustMarshalJSON(createValidatorReq)
@@ -462,6 +463,7 @@ func TestRESTEditValidator(t *testing.T) {
 	editValidatorReq := editValidatorReq{
 		BaseReq:     basereq,
 		Description: types.NewDescription("moniker", "identity", "https://test.io", "details"),
+		Fee:         "10000000",
 	}
 
 	body := clictx.Codec.MustMarshalJSON(editValidatorReq)

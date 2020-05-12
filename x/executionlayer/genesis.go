@@ -32,6 +32,7 @@ func InitGenesis(
 		BondedAmount: &state.BigInt{Value: types.SYSTEM_ACCOUNT_BONDED_AMOUNT, BitWidth: 512},
 	}
 	genesisConfig.Accounts = append(genesisConfig.Accounts, account)
+	genesisConfig.Timestamp = uint64(ctx.BlockTime().Unix())
 
 	response, err := keeper.client.RunGenesis(ctx.Context(), genesisConfig)
 	if err != nil {

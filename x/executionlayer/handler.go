@@ -106,6 +106,7 @@ func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExe
 }
 
 func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgCreateValidator) sdk.Result {
+	proxyContractHash := k.GetProxyContractHash(ctx)
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddress)
 	if !found {
 		validator = types.Validator{}
@@ -113,29 +114,79 @@ func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg type
 
 	validator.OperatorAddress = msg.ValidatorAddress
 	validator.ConsPubKey = msg.ConsPubKey
-	validator.Description = msg.Description
 	validator.Stake = ""
+	description, err := validator.Description.UpdateDescription(msg.Description)
+	validator.Description = description
+
+	if proxyContractHash != nil {
+		paymentAmount := "0"
+		if err == nil {
+			paymentAmount = types.BASIC_PAY_AMOUNT
+		}
+
+		sessionArgsStr, parseError := getPayAmountSessionArgsStr(paymentAmount)
+
+		msgExecute := NewMsgExecute(
+			msg.ContractAddress,
+			msg.ValidatorAddress,
+			util.HASH,
+			proxyContractHash,
+			sessionArgsStr,
+			msg.Fee,
+		)
+
+		result, log := execute(ctx, k, msgExecute)
+
+		if err != nil {
+			return getResult(false, err.Error())
+		} else if parseError != nil {
+			return getResult(false, parseError.Error())
+		} else if log != "" || !result {
+			return getResult(false, log)
+		}
+	}
 
 	k.SetValidator(ctx, msg.ValidatorAddress, validator)
-
 	return getResult(true, "")
 }
 
 func handlerMsgEditValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgEditValidator) sdk.Result {
+	proxyContractHash := k.GetProxyContractHash(ctx)
 	// validator must already be registered
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddress)
-	if !found {
-		return getResult(false, "validator does not exist for that address")
-	}
 
 	// replace all editable fields (clients should autofill existing values)
 	description, err := validator.Description.UpdateDescription(msg.Description)
-	if err != nil {
+
+	paymentAmount := "0"
+	if found && err == nil {
+		paymentAmount = types.BASIC_PAY_AMOUNT
+	}
+
+	sessionArgsStr, parseError := getPayAmountSessionArgsStr(paymentAmount)
+
+	msgExecute := NewMsgExecute(
+		msg.ContractAddress,
+		msg.ValidatorAddress,
+		util.HASH,
+		proxyContractHash,
+		sessionArgsStr,
+		msg.Fee,
+	)
+
+	result, log := execute(ctx, k, msgExecute)
+
+	if !found {
+		return getResult(false, "validator does not exist for that address")
+	} else if err != nil {
 		return getResult(false, err.Error())
+	} else if parseError != nil {
+		return getResult(false, parseError.Error())
+	} else if log != "" || !result {
+		return getResult(false, log)
 	}
 
 	validator.Description = description
-
 	k.SetValidator(ctx, msg.ValidatorAddress, validator)
 	return getResult(true, "")
 }
@@ -652,4 +703,24 @@ func getResult(ok bool, log string) sdk.Result {
 	res.Log = log
 
 	return res
+}
+
+func getPayAmountSessionArgsStr(amount string) (string, error) {
+	sessionArgs := []*consensus.Deploy_Arg{
+		&consensus.Deploy_Arg{
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_StrValue{
+						StrValue: types.PaymentMethodName}}}},
+		&consensus.Deploy_Arg{
+			Value: &state.CLValueInstance{
+				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}},
+				Value: &state.CLValueInstance_Value{
+					Value: &state.CLValueInstance_Value_U512{
+						U512: &state.CLValueInstance_U512{
+							Value: amount}}}}}}
+	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
+
+	return sessionArgsStr, err
 }

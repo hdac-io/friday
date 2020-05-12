@@ -559,6 +559,7 @@ type createValidatorReq struct {
 	BaseReq     rest.BaseReq      `json:"base_req"`
 	ConsPubKey  string            `json:"cons_pub_key"`
 	Description types.Description `json:"description"`
+	Fee         string            `json:"fee"`
 }
 
 func createValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
@@ -589,8 +590,13 @@ func createValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext,
 		return rest.BaseReq{}, nil, err
 	}
 
+	fee, err := cliutil.ToBigsun(cliutil.Hdac(req.Fee))
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
 	// create the message
-	msg := types.NewMsgCreateValidator(valAddr, consPubKey, req.Description)
+	msg := types.NewMsgCreateValidator("system:create_validator", valAddr, consPubKey, req.Description, string(fee))
 	err = msg.ValidateBasic()
 	if err != nil {
 		return rest.BaseReq{}, nil, err
@@ -602,6 +608,7 @@ func createValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext,
 type editValidatorReq struct {
 	BaseReq     rest.BaseReq      `json:"base_req"`
 	Description types.Description `json:"description"`
+	Fee         string            `json:"fee"`
 }
 
 func editValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) (rest.BaseReq, []sdk.Msg, error) {
@@ -626,8 +633,13 @@ func editValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r
 		return rest.BaseReq{}, nil, fmt.Errorf("failed to parse base request")
 	}
 
+	fee, err := cliutil.ToBigsun(cliutil.Hdac(req.Fee))
+	if err != nil {
+		return rest.BaseReq{}, nil, err
+	}
+
 	// create the message
-	msg := types.NewMsgEditValidator(valAddr, req.Description)
+	msg := types.NewMsgEditValidator("system:edit_validator", valAddr, req.Description, string(fee))
 	err = msg.ValidateBasic()
 	if err != nil {
 		return rest.BaseReq{}, nil, err

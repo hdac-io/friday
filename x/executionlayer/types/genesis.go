@@ -151,16 +151,17 @@ func ToChainSpecGenesisConfig(gs GenesisState) (*ipc.ChainSpec_GenesisConfig, er
 	}
 
 	chainSpecConfig := ipc.ChainSpec_GenesisConfig{
-		Name:            gs.ChainName,
-		Timestamp:       config.Genesis.Timestamp,
-		ProtocolVersion: pv,
-		MintInstaller:   config.Genesis.MintWasm,
-		PosInstaller:    config.Genesis.PosWasm,
-		Accounts:        accounts,
-		Costs:           toCostTable(config.WasmCosts),
-		DeployConfig:    toDeployConfig(config.DeployConfig),
-		HighwayConfig:   toHighwayConfig(config.HighwayConfig),
-		StateInfos:      gs.StateInfos,
+		Name:                     gs.ChainName,
+		Timestamp:                config.Genesis.Timestamp,
+		ProtocolVersion:          pv,
+		MintInstaller:            config.Genesis.MintWasm,
+		PosInstaller:             config.Genesis.PosWasm,
+		StandardPaymentInstaller: config.Genesis.StandardPaymentWasm,
+		Accounts:                 accounts,
+		Costs:                    toCostTable(config.WasmCosts),
+		DeployConfig:             toDeployConfig(config.DeployConfig),
+		HighwayConfig:            toHighwayConfig(config.HighwayConfig),
+		StateInfos:               gs.StateInfos,
 	}
 
 	return &chainSpecConfig, nil
