@@ -48,10 +48,10 @@ class TestMultiNodeSimple:
     create_validator_fee = "0.1"
 
     basic_bond = "1"
-    bonding_fee = "0.001"
+    bonding_fee = "0.1"
 
     transfer_amount = "1"
-    transfer_fee = "0.001"
+    transfer_fee = "0.1"
 
     tx_blocktime = 6
 
