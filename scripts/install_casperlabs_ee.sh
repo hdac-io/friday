@@ -17,7 +17,7 @@ git fetch origin
 git reset --hard $COMMIT_HASH
 
 cd execution-engine
-make setup
+make setup-rs
 cargo build --release # build execution engine
 
 declare -a TARGET_CONTRACTS=(
