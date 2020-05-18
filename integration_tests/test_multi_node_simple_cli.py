@@ -145,10 +145,10 @@ class TestMultiNodeSimple:
         for node in self.nodes_address[:3]:
             print("Test of {}".format(node))
             res = cmd.get_balance(self.wallet_anna, node=node)
-            assert("value" in res)
+            assert(float(res))
 
             res = cmd.get_balance(self.wallet_elsa, node=node)
-            assert("value" in res)
+            assert(float(res))
 
             print("{} OK".format(node))
 
