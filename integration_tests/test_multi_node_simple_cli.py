@@ -45,6 +45,8 @@ class TestMultiNodeSimple:
 
     basic_coin_amount = int(int(basic_coin) / multiplier)
 
+    create_validator_fee = "0.1"
+
     basic_bond = "1"
     bonding_fee = "0.001"
 
@@ -83,7 +85,7 @@ class TestMultiNodeSimple:
                 zip(self.nodes_address[1:], self.bls_pubkeys[1:], [self.wallet_anna, self.wallet_hans, self.wallet_olaf], self.monikers[1:]):
 
             print("For {}".format(unit_node_address))
-            unit_val_tx_hash = cmd.create_validator(self.wallet_password, unit_wallet_alias, unit_pub, unit_moniker)
+            unit_val_tx_hash = cmd.create_validator(self.wallet_password, self.create_validator_fee, unit_wallet_alias, unit_pub, unit_moniker)
             val_tx_hashes.append(unit_val_tx_hash)
 
         print("Wait for switching next block...")
