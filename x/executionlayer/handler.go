@@ -16,34 +16,34 @@ import (
 
 // NewHandler returns a handler for "executionlayer" type messages.
 func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	return func(ctx sdk.Context, msg sdk.Msg, simulate bool) sdk.Result {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
 		case types.MsgExecute:
-			return handlerMsgExecute(ctx, k, msg)
+			return handlerMsgExecute(ctx, k, msg, simulate)
 		case types.MsgTransfer:
-			return handlerMsgTransfer(ctx, k, msg)
+			return handlerMsgTransfer(ctx, k, msg, simulate)
 		case types.MsgCreateValidator:
-			return handlerMsgCreateValidator(ctx, k, msg)
+			return handlerMsgCreateValidator(ctx, k, msg, simulate)
 		case types.MsgEditValidator:
-			return handlerMsgEditValidator(ctx, k, msg)
+			return handlerMsgEditValidator(ctx, k, msg, simulate)
 		case types.MsgBond:
-			return handlerMsgBond(ctx, k, msg)
+			return handlerMsgBond(ctx, k, msg, simulate)
 		case types.MsgUnBond:
-			return handlerMsgUnBond(ctx, k, msg)
+			return handlerMsgUnBond(ctx, k, msg, simulate)
 		case types.MsgDelegate:
-			return handlerMsgDelegate(ctx, k, msg)
+			return handlerMsgDelegate(ctx, k, msg, simulate)
 		case types.MsgUndelegate:
-			return handlerMsgUndelgate(ctx, k, msg)
+			return handlerMsgUndelgate(ctx, k, msg, simulate)
 		case types.MsgRedelegate:
-			return handlerMsgRedelegate(ctx, k, msg)
+			return handlerMsgRedelegate(ctx, k, msg, simulate)
 		case types.MsgVote:
-			return handlerMsgVote(ctx, k, msg)
+			return handlerMsgVote(ctx, k, msg, simulate)
 		case types.MsgUnvote:
-			return handlerMsgUnvote(ctx, k, msg)
+			return handlerMsgUnvote(ctx, k, msg, simulate)
 		case types.MsgClaim:
-			return handlerMsgClaim(ctx, k, msg)
+			return handlerMsgClaim(ctx, k, msg, simulate)
 		default:
 			errMsg := fmt.Sprintf("unrecognized execution layer messgae type: %T", msg)
 			return sdk.ErrUnknownRequest(errMsg).Result()
@@ -56,7 +56,7 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 // Difference of general execution
 //   1) Raw account is needed for checking address existence
 //   2) Fixed transfer & payment WASMs are needed
-func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTransfer) sdk.Result {
+func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTransfer, simulate bool) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
@@ -92,7 +92,7 @@ func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTr
 		sessionArgsStr,
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute)
+	result, log := execute(ctx, k, msgExecute, simulate)
 	if result == true {
 		k.SetAccountIfNotExists(ctx, msg.ToAddress)
 	}
@@ -100,12 +100,12 @@ func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTr
 }
 
 // Handle MsgExecute
-func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) sdk.Result {
-	result, log := execute(ctx, k, msg)
+func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simulate bool) sdk.Result {
+	result, log := execute(ctx, k, msg, simulate)
 	return getResult(result, log)
 }
 
-func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgCreateValidator) sdk.Result {
+func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgCreateValidator, simulate bool) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddress)
 	if !found {
@@ -135,7 +135,7 @@ func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg type
 			msg.Fee,
 		)
 
-		result, log := execute(ctx, k, msgExecute)
+		result, log := execute(ctx, k, msgExecute, simulate)
 
 		if err != nil {
 			return getResult(false, err.Error())
@@ -150,7 +150,7 @@ func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg type
 	return getResult(true, "")
 }
 
-func handlerMsgEditValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgEditValidator) sdk.Result {
+func handlerMsgEditValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgEditValidator, simulate bool) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	// validator must already be registered
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddress)
@@ -174,7 +174,7 @@ func handlerMsgEditValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.
 		msg.Fee,
 	)
 
-	result, log := execute(ctx, k, msgExecute)
+	result, log := execute(ctx, k, msgExecute, simulate)
 
 	if !found {
 		return getResult(false, "validator does not exist for that address")
@@ -191,7 +191,7 @@ func handlerMsgEditValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.
 	return getResult(true, "")
 }
 
-func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) sdk.Result {
+func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond, simulate bool) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
@@ -221,11 +221,11 @@ func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond) 
 		sessionArgsStr,
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute)
+	result, log := execute(ctx, k, msgExecute, simulate)
 	return getResult(result, log)
 }
 
-func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBond) sdk.Result {
+func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBond, simulate bool) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
@@ -260,12 +260,12 @@ func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBo
 		sessionArgsStr,
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute)
+	result, log := execute(ctx, k, msgExecute, simulate)
 
 	return getResult(result, log)
 }
 
-func handlerMsgDelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgDelegate) sdk.Result {
+func handlerMsgDelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgDelegate, simulate bool) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
@@ -301,12 +301,12 @@ func handlerMsgDelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgDe
 		sessionArgsStr,
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute)
+	result, log := execute(ctx, k, msgExecute, simulate)
 
 	return getResult(result, log)
 }
 
-func handlerMsgUndelgate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUndelegate) sdk.Result {
+func handlerMsgUndelgate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUndelegate, simulate bool) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
@@ -345,12 +345,12 @@ func handlerMsgUndelgate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgU
 		sessionArgsStr,
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute)
+	result, log := execute(ctx, k, msgExecute, simulate)
 
 	return getResult(result, log)
 }
 
-func handlerMsgRedelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgRedelegate) sdk.Result {
+func handlerMsgRedelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgRedelegate, simulate bool) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
@@ -392,12 +392,12 @@ func handlerMsgRedelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.Msg
 		sessionArgsStr,
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute)
+	result, log := execute(ctx, k, msgExecute, simulate)
 
 	return getResult(result, log)
 }
 
-func handlerMsgVote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgVote) sdk.Result {
+func handlerMsgVote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgVote, simulate bool) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	var sessionArgs []*consensus.Deploy_Arg
 
@@ -470,12 +470,12 @@ func handlerMsgVote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgVote) 
 		sessionArgsStr,
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute)
+	result, log := execute(ctx, k, msgExecute, simulate)
 
 	return getResult(result, log)
 }
 
-func handlerMsgUnvote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnvote) sdk.Result {
+func handlerMsgUnvote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnvote, simulate bool) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	var sessionArgs []*consensus.Deploy_Arg
 
@@ -554,12 +554,12 @@ func handlerMsgUnvote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnvo
 		sessionArgsStr,
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute)
+	result, log := execute(ctx, k, msgExecute, simulate)
 
 	return getResult(result, log)
 }
 
-func handlerMsgClaim(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgClaim) sdk.Result {
+func handlerMsgClaim(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgClaim, simulate bool) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	var methodName string
 	switch msg.RewardOrCommission {
@@ -592,15 +592,20 @@ func handlerMsgClaim(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgClaim
 		sessionArgsStr,
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute)
+	result, log := execute(ctx, k, msgExecute, simulate)
 
 	return getResult(result, log)
 }
 
-func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) (bool, string) {
+func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simulate bool) (bool, string) {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	// Parameter preparation
-	stateHash := ctx.CandidateBlock().State
+	var stateHash []byte
+	if simulate {
+		stateHash = k.GetUnitHashMap(ctx, ctx.BlockHeight()).EEState
+	} else {
+		stateHash = ctx.CandidateBlock().State
+	}
 	protocolVersion := k.MustGetProtocolVersion(ctx)
 	log := ""
 
@@ -675,6 +680,10 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute) (boo
 	default:
 		err = fmt.Errorf("Unknown result : %s", resExecute.String())
 		log += err.Error()
+	}
+
+	if simulate {
+		return log == "", log
 	}
 
 	// Commit

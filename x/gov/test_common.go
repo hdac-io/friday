@@ -8,8 +8,8 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/hdac-io/tendermint/crypto/ed25519"
+	"github.com/stretchr/testify/require"
 
 	abci "github.com/hdac-io/tendermint/abci/types"
 	"github.com/hdac-io/tendermint/crypto"
@@ -236,7 +236,7 @@ func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context,
 			testDescription, testCommissionRates, sdk.OneInt(),
 		)
 
-		res := stakingHandler(ctx, valCreateMsg)
+		res := stakingHandler(ctx, valCreateMsg, false)
 		require.True(t, res.IsOK())
 	}
 }

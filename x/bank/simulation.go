@@ -74,7 +74,7 @@ func sendAndVerifyMsgSend(app *baseapp.BaseApp, mapper types.AccountKeeper, msg 
 	initialToAddrCoins := toAcc.GetCoins()
 
 	if handler != nil {
-		res := handler(ctx, msg)
+		res := handler(ctx, msg, false)
 		if !res.IsOK() {
 			if res.Code == types.CodeSendDisabled {
 				return nil
@@ -182,7 +182,7 @@ func sendAndVerifyMsgMultiSend(app *baseapp.BaseApp, mapper types.AccountKeeper,
 		initialOutputAddrCoins[i] = acc.GetCoins()
 	}
 	if handler != nil {
-		res := handler(ctx, msg)
+		res := handler(ctx, msg, false)
 		if !res.IsOK() {
 			if res.Code == types.CodeSendDisabled {
 				return nil

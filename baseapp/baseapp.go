@@ -782,9 +782,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		var msgResult sdk.Result
 
 		// skip actual execution for CheckTx mode
-		if mode != runTxModeCheck {
-			msgResult = handler(ctx, msg)
-		}
+		msgResult = handler(ctx, msg, mode == runTxModeCheck)
 
 		// Each message result's Data must be length prefixed in order to separate
 		// each result.

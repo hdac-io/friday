@@ -47,7 +47,7 @@ func EndBlocker(ctx sdk.Context, req abci.RequestEndBlock, k ExecutionLayerKeepe
 		sessionArgsStr,
 		types.BASIC_FEE,
 	)
-	result, log := execute(ctx, k, msgExecute)
+	result, log := execute(ctx, k, msgExecute, false)
 	if !result {
 		getResult(result, log)
 	}

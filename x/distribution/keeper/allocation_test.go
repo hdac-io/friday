@@ -3,8 +3,8 @@ package keeper
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	abci "github.com/hdac-io/tendermint/abci/types"
+	"github.com/stretchr/testify/require"
 
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/staking"
@@ -18,7 +18,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
-	require.True(t, sh(ctx, msg).IsOK())
+	require.True(t, sh(ctx, msg, false).IsOK())
 	val := sk.Validator(ctx, valOpAddr1)
 
 	// allocate tokens
@@ -45,13 +45,13 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
-	require.True(t, sh(ctx, msg).IsOK())
+	require.True(t, sh(ctx, msg, false).IsOK())
 
 	// create second validator with 0% commission
 	commission = staking.NewCommissionRates(sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0))
 	msg = staking.NewMsgCreateValidator(valOpAddr2, valConsPk2,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
-	require.True(t, sh(ctx, msg).IsOK())
+	require.True(t, sh(ctx, msg, false).IsOK())
 
 	abciValA := abci.Validator{
 		Address: valConsPk1.Address(),
@@ -116,19 +116,19 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(110)), staking.Description{}, commission, sdk.OneInt())
-	require.True(t, sh(ctx, msg).IsOK())
+	require.True(t, sh(ctx, msg, false).IsOK())
 
 	// create second validator with 10% commission
 	commission = staking.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
 	msg = staking.NewMsgCreateValidator(valOpAddr2, valConsPk2,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
-	require.True(t, sh(ctx, msg).IsOK())
+	require.True(t, sh(ctx, msg, false).IsOK())
 
 	// create third validator with 10% commission
 	commission = staking.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
 	msg = staking.NewMsgCreateValidator(valOpAddr3, valConsPk3,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
-	require.True(t, sh(ctx, msg).IsOK())
+	require.True(t, sh(ctx, msg, false).IsOK())
 
 	abciValA := abci.Validator{
 		Address: valConsPk1.Address(),
