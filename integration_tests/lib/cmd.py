@@ -44,6 +44,7 @@ def _tx_executor(cmd: str, passphrase, *args):
         print(outs)
         try:
             tx_hash = re.search(r'"txhash": "([A-Z0-9]+)"', outs).group(1)
+            success = re.search(r'"success": (true|false)', outs).group(1)
         except Exception as e:
             print(outs_of_child)
             print(e)
@@ -52,7 +53,7 @@ def _tx_executor(cmd: str, passphrase, *args):
     except pexpect.TIMEOUT:
         raise FinishedWithError
 
-    return tx_hash
+    return tx_hash, success == 'true'
 
 
 #################
