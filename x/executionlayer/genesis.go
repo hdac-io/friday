@@ -7,11 +7,9 @@ import (
 	"strings"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/storedvalue"
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 )
@@ -23,15 +21,6 @@ func InitGenesis(
 	if err != nil {
 		panic(err)
 	}
-
-	// add to temp account
-	tempAddress := sdk.AccAddress(types.TEMP_ACC_ADDRESS)
-	account := &ipc.ChainSpec_GenesisAccount{
-		PublicKey:    tempAddress,
-		Balance:      &state.BigInt{Value: types.SYSTEM_ACCOUNT_BALANCE, BitWidth: 512},
-		BondedAmount: &state.BigInt{Value: types.SYSTEM_ACCOUNT_BONDED_AMOUNT, BitWidth: 512},
-	}
-	genesisConfig.Accounts = append(genesisConfig.Accounts, account)
 	genesisConfig.Timestamp = uint64(ctx.BlockTime().Unix())
 
 	response, err := keeper.client.RunGenesis(ctx.Context(), genesisConfig)
@@ -41,10 +30,6 @@ func InitGenesis(
 
 	if reflect.TypeOf(response.GetResult()) != reflect.TypeOf(&ipc.GenesisResponse_Success{}) {
 		panic(response.GetResult())
-	}
-
-	if data.Accounts != nil {
-		keeper.SetGenesisAccounts(ctx, data.Accounts)
 	}
 
 	candidateBlock := ctx.CandidateBlock()
@@ -94,46 +79,6 @@ func InitGenesis(
 	}
 
 	keeper.SetProxyContractHash(ctx, proxyContractHash)
-
-	// send to system account from temp account
-	sessionArgs := []*consensus.Deploy_Arg{
-		&consensus.Deploy_Arg{
-			Value: &state.CLValueInstance{
-				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
-				Value: &state.CLValueInstance_Value{
-					Value: &state.CLValueInstance_Value_StrValue{
-						StrValue: types.TransferMethodName}}}},
-		&consensus.Deploy_Arg{
-			Value: &state.CLValueInstance{
-				ClType: &state.CLType{Variants: &state.CLType_ListType{ListType: &state.CLType_List{Inner: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U8}}}}},
-				Value: &state.CLValueInstance_Value{
-					Value: &state.CLValueInstance_Value_BytesValue{
-						BytesValue: types.SYSTEM_ACCOUNT}}}},
-		&consensus.Deploy_Arg{
-			Value: &state.CLValueInstance{
-				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}},
-				Value: &state.CLValueInstance_Value{
-					Value: &state.CLValueInstance_Value_U512{
-						U512: &state.CLValueInstance_U512{
-							Value: types.TRANSFER_BALANCE}}}}}}
-	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
-	if err != nil {
-		getResult(false, err.Error())
-	}
-
-	msgExecute := NewMsgExecute(
-		types.SYSTEM,
-		tempAddress,
-		util.HASH,
-		proxyContractHash,
-		sessionArgsStr,
-		types.BASIC_FEE,
-	)
-	result, log := execute(ctx, keeper, msgExecute, false)
-	if !result {
-		getResult(false, log)
-	}
-
 	keeper.SetUnitHashMap(ctx, types.NewUnitHashMap(ctx.CandidateBlock().State))
 }
 

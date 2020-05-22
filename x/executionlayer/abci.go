@@ -1,12 +1,11 @@
 package executionlayer
 
 import (
+	"encoding/hex"
+	"fmt"
 	"strconv"
 
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus"
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 	abci "github.com/hdac-io/tendermint/abci/types"
@@ -25,52 +24,47 @@ func EndBlocker(ctx sdk.Context, req abci.RequestEndBlock, k ExecutionLayerKeepe
 	var validatorUpdates []abci.ValidatorUpdate
 
 	// step
-	proxyContractHash := k.GetProxyContractHash(ctx)
-	sessionArgs := []*consensus.Deploy_Arg{
-		&consensus.Deploy_Arg{
-			Value: &state.CLValueInstance{
-				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_STRING}},
-				Value: &state.CLValueInstance_Value{
-					Value: &state.CLValueInstance_Value_StrValue{
-						StrValue: types.StepMethodName}}}}}
-
-	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
+	protocolVersion := k.MustGetProtocolVersion(ctx)
+	stepRequest := &ipc.StepRequest{
+		ParentStateHash: ctx.CandidateBlock().State,
+		BlockTime:       uint64(ctx.BlockTime().Unix()),
+		ProtocolVersion: &protocolVersion,
+	}
+	res, err := k.client.Step(ctx.Context(), stepRequest)
 	if err != nil {
-		getResult(false, err.Error())
+		panic(err)
+	}
+	switch res.GetResult().(type) {
+	case *ipc.StepResponse_Success:
+		ctx.CandidateBlock().State = res.GetSuccess().GetPostStateHash()
+	case *ipc.StepResponse_MissingParent:
+		panic(fmt.Sprintf("Missing parent : %s", hex.EncodeToString(res.GetMissingParent().GetHash())))
+	case *ipc.StepResponse_Error:
+		panic(res.GetError().GetMessage())
+	default:
+		panic(fmt.Sprintf("Unknown result : %s", res.String()))
 	}
 
-	msgExecute := NewMsgExecute(
-		types.SYSTEM,
-		types.SYSTEM_ACCOUNT,
-		util.HASH,
-		proxyContractHash,
-		sessionArgsStr,
-		types.BASIC_FEE,
-	)
-	result, log := execute(ctx, k, msgExecute, false)
-	if !result {
-		getResult(result, log)
+	// Query to current validator information.
+	posInfos, err := getQueryResult(ctx, k, types.ADDRESS, types.SYSTEM, types.PosContractName)
+	if err != nil {
+		panic(err)
 	}
+	nextStakeInfos := posInfos.Contract.NamedKeys.GetAllValidators()
 
 	// calculate and set voting power
 	validators := k.GetAllValidators(ctx)
 
-	resultbonds := ctx.CandidateBlock().Bonds
-	if len(resultbonds) > 0 {
-		resultBondsMap := make(map[string]*ipc.Bond)
-		for _, bond := range resultbonds {
-			resultBondsMap[string(bond.GetValidatorPublicKey())] = bond
-		}
-
+	if len(nextStakeInfos) > 0 {
 		for _, validator := range validators {
 			var power string
-			resultBond, found := resultBondsMap[string(validator.OperatorAddress)]
+			stake, found := nextStakeInfos[hex.EncodeToString(validator.OperatorAddress)]
 			if found {
-				if validator.Stake == resultBond.GetStake().GetValue() {
+				if validator.Stake == stake {
 					continue
 				}
-				power = resultBond.GetStake().GetValue()
-				validator.Stake = resultBond.GetStake().GetValue()
+				power = stake
+				validator.Stake = stake
 			} else {
 				if validator.Stake != "" {
 					power = "0"
