@@ -1,6 +1,7 @@
 package executionlayer
 
 import (
+	"encoding/hex"
 	"fmt"
 	"strings"
 
@@ -700,6 +701,45 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simu
 	}
 
 	return result, log
+}
+
+func executeStep(ctx sdk.Context, k ExecutionLayerKeeper) (bool, error) {
+	protocolVersion := k.MustGetProtocolVersion(ctx)
+	stepRequest := &ipc.StepRequest{
+		ParentStateHash: ctx.CandidateBlock().State,
+		BlockTime:       uint64(ctx.BlockTime().Unix()),
+		ProtocolVersion: &protocolVersion,
+	}
+
+	res, err := k.client.Step(ctx.Context(), stepRequest)
+	if err != nil {
+		return false, err
+	}
+
+	var stateHash []byte
+	effects := []*transforms.TransformEntry{}
+	switch res.GetResult().(type) {
+	case *ipc.StepResponse_Success:
+		stateHash = res.GetSuccess().GetPostStateHash()
+		effects = res.GetSuccess().GetEffect().TransformMap
+	case *ipc.StepResponse_MissingParent:
+		return false, fmt.Errorf("Missing parent : %s", hex.EncodeToString(res.GetMissingParent().GetHash()))
+	case *ipc.StepResponse_Error:
+		return false, fmt.Errorf(res.GetError().GetMessage())
+	default:
+		return false, fmt.Errorf("Unknown result : %s", res.String())
+	}
+
+	postStateHash, bonds, errMsg := grpc.Commit(k.client, stateHash, effects, &protocolVersion)
+	if errMsg != "" {
+		return false, fmt.Errorf(errMsg)
+	}
+
+	candidateBlock := ctx.CandidateBlock()
+	candidateBlock.State = postStateHash
+	candidateBlock.Bonds = bonds
+
+	return true, nil
 }
 
 func getResult(ok bool, log string) sdk.Result {

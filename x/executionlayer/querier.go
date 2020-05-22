@@ -175,12 +175,15 @@ func getQueryResult(ctx sdk.Context, k ExecutionLayerKeeper,
 	}
 
 	protocolVersion := k.MustGetProtocolVersion(ctx)
-	unitHash := k.GetUnitHashMap(ctx, ctx.BlockHeight())
+	stateHash := k.GetUnitHashMap(ctx, ctx.BlockHeight()).EEState
+	if len(stateHash) == 0 {
+		stateHash = ctx.CandidateBlock().State
+	}
 	keyDataBytes, err := toBytes(keyType, keyData, k.NicknameKeeper, ctx)
 	if err != nil {
 		return storedvalue.StoredValue{}, err
 	}
-	res, errstr := grpc.Query(k.client, unitHash.EEState, keyType, keyDataBytes, arrPath, &protocolVersion)
+	res, errstr := grpc.Query(k.client, stateHash, keyType, keyDataBytes, arrPath, &protocolVersion)
 	if errstr != "" {
 		return storedvalue.StoredValue{}, fmt.Errorf(errstr)
 	}
