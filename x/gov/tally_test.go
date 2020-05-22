@@ -372,7 +372,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 
 	delTokens := sdk.TokensFromConsensusPower(30)
 	delegator1Msg := staking.NewMsgDelegate(input.addrs[3], sdk.ValAddress(input.addrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
-	stakingHandler(ctx, delegator1Msg)
+	stakingHandler(ctx, delegator1Msg, false)
 
 	tp := testProposal()
 	proposal, err := input.keeper.SubmitProposal(ctx, tp)
@@ -418,7 +418,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 
 	delTokens := sdk.TokensFromConsensusPower(30)
 	delegator1Msg := staking.NewMsgDelegate(input.addrs[3], sdk.ValAddress(input.addrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
-	stakingHandler(ctx, delegator1Msg)
+	stakingHandler(ctx, delegator1Msg, false)
 
 	tp := testProposal()
 	proposal, err := input.keeper.SubmitProposal(ctx, tp)
@@ -462,9 +462,9 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 
 	delTokens := sdk.TokensFromConsensusPower(10)
 	delegator1Msg := staking.NewMsgDelegate(input.addrs[3], sdk.ValAddress(input.addrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
-	stakingHandler(ctx, delegator1Msg)
+	stakingHandler(ctx, delegator1Msg, false)
 	delegator1Msg2 := staking.NewMsgDelegate(input.addrs[3], sdk.ValAddress(input.addrs[1]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
-	stakingHandler(ctx, delegator1Msg2)
+	stakingHandler(ctx, delegator1Msg2, false)
 
 	tp := testProposal()
 	proposal, err := input.keeper.SubmitProposal(ctx, tp)
@@ -504,26 +504,26 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	val1CreateMsg := staking.NewMsgCreateValidator(
 		sdk.ValAddress(input.addrs[0]), ed25519.GenPrivKey().PubKey(), sdk.NewCoin(sdk.DefaultBondDenom, valTokens1), testDescription, testCommissionRates, sdk.OneInt(),
 	)
-	stakingHandler(ctx, val1CreateMsg)
+	stakingHandler(ctx, val1CreateMsg, false)
 
 	valTokens2 := sdk.TokensFromConsensusPower(6)
 	val2CreateMsg := staking.NewMsgCreateValidator(
 		sdk.ValAddress(input.addrs[1]), ed25519.GenPrivKey().PubKey(), sdk.NewCoin(sdk.DefaultBondDenom, valTokens2), testDescription, testCommissionRates, sdk.OneInt(),
 	)
-	stakingHandler(ctx, val2CreateMsg)
+	stakingHandler(ctx, val2CreateMsg, false)
 
 	valTokens3 := sdk.TokensFromConsensusPower(7)
 	val3CreateMsg := staking.NewMsgCreateValidator(
 		sdk.ValAddress(input.addrs[2]), ed25519.GenPrivKey().PubKey(), sdk.NewCoin(sdk.DefaultBondDenom, valTokens3), testDescription, testCommissionRates, sdk.OneInt(),
 	)
-	stakingHandler(ctx, val3CreateMsg)
+	stakingHandler(ctx, val3CreateMsg, false)
 
 	delTokens := sdk.TokensFromConsensusPower(10)
 	delegator1Msg := staking.NewMsgDelegate(input.addrs[3], sdk.ValAddress(input.addrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
-	stakingHandler(ctx, delegator1Msg)
+	stakingHandler(ctx, delegator1Msg, false)
 
 	delegator1Msg2 := staking.NewMsgDelegate(input.addrs[3], sdk.ValAddress(input.addrs[1]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
-	stakingHandler(ctx, delegator1Msg2)
+	stakingHandler(ctx, delegator1Msg2, false)
 
 	staking.EndBlocker(ctx, input.sk)
 
@@ -569,10 +569,10 @@ func TestTallyJailedValidator(t *testing.T) {
 
 	delTokens := sdk.TokensFromConsensusPower(10)
 	delegator1Msg := staking.NewMsgDelegate(input.addrs[3], sdk.ValAddress(input.addrs[2]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
-	stakingHandler(ctx, delegator1Msg)
+	stakingHandler(ctx, delegator1Msg, false)
 
 	delegator1Msg2 := staking.NewMsgDelegate(input.addrs[3], sdk.ValAddress(input.addrs[1]), sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
-	stakingHandler(ctx, delegator1Msg2)
+	stakingHandler(ctx, delegator1Msg2, false)
 
 	val2, found := input.sk.GetValidator(ctx, sdk.ValAddress(input.addrs[1]))
 	require.True(t, found)

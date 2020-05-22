@@ -163,8 +163,9 @@ class TestMultiNodeSimple:
         picked_node = self.get_node_randomly()
         print("At {}".format(picked_node))
 
-        tx_hash = cmd.transfer_to(self.wallet_password, self.info_anna['address'], self.transfer_amount,
+        tx_hash, success = cmd.transfer_to(self.wallet_password, self.info_anna['address'], self.transfer_amount,
                         self.transfer_fee, self.info_elsa['address'], node=picked_node)
+        assert(success == True)
 
         print("Tx sent. Waiting for validation")
         time.sleep(self.tx_blocktime * 3 + 1)
@@ -196,8 +197,9 @@ class TestMultiNodeSimple:
         picked_node = self.get_node_randomly()
         print("At {}".format(picked_node))
 
-        tx_hash = cmd.transfer_to(self.wallet_password, self.info_bryan['address'], float(self.transfer_amount) / 10,
+        tx_hash, success = cmd.transfer_to(self.wallet_password, self.info_bryan['address'], float(self.transfer_amount) / 10,
                         self.transfer_fee, self.info_anna['address'], node=picked_node)
+        assert(success == True)
 
         print("Tx sent. Waiting for validation")
         time.sleep(self.tx_blocktime * 3 + 1)
@@ -229,7 +231,8 @@ class TestMultiNodeSimple:
         print("Set nickname")
         picked_node = self.get_node_randomly()
         print("At {}".format(picked_node))
-        tx_hash_nickname = cmd.set_nickname(self.wallet_password, self.nickname_anna, self.info_anna['address'], node=picked_node)
+        tx_hash_nickname, success = cmd.set_nickname(self.wallet_password, self.nickname_anna, self.info_anna['address'], node=picked_node)
+        assert(success == True)
 
         print("Tx sent. Waiting for validation")
         time.sleep(self.tx_blocktime * 3 + 1)
@@ -261,9 +264,9 @@ class TestMultiNodeSimple:
         picked_node = self.get_node_randomly()
         print("At {}".format(picked_node))
 
-        tx_hash_transfer = cmd.transfer_to(self.wallet_password, self.nickname_anna, self.transfer_amount,
+        tx_hash_transfer, success = cmd.transfer_to(self.wallet_password, self.nickname_anna, self.transfer_amount,
                                            self.transfer_fee, self.wallet_elsa, node=picked_node)
-
+        assert(success == True)
         print("Tx sent. Waiting for validation")
         time.sleep(self.tx_blocktime * 3 + 1)
 
@@ -276,9 +279,10 @@ class TestMultiNodeSimple:
         #assert(int(res_transfer) == int(self.basic_coin + self.transfer_amount))
 
         print("Try to transfer to nickname sender")
-        tx_hash_transfer = cmd.transfer_to(self.wallet_password, self.info_elsa['address'], self.transfer_amount,
+        tx_hash_transfer, success = cmd.transfer_to(self.wallet_password, self.info_elsa['address'], self.transfer_amount,
                                            self.transfer_fee, self.nickname_anna)
-
+        assert(success == True)
+        
         print("Tx sent. Waiting for validation")
         time.sleep(self.tx_blocktime * 3 + 1)
 

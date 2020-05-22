@@ -3,8 +3,8 @@ package mock
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	abci "github.com/hdac-io/tendermint/abci/types"
+	"github.com/stretchr/testify/require"
 
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/auth"
@@ -43,7 +43,7 @@ func (tx testMsg) ValidateBasic() sdk.Error {
 func getMockApp(t *testing.T) *App {
 	mApp := NewApp()
 
-	mApp.Router().AddRoute(msgRoute, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
+	mApp.Router().AddRoute(msgRoute, func(ctx sdk.Context, msg sdk.Msg, simulate bool) (res sdk.Result) { return })
 	require.NoError(t, mApp.CompleteSetup())
 
 	return mApp

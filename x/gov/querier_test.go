@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	abci "github.com/hdac-io/tendermint/abci/types"
+	"github.com/stretchr/testify/require"
 
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
@@ -198,25 +198,25 @@ func TestQueries(t *testing.T) {
 	depositParams, _, _ := getQueriedParams(t, ctx, cdc, querier)
 
 	// input.addrs[0] proposes (and deposits) proposals #1 and #2
-	res := handler(ctx, NewMsgSubmitProposal(testProposal(), sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)}, input.addrs[0]))
+	res := handler(ctx, NewMsgSubmitProposal(testProposal(), sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)}, input.addrs[0]), false)
 	var proposalID1 uint64
 	require.True(t, res.IsOK())
 	cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID1)
 
-	res = handler(ctx, NewMsgSubmitProposal(testProposal(), sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000)}, input.addrs[0]))
+	res = handler(ctx, NewMsgSubmitProposal(testProposal(), sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000)}, input.addrs[0]), false)
 	var proposalID2 uint64
 	require.True(t, res.IsOK())
 	cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID2)
 
 	// input.addrs[1] proposes (and deposits) proposals #3
-	res = handler(ctx, NewMsgSubmitProposal(testProposal(), sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)}, input.addrs[1]))
+	res = handler(ctx, NewMsgSubmitProposal(testProposal(), sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)}, input.addrs[1]), false)
 	var proposalID3 uint64
 	require.True(t, res.IsOK())
 	cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID3)
 
 	// input.addrs[1] deposits on proposals #2 & #3
-	res = handler(ctx, NewMsgDeposit(input.addrs[1], proposalID2, depositParams.MinDeposit))
-	res = handler(ctx, NewMsgDeposit(input.addrs[1], proposalID3, depositParams.MinDeposit))
+	res = handler(ctx, NewMsgDeposit(input.addrs[1], proposalID2, depositParams.MinDeposit), false)
+	res = handler(ctx, NewMsgDeposit(input.addrs[1], proposalID3, depositParams.MinDeposit), false)
 
 	// check deposits on proposal1 match individual deposits
 	deposits := getQueriedDeposits(t, ctx, cdc, querier, proposalID1)
@@ -250,11 +250,11 @@ func TestQueries(t *testing.T) {
 	require.Equal(t, proposalID3, proposals[1].ProposalID)
 
 	// Addrs[0] votes on proposals #2 & #3
-	require.True(t, handler(ctx, NewMsgVote(input.addrs[0], proposalID2, OptionYes)).IsOK())
-	require.True(t, handler(ctx, NewMsgVote(input.addrs[0], proposalID3, OptionYes)).IsOK())
+	require.True(t, handler(ctx, NewMsgVote(input.addrs[0], proposalID2, OptionYes), false).IsOK())
+	require.True(t, handler(ctx, NewMsgVote(input.addrs[0], proposalID3, OptionYes), false).IsOK())
 
 	// Addrs[1] votes on proposal #3
-	handler(ctx, NewMsgVote(input.addrs[1], proposalID3, OptionYes))
+	handler(ctx, NewMsgVote(input.addrs[1], proposalID3, OptionYes), false)
 
 	// Test query voted by input.addrs[0]
 	proposals = getQueriedProposals(t, ctx, cdc, querier, nil, input.addrs[0], StatusNil, 0)

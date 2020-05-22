@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	abci "github.com/hdac-io/tendermint/abci/types"
+	"github.com/stretchr/testify/require"
 
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/auth"
@@ -54,7 +54,7 @@ func TestHandleMsgVerifyInvariantWithNotEnoughSenderCoins(t *testing.T) {
 
 	h := crisis.NewHandler(crisisKeeper)
 	msg := crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichPasses.Route)
-	require.False(t, h(ctx, msg).IsOK())
+	require.False(t, h(ctx, msg, false).IsOK())
 }
 
 func TestHandleMsgVerifyInvariantWithBadInvariant(t *testing.T) {
@@ -63,7 +63,7 @@ func TestHandleMsgVerifyInvariantWithBadInvariant(t *testing.T) {
 
 	h := crisis.NewHandler(crisisKeeper)
 	msg := crisis.NewMsgVerifyInvariant(sender, testModuleName, "route-that-doesnt-exist")
-	res := h(ctx, msg)
+	res := h(ctx, msg, false)
 	require.False(t, res.IsOK())
 }
 
@@ -75,7 +75,7 @@ func TestHandleMsgVerifyInvariantWithInvariantBroken(t *testing.T) {
 	msg := crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichFails.Route)
 	var res sdk.Result
 	require.Panics(t, func() {
-		res = h(ctx, msg)
+		res = h(ctx, msg, false)
 	}, fmt.Sprintf("%v", res))
 }
 
@@ -92,7 +92,7 @@ func TestHandleMsgVerifyInvariantWithInvariantBrokenAndNotEnoughPoolCoins(t *tes
 	msg := crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichFails.Route)
 	var res sdk.Result
 	require.Panics(t, func() {
-		res = h(ctx, msg)
+		res = h(ctx, msg, false)
 	}, fmt.Sprintf("%v", res))
 }
 
@@ -102,14 +102,14 @@ func TestHandleMsgVerifyInvariantWithInvariantNotBroken(t *testing.T) {
 
 	h := crisis.NewHandler(crisisKeeper)
 	msg := crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichPasses.Route)
-	require.True(t, h(ctx, msg).IsOK())
+	require.True(t, h(ctx, msg, false).IsOK())
 }
 
 func TestInvalidMsg(t *testing.T) {
 	k := crisis.Keeper{}
 	h := crisis.NewHandler(k)
 
-	res := h(sdk.NewContext(nil, abci.Header{}, false, nil), sdk.NewTestMsg())
+	res := h(sdk.NewContext(nil, abci.Header{}, false, nil), sdk.NewTestMsg(), false)
 	require.False(t, res.IsOK())
 	require.True(t, strings.Contains(res.Log, "unrecognized crisis message type"))
 }

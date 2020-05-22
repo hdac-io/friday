@@ -14,11 +14,11 @@ func TestValidMsg(t *testing.T) {
 	h := NewHandler(input.k)
 
 	addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
-	res := h(input.ctx, NewMsgSetAccount(NewName("bryanrhee"), addr))
+	res := h(input.ctx, NewMsgSetAccount(NewName("bryanrhee"), addr), false)
 	require.True(t, res.IsOK())
 
 	newaddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
-	res = h(input.ctx, NewMsgChangeKey("bryanrhee", addr, newaddr))
+	res = h(input.ctx, NewMsgChangeKey("bryanrhee", addr, newaddr), false)
 	require.True(t, res.IsOK())
 }
 
@@ -26,6 +26,6 @@ func TestInValidMsg(t *testing.T) {
 	input := setupTestInput()
 	h := NewHandler(input.k)
 
-	res := h(input.ctx, sdk.NewTestMsg())
+	res := h(input.ctx, sdk.NewTestMsg(), false)
 	require.False(t, res.IsOK())
 }

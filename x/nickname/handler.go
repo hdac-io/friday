@@ -9,7 +9,11 @@ import (
 
 // NewHandler returns a handler for "nameservice" type messages.
 func NewHandler(k NicknameKeeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	return func(ctx sdk.Context, msg sdk.Msg, simulate bool) sdk.Result {
+		if simulate {
+			return sdk.Result{}
+		}
+
 		switch msg := msg.(type) {
 		case MsgSetAccount:
 			return handleMsgSetAccount(ctx, k, msg)

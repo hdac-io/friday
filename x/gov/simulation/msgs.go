@@ -99,7 +99,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, contentSim Con
 
 func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, handler sdk.Handler, ctx sdk.Context) (ok bool) {
 	ctx, write := ctx.CacheContext()
-	ok = handler(ctx, msg).IsOK()
+	ok = handler(ctx, msg, false).IsOK()
 	if ok {
 		write()
 	}
@@ -138,7 +138,7 @@ func SimulateMsgDeposit(k gov.Keeper) simulation.Operation {
 			return simulation.NoOpMsg(gov.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 		ctx, write := ctx.CacheContext()
-		ok = gov.NewHandler(k)(ctx, msg).IsOK()
+		ok = gov.NewHandler(k)(ctx, msg, false).IsOK()
 		if ok {
 			write()
 		}
@@ -177,7 +177,7 @@ func operationSimulateMsgVote(k gov.Keeper, acc simulation.Account, proposalID u
 		}
 
 		ctx, write := ctx.CacheContext()
-		ok := gov.NewHandler(k)(ctx, msg).IsOK()
+		ok := gov.NewHandler(k)(ctx, msg, false).IsOK()
 		if ok {
 			write()
 		}

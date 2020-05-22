@@ -129,7 +129,7 @@ func InitGenesis(
 		sessionArgsStr,
 		types.BASIC_FEE,
 	)
-	result, log := execute(ctx, keeper, msgExecute)
+	result, log := execute(ctx, keeper, msgExecute, false)
 	if !result {
 		getResult(false, log)
 	}
