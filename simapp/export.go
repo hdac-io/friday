@@ -9,6 +9,7 @@ import (
 
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/executionlayer"
 	"github.com/hdac-io/friday/x/slashing"
 	"github.com/hdac-io/friday/x/staking"
 	"github.com/hdac-io/friday/x/staking/exported"
@@ -33,7 +34,7 @@ func (app *SimApp) ExportAppStateAndValidators(
 		return nil, nil, err
 	}
 
-	validators = staking.WriteValidators(ctx, app.stakingKeeper)
+	validators = executionlayer.WriteValidators(ctx, app.executionLayerKeeper)
 	return appState, validators, nil
 }
 

@@ -13,6 +13,6 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data types.GenesisState)
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
 func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) types.GenesisState {
-	constantFee := keeper.GetConstantFee(ctx)
-	return types.NewGenesisState(constantFee)
+	// constantFee := keeper.GetConstantFee(ctx)
+	return types.GenesisState{}
 }

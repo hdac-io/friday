@@ -222,7 +222,7 @@ func NewFridayApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest
 	app.mm.SetOrderInitGenesis(
 		genaccounts.ModuleName, distr.ModuleName, staking.ModuleName,
 		auth.ModuleName, bank.ModuleName, slashing.ModuleName, gov.ModuleName,
-		mint.ModuleName, supply.ModuleName, crisis.ModuleName, genutil.ModuleName,
+		mint.ModuleName, supply.ModuleName, genutil.ModuleName,
 		nickname.ModuleName,
 		executionlayer.ModuleName,
 	)

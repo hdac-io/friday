@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
@@ -12,11 +13,13 @@ import (
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/storedvalue"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
+	abci "github.com/hdac-io/tendermint/abci/types"
+	tmtypes "github.com/hdac-io/tendermint/types"
 )
 
 // InitGenesis sets an executionlayer configuration for genesis.
 func InitGenesis(
-	ctx sdk.Context, keeper ExecutionLayerKeeper, data types.GenesisState) {
+	ctx sdk.Context, keeper ExecutionLayerKeeper, data types.GenesisState) (res []abci.ValidatorUpdate) {
 	genesisConfig, err := types.ToChainSpecGenesisConfig(data)
 	if err != nil {
 		panic(err)
@@ -47,6 +50,7 @@ func InitGenesis(
 
 	bonds := []*ipc.Bond{}
 	validatorStakeInfos := posInfos.Contract.NamedKeys.GetAllValidators()
+	validatorUpdates := []abci.ValidatorUpdate{}
 
 	for _, validator := range data.Validators {
 		bond := &ipc.Bond{
@@ -54,6 +58,24 @@ func InitGenesis(
 			Stake:              &state.BigInt{Value: validatorStakeInfos[hex.EncodeToString(validator.OperatorAddress)], BitWidth: 512},
 		}
 		bonds = append(bonds, bond)
+
+		// for export update
+		powerStr := validator.Stake
+		if len(powerStr) > types.DECIMAL_POINT_POS {
+			powerStr = powerStr[:len(powerStr)-types.DECIMAL_POINT_POS]
+		} else {
+			powerStr = "0"
+		}
+		power, err := strconv.ParseInt(powerStr, 10, 64)
+		if err != nil {
+			power = 0
+		}
+		validatorUpdate := abci.ValidatorUpdate{
+			PubKey: tmtypes.TM2PB.PubKey(validator.ConsPubKey),
+			Power:  power,
+		}
+
+		validatorUpdates = append(validatorUpdates, validatorUpdate)
 
 		validator.Stake = ""
 		keeper.SetValidator(ctx, validator.OperatorAddress, validator)
@@ -80,6 +102,8 @@ func InitGenesis(
 
 	keeper.SetProxyContractHash(ctx, proxyContractHash)
 	keeper.SetUnitHashMap(ctx, types.NewUnitHashMap(ctx.CandidateBlock().State))
+
+	return validatorUpdates
 }
 
 func ExportGenesis(ctx sdk.Context, keeper ExecutionLayerKeeper) types.GenesisState {
@@ -132,4 +156,28 @@ func ExportGenesis(ctx sdk.Context, keeper ExecutionLayerKeeper) types.GenesisSt
 
 	return types.NewGenesisState(
 		keeper.GetGenesisConf(ctx), accounts, keeper.GetChainName(ctx), validators, stateInfos)
+}
+
+func WriteValidators(ctx sdk.Context, keeper ExecutionLayerKeeper) (vals []tmtypes.GenesisValidator) {
+	validators := keeper.GetAllValidators(ctx)
+
+	for _, validator := range validators {
+		powerStr := validator.Stake
+		if len(powerStr) > types.DECIMAL_POINT_POS {
+			powerStr = powerStr[:len(powerStr)-types.DECIMAL_POINT_POS]
+		} else {
+			powerStr = "0"
+		}
+		power, err := strconv.ParseInt(powerStr, 10, 64)
+		if err != nil {
+			power = 0
+		}
+		vals = append(vals, tmtypes.GenesisValidator{
+			PubKey: validator.ConsPubKey,
+			Power:  power,
+			Name:   validator.Description.Moniker,
+		})
+	}
+
+	return vals
 }
