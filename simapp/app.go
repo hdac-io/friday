@@ -16,13 +16,13 @@ import (
 	"github.com/hdac-io/friday/version"
 	"github.com/hdac-io/friday/x/auth"
 	"github.com/hdac-io/friday/x/bank"
-	"github.com/hdac-io/friday/x/crisis"
 	distr "github.com/hdac-io/friday/x/distribution"
 	"github.com/hdac-io/friday/x/executionlayer"
 	"github.com/hdac-io/friday/x/genaccounts"
 	"github.com/hdac-io/friday/x/genutil"
 	"github.com/hdac-io/friday/x/gov"
 	"github.com/hdac-io/friday/x/mint"
+	"github.com/hdac-io/friday/x/nickname"
 	"github.com/hdac-io/friday/x/params"
 	paramsclient "github.com/hdac-io/friday/x/params/client"
 	"github.com/hdac-io/friday/x/slashing"
@@ -52,9 +52,9 @@ var (
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(paramsclient.ProposalHandler, distr.ProposalHandler),
 		params.AppModuleBasic{},
-		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
 		supply.AppModuleBasic{},
+		nickname.AppModuleBasic{},
 		executionlayer.AppModuleBasic{},
 	)
 
@@ -98,8 +98,8 @@ type SimApp struct {
 	mintKeeper           mint.Keeper
 	distrKeeper          distr.Keeper
 	govKeeper            gov.Keeper
-	crisisKeeper         crisis.Keeper
 	paramsKeeper         params.Keeper
+	nicknameKeeper       nickname.NicknameKeeper
 	executionLayerKeeper executionlayer.ExecutionLayerKeeper
 
 	// the module manager
@@ -121,7 +121,8 @@ func NewSimApp(
 	keys := sdk.NewKVStoreKeys(bam.MainStoreKey, auth.StoreKey, staking.StoreKey,
 		supply.StoreKey, mint.StoreKey, distr.StoreKey, slashing.StoreKey,
 		gov.StoreKey, params.StoreKey,
-		//executionlayer.StoreKey
+		nickname.StoreKey,
+		executionlayer.HashMapStoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(staking.TStoreKey, params.TStoreKey)
 
@@ -142,7 +143,6 @@ func NewSimApp(
 	distrSubspace := app.paramsKeeper.Subspace(distr.DefaultParamspace)
 	slashingSubspace := app.paramsKeeper.Subspace(slashing.DefaultParamspace)
 	govSubspace := app.paramsKeeper.Subspace(gov.DefaultParamspace)
-	crisisSubspace := app.paramsKeeper.Subspace(crisis.DefaultParamspace)
 
 	// add keepers
 	app.accountKeeper = auth.NewAccountKeeper(app.cdc, keys[auth.StoreKey], authSubspace, auth.ProtoBaseAccount)
@@ -155,9 +155,15 @@ func NewSimApp(
 		app.supplyKeeper, distr.DefaultCodespace, auth.FeeCollectorName, app.ModuleAccountAddrs())
 	app.slashingKeeper = slashing.NewKeeper(app.cdc, keys[slashing.StoreKey], &stakingKeeper,
 		slashingSubspace, slashing.DefaultCodespace)
-	app.crisisKeeper = crisis.NewKeeper(crisisSubspace, invCheckPeriod, app.supplyKeeper, auth.FeeCollectorName)
 	// TODO - Need to change default value(socket path, protocol version)
-	//app.executionLayerKeeper = executionlayer.NewExecutionLayerKeeper(app.cdc, keys[executionlayer.StoreKey], os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"), os.ExpandEnv("1.0.0"))
+	app.nicknameKeeper = nickname.NewNicknameKeeper(keys[nickname.StoreKey], app.cdc, app.accountKeeper)
+	app.executionLayerKeeper = executionlayer.NewExecutionLayerKeeper(
+		app.cdc,
+		keys[executionlayer.HashMapStoreKey],
+		os.ExpandEnv("$HOME/.casperlabs/.casper-node.sock"),
+		app.accountKeeper,
+		app.nicknameKeeper,
+	)
 
 	// register the proposal types
 	govRouter := gov.NewRouter()
@@ -180,32 +186,31 @@ func NewSimApp(
 		genutil.NewAppModule(app.accountKeeper, app.stakingKeeper, app.BaseApp.DeliverTx),
 		auth.NewAppModule(app.accountKeeper),
 		bank.NewAppModule(app.bankKeeper, app.accountKeeper),
-		crisis.NewAppModule(&app.crisisKeeper),
 		supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
 		distr.NewAppModule(app.distrKeeper, app.supplyKeeper),
 		gov.NewAppModule(app.govKeeper, app.supplyKeeper),
 		mint.NewAppModule(app.mintKeeper),
 		slashing.NewAppModule(app.slashingKeeper, app.stakingKeeper),
 		staking.NewAppModule(app.stakingKeeper, app.distrKeeper, app.accountKeeper, app.supplyKeeper),
-		//executionlayer.NewAppModule(app.ExecutionLayerKeeper),
+		nickname.NewAppModule(app.nicknameKeeper),
+		executionlayer.NewAppModule(app.executionLayerKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
 	// CanWithdrawInvariant invariant.
-	app.mm.SetOrderBeginBlockers(mint.ModuleName, distr.ModuleName, slashing.ModuleName, executionlayer.ModuleName)
+	app.mm.SetOrderBeginBlockers(executionlayer.ModuleName)
 
-	app.mm.SetOrderEndBlockers(crisis.ModuleName, gov.ModuleName, staking.ModuleName)
+	app.mm.SetOrderEndBlockers(executionlayer.ModuleName)
 
 	// NOTE: The genutils moodule must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
 	app.mm.SetOrderInitGenesis(
 		genaccounts.ModuleName, distr.ModuleName, staking.ModuleName,
 		auth.ModuleName, bank.ModuleName, slashing.ModuleName, gov.ModuleName,
-		mint.ModuleName, supply.ModuleName, crisis.ModuleName, genutil.ModuleName,
+		mint.ModuleName, supply.ModuleName, genutil.ModuleName, nickname.ModuleName, executionlayer.ModuleName,
 	)
 
-	app.mm.RegisterInvariants(&app.crisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter())
 
 	// initialize stores

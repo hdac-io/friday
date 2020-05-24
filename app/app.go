@@ -17,7 +17,6 @@ import (
 	"github.com/hdac-io/friday/version"
 	"github.com/hdac-io/friday/x/auth"
 	"github.com/hdac-io/friday/x/bank"
-	"github.com/hdac-io/friday/x/crisis"
 	distr "github.com/hdac-io/friday/x/distribution"
 	"github.com/hdac-io/friday/x/executionlayer"
 	"github.com/hdac-io/friday/x/genaccounts"
@@ -54,7 +53,6 @@ var (
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(paramsclient.ProposalHandler, distr.ProposalHandler),
 		params.AppModuleBasic{},
-		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
 		supply.AppModuleBasic{},
 		nickname.AppModuleBasic{},
@@ -104,7 +102,6 @@ type FridayApp struct {
 	mintKeeper           mint.Keeper
 	distrKeeper          distr.Keeper
 	govKeeper            gov.Keeper
-	crisisKeeper         crisis.Keeper
 	paramsKeeper         params.Keeper
 	nicknameKeeper       nickname.NicknameKeeper
 	executionLayerKeeper executionlayer.ExecutionLayerKeeper
@@ -149,7 +146,6 @@ func NewFridayApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest
 	distrSubspace := app.paramsKeeper.Subspace(distr.DefaultParamspace)
 	slashingSubspace := app.paramsKeeper.Subspace(slashing.DefaultParamspace)
 	govSubspace := app.paramsKeeper.Subspace(gov.DefaultParamspace)
-	crisisSubspace := app.paramsKeeper.Subspace(crisis.DefaultParamspace)
 
 	// add keepers
 	app.accountKeeper = auth.NewAccountKeeper(app.cdc, keys[auth.StoreKey], authSubspace, auth.ProtoBaseAccount)
@@ -165,7 +161,6 @@ func NewFridayApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest
 	app.slashingKeeper = slashing.NewKeeper(
 		app.cdc, keys[slashing.StoreKey], &stakingKeeper, slashingSubspace, slashing.DefaultCodespace,
 	)
-	app.crisisKeeper = crisis.NewKeeper(crisisSubspace, invCheckPeriod, app.supplyKeeper, auth.FeeCollectorName)
 	// TODO - Need to change default value(socket path, protocol version)
 	app.nicknameKeeper = nickname.NewNicknameKeeper(keys[nickname.StoreKey], app.cdc, app.accountKeeper)
 	app.executionLayerKeeper = executionlayer.NewExecutionLayerKeeper(
@@ -199,7 +194,6 @@ func NewFridayApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest
 		genutil.NewAppModule(app.accountKeeper, app.stakingKeeper, app.BaseApp.DeliverTx),
 		auth.NewAppModule(app.accountKeeper),
 		bank.NewAppModule(app.bankKeeper, app.accountKeeper),
-		crisis.NewAppModule(&app.crisisKeeper),
 		supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
 		distr.NewAppModule(app.distrKeeper, app.supplyKeeper),
 		gov.NewAppModule(app.govKeeper, app.supplyKeeper),
@@ -227,7 +221,6 @@ func NewFridayApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest
 		executionlayer.ModuleName,
 	)
 
-	app.mm.RegisterInvariants(&app.crisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter())
 
 	// initialize stores
