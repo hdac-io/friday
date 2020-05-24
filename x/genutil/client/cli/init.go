@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -71,7 +70,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 			// Note: Before executing InitCmd(), it usually revises to TimeoutCommit == 5 sec in interceptConfig.
 			// But in this part, as it doesn't know consensus module, I wrote this line at here
 			if ctx.Config.Consensus.Module == "friday" {
-				ctx.Config.Consensus.TimeoutCommit = 800 * time.Millisecond
+				ctx.Config.Consensus.SkipTimeoutCommit = true
 			}
 
 			config := ctx.Config
