@@ -16,8 +16,6 @@ class TestSingleNode():
     consensus_module = "friday"
 
     system_contract = "0000000000000000000000000000000000000000000000000000000000000000"
-    anonymous_contract_address_hash = "fridaycontracthash1dl45lfet0wrsduxfeegwmskmmr8yhlpk6lk4qdpyhpjsffkymstq6ajv0a"
-    anonymous_contract_address_uref = "fridaycontracturef1v4xev2kdy8hkzvwcadk4a3872lzcyyz8t44du5z2jhz636qduz3sf9mf96"
 
     wallet_elsa = "elsa"
     wallet_anna = "anna"
@@ -410,8 +408,12 @@ class TestSingleNode():
     def test07_simple_vote_and_unvote(self):
         print("======================Start test07_simple_vote_and_unvote======================")
 
+        res = cmd.query_contract("address", "system", "")
+        contracthash = res['account']['namedKeys'][0]['key']['hash']['hash']
+        contracturef = res['account']['namedKeys'][2]['key']['uref']['uref']
+
         print("Vote token: uref")
-        vote_tx_hash, success = cmd.vote(self.wallet_password, self.anonymous_contract_address_uref, self.vote_amount, self.vote_fee, self.wallet_anna)
+        vote_tx_hash, success = cmd.vote(self.wallet_password, contracturef, self.vote_amount, self.vote_fee, self.wallet_anna)
         assert(success == True)
         print("Tx sent. Waiting for vote")
 
@@ -421,12 +423,12 @@ class TestSingleNode():
         is_ok = cmd.is_tx_ok(vote_tx_hash)
         assert(is_ok == True)
 
-        res = cmd.get_voter(self.anonymous_contract_address_uref, self.info_anna['address'])
+        res = cmd.get_voter(contracturef, self.info_anna['address'])
         print("Output: ", res)
         assert(res[0]["amount"] == self.vote_amount_bigsun)
 
         print("Vote token: hash")
-        vote_tx_hash, success = cmd.vote(self.wallet_password, self.anonymous_contract_address_hash, self.vote_amount, self.vote_fee, self.wallet_anna)
+        vote_tx_hash, success = cmd.vote(self.wallet_password, contracthash, self.vote_amount, self.vote_fee, self.wallet_anna)
         assert(success == True)
         print("Tx sent. Waiting for vote")
 
@@ -436,12 +438,12 @@ class TestSingleNode():
         is_ok = cmd.is_tx_ok(vote_tx_hash)
         assert(is_ok == True)
 
-        res = cmd.get_voter(self.anonymous_contract_address_hash, self.info_anna['address'])
+        res = cmd.get_voter(contracthash, self.info_anna['address'])
         print("Output: ", res)
         assert(res[0]["amount"] == self.vote_amount_bigsun) 
 
         print("Unvote token")
-        unvote_tx_hash, success = cmd.unvote(self.wallet_password, self.anonymous_contract_address_hash, self.vote_amount, self.vote_fee, self.wallet_anna)
+        unvote_tx_hash, success = cmd.unvote(self.wallet_password, contracthash, self.vote_amount, self.vote_fee, self.wallet_anna)
         assert(success == True)
         print("Tx sent. Waiting for unvote")
 

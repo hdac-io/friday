@@ -113,6 +113,18 @@ func (q QueryVoterParamsHash) GetContract() ContractAddress {
 	return q.Contract
 }
 
+type QueryVoterResponse struct {
+	Address string `json:"address"`
+	Amount  string `json:"amount"`
+}
+
+func NewQueryVoterResponse(address string, amount string) QueryVoterResponse {
+	return QueryVoterResponse{
+		Address: address,
+		Amount:  amount,
+	}
+}
+
 // QueryGetReward payload for reward query
 type QueryGetReward struct {
 	Address sdk.AccAddress `json:"address"`

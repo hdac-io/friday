@@ -420,7 +420,7 @@ func handlerMsgVote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgVote, 
 					ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_KEY}},
 					Value: &state.CLValueInstance_Value{
 						Value: &state.CLValueInstance_Value_Key{
-							Key: &state.Key{Value: &state.Key_Hash_{Hash: &state.Key_Hash{Hash: contractAddr.Bytes()}}}}}}},
+							Key: &state.Key{Value: &state.Key_Uref{Uref: &state.Key_URef{Uref: contractAddr.Bytes(), AccessRights: state.Key_URef_NONE}}}}}}},
 			&consensus.Deploy_Arg{
 				Value: &state.CLValueInstance{
 					ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}},
@@ -498,7 +498,7 @@ func handlerMsgUnvote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnvo
 					ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_KEY}},
 					Value: &state.CLValueInstance_Value{
 						Value: &state.CLValueInstance_Value_Key{
-							Key: &state.Key{Value: &state.Key_Hash_{Hash: &state.Key_Hash{Hash: contractAddr.Bytes()}}}}}}},
+							Key: &state.Key{Value: &state.Key_Uref{Uref: &state.Key_URef{Uref: contractAddr.Bytes(), AccessRights: state.Key_URef_NONE}}}}}}},
 			&consensus.Deploy_Arg{
 				Value: &state.CLValueInstance{
 					ClType: &state.CLType{Variants: &state.CLType_OptionType{OptionType: &state.CLType_Option{Inner: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}}}}},
