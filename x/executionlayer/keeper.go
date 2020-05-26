@@ -209,6 +209,21 @@ func (k ExecutionLayerKeeper) GetAllValidators(ctx sdk.Context) (validators []ty
 	return validators
 }
 
+func (k ExecutionLayerKeeper) GetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) (validator types.Validator, found bool) {
+	store := ctx.KVStore(k.HashMapStoreKey)
+	opAddr := store.Get(types.GetValidatorByConsAddrKey(consAddr))
+	if opAddr == nil {
+		return validator, false
+	}
+	return k.GetValidator(ctx, opAddr)
+}
+
+func (k ExecutionLayerKeeper) SetValidatorByConsAddr(ctx sdk.Context, validator types.Validator) {
+	store := ctx.KVStore(k.HashMapStoreKey)
+	consAddr := sdk.ConsAddress(validator.ConsPubKey.Address())
+	store.Set(types.GetValidatorByConsAddrKey(consAddr), validator.OperatorAddress)
+}
+
 // -----------------------------------------------------------------------------------------------------------
 
 // GetProxyContractHash retrieves proxy_contract_hash

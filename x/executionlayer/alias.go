@@ -20,8 +20,14 @@ var (
 	NewUnitHashMap = types.NewUnitHashMap
 
 	// variable aliases
-	ModuleCdc    = types.ModuleCdc
-	ValidatorKey = types.ValidatorKey
+	ModuleCdc               = types.ModuleCdc
+	ValidatorKey            = types.ValidatorKey
+	ValidatorsByConsAddrKey = types.ValidatorsByConsAddrKey
+
+	// error
+	ErrValidatorOwnerExists            = types.ErrValidatorOwnerExists
+	ErrValidatorPubKeyExists           = types.ErrValidatorPubKeyExists
+	ErrValidatorPubKeyTypeNotSupported = types.ErrValidatorPubKeyTypeNotSupported
 )
 
 type (
