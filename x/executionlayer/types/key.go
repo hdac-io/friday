@@ -24,8 +24,9 @@ const (
 )
 
 var (
-	EEStateKey   = []byte{0x11}
-	ValidatorKey = []byte{0x21}
+	EEStateKey              = []byte{0x11}
+	ValidatorKey            = []byte{0x21}
+	ValidatorsByConsAddrKey = []byte{0x22}
 )
 
 type (
@@ -43,4 +44,8 @@ func GetEEStateKey(height int64) []byte {
 
 func GetValidatorKey(operatorAddr sdk.AccAddress) []byte {
 	return append(ValidatorKey, operatorAddr.Bytes()...)
+}
+
+func GetValidatorByConsAddrKey(addr sdk.ConsAddress) []byte {
+	return append(ValidatorsByConsAddrKey, addr.Bytes()...)
 }
