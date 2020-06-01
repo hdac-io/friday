@@ -644,6 +644,11 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simu
 		return false, err.Error()
 	}
 
+	replacedSessionArgs, err := ReplaceFromBech32ToHex(msg.SessionArgs)
+	if err != nil {
+		return false, err.Error()
+	}
+
 	executeAddress := []byte{}
 	if len(msg.ExecAddress) == sdk.AddrLen {
 		executeAddress = msg.ExecAddress
@@ -655,7 +660,7 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simu
 	deploys := []*ipc.DeployItem{}
 	deploy, err := util.MakeDeploy(
 		executeAddress,
-		msg.SessionType, msg.SessionCode, msg.SessionArgs,
+		msg.SessionType, msg.SessionCode, replacedSessionArgs,
 		util.HASH, proxyContractHash, paymentArgsJson,
 		types.BASIC_GAS, ctx.BlockTime().Unix(), ctx.ChainID())
 	if err != nil {
