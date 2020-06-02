@@ -90,7 +90,7 @@ func DeployArgsToJsonString(args []*consensus.Deploy_Arg) (string, error) {
 func ReplaceFromBech32ToHex(valueStr string) (string, error) {
 	res := valueStr
 
-	r := regexp.MustCompile(`\"hash\":\{\"hash\":\"(fridaycontracthash[a-zA-Z0-9+/]+)\"`)
+	r := regexp.MustCompile(fmt.Sprintf(`\"hash\":\{\"hash\":\"(%s[a-zA-Z0-9+/]+)\"`, sdk.Bech32PrefixContractHash))
 	for _, matchedGroup := range r.FindAllStringSubmatch(valueStr, -1) {
 		hashStr := matchedGroup[1]
 		hashaddr, err := sdk.ContractHashAddressFromBech32(hashStr)
@@ -104,7 +104,7 @@ func ReplaceFromBech32ToHex(valueStr string) (string, error) {
 		res = strings.Replace(res, filterHashStr, replaceStr, -1)
 	}
 
-	r = regexp.MustCompile(`\"uref\":\{\"uref\":\"(fridaycontracturef[a-zA-Z0-9+/]+)\"`)
+	r = regexp.MustCompile(fmt.Sprintf(`\"uref\":\{\"uref\":\"(%s[a-zA-Z0-9+/]+)\"`, sdk.Bech32PrefixContractURef))
 	for _, matchedGroup := range r.FindAllStringSubmatch(valueStr, -1) {
 		urefStr := matchedGroup[1]
 		urefaddr, err := sdk.ContractUrefAddressFromBech32(urefStr)
@@ -118,7 +118,7 @@ func ReplaceFromBech32ToHex(valueStr string) (string, error) {
 		res = strings.Replace(res, filterUrefStr, replaceStr, -1)
 	}
 
-	r = regexp.MustCompile(`\"address\":\{\"account\":\"(friday[a-zA-Z0-9+/]+)\"`)
+	r = regexp.MustCompile(fmt.Sprintf(`{\"name\":\"address\",\"value\":{\"cl_type\":\{\"list\_type\":\{\"inner\":\{\"simple_type\":\"U8\"\}\}\},\"value\":\{\"bytes\_value\":\"(%s[a-zA-Z0-9+/]+)\"\}\}\}`, sdk.Bech32PrefixAccAddr))
 	for _, matchedGroup := range r.FindAllStringSubmatch(valueStr, -1) {
 		accountStr := matchedGroup[1]
 		accountAddr, err := sdk.AccAddressFromBech32(accountStr)
@@ -127,8 +127,8 @@ func ReplaceFromBech32ToHex(valueStr string) (string, error) {
 		}
 		accountHex := base64.StdEncoding.EncodeToString(accountAddr.Bytes())
 
-		filterAccountStr := `"address":{"account":"` + accountStr
-		replaceStr := `"address":{"account":"` + accountHex
+		filterAccountStr := `{"name":"address","value":{"cl_type":{"list_type":{"inner":{"simple_type":"U8"}}},"value":{"bytes_value":"` + accountStr
+		replaceStr := `{"name":"address","value":{"cl_type":{"list_type":{"inner":{"simple_type":"U8"}}},"value":{"bytes_value":"` + accountHex
 		res = strings.Replace(res, filterAccountStr, replaceStr, -1)
 	}
 
