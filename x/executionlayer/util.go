@@ -1,6 +1,7 @@
 package executionlayer
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"regexp"
@@ -96,8 +97,11 @@ func ReplaceFromBech32ToHex(valueStr string) (string, error) {
 		if err != nil {
 			return valueStr, err
 		}
-		hashaddrhex := hex.EncodeToString(hashaddr.Bytes())
-		res = strings.Replace(res, hashStr, hashaddrhex, -1)
+		hashaddrhex := base64.StdEncoding.EncodeToString(hashaddr.Bytes())
+
+		filterHashStr := `"hash":{"hash":"` + hashStr
+		replaceStr := `"hash":{"hash":"` + hashaddrhex
+		res = strings.Replace(res, filterHashStr, replaceStr, -1)
 	}
 
 	r = regexp.MustCompile(`\"uref\":\{\"uref\":\"(fridaycontracturef[a-zA-Z0-9+/]+)\"`)
@@ -107,8 +111,11 @@ func ReplaceFromBech32ToHex(valueStr string) (string, error) {
 		if err != nil {
 			return valueStr, err
 		}
-		urefaddrhex := hex.EncodeToString(urefaddr.Bytes())
-		res = strings.Replace(res, urefStr, urefaddrhex, -1)
+		urefaddrhex := base64.StdEncoding.EncodeToString(urefaddr.Bytes())
+
+		filterUrefStr := `"uref":{"uref":"` + urefStr
+		replaceStr := `"uref":{"uref":"` + urefaddrhex
+		res = strings.Replace(res, filterUrefStr, replaceStr, -1)
 	}
 
 	r = regexp.MustCompile(`\"address\":\{\"account\":\"(friday[a-zA-Z0-9+/]+)\"`)
@@ -118,8 +125,11 @@ func ReplaceFromBech32ToHex(valueStr string) (string, error) {
 		if err != nil {
 			return valueStr, err
 		}
-		accountHex := hex.EncodeToString(accountAddr.Bytes())
-		res = strings.Replace(res, accountStr, accountHex, -1)
+		accountHex := base64.StdEncoding.EncodeToString(accountAddr.Bytes())
+
+		filterAccountStr := `"address":{"account":"` + accountStr
+		replaceStr := `"address":{"account":"` + accountHex
+		res = strings.Replace(res, filterAccountStr, replaceStr, -1)
 	}
 
 	return res, nil
