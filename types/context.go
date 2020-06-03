@@ -55,6 +55,12 @@ func (c Context) IsCheckTx() bool                 { return c.checkTx }
 func (c Context) MinGasPrices() DecCoins          { return c.minGasPrice }
 func (c Context) EventManager() *EventManager     { return c.eventManager }
 func (c Context) CandidateBlock() *CandidateBlock { return c.candidateBlock }
+func (c Context) UBlockHeight() uint64 {
+	if c.header.Height < 0 {
+		return 0
+	}
+	return uint64(c.header.Height)
+}
 
 // clone the header before returning
 func (c Context) BlockHeader() abci.Header {

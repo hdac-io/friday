@@ -28,6 +28,7 @@ func EndBlocker(ctx sdk.Context, req abci.RequestEndBlock, k ExecutionLayerKeepe
 	stepRequest := &ipc.StepRequest{
 		ParentStateHash: ctx.CandidateBlock().State,
 		BlockTime:       uint64(ctx.BlockTime().Unix()),
+		BlockHeight:     ctx.UBlockHeight(),
 		ProtocolVersion: &protocolVersion,
 	}
 	res, err := k.client.Step(ctx.Context(), stepRequest)
