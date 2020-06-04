@@ -101,6 +101,7 @@ func InitGenesis(
 	}
 
 	keeper.SetProxyContractHash(ctx, proxyContractHash)
+	keeper.SetProtocolVersion(ctx, *genesisConfig.ProtocolVersion)
 	keeper.SetUnitHashMap(ctx, types.NewUnitHashMap(ctx.CandidateBlock().State))
 
 	return validatorUpdates
@@ -111,7 +112,7 @@ func ExportGenesis(ctx sdk.Context, keeper ExecutionLayerKeeper) types.GenesisSt
 	existAccounts := keeper.AccountKeeper.GetAllAccounts(ctx)
 
 	stateHash := keeper.GetUnitHashMap(ctx, ctx.BlockHeight()).EEState
-	protocolVersion := keeper.MustGetProtocolVersion(ctx)
+	protocolVersion := keeper.GetProtocolVersion(ctx)
 
 	stakeAmounts := map[string]string{}
 	for _, validator := range validators {

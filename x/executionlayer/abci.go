@@ -18,17 +18,18 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, elk ExecutionLaye
 	candidateBlock := ctx.CandidateBlock()
 	candidateBlock.Hash = req.GetHash()
 	candidateBlock.State = unitHash.EEState
+	protocolVersion := elk.GetProtocolVersion(ctx)
+	candidateBlock.ProtocolVersion = &protocolVersion
 }
 
 func EndBlocker(ctx sdk.Context, req abci.RequestEndBlock, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
 	var validatorUpdates []abci.ValidatorUpdate
 
 	// step
-	protocolVersion := k.MustGetProtocolVersion(ctx)
 	stepRequest := &ipc.StepRequest{
 		ParentStateHash: ctx.CandidateBlock().State,
 		BlockTime:       uint64(ctx.BlockTime().Unix()),
-		ProtocolVersion: &protocolVersion,
+		ProtocolVersion: ctx.CandidateBlock().ProtocolVersion,
 	}
 	res, err := k.client.Step(ctx.Context(), stepRequest)
 	if err != nil {

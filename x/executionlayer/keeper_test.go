@@ -65,23 +65,6 @@ func TestUnitHashMapInCorrectInput(t *testing.T) {
 	unitHash := input.elk.GetUnitHashMap(input.ctx, input.ctx.BlockHeight())
 	assert.NotEqual(t, eeState, unitHash.EEState)
 }
-
-func TestMustGetProtocolVersion(t *testing.T) {
-	expected, err := types.ToProtocolVersion(types.DefaultGenesisState().GenesisConf.Genesis.ProtocolVersion)
-	assert.Nil(t, err)
-
-	input := setupTestInput()
-	got := input.elk.MustGetProtocolVersion(input.ctx)
-	assert.Equal(t, *expected, got)
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("MustGetProtocolVersion below should panic!")
-		}
-	}()
-	input.elk.MustGetProtocolVersion(sdk.Context{})
-}
-
 func TestMarsahlAndUnMarshal(t *testing.T) {
 	src := &transforms.TransformEntry{
 		Transform: &transforms.Transform{TransformInstance: &transforms.Transform_Write{Write: &transforms.TransformWrite{Value: &state.StoredValue{Variants: &state.StoredValue_ClValue{ClValue: &state.CLValue{ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_BOOL}}, SerializedValue: []byte{1, 2, 3}}}}}}}}
@@ -169,4 +152,15 @@ func TestProxyContractKeeper(t *testing.T) {
 	res := input.elk.GetProxyContractHash(input.ctx)
 
 	assert.Equal(t, contractHash, res)
+}
+
+func TestProtocolVersionKeeper(t *testing.T) {
+	input := setupTestInput()
+
+	src := state.ProtocolVersion{Major: 1, Minor: 2, Patch: 3}
+
+	input.elk.SetProtocolVersion(input.ctx, src)
+	res := input.elk.GetProtocolVersion(input.ctx)
+
+	assert.Equal(t, src, res)
 }

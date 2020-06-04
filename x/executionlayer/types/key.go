@@ -20,6 +20,7 @@ const (
 	GenesisAccountKey    = "genesisaccount"
 	CandidateBlockKey    = "candidateblock"
 	ProxyContractHashKey = "proxycontractkey"
+	ProtoclVersionKey    = "protocolversion"
 )
 
 var (

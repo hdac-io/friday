@@ -98,7 +98,7 @@ func queryBalanceDetail(ctx sdk.Context, path []string, req abci.RequestQuery, k
 	}
 
 	eeState := keeper.GetUnitHashMap(ctx, req.GetHeight()).EEState
-	protocolVersion := keeper.MustGetProtocolVersion(ctx)
+	protocolVersion := keeper.GetProtocolVersion(ctx)
 	val, errMsg := grpc.QueryBalance(keeper.client, eeState, param.Address, &protocolVersion)
 	if errMsg != "" {
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", errMsg)
@@ -174,7 +174,7 @@ func getQueryResult(ctx sdk.Context, k ExecutionLayerKeeper,
 		arrPath = strings.Split(path, "/")
 	}
 
-	protocolVersion := k.MustGetProtocolVersion(ctx)
+	protocolVersion := k.GetProtocolVersion(ctx)
 	stateHash := k.GetUnitHashMap(ctx, ctx.BlockHeight()).EEState
 	if len(stateHash) == 0 {
 		stateHash = ctx.CandidateBlock().State
