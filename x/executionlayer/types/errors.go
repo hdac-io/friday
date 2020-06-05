@@ -19,7 +19,7 @@ const (
 	CodeInvalidAddress             sdk.CodeType = sdk.CodeInvalidAddress
 	CodeGRpcExecuteMissingParent   sdk.CodeType = 301
 	CodeGRpcExecuteDeployGasError  sdk.CodeType = 302
-	CodeGRpcExecuteDeployExecError sdk.CodeType = 302
+	CodeGRpcExecuteDeployExecError sdk.CodeType = 303
 )
 
 // ErrPublicKeyDecode is an error
