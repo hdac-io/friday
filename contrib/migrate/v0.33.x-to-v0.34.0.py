@@ -9,13 +9,6 @@ def process_raw_genesis(genesis, parsed_args):
         genesis['consensus_params']['block'] = genesis['consensus_params']['block_size']
         del genesis['consensus_params']['block_size']
 
-    genesis['app_state']['crisis'] = {
-        'constant_fee': {
-            'amount': '1333000000',  # ~$5,000 worth of uatoms
-            'denom': 'uatom',
-        },
-    }
-
     # migrate governance state as the internal structure of proposals has changed
     migrate_gov_data(genesis['app_state']['gov'])
 

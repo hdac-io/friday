@@ -9,6 +9,7 @@ import (
 
 	"github.com/hdac-io/friday/codec"
 	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/executionlayer"
 	"github.com/hdac-io/friday/x/slashing"
 	"github.com/hdac-io/friday/x/staking"
 )
@@ -28,7 +29,7 @@ func (app *FridayApp) ExportAppStateAndValidators(forZeroHeight bool, jailWhiteL
 	if err != nil {
 		return nil, nil, err
 	}
-	validators = staking.WriteValidators(ctx, app.stakingKeeper)
+	validators = executionlayer.WriteValidators(ctx, app.executionLayerKeeper)
 	return appState, validators, nil
 }
 
@@ -52,9 +53,6 @@ func (app *FridayApp) prepForZeroHeightGenesis(ctx sdk.Context, jailWhiteList []
 		}
 		whiteListMap[addr] = true
 	}
-
-	/* Just to be safe, assert the invariants on current state. */
-	app.crisisKeeper.AssertInvariants(ctx)
 
 	/* Handle fee distribution state. */
 

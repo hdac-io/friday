@@ -141,8 +141,8 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, accountKeeper types.AccountKeep
 // the keeper.
 func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	params := keeper.GetParams(ctx)
-	lastTotalPower := keeper.GetLastTotalPower(ctx)
-	validators := keeper.GetAllValidators(ctx)
+	// lastTotalPower := keeper.GetLastTotalPower(ctx)
+	// validators := keeper.GetAllValidators(ctx)
 	delegations := keeper.GetAllDelegations(ctx)
 	var unbondingDelegations []types.UnbondingDelegation
 	keeper.IterateUnbondingDelegations(ctx, func(_ int64, ubd types.UnbondingDelegation) (stop bool) {
@@ -161,10 +161,10 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	})
 
 	return types.GenesisState{
-		Params:               params,
-		LastTotalPower:       lastTotalPower,
-		LastValidatorPowers:  lastValidatorPowers,
-		Validators:           validators,
+		Params: params,
+		// LastTotalPower:       lastTotalPower,
+		// LastValidatorPowers:  lastValidatorPowers,
+		// Validators:           validators,
 		Delegations:          delegations,
 		UnbondingDelegations: unbondingDelegations,
 		Redelegations:        redelegations,
