@@ -79,6 +79,7 @@ func InitGenesis(
 
 		validator.Stake = ""
 		keeper.SetValidator(ctx, validator.OperatorAddress, validator)
+		keeper.SetValidatorByConsAddr(ctx, validator)
 	}
 	candidateBlock.Bonds = bonds
 

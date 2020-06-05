@@ -2,22 +2,24 @@ package types
 
 import (
 	"fmt"
+	"strings"
+
 	sdk "github.com/hdac-io/friday/types"
 )
 
 const (
 	DefaultCodespace sdk.CodespaceType = ModuleName
 
-	CodePublicKeyDecode      sdk.CodeType = 101
-	CodeProtocolVersionParse sdk.CodeType = 102
-	CodeTomlParse            sdk.CodeType = 103
-	CodeInvalidValidator     sdk.CodeType = 201
-	CodeInvalidDelegation    sdk.CodeType = 202
-	CodeInvalidInput         sdk.CodeType = 203
-	CodeInvalidAddress		 sdk.CodeType = sdk.CodeInvalidAddress
-	CodeGRpcExecuteMissingParent sdk.CodeType = 301
-	CodeGRpcExecuteDeployGasError sdk.CodeType = 302
-	CodeGRpcExecuteDeployExecError sdk.CodeType = 302
+	CodePublicKeyDecode            sdk.CodeType = 101
+	CodeProtocolVersionParse       sdk.CodeType = 102
+	CodeTomlParse                  sdk.CodeType = 103
+	CodeInvalidValidator           sdk.CodeType = 201
+	CodeInvalidDelegation          sdk.CodeType = 202
+	CodeInvalidInput               sdk.CodeType = 203
+	CodeInvalidAddress             sdk.CodeType = sdk.CodeInvalidAddress
+	CodeGRpcExecuteMissingParent   sdk.CodeType = 301
+	CodeGRpcExecuteDeployGasError  sdk.CodeType = 302
+	CodeGRpcExecuteDeployExecError sdk.CodeType = 303
 )
 
 // ErrPublicKeyDecode is an error
@@ -75,4 +77,17 @@ func ErrGRpcExecuteDeployGasError(codespace sdk.CodespaceType) sdk.Error {
 
 func ErrGRpcExecuteDeployExecError(codespace sdk.CodespaceType, msg string) sdk.Error {
 	return sdk.NewError(codespace, CodeGRpcExecuteDeployExecError, "execution engine - deploy error - execute : ", msg)
+}
+
+func ErrValidatorOwnerExists(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "validator already exist for this operator address, must use new validator operator address")
+}
+
+func ErrValidatorPubKeyExists(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "validator already exist for this pubkey, must use new validator pubkey")
+}
+
+func ErrValidatorPubKeyTypeNotSupported(codespace sdk.CodespaceType, keyType string, supportedTypes []string) sdk.Error {
+	msg := fmt.Sprintf("validator pubkey type %s is not supported, must use %s", keyType, strings.Join(supportedTypes, ","))
+	return sdk.NewError(codespace, CodeInvalidValidator, msg)
 }

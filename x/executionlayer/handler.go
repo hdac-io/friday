@@ -13,6 +13,8 @@ import (
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/util"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
+	"github.com/hdac-io/tendermint/libs/common"
+	tmtypes "github.com/hdac-io/tendermint/types"
 )
 
 // NewHandler returns a handler for "executionlayer" type messages.
@@ -107,23 +109,34 @@ func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExe
 }
 
 func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgCreateValidator, simulate bool) sdk.Result {
-	proxyContractHash := k.GetProxyContractHash(ctx)
-	validator, found := k.GetValidator(ctx, msg.ValidatorAddress)
-	if !found {
-		validator = types.Validator{}
+
+	if _, found := k.GetValidator(ctx, msg.ValidatorAddress); found {
+		return ErrValidatorOwnerExists(types.DefaultCodespace).Result()
 	}
 
-	validator.OperatorAddress = msg.ValidatorAddress
-	validator.ConsPubKey = msg.ConsPubKey
-	validator.Stake = ""
-	description, err := validator.Description.UpdateDescription(msg.Description)
-	validator.Description = description
+	if _, found := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(msg.ConsPubKey)); found {
+		return ErrValidatorPubKeyExists(types.DefaultCodespace).Result()
+	}
+
+	if _, err := msg.Description.EnsureLength(); err != nil {
+		return err.Result()
+	}
+
+	if ctx.ConsensusParams() != nil {
+		tmPubKey := tmtypes.TM2PB.PubKey(msg.ConsPubKey)
+		if !common.StringInSlice(tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes) {
+			return ErrValidatorPubKeyTypeNotSupported(types.DefaultCodespace,
+				tmPubKey.Type,
+				ctx.ConsensusParams().Validator.PubKeyTypes).Result()
+		}
+	}
+
+	proxyContractHash := k.GetProxyContractHash(ctx)
+	validator := types.NewValidator(msg.ValidatorAddress, msg.ConsPubKey, msg.Description, "")
 
 	if proxyContractHash != nil {
-		paymentAmount := "0"
-		if err == nil {
-			paymentAmount = types.BASIC_PAY_AMOUNT
-		}
+
+		paymentAmount := types.BASIC_PAY_AMOUNT
 
 		sessionArgsStr, parseError := getPayAmountSessionArgsStr(paymentAmount)
 
@@ -138,9 +151,7 @@ func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg type
 
 		result, log := execute(ctx, k, msgExecute, simulate)
 
-		if err != nil {
-			return getResult(false, err.Error())
-		} else if parseError != nil {
+		if parseError != nil {
 			return getResult(false, parseError.Error())
 		} else if log != "" || !result {
 			return getResult(false, log)
@@ -148,6 +159,7 @@ func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg type
 	}
 
 	k.SetValidator(ctx, msg.ValidatorAddress, validator)
+	k.SetValidatorByConsAddr(ctx, validator)
 	return getResult(true, "")
 }
 
