@@ -644,9 +644,15 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simu
 		return false, err.Error()
 	}
 
-	replacedSessionArgs, err := ReplaceFromBech32ToHex(isCustomContract, msg.SessionArgs)
+	replacedSessionArgs, addrList, err := ReplaceFromBech32ToHex(isCustomContract, msg.SessionArgs)
 	if err != nil {
 		return false, err.Error()
+	}
+
+	if isCustomContract {
+		for _, unitAddr := range addrList {
+			k.SetAccountIfNotExists(ctx, unitAddr)
+		}
 	}
 
 	executeAddress := []byte{}

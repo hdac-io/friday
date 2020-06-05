@@ -87,15 +87,16 @@ func DeployArgsToJsonString(args []*consensus.Deploy_Arg) (string, error) {
 	return str, nil
 }
 
-func ReplaceFromBech32ToHex(isCustomContractRun bool, valueStr string) (string, error) {
+func ReplaceFromBech32ToHex(isCustomContractRun bool, valueStr string) (string, []sdk.AccAddress, error) {
 	res := valueStr
+	addrList := []sdk.AccAddress{}
 	if isCustomContractRun {
 		r := regexp.MustCompile(fmt.Sprintf(`\"hash\":\{\"hash\":\"(%s[a-zA-Z0-9+/]+)\"`, sdk.Bech32PrefixContractHash))
 		for _, matchedGroup := range r.FindAllStringSubmatch(valueStr, -1) {
 			hashStr := matchedGroup[1]
 			hashaddr, err := sdk.ContractHashAddressFromBech32(hashStr)
 			if err != nil {
-				return valueStr, err
+				return valueStr, []sdk.AccAddress{}, err
 			}
 			hashaddrhex := base64.StdEncoding.EncodeToString(hashaddr.Bytes())
 
@@ -109,7 +110,7 @@ func ReplaceFromBech32ToHex(isCustomContractRun bool, valueStr string) (string, 
 			urefStr := matchedGroup[1]
 			urefaddr, err := sdk.ContractUrefAddressFromBech32(urefStr)
 			if err != nil {
-				return valueStr, err
+				return valueStr, []sdk.AccAddress{}, err
 			}
 			urefaddrhex := base64.StdEncoding.EncodeToString(urefaddr.Bytes())
 
@@ -123,8 +124,9 @@ func ReplaceFromBech32ToHex(isCustomContractRun bool, valueStr string) (string, 
 			accountStr := matchedGroup[1]
 			accountAddr, err := sdk.AccAddressFromBech32(accountStr)
 			if err != nil {
-				return valueStr, err
+				return valueStr, []sdk.AccAddress{}, err
 			}
+			addrList = append(addrList, accountAddr)
 			accountHex := base64.StdEncoding.EncodeToString(accountAddr.Bytes())
 
 			filterAccountStr := `{"name":"address","value":{"cl_type":{"list_type":{"inner":{"simple_type":"U8"}}},"value":{"bytes_value":"` + accountStr
@@ -133,5 +135,5 @@ func ReplaceFromBech32ToHex(isCustomContractRun bool, valueStr string) (string, 
 		}
 	}
 
-	return res, nil
+	return res, addrList, nil
 }
