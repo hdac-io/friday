@@ -247,6 +247,8 @@ class TestSingleNode():
         # Reason: Just enough value to ensure that tx become invalid
         assert(self.basic_coin_amount / 3 < int(res_after))
 
+        time.sleep(self.tx_block_time * 3 + 1)
+
         print("Unbond and try to transfer")
         print("Unbond first")
         tx_hash_unbond, success = cmd.unbond(self.wallet_password, self.basic_coin_amount / 30, self.bonding_fee, self.wallet_anna)
