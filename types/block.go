@@ -6,8 +6,8 @@ import (
 )
 
 type CandidateBlock struct {
-	Hash            []byte      `json:"hash"`
-	State           []byte      `json:"state"`
-	Bonds           []*ipc.Bond `json:"bonds"`
-	ProtocolVersion *state.ProtocolVersion
+	Hash            []byte                 `json:"hash"`
+	State           []byte                 `json:"state"`
+	Bonds           []*ipc.Bond            `json:"bonds"`
+	ProtocolVersion *state.ProtocolVersion `json:"protocol_version"`
 }
