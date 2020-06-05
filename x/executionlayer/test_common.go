@@ -166,7 +166,7 @@ func counterDefine(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 		panic(err)
 	}
 	cntDefCode := util.LoadWasmFile(path.Join(contractPath, counterDefineWasm))
-	protocolVersion := input.elk.MustGetProtocolVersion(input.ctx)
+	protocolVersion := input.elk.GetProtocolVersion(input.ctx)
 	genesisAddr := input.elk.GetGenesisAccounts(input.ctx)[0]
 
 	deploy, err := util.MakeDeploy(genesisAddr.Address, util.WASM, cntDefCode, "",
@@ -215,7 +215,7 @@ func counterCall(keeper ExecutionLayerKeeper, parentStateHash []byte) []byte {
 		panic(err)
 	}
 	cntCallCode := util.LoadWasmFile(path.Join(contractPath, counterCallWasm))
-	protocolVersion := input.elk.MustGetProtocolVersion(input.ctx)
+	protocolVersion := input.elk.GetProtocolVersion(input.ctx)
 	genesisAddr := input.elk.GetGenesisAccounts(input.ctx)[0]
 
 	timestamp = time.Now().Unix()

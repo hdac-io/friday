@@ -38,15 +38,6 @@ func NewExecutionLayerKeeper(
 	}
 }
 
-func (k ExecutionLayerKeeper) MustGetProtocolVersion(ctx sdk.Context) state.ProtocolVersion {
-	genesisConf := k.GetGenesisConf(ctx)
-	pv, err := types.ToProtocolVersion(genesisConf.Genesis.ProtocolVersion)
-	if err != nil {
-		panic(fmt.Errorf("System has invalid protocol version: %v", err))
-	}
-	return *pv
-}
-
 // -----------------------------------------------------------------------------------------------------------
 
 // SetUnitHashMap map unitHash to blockHash
@@ -223,4 +214,22 @@ func (k ExecutionLayerKeeper) GetProxyContractHash(ctx sdk.Context) []byte {
 func (k ExecutionLayerKeeper) SetProxyContractHash(ctx sdk.Context, contractHash []byte) {
 	store := ctx.KVStore(k.HashMapStoreKey)
 	store.Set([]byte(types.ProxyContractHashKey), contractHash)
+}
+
+// -----------------------------------------------------------------------------------------------------------
+// GetProtocolVersion retrieves protocol version
+func (k ExecutionLayerKeeper) GetProtocolVersion(ctx sdk.Context) state.ProtocolVersion {
+	store := ctx.KVStore(k.HashMapStoreKey)
+	protocolVersionBytes := store.Get([]byte(types.ProtoclVersionKey))
+	var protocolVersion state.ProtocolVersion
+	k.cdc.UnmarshalBinaryBare(protocolVersionBytes, &protocolVersion)
+
+	return protocolVersion
+}
+
+// SetProtocolVersion save protocol version.
+func (k ExecutionLayerKeeper) SetProtocolVersion(ctx sdk.Context, protocolVersion state.ProtocolVersion) {
+	store := ctx.KVStore(k.HashMapStoreKey)
+	protocolVersionBytes := k.cdc.MustMarshalBinaryBare(protocolVersion)
+	store.Set([]byte(types.ProtoclVersionKey), protocolVersionBytes)
 }

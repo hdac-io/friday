@@ -602,12 +602,14 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simu
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	// Parameter preparation
 	var stateHash []byte
+	var protocolVersion state.ProtocolVersion
 	if simulate {
 		stateHash = k.GetUnitHashMap(ctx, ctx.BlockHeight()).EEState
+		protocolVersion = k.GetProtocolVersion(ctx)
 	} else {
 		stateHash = ctx.CandidateBlock().State
+		protocolVersion = *ctx.CandidateBlock().ProtocolVersion
 	}
-	protocolVersion := k.MustGetProtocolVersion(ctx)
 	log := ""
 
 	paymentArgs := []*consensus.Deploy_Arg{
@@ -704,11 +706,10 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simu
 }
 
 func executeStep(ctx sdk.Context, k ExecutionLayerKeeper) (bool, error) {
-	protocolVersion := k.MustGetProtocolVersion(ctx)
 	stepRequest := &ipc.StepRequest{
 		ParentStateHash: ctx.CandidateBlock().State,
 		BlockTime:       uint64(ctx.BlockTime().Unix()),
-		ProtocolVersion: &protocolVersion,
+		ProtocolVersion: ctx.CandidateBlock().ProtocolVersion,
 	}
 
 	res, err := k.client.Step(ctx.Context(), stepRequest)
@@ -730,7 +731,7 @@ func executeStep(ctx sdk.Context, k ExecutionLayerKeeper) (bool, error) {
 		return false, fmt.Errorf("Unknown result : %s", res.String())
 	}
 
-	postStateHash, bonds, errMsg := grpc.Commit(k.client, stateHash, effects, &protocolVersion)
+	postStateHash, bonds, errMsg := grpc.Commit(k.client, stateHash, effects, ctx.CandidateBlock().ProtocolVersion)
 	if errMsg != "" {
 		return false, fmt.Errorf(errMsg)
 	}
