@@ -278,6 +278,10 @@ def query_tx(tx_hash, client_home: str = ".test_clif"):
     res = _process_executor("clif query tx {} --home {}", tx_hash, client_home, need_output=True)
     return res
 
+def query_contract(mode, address, path, client_home: str = ".test_clif"):
+    client_home = os.path.join(os.environ["HOME"], client_home)
+    res = _process_executor("clif contract query {} {} {} --home {}", mode, address, path, client_home, need_output=True)
+    return res
 
 def is_tx_ok(tx_hash):
     res = query_tx(tx_hash)

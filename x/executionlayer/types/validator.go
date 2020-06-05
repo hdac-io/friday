@@ -251,12 +251,12 @@ func (d Delegators) String() (out string) {
 }
 
 type Voter struct {
-	Address []byte `json:"address" yaml:"address"`
+	Address string `json:"address" yaml:"address"`
 	Amount  string `json:"amount" yaml:"amount"`
 }
 
 // NewVoter - initialize a new voter
-func NewVoter(address sdk.AccAddress, amount string) Voter {
+func NewVoter(address string, amount string) Voter {
 	return Voter{
 		Address: address,
 		Amount:  amount,

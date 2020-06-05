@@ -251,47 +251,69 @@ func queryVoter(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKee
 	var param QueryVoterParams
 
 	err := types.ModuleCdc.UnmarshalJSON(req.Data, &paramUref)
+	var contractKey storedvalue.Key
 	if err != nil {
 		err = types.ModuleCdc.UnmarshalJSON(req.Data, &paramHash)
 		if err != nil {
 			return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 		}
 		param = paramHash
+		contractKey = storedvalue.NewKeyFromHash(param.GetContract().Bytes())
 	} else {
 		param = paramUref
+		uref := storedvalue.NewURef(param.GetContract().Bytes(), state.Key_URef_NONE)
+		contractKey = storedvalue.NewKeyFromURef(uref)
 	}
 
 	storedValue, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
-
 	var resMap map[string]string
 	if !param.GetAddress().Empty() {
 		resMap = storedValue.Contract.NamedKeys.GetVotingDappFromUser(param.GetAddress())
 
 		if !param.GetContract().Empty() {
-			hashStr := hex.EncodeToString(param.GetContract().Bytes())
-			resMap = map[string]string{hashStr: resMap[hashStr]}
+			dappAddressHex := hex.EncodeToString(param.GetContract().Bytes())
+			resMap = map[string]string{dappAddressHex: resMap[dappAddressHex]}
 		}
 	}
 	if !param.GetContract().Empty() {
-		resMap = storedValue.Contract.NamedKeys.GetVotingUserFromDapp(param.GetContract().Bytes())
+		resMap = storedValue.Contract.NamedKeys.GetVotingUserFromDapp(contractKey.ToBytes())
 
 		if !param.GetAddress().Empty() {
-			addressStr := hex.EncodeToString(param.GetAddress())
-			resMap = map[string]string{addressStr: resMap[addressStr]}
+			addressHex := hex.EncodeToString(param.GetAddress())
+			resMap = map[string]string{addressHex: resMap[addressHex]}
 		}
 	}
 
-	voters := types.Voters{}
+	voters := []types.QueryVoterResponse{}
 	for addressStr, amount := range resMap {
-		address, err := hex.DecodeString(addressStr)
+		addressBytes, err := hex.DecodeString(addressStr)
 		if err != nil {
 			return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeInvalidAddress, "Can't convert address {}")
 		}
+		var address sdk.Address
+		if len(addressBytes) == sdk.AddrLen {
+			address = sdk.AccAddress(addressBytes)
+		} else {
+			var key storedvalue.Key
+			key, err, _ := key.FromBytes(addressBytes)
+			if err != nil {
+				return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeInvalidAddress, "Can't convert address {}")
+			}
 
-		voter := types.Voter{
-			Address: address,
-			Amount:  amount,
+			switch key.KeyID {
+			case storedvalue.KEY_ID_HASH:
+				address = sdk.ContractHashAddress(key.Hash)
+			case storedvalue.KEY_ID_UREF:
+				address = sdk.ContractUrefAddress(key.Uref.Address)
+			case storedvalue.KEY_ID_ACCOUNT:
+				address = sdk.AccAddress(key.Account.PublicKey)
+			case storedvalue.KEY_ID_LOCAL:
+			default:
+				return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeInvalidAddress, "Can't convert key")
+			}
 		}
+
+		voter := types.NewQueryVoterResponse(address.String(), amount)
 		voters = append(voters, voter)
 	}
 
