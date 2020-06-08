@@ -85,7 +85,8 @@ class TestMultiNodeSimple:
                 zip(self.nodes_address[1:], self.bls_pubkeys[1:], [self.wallet_anna, self.wallet_hans, self.wallet_olaf], self.monikers[1:]):
 
             print("For {}".format(unit_node_address))
-            unit_val_tx_hash = cmd.create_validator(self.wallet_password, self.create_validator_fee, unit_wallet_alias, unit_pub, unit_moniker)
+            unit_val_tx_hash, success = cmd.create_validator(self.wallet_password, self.create_validator_fee, unit_wallet_alias, unit_pub, unit_moniker)
+            assert(success == True)
             val_tx_hashes.append(unit_val_tx_hash)
 
         print("Wait for switching next block...")
@@ -97,7 +98,8 @@ class TestMultiNodeSimple:
                 zip(self.nodes_address[1:], self.bls_pubkeys[1:], [self.wallet_anna, self.wallet_hans, self.wallet_olaf], self.monikers[1:]):
 
             print("For {}".format(unit_node_address))
-            unit_bond_hash = cmd.bond(self.wallet_password, self.basic_bond, self.bonding_fee, unit_wallet_alias)
+            unit_bond_hash, success = cmd.bond(self.wallet_password, self.basic_bond, self.bonding_fee, unit_wallet_alias)
+            assert(success == True)
             bond_hashes.append(unit_bond_hash)
 
         print("Wait for switching next block...")
