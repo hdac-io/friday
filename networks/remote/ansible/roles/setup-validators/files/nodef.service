@@ -1,0 +1,17 @@
+[Unit]
+Description=nodef
+Requires=network-online.target ee.service
+After=network-online.target
+
+[Service]
+Restart=on-failure
+User=nodef
+Group=nodef
+PermissionsStartOnly=true
+ExecStart=/usr/bin/nodef start > /home/nodef/.nodef/nodef.log
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target
+

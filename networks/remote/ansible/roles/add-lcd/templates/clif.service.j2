@@ -1,0 +1,17 @@
+[Unit]
+Description=clif
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+Restart=on-failure
+User=nodef
+Group=nodef
+PermissionsStartOnly=true
+ExecStart=/usr/bin/clif rest-server --laddr {{CLIF_ADDRESS}}
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,0 +1,17 @@
+---
+
+- hosts: all
+  any_errors_fatal: true
+  gather_facts: no
+  vars:
+    - service: nodef
+  roles:
+    - stop
+
+- hosts: all
+  any_errors_fatal: true
+  gather_facts: no
+  vars:
+    - service: ee
+  roles:
+    - stop

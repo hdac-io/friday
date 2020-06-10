@@ -1,0 +1,210 @@
+---
+
+
+- name: install pip
+  yum:
+    name: python2-pip
+    state: latest
+ 
+- name: install pexpect
+  pip:
+    name: pexpect
+  become: yes
+
+- name: Ensure keys folder exists locally
+  file: path=keys state=directory
+  connection: local
+  run_once: true
+  become: no
+
+- name: Create nodef user
+  user: name=nodef home=/home/nodef shell=/bin/bash
+
+- name: Copy binary
+  copy:
+    src: "{{BINARY}}"
+    dest: /usr/bin
+    mode: 0755
+
+- name: Copy ee binary
+  copy:
+    src: "{{EE_BINARIY}}release/casperlabs-engine-grpc-server"
+    dest: "/usr/bin"
+    mode: 0755
+
+- name: Copy ee manifest
+  become: yes 
+  become_user: nodef
+  copy:
+    src: "{{MANIFEST}}"
+    dest: "/home/nodef/.nodef/config/"
+    mode: 0755
+
+- name: find wasm list
+  find:
+    path: "{{EE_BINARIY}}wasm32-unknown-unknown/release/"
+    patterns: "*.wasm"
+  register: list_wasm_files
+  run_once: yes
+  connection: local
+  
+- name: copy contract wasm binaries
+  copy:
+    src: "{{item.path}}"
+    dest: "/home/nodef/.nodef/contracts/"
+  become: yes
+  become_user: nodef
+  loop: "{{ list_wasm_files.files }}"
+
+- name: Copy EE service file
+  copy: src=ee.service dest=/etc/systemd/system/ee.service mode=0755
+  notify: reload systemd
+
+- name: Copy service file
+  copy: src=nodef.service dest=/etc/systemd/system/nodef.service mode=0755
+  notify: reload systemd
+
+- name: Get node ID
+  command: "cat /etc/nodeid"
+  changed_when: false
+  register: nodeid
+
+
+- name: Create account key
+  become: yes 
+  become_user: nodef
+  expect:
+    command: "clif keys add node{{nodeid.stdout_lines[0]}}"
+    responses:
+      'Enter a passphrase to encrypt your key to disk:': "!@#$5678"
+      'Repeat the passphrase:': "!@#$5678"
+    echo: yes
+
+- name: Get account key
+  command: "clif keys show node{{nodeid.stdout_lines[0]}} -a"
+  become: yes 
+  become_user: nodef
+  changed_when: false
+  register: accountkey
+
+
+- name: Clear local keys
+  file: path=keys/ state=absent
+  connection: local
+  run_once: yes
+
+- name: Mkdir keys
+  connection: local
+  file: path=keys/ state=directory
+  run_once: yes
+
+- name: Write key file
+  copy: content="{{ accountkey.stdout_lines[0] }}" dest=keys/node{{nodeid.stdout_lines[0]}}
+  connection: local
+
+- name: Find key files
+  command: "ls keys/"
+  connection: local
+  changed_when: false
+  register: keyfiles
+
+- name: Cat keys
+  command: "cat keys/{{item}}"
+  connection: local
+  changed_when: false
+  loop: "{{ keyfiles.stdout_lines }}"
+  register: catkeys
+
+- name: Set key list fact
+  set_fact:
+    list_key: "{{ list_key | default([]) + [item.stdout] }}"  
+  loop: "{{ catkeys['results'] }}"
+
+
+- name: Generate genesis.json
+  command: "/usr/bin/nodef init node{{nodeid.stdout_lines[0]}} {{CONSENSUS_MODULE}} --chain-id={{TESTNET_NAME}}"
+  become: yes
+  become_user: nodef
+  args:
+    creates: /home/nodef/.nodef/config/genesis.json
+
+  
+- name: Create initial genesis account
+  command: "/usr/bin/nodef add-genesis-account {{ item }} 1000000000stake,1000000000validatortoken"
+  become: yes
+  become_user: nodef
+  args:
+    creates: /home/nodef/.nodef/config/gentx
+  loop: "{{ list_key }}"
+
+- name: Create initial el genesis account
+  command: "/usr/bin/nodef add-el-genesis-account {{ item }} \"1000000000000000000000000000\" \"100000000000000000000\""
+  become: yes
+  become_user: nodef
+  args:
+    creates: /home/nodef/.nodef/config/gentx
+  loop: "{{ list_key }}"
+
+
+- name: Load chainsepc
+  command: "/usr/bin/nodef load-chainspec /home/nodef/.nodef/config/manifest.toml"
+  become: yes
+  become_user: nodef
+
+- name: Create initial transaction
+  expect:
+    command: "/usr/bin/nodef gentx --name node{{nodeid.stdout_lines[0]}} --ip {{inventory_hostname}}"
+    responses:
+      'Password to sign with': "!@#$5678"
+  become: yes
+  become_user: nodef
+  args:
+    creates: /home/nodef/.nodef/config/gentx
+
+
+- name: Find gentx file
+  command: "ls /home/nodef/.nodef/config/gentx"
+  changed_when: false
+  register: gentxfile
+
+- name: Clear local gen-tx list
+  file: path=files/ state=absent
+  connection: local
+  run_once: yes
+
+- name: Get gen-tx file
+  fetch:
+    dest: files/
+    src: "/home/nodef/.nodef/config/gentx/{{gentxfile.stdout_lines[0]}}"
+    flat: yes
+
+- name: Compress gathered gen-tx files locally
+  archive: path=files/ exclude_path=files/gen-tx.tgz dest=files/gen-tx.tgz
+  run_once: yes
+  connection: local
+
+- name: Unpack gen-tx archive
+  unarchive: src=files/gen-tx.tgz dest=/home/nodef/.nodef/config/gentx owner=nodef
+
+- name: collect gentxs
+  command: "/usr/bin/nodef collect-gentxs"
+  become: yes
+  become_user: nodef
+
+- name: Get canonical genesis.json
+  fetch:
+    dest: files/
+    src: /home/nodef/.nodef/config/genesis.json
+    flat: yes
+  run_once: yes
+
+
+- name: update genesis.json
+  copy:
+    src: files/genesis.json
+    dest: /home/nodef/.nodef/config/genesis.json
+    owner: nodef
+  become: yes
+  become_user: nodef
+
+

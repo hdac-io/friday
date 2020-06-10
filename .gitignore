@@ -27,6 +27,7 @@ clif
 baseapp/data/*
 client/lcd/keys/*
 mytestnet
+build/
 
 # Testing
 coverage.txt

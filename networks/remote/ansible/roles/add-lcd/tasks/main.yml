@@ -1,0 +1,15 @@
+---
+
+- name: Copy binary
+  copy:
+    src: "{{CLIF_BINARY}}"
+    dest: /usr/bin/clif
+    mode: 0755
+  notify: restart clif
+
+- name: Copy service
+  template:
+    src: clif.service.j2
+    dest: /etc/systemd/system/clif.service
+  notify: systemctl
+

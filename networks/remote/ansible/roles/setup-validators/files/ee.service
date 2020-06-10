@@ -1,0 +1,17 @@
+[Unit]
+Description=ee
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+Restart=on-failure
+User=nodef
+Group=nodef
+PermissionsStartOnly=true
+ExecStart=/usr/bin/casperlabs-engine-grpc-server /home/nodef/.casperlabs/.casper-node.sock -z
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target
+

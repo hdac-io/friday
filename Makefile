@@ -13,6 +13,20 @@ ldflags = -X github.com/hdac-io/friday/version.Name=friday \
 
 all: install
 
+build-linux-docker-image:
+	@cd scripts/build-linux && make build-docker-image
+
+build-linux: go.sum
+	@cd scripts/build-linux && make build-ee-linux
+	# xgo it's for cross compile when require cgo
+	docker pull karalabe/xgo-latest 
+	go get github.com/karalabe/xgo
+	xgo --targets=linux/amd64 -out ./build/clif -ldflags="$(LD_FLAGS)" ./cmd/clif
+	xgo --targets=linux/amd64 -out ./build/nodef -ldflags="$(LD_FLAGS)" ./cmd/nodef
+	mv ./build/nodef-linux-amd64 ./build/nodef
+	mv ./build/clif-linux-amd64 ./build/clif
+	
+
 install: go.sum
 	bash ./scripts/install_casperlabs_ee.sh
 	go install -mod=readonly -ldflags '$(ldflags)' ./cmd/nodef

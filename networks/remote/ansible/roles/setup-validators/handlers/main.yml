@@ -1,0 +1,5 @@
+---
+
+- name: reload systemd
+  systemd: name=ee enabled=yes daemon_reload=yes
+  systemd: name=nodef enabled=yes daemon_reload=yes
