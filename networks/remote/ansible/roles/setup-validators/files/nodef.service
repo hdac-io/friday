@@ -5,12 +5,14 @@ After=network-online.target
 
 [Service]
 Restart=on-failure
+RestartSec=5
 User=nodef
 Group=nodef
 PermissionsStartOnly=true
 ExecStart=/usr/bin/nodef start > /home/nodef/.nodef/nodef.log
 ExecReload=/bin/kill -HUP $MAINPID
 KillSignal=SIGTERM
+LimitNOFILE=4096
 
 [Install]
 WantedBy=multi-user.target
