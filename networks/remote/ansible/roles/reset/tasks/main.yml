@@ -1,0 +1,6 @@
+---
+
+- name: Unsafe reset all
+  command: "/usr/bin/nodef unsafe-reset-all"
+  become: yes
+  become_user: nodef

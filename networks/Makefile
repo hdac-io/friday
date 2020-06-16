@@ -70,6 +70,10 @@ validators-start: disclaimer
 	cd remote/ansible && ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i inventory/ec2.py -v -l "tag_Environment_$(CLUSTER_NAME)" -u ec2-user -b -e BINARY=$(BINARY) -e CLIF_BINARY=$(CLIF_BINARY) -e EE_BINARIY=$(EE_BINARIY) -e MANIFEST=$(MANIFEST) -e CONSENSUS_MODULE=$(CONSENSUS_MODULE) -e TESTNET_NAME="$(TESTNET_NAME)" setup-validators.yml
 	cd remote/ansible && ansible-playbook -i inventory/ec2.py -v -l "tag_Environment_$(CLUSTER_NAME)" -u ec2-user -b start.yml
 
+validators-reset: disclaimer
+	cd remote/ansible && ansible-playbook -i inventory/ec2.py -v -l "tag_Environment_$(CLUSTER_NAME)" -u ec2-user -b reset.yml
+
+
 validators-stop: disclaimer
 	cd remote/terraform-aws && terraform workspace select "$(CLUSTER_NAME)" && terraform destroy -force -var SSH_PUBLIC_FILE="$(SSH_PUBLIC_FILE)" -var SSH_PRIVATE_FILE="$(SSH_PRIVATE_FILE)" && terraform workspace select default && terraform workspace delete "$(CLUSTER_NAME)"
 	rm -rf remote/ansible/keys/ remote/ansible/files/
