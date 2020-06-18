@@ -44,9 +44,12 @@ integration_test
     * `01_transfer_to`
         1. Transfer another account
         1. Check balance both of them
-    * `test02_1_simple_bond_unbond`:
+    * `test02_bond_and_unbond`:
         1. Bond token and check whether the tx is valid or not
-        1. Unbond token and check whether the tx is valid or not
+        1. Check balance whether the amount of transferable tokens is (initial amount - bonded amount)
+        1. Try to transfer, less than whole amount, but more than the rest of transferable amount. Expected failure
+        1. Unbond tiny amount
+        1. Try to transfer, less than whole amount, but more than the rest of transferable amount. Expected success
     * `test03_simple_register_nickname`
         1. Register nickname
         1. Get address of the nickname and compare to local wallet query
@@ -54,6 +57,26 @@ integration_test
         1. Set nickname
         1. Transfer by nickname recipient
         1. Check balance by nickname
+    * `test05_custom_contract_execution`
+        1. Try to execute bonding contract by WASM execution
+        1. Parameter are custom JSON
+        1. Check whether executed success or not
+    * `test06_simple_delegate_and_undelegate`
+        1. Delegate token and check delegation status
+        1. Redelegate token and check delegation status
+        1. Undelegate token and check delegation status
+    * `test07_simple_vote_and_unvote`
+        1. Vote to URef contract
+        1. Vote to Hash contract
+        1. Unvote to Hash contract
+    * `test08_simple_claim_reward_and_commission`
+        1. Sleep for inflation proceeding
+        1. Get commission & reward rating
+        1. Claim reward token
+        1. Claim commission token
+        1. Check balance
+    * `test09_fail_to_tx_lack_of_gas`
+        1. Try to transfer with small amount of gas. Should fail
 1. Multi node
     * `setup_class`: `create_validator` & `bond` some token
     * `00_get_balance`: Get balance by wallet alias
