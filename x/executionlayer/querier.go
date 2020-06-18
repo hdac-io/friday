@@ -20,6 +20,8 @@ import (
 const (
 	QueryEEDetail        = "querydetail"
 	QueryEEBalanceDetail = "querybalancedetail"
+	QueryStakeDetail     = "querystakedetail"
+	QueryVoteDetail      = "queryvotedetail"
 
 	QueryValidator    = "queryvalidator"
 	QueryAllValidator = "queryallvalidator"
@@ -39,6 +41,10 @@ func NewQuerier(keeper ExecutionLayerKeeper) sdk.Querier {
 			return queryEEDetail(ctx, path[1:], req, keeper)
 		case QueryEEBalanceDetail:
 			return queryBalanceDetail(ctx, path[1:], req, keeper)
+		case QueryStakeDetail:
+			return queryStakeDetail(ctx, req, keeper)
+		case QueryVoteDetail:
+			return queryVoteDetail(ctx, req, keeper)
 		case QueryValidator:
 			return queryValidator(ctx, req, keeper)
 		case QueryAllValidator:
@@ -102,6 +108,86 @@ func queryBalanceDetail(ctx sdk.Context, path []string, req abci.RequestQuery, k
 	val, errMsg := grpc.QueryBalance(keeper.client, eeState, param.Address, &protocolVersion)
 	if errMsg != "" {
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", errMsg)
+	}
+
+	queryvalue := &state.Value{Value: &state.Value_StringValue{StringValue: val}}
+
+	jsonMarshaler := jsonpb.Marshaler{}
+	res := &bytes.Buffer{}
+	err = jsonMarshaler.Marshal(res, queryvalue)
+
+	if err != nil {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
+	}
+	return res.Bytes(), nil
+}
+
+func queryStakeDetail(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
+	var param QueryGetStakeDetail
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &param)
+	if err != nil {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
+	}
+
+	eeState := keeper.GetUnitHashMap(ctx, req.GetHeight()).EEState
+	protocolVersion := keeper.GetProtocolVersion(ctx)
+	val, errMsg := grpc.QueryStake(keeper.client, eeState, param.Address, &protocolVersion)
+	if errMsg != "" {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", errMsg)
+	}
+
+	queryvalue := &state.Value{Value: &state.Value_StringValue{StringValue: val}}
+
+	jsonMarshaler := jsonpb.Marshaler{}
+	res := &bytes.Buffer{}
+	err = jsonMarshaler.Marshal(res, queryvalue)
+
+	if err != nil {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
+	}
+	return res.Bytes(), nil
+}
+
+func queryVoteDetail(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
+	var param QueryGetVoteDetail
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &param)
+	if err != nil {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
+	}
+
+	eeState := keeper.GetUnitHashMap(ctx, req.GetHeight()).EEState
+	protocolVersion := keeper.GetProtocolVersion(ctx)
+
+	val := ""
+	errMsg := ""
+	if !param.Address.Empty() {
+		val, errMsg = grpc.QueryVoting(keeper.client, eeState, param.Address, &protocolVersion)
+		if errMsg != "" {
+			return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", errMsg)
+		}
+	} else if param.Dapp != "" {
+		var key storedvalue.Key
+		if strings.HasPrefix(param.Dapp, sdk.Bech32PrefixContractURef) {
+			urefAddress, err := sdk.ContractUrefAddressFromBech32(param.Dapp)
+			if err != nil {
+				return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
+			}
+
+			uref := storedvalue.NewURef(urefAddress.Bytes(), state.Key_URef_NONE)
+			key = storedvalue.NewKeyFromURef(uref)
+		} else if strings.HasPrefix(param.Dapp, sdk.Bech32PrefixContractHash) {
+			hash, err := sdk.ContractHashAddressFromBech32(param.Dapp)
+			if err != nil {
+				return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
+			}
+
+			key = storedvalue.NewKeyFromHash(hash.Bytes())
+
+		}
+		val, errMsg = grpc.QueryVoted(keeper.client, eeState, key.ToBytes(), &protocolVersion)
+		if errMsg != "" {
+			return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", errMsg)
+		}
 	}
 
 	queryvalue := &state.Value{Value: &state.Value_StringValue{StringValue: val}}

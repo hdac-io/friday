@@ -335,6 +335,37 @@ func TestRESTBalance(t *testing.T) {
 	require.NotNil(t, res)
 }
 
+func TestRESTStake(t *testing.T) {
+	fromAddr, _, writer, clictx, _ := prepare()
+
+	req := mustNewRequest(t, "GET", fmt.Sprintf("/%s/stake?address=%s", hdacSpecific, fromAddr), nil)
+	res, err := getStakeQuerying(writer, clictx, req, hdacSpecific)
+
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
+func TestRESTVoteUser(t *testing.T) {
+	fromAddr, _, writer, clictx, _ := prepare()
+
+	req := mustNewRequest(t, "GET", fmt.Sprintf("/%s/vote?address=%s", hdacSpecific, fromAddr), nil)
+	res, err := getVoteQuerying(writer, clictx, req, hdacSpecific)
+
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
+func TestRESTVoteDapp(t *testing.T) {
+	_, _, writer, clictx, _ := prepare()
+	contractUrefAddress := sdk.ContractUrefAddress(types.SYSTEM_ACCOUNT)
+
+	req := mustNewRequest(t, "GET", fmt.Sprintf("/%s/vote?dapp=%s", hdacSpecific, contractUrefAddress), nil)
+	res, err := getVoteQuerying(writer, clictx, req, hdacSpecific)
+
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
 func TestRESTGetValidator(t *testing.T) {
 	fromAddr, _, writer, clictx, _ := prepare()
 

@@ -368,6 +368,21 @@ def get_balance(from_value: str, node: str = "tcp://localhost:26657", client_hom
     res = _process_executor("clif hdac getbalance --from {} --node {} --home {}", from_value, node, client_home, need_output=True)
     return res
 
+def get_stake(from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+    client_home = os.path.join(os.environ["HOME"], client_home)
+    res = _process_executor("clif hdac getstake --from {} --node {} --home {}", from_value, node, client_home, need_output=True)
+    return res
+
+def get_vote_user(from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+    client_home = os.path.join(os.environ["HOME"], client_home)
+    res = _process_executor("clif hdac getvote --from {} --node {} --home {}", from_value, node, client_home, need_output=True)
+    return res
+
+def get_vote_dapp(dapp_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
+    client_home = os.path.join(os.environ["HOME"], client_home)
+    res = _process_executor("clif hdac getvote {} --node {} --home {}", dapp_value, node, client_home, need_output=True)
+    return res
+
 def get_validator(validator_address: str, from_value: str, node: str = "tcp://localhost:26657", client_home: str = '.test_clif'):
     client_home = os.path.join(os.environ["HOME"], client_home)
     res = _process_executor("clif hdac validator {} --from {} --node {} --home {}", validator_address, from_value, node, client_home, need_output=True)

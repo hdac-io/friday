@@ -35,12 +35,13 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 	r.HandleFunc(fmt.Sprintf("/%s/redelegate", hdacSpecific), redelegateHandler(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/%s/delegator", hdacSpecific), getDelegatorHandler(cliCtx, storeName)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/%s/vote", hdacSpecific), voteHandler(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/%s/vote", hdacSpecific), getVoteHandler(cliCtx, storeName)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/%s/unvote", hdacSpecific), unvoteHandler(cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/%s/voter", hdacSpecific), getVoterHandler(cliCtx, storeName)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/%s/claim", hdacSpecific), claimHandler(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/%s/reward", hdacSpecific), getRewardHandler(cliCtx, storeName)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/%s/commission", hdacSpecific), getCommissionHandler(cliCtx, storeName)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/%s/balance", hdacSpecific), getBalanceHandler(cliCtx, storeName)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/%s/stake", hdacSpecific), getStakeHandler(cliCtx, storeName)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/%s/validators", hdacSpecific), getValidatorHandler(cliCtx, storeName)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/%s/validators", hdacSpecific), createValidatorHandler(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/%s/validators", hdacSpecific), editValidatorHandler(cliCtx)).Methods("PUT")
@@ -196,6 +197,40 @@ func getBalanceHandler(cliCtx context.CLIContext, storeName string) http.Handler
 		}
 
 		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalancedetail", storeName), bz)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		rest.PostProcessResponseBare(w, cliCtx, res)
+	}
+}
+
+func getStakeHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		bz, err := getStakeQuerying(w, cliCtx, r, storeName)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalancedetail", storeName), bz)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		rest.PostProcessResponseBare(w, cliCtx, res)
+	}
+}
+
+func getVoteHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		bz, err := getVoteQuerying(w, cliCtx, r, storeName)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/queryvotedetail", storeName), bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

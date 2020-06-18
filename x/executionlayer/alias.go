@@ -39,6 +39,8 @@ type (
 	UnitHashMap               = types.UnitHashMap
 	QueryExecutionLayerDetail = types.QueryExecutionLayerDetail
 	QueryGetBalanceDetail     = types.QueryGetBalanceDetail
+	QueryGetStakeDetail       = types.QueryGetStakeDetail
+	QueryGetVoteDetail        = types.QueryGetVoteDetail
 	QueryValidatorParams      = types.QueryValidatorParams
 	QueryDelegatorParams      = types.QueryDelegatorParams
 	QueryVoterParams          = types.QueryVoterParams
