@@ -7,7 +7,7 @@ if [ ${PWD##*/} != "friday" ]; then
   exit 1
 fi
 
-COMMIT_HASH="08f70b0b8cc98e311fba086c93c76d3c61818bae"
+COMMIT_HASH="0a928aad5ede6b7dbadc42dd858b6b740a4deba4"
 if [ ! -d "CasperLabs/.git" ]; then
   git clone https://github.com/hdac-io/CasperLabs.git
 fi

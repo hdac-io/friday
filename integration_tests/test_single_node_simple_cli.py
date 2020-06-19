@@ -249,8 +249,7 @@ class TestSingleNode():
 
         time.sleep(self.tx_block_time * 3 + 1)
 
-        print("Unbond and try to transfer")
-        print("Unbond first")
+        print("Unbond")
         tx_hash_unbond, success = cmd.unbond(self.wallet_password, self.basic_coin_amount / 30, self.bonding_fee, self.wallet_anna)
         assert(success == True)
         print("Tx sent. Waiting for validation")
@@ -260,22 +259,6 @@ class TestSingleNode():
         print("Check whether tx is ok or not")
         is_ok = cmd.is_tx_ok(tx_hash_unbond)
         assert(is_ok == True)
-
-        print("Try to transfer. Will be confirmed in this time")
-        tx_hash_after_unbond, success = cmd.transfer_to(self.wallet_password, self.info_elsa['address'], self.basic_coin_amount * 2 / 3,
-                                               self.transfer_fee, self.wallet_anna)
-        assert(success == True)
-        
-        print("Tx sent. Waiting for validation")
-        time.sleep(self.tx_block_time * 3 + 1)
-
-        print("Check whether tx is ok or not")
-        is_ok = cmd.is_tx_ok(tx_hash_after_unbond)
-        assert(is_ok == True)
-
-        print("Balance checking after bonding")
-        res_after_after = cmd.get_balance(self.wallet_anna)
-        assert(int(res_after_after) < self.basic_coin_amount / 30)
 
         print("======================Done test02_bond_and_unbond======================")
 
@@ -387,7 +370,7 @@ class TestSingleNode():
         assert(res[0]["amount"] == self.delegate_amount_bigsun) 
 
         print("Redelegate token")
-        redelegate_tx_hash, success = cmd.redelegate(self.wallet_password, self.info_elsa['address'], self.info_olaf['address'], self.delegate_amount, self.delegate_fee, self.wallet_anna)
+        redelegate_tx_hash, success = cmd.redelegate(self.wallet_password, self.info_elsa['address'], self.info_olaf['address'], str(int(self.delegate_amount) / 3), self.delegate_fee, self.wallet_anna)
         assert(success == True)
         print("Tx sent. Waiting for redelegate")
 
@@ -397,12 +380,8 @@ class TestSingleNode():
         is_ok = cmd.is_tx_ok(redelegate_tx_hash)
         assert(is_ok == True)
 
-        res = cmd.get_delegator(self.info_olaf['address'], self.info_anna['address'])
-        print("Output: ", res)
-        assert(res[0]["amount"] == self.delegate_amount_bigsun) 
-
         print("Undelegate token")
-        undelegate_tx_hash, success = cmd.undelegate(self.wallet_password, self.info_olaf['address'], self.delegate_amount, self.delegate_fee, self.wallet_anna)
+        undelegate_tx_hash, success = cmd.undelegate(self.wallet_password, self.info_olaf['address'], str(int(self.delegate_amount) / 3), self.delegate_fee, self.wallet_anna)
         assert(success == True)
         print("Tx sent. Waiting for undelegate")
 
