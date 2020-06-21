@@ -38,7 +38,7 @@ func GetExecutionLayerQueryCmd(cdc *codec.Codec) *cobra.Command {
 // GetCmdQueryBalance is a getter of the balance of the address
 func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "getbalance --from <from> [--blockhash <blockhash_since>]",
+		Use:   "getbalance --from <from> [--height <block_height>]",
 		Short: "Get balance of address",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -91,10 +91,127 @@ func GetCmdQueryBalance(cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
+// GetCmdQueryStake is a getter of the stake amount of the address
+func GetCmdQueryStake(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "getstake --from <from> [--height <block_height>]",
+		Short: "Get stake amount of address",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			valueFromFromFlag := viper.GetString(client.FlagFrom)
+			var addr sdk.AccAddress
+			var err error
+			addr, err = cliutil.GetAddress(cdc, cliCtx, valueFromFromFlag)
+			if err != nil {
+				kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+				if err != nil {
+					return err
+				}
+
+				keyInfo, err := kb.Get(valueFromFromFlag)
+				if err != nil {
+					return err
+				}
+
+				addr = keyInfo.GetAddress()
+			}
+
+			queryData := types.QueryGetStakeDetail{
+				Address: addr,
+			}
+			bz := cdc.MustMarshalJSON(queryData)
+
+			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querystakedetail", types.ModuleName), bz)
+			if err != nil {
+				fmt.Printf("no stake data of input")
+				return nil
+			}
+			out := &state.Value{}
+			err = jsonpb.Unmarshal(bytes.NewReader(res), out)
+			if err != nil {
+				fmt.Printf("Faild to json unmarshal, %s", err)
+			}
+
+			balance := string(cliutil.ToHdac(cliutil.Bigsun(out.GetStringValue())))
+
+			_, err = fmt.Println(balance)
+			return err
+		},
+	}
+
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(client.FlagFrom, "", "Executor's identity (one of wallet alias, address, nickname)")
+
+	return cmd
+}
+
+// GetCmdQueryVote is a getter of the dapp address of the address
+func GetCmdQueryVote(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "getvote <dapp-address>|--from <from> [--height <block_height>]",
+		Short: "Get vote amount of address or dapp",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			valueFromFromFlag := viper.GetString(client.FlagFrom)
+			var addr sdk.AccAddress
+			var err error
+			var res []byte
+
+			queryData := types.QueryGetVoteDetail{}
+			if len(args) == 0 {
+				addr, err = cliutil.GetAddress(cdc, cliCtx, valueFromFromFlag)
+
+				kb, err := client.NewKeyBaseFromDir(viper.GetString(client.FlagHome))
+				if err != nil {
+					return err
+				}
+
+				keyInfo, err := kb.Get(valueFromFromFlag)
+				if err != nil {
+					return err
+				}
+
+				addr = keyInfo.GetAddress()
+
+				queryData.Address = addr
+			} else {
+				queryData.Dapp = args[0]
+			}
+			bz := cdc.MustMarshalJSON(queryData)
+
+			res, _, err = cliCtx.QueryWithData(fmt.Sprintf("custom/%s/queryvotedetail", types.ModuleName), bz)
+			if err != nil {
+				fmt.Printf("no vote dapp data of input")
+				return nil
+			}
+
+			out := &state.Value{}
+			err = jsonpb.Unmarshal(bytes.NewReader(res), out)
+			if err != nil {
+				fmt.Printf("Faild to json unmarshal, %s", err)
+			}
+
+			balance := string(cliutil.ToHdac(cliutil.Bigsun(out.GetStringValue())))
+
+			_, err = fmt.Println(balance)
+			return err
+		},
+	}
+
+	cmd.Flags().String(client.FlagHome, DefaultClientHome, "Custom local path of client's home dir")
+	cmd.Flags().String(client.FlagFrom, "", "Executor's identity (one of wallet alias, address, nickname)")
+
+	return cmd
+}
+
 // GetCmdQuery is a EE query getter
 func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "query address|uref|hash|local <data> <path> [--blockhash <blockhash_since>]",
+		Use:   "query address|uref|hash|local <data> <path> [--height <block_height>]",
 		Short: "Get query of the data",
 		Args:  cobra.MaximumNArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {

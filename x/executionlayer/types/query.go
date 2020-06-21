@@ -37,6 +37,27 @@ func (q QueryGetBalanceDetail) String() string {
 	return fmt.Sprintf("Query public key or readable name: %s", q.Address)
 }
 
+// QueryGetStakeDetail payload for stake query
+type QueryGetStakeDetail struct {
+	Address sdk.AccAddress `json:"address"`
+}
+
+// implement fmt.Stringer
+func (q QueryGetStakeDetail) String() string {
+	return fmt.Sprintf("Query public key or readable name: %s", q.Address)
+}
+
+// QueryGetVoteDetail payload for user's vote amount query
+type QueryGetVoteDetail struct {
+	Address sdk.AccAddress `json:"address"`
+	Dapp    string         `json:"dapp"`
+}
+
+// implement fmt.Stringer
+func (q QueryGetVoteDetail) String() string {
+	return fmt.Sprintf("Query public key or readable name: %s\ndapp: %s", q.Address, q.Dapp)
+}
+
 // defines the params for the following queries:
 // - 'custom/%s/validator'
 type QueryValidatorParams struct {

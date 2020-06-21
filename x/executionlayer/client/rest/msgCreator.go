@@ -555,6 +555,74 @@ func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 	return bz, nil
 }
 
+func getStakeQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error) {
+	vars := r.URL.Query()
+	straddr := vars.Get("address")
+	heightStr := vars.Get("height")
+	if len(heightStr) == 0 {
+		heightStr = "0"
+	}
+	height, err := strconv.ParseInt(heightStr, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	addr, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, straddr)
+	if err != nil {
+		return nil, err
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	queryData := types.QueryGetStakeDetail{
+		Address: addr,
+	}
+	cliCtx = cliCtx.WithHeight(height)
+	bz := cliCtx.Codec.MustMarshalJSON(queryData)
+
+	return bz, nil
+}
+
+func getVoteQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error) {
+	vars := r.URL.Query()
+	straddr := vars.Get("address")
+	strdapp := vars.Get("dapp")
+	heightStr := vars.Get("height")
+	if len(heightStr) == 0 {
+		heightStr = "0"
+	}
+
+	height, err := strconv.ParseInt(heightStr, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	var bz []byte
+	queryData := types.QueryGetVoteDetail{}
+	if straddr != "" {
+		addr, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, straddr)
+		if err != nil {
+			return nil, err
+		}
+
+		if err != nil {
+			return nil, err
+		}
+		queryData.Address = addr
+
+		cliCtx = cliCtx.WithHeight(height)
+		bz = cliCtx.Codec.MustMarshalJSON(queryData)
+	} else if strdapp != "" {
+		queryData.Dapp = strdapp
+
+		cliCtx = cliCtx.WithHeight(height)
+		bz = cliCtx.Codec.MustMarshalJSON(queryData)
+	}
+
+	return bz, nil
+}
+
 type createValidatorReq struct {
 	BaseReq     rest.BaseReq      `json:"base_req"`
 	ConsPubKey  string            `json:"cons_pub_key"`

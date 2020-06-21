@@ -365,8 +365,15 @@ class TestSingleNode():
     def test06_simple_delegate_redelegate_and_undelegate(self):
         print("======================Start test06_simple_delegate_and_undelegate======================")
 
+        print("Bonding token")
+        bond_tx_hash, success = cmd.bond(self.wallet_password, self.delegate_amount, self.delegate_fee, self.wallet_anna)
+        assert(success == True)
+
+        time.sleep(self.tx_block_time * 3 + 1)
+        
         print("Delegate token")
         delegate_tx_hash, success = cmd.delegate(self.wallet_password, self.info_elsa['address'], self.delegate_amount, self.delegate_fee, self.wallet_anna)
+        assert(success == True)
         print("Tx sent. Waiting for delegate")
 
         time.sleep(self.tx_block_time * 3 + 1)
@@ -414,6 +421,12 @@ class TestSingleNode():
         contracthash = res['account']['namedKeys'][0]['key']['hash']['hash']
         contracturef = res['account']['namedKeys'][2]['key']['uref']['uref']
 
+        print("Bonding token")
+        bond_tx_hash, success = cmd.bond(self.wallet_password, self.delegate_amount, self.delegate_fee, self.wallet_anna)
+        assert(success == True)
+
+        time.sleep(self.tx_block_time * 3 + 1)
+
         print("Vote token: uref")
         vote_tx_hash, success = cmd.vote(self.wallet_password, contracturef, self.vote_amount, self.vote_fee, self.wallet_anna)
         assert(success == True)
@@ -425,9 +438,9 @@ class TestSingleNode():
         is_ok = cmd.is_tx_ok(vote_tx_hash)
         assert(is_ok == True)
 
-        res = cmd.get_voter(contracturef, self.info_anna['address'])
+        res = cmd.get_vote_dapp(contracturef)
         print("Output: ", res)
-        assert(res[0]["amount"] == self.vote_amount_bigsun)
+        assert(res == int(self.vote_amount))
 
         print("Vote token: hash")
         vote_tx_hash, success = cmd.vote(self.wallet_password, contracthash, self.vote_amount, self.vote_fee, self.wallet_anna)
@@ -440,9 +453,9 @@ class TestSingleNode():
         is_ok = cmd.is_tx_ok(vote_tx_hash)
         assert(is_ok == True)
 
-        res = cmd.get_voter(contracthash, self.info_anna['address'])
+        res = cmd.get_vote_dapp(contracthash)
         print("Output: ", res)
-        assert(res[0]["amount"] == self.vote_amount_bigsun) 
+        assert(res == int(self.vote_amount)) 
 
         print("Unvote token")
         unvote_tx_hash, success = cmd.unvote(self.wallet_password, contracthash, self.vote_amount, self.vote_fee, self.wallet_anna)

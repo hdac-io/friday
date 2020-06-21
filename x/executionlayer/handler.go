@@ -388,9 +388,12 @@ func handlerMsgRedelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.Msg
 			Value: &state.CLValueInstance{
 				ClType: &state.CLType{Variants: &state.CLType_SimpleType{SimpleType: state.CLType_U512}},
 				Value: &state.CLValueInstance_Value{
-					Value: &state.CLValueInstance_Value_U512{
-						U512: &state.CLValueInstance_U512{
-							Value: msg.Amount}}}}}}
+					Value: &state.CLValueInstance_Value_OptionValue{
+						OptionValue: &state.CLValueInstance_Option{
+							Value: &state.CLValueInstance_Value{
+								Value: &state.CLValueInstance_Value_U512{
+									U512: &state.CLValueInstance_U512{
+										Value: msg.Amount}}}}}}}}}
 
 	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
 	if err != nil {
