@@ -44,7 +44,7 @@ variable "image" {
 
 variable "instance_type" {
   description = "AWS instance type"
-  default = "t2.large"
+  default = "m5.large"
 }
 
 provider "aws" {

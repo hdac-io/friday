@@ -43,7 +43,7 @@ variable "image" {
 
 variable "instance_type" {
   description = "AWS instance type"
-  default = "t2.large"
+  default = "m5.xlarge"
 }
 
 module "nodes-0" {
