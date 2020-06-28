@@ -94,7 +94,7 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 		conf.TxIndex.IndexAllTags = true
 		conf.Consensus.TimeoutCommit = 5 * time.Second
 		// set max body and yx bytes to 3MiB
-		maxBytes := 3 * 1024 * 1024 // 3MiB
+		maxBytes := 5 * 1024 * 1024 // 5MiB
 		conf.RPC.MaxBodyBytes = int64(maxBytes)
 		conf.Mempool.MaxTxBytes = maxBytes
 		cfg.WriteConfigFile(configFilePath, conf)
