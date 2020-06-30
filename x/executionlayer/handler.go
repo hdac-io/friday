@@ -82,7 +82,7 @@ func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTr
 						U512: &state.CLValueInstance_U512{
 							Value: msg.Amount}}}}}}
 
-	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
+	sessionAbi, err := util.AbiDeployArgsTobytes(sessionArgs)
 	if err != nil {
 		getResult(false, err.Error())
 	}
@@ -92,7 +92,7 @@ func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTr
 		msg.FromAddress,
 		util.HASH,
 		proxyContractHash,
-		sessionArgsStr,
+		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
 	result, log := execute(ctx, k, msgExecute, simulate, false)
@@ -104,6 +104,18 @@ func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTr
 
 // Handle MsgExecute
 func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simulate bool) sdk.Result {
+	deployArgs, err := util.JsonStringToDeployArgs(msg.SessionArgs)
+	if err != nil {
+		return getResult(false, err.Error())
+	}
+
+	deployAbi, err := util.AbiDeployArgsTobytes(deployArgs)
+	if err != nil {
+		return getResult(false, err.Error())
+	}
+
+	msg.SessionArgs = util.EncodeToHexString(deployAbi)
+
 	result, log := execute(ctx, k, msg, simulate, true)
 	return getResult(result, log)
 }
@@ -138,14 +150,14 @@ func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg type
 
 		paymentAmount := types.BASIC_PAY_AMOUNT
 
-		sessionArgsStr, parseError := getPayAmountSessionArgsStr(paymentAmount)
+		sessionAbi, parseError := getPayAmountSessionArgsStr(paymentAmount)
 
 		msgExecute := NewMsgExecute(
 			msg.ContractAddress,
 			msg.ValidatorAddress,
 			util.HASH,
 			proxyContractHash,
-			sessionArgsStr,
+			hex.EncodeToString(sessionAbi),
 			msg.Fee,
 		)
 
@@ -176,14 +188,14 @@ func handlerMsgEditValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.
 		paymentAmount = types.BASIC_PAY_AMOUNT
 	}
 
-	sessionArgsStr, parseError := getPayAmountSessionArgsStr(paymentAmount)
+	sessionAbi, parseError := getPayAmountSessionArgsStr(paymentAmount)
 
 	msgExecute := NewMsgExecute(
 		msg.ContractAddress,
 		msg.ValidatorAddress,
 		util.HASH,
 		proxyContractHash,
-		sessionArgsStr,
+		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
 
@@ -221,7 +233,7 @@ func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond, 
 						U512: &state.CLValueInstance_U512{
 							Value: msg.Amount}}}}}}
 
-	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
+	sessionAbi, err := util.AbiDeployArgsTobytes(sessionArgs)
 	if err != nil {
 		getResult(false, err.Error())
 	}
@@ -231,7 +243,7 @@ func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond, 
 		msg.FromAddress,
 		util.HASH,
 		proxyContractHash,
-		sessionArgsStr,
+		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
 	result, log := execute(ctx, k, msgExecute, simulate, false)
@@ -260,7 +272,7 @@ func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBo
 									U512: &state.CLValueInstance_U512{
 										Value: string(msg.Amount)}}}}}}}}}
 
-	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
+	sessionAbi, err := util.AbiDeployArgsTobytes(sessionArgs)
 	if err != nil {
 		getResult(false, err.Error())
 	}
@@ -270,7 +282,7 @@ func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBo
 		msg.FromAddress,
 		util.HASH,
 		proxyContractHash,
-		sessionArgsStr,
+		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
 	result, log := execute(ctx, k, msgExecute, simulate, false)
@@ -301,7 +313,7 @@ func handlerMsgDelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgDe
 						U512: &state.CLValueInstance_U512{
 							Value: msg.Amount}}}}}}
 
-	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
+	sessionAbi, err := util.AbiDeployArgsTobytes(sessionArgs)
 	if err != nil {
 		getResult(false, err.Error())
 	}
@@ -311,7 +323,7 @@ func handlerMsgDelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgDe
 		msg.FromAddress,
 		util.HASH,
 		proxyContractHash,
-		sessionArgsStr,
+		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
 	result, log := execute(ctx, k, msgExecute, simulate, false)
@@ -345,7 +357,7 @@ func handlerMsgUndelgate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgU
 									U512: &state.CLValueInstance_U512{
 										Value: msg.Amount}}}}}}}}}
 
-	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
+	sessionAbi, err := util.AbiDeployArgsTobytes(sessionArgs)
 	if err != nil {
 		getResult(false, err.Error())
 	}
@@ -355,7 +367,7 @@ func handlerMsgUndelgate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgU
 		msg.FromAddress,
 		util.HASH,
 		proxyContractHash,
-		sessionArgsStr,
+		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
 	result, log := execute(ctx, k, msgExecute, simulate, false)
@@ -395,7 +407,7 @@ func handlerMsgRedelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.Msg
 									U512: &state.CLValueInstance_U512{
 										Value: msg.Amount}}}}}}}}}
 
-	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
+	sessionAbi, err := util.AbiDeployArgsTobytes(sessionArgs)
 	if err != nil {
 		getResult(false, err.Error())
 	}
@@ -405,7 +417,7 @@ func handlerMsgRedelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.Msg
 		msg.FromAddress,
 		util.HASH,
 		proxyContractHash,
-		sessionArgsStr,
+		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
 	result, log := execute(ctx, k, msgExecute, simulate, false)
@@ -473,7 +485,7 @@ func handlerMsgVote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgVote, 
 
 	}
 
-	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
+	sessionAbi, err := util.AbiDeployArgsTobytes(sessionArgs)
 	if err != nil {
 		getResult(false, err.Error())
 	}
@@ -483,7 +495,7 @@ func handlerMsgVote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgVote, 
 		msg.FromAddress,
 		util.HASH,
 		proxyContractHash,
-		sessionArgsStr,
+		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
 	result, log := execute(ctx, k, msgExecute, simulate, false)
@@ -557,7 +569,7 @@ func handlerMsgUnvote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnvo
 
 	}
 
-	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
+	sessionAbi, err := util.AbiDeployArgsTobytes(sessionArgs)
 	if err != nil {
 		getResult(false, err.Error())
 	}
@@ -567,7 +579,7 @@ func handlerMsgUnvote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnvo
 		msg.FromAddress,
 		util.HASH,
 		proxyContractHash,
-		sessionArgsStr,
+		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
 	result, log := execute(ctx, k, msgExecute, simulate, false)
@@ -595,7 +607,7 @@ func handlerMsgClaim(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgClaim
 					Value: &state.CLValueInstance_Value_StrValue{
 						StrValue: methodName}}}}}
 
-	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
+	sessionAbi, err := util.AbiDeployArgsTobytes(sessionArgs)
 	if err != nil {
 		return getResult(false, err.Error())
 	}
@@ -605,7 +617,7 @@ func handlerMsgClaim(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgClaim
 		msg.FromAddress,
 		util.HASH,
 		proxyContractHash,
-		sessionArgsStr,
+		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
 	result, log := execute(ctx, k, msgExecute, simulate, false)
@@ -642,20 +654,9 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simu
 						U512: &state.CLValueInstance_U512{
 							Value: string(msg.Fee)}}}}}}
 
-	paymentArgsJson, err := DeployArgsToJsonString(paymentArgs)
+	paymentAbi, err := util.AbiDeployArgsTobytes(paymentArgs)
 	if err != nil {
 		return false, err.Error()
-	}
-
-	replacedSessionArgs, addrList, err := ReplaceFromBech32ToHex(isCustomContract, msg.SessionArgs)
-	if err != nil {
-		return false, err.Error()
-	}
-
-	if isCustomContract {
-		for _, unitAddr := range addrList {
-			k.SetAccountIfNotExists(ctx, unitAddr)
-		}
 	}
 
 	executeAddress := []byte{}
@@ -665,17 +666,22 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simu
 		executeAddress = msg.ExecAddress
 	}
 
-	// Execute
-	deploys := []*ipc.DeployItem{}
-	deploy, err := util.MakeDeploy(
-		executeAddress,
-		msg.SessionType, msg.SessionCode, replacedSessionArgs,
-		util.HASH, proxyContractHash, paymentArgsJson,
-		types.BASIC_GAS, ctx.BlockTime().Unix(), ctx.ChainID())
+	sessionAbi, err := hex.DecodeString(msg.SessionArgs)
 	if err != nil {
 		return false, err.Error()
 	}
-	deploys = append(deploys, deploy)
+
+	// Execute
+	deploys := []*ipc.DeployItem{
+		&ipc.DeployItem{
+			Address:           executeAddress,
+			Session:           util.MakeDeployPayload(msg.SessionType, msg.SessionCode, sessionAbi),
+			Payment:           util.MakeDeployPayload(util.HASH, proxyContractHash, paymentAbi),
+			AuthorizationKeys: [][]byte{executeAddress},
+			DeployHash:        make([]byte, 32),
+			GasPrice:          types.BASIC_GAS,
+		},
+	}
 	reqExecute := &ipc.ExecuteRequest{
 		ParentStateHash: stateHash,
 		BlockTime:       uint64(ctx.BlockTime().Unix()),
@@ -781,7 +787,7 @@ func getResult(ok bool, log string) sdk.Result {
 	return res
 }
 
-func getPayAmountSessionArgsStr(amount string) (string, error) {
+func getPayAmountSessionArgsStr(amount string) ([]byte, error) {
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
 			Value: &state.CLValueInstance{
@@ -796,7 +802,7 @@ func getPayAmountSessionArgsStr(amount string) (string, error) {
 					Value: &state.CLValueInstance_Value_U512{
 						U512: &state.CLValueInstance_U512{
 							Value: amount}}}}}}
-	sessionArgsStr, err := DeployArgsToJsonString(sessionArgs)
+	sessionAbi, err := util.AbiDeployArgsTobytes(sessionArgs)
 
-	return sessionArgsStr, err
+	return sessionAbi, err
 }
