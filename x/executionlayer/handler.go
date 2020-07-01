@@ -676,16 +676,16 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simu
 	msgHash := util.Blake2b256(msg.GetSignBytes())
 
 	// Execute
-	deploys := []*ipc.DeployItem{
-		&ipc.DeployItem{
-			Address:           msg.ExecAddress,
-			Session:           util.MakeDeployPayload(msg.SessionType, msg.SessionCode, sessionAbi),
-			Payment:           util.MakeDeployPayload(util.HASH, proxyContractHash, paymentAbi),
-			AuthorizationKeys: [][]byte{msg.ExecAddress},
-			DeployHash:        msgHash,
-			GasPrice:          types.BASIC_GAS,
-		},
+	deploys := ctx.CandidateBlock().Deploys
+	deploy := &ipc.DeployItem{
+		Address:           msg.ExecAddress,
+		Session:           util.MakeDeployPayload(msg.SessionType, msg.SessionCode, sessionAbi),
+		Payment:           util.MakeDeployPayload(util.HASH, proxyContractHash, paymentAbi),
+		AuthorizationKeys: [][]byte{msg.ExecAddress},
+		DeployHash:        msgHash,
+		GasPrice:          types.BASIC_GAS,
 	}
+	deploys = append(deploys, deploy)
 	reqExecute := &ipc.ExecuteRequest{
 		ParentStateHash: stateHash,
 		BlockTime:       uint64(ctx.BlockTime().Unix()),
@@ -700,45 +700,33 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simu
 	effects := []*transforms.TransformEntry{}
 	switch resExecute.GetResult().(type) {
 	case *ipc.ExecuteResponse_Success:
-		for _, res := range resExecute.GetSuccess().GetDeployResults() {
-			switch res.GetExecutionResult().GetError().GetValue().(type) {
-			case *ipc.DeployError_GasError:
-				err = types.ErrGRpcExecuteDeployGasError(types.DefaultCodespace)
-			case *ipc.DeployError_ExecError:
-				err = types.ErrGRpcExecuteDeployExecError(types.DefaultCodespace, res.GetExecutionResult().GetError().GetExecError().GetMessage())
-			}
-
-			effects = append(effects, res.GetExecutionResult().GetEffects().GetTransformMap()...)
-			if err != nil {
-				log += fmt.Sprintf(log, err.Error())
-			}
+		res := resExecute.GetSuccess().GetDeployResults()
+		index := len(res) - 1
+		switch res[index].GetExecutionResult().GetError().GetValue().(type) {
+		case *ipc.DeployError_GasError:
+			err = types.ErrGRpcExecuteDeployGasError(types.DefaultCodespace)
+		case *ipc.DeployError_ExecError:
+			err = types.ErrGRpcExecuteDeployExecError(types.DefaultCodespace, res[index].GetExecutionResult().GetError().GetExecError().GetMessage())
 		}
+
+		effects = append(effects, res[index].GetExecutionResult().GetEffects().GetTransformMap()...)
+		if err != nil {
+			log = fmt.Sprintf(log, err.Error())
+		}
+
 	case *ipc.ExecuteResponse_MissingParent:
 		err = types.ErrGRpcExecuteMissingParent(types.DefaultCodespace, util.EncodeToHexString(resExecute.GetMissingParent().GetHash()))
-		log += err.Error()
+		log = err.Error()
 	default:
 		err = fmt.Errorf("Unknown result : %s", resExecute.String())
-		log += err.Error()
+		log = err.Error()
 	}
-
-	if simulate {
-		return log == "", log
-	}
-
-	// Commit
-	postStateHash, bonds, errGrpc := grpc.Commit(k.client, stateHash, effects, &protocolVersion)
-	log += errGrpc
 
 	candidateBlock := ctx.CandidateBlock()
-	candidateBlock.State = postStateHash
-	candidateBlock.Bonds = bonds
+	candidateBlock.Deploys = deploys
+	candidateBlock.Effects = effects
 
-	result := false
-	if log == "" {
-		result = true
-	}
-
-	return result, log
+	return log == "", log
 }
 
 func executeStep(ctx sdk.Context, k ExecutionLayerKeeper) (bool, error) {

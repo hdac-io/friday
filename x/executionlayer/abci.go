@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc/transforms"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/storedvalue"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
@@ -19,16 +21,25 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, elk ExecutionLaye
 	candidateBlock := ctx.CandidateBlock()
 	candidateBlock.Hash = req.GetHash()
 	candidateBlock.State = unitHash.EEState
+	candidateBlock.Deploys = []*ipc.DeployItem{}
+	candidateBlock.Effects = []*transforms.TransformEntry{}
 	protocolVersion := elk.GetProtocolVersion(ctx)
 	candidateBlock.ProtocolVersion = &protocolVersion
 }
 
 func EndBlocker(ctx sdk.Context, req abci.RequestEndBlock, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
+
+	// Commit
+	stateHash, _, errGrpc := grpc.Commit(k.client, ctx.CandidateBlock().State, ctx.CandidateBlock().Effects, ctx.CandidateBlock().ProtocolVersion)
+	if errGrpc != "" {
+		panic(errGrpc)
+	}
+
 	var validatorUpdates []abci.ValidatorUpdate
 
 	// step
 	stepRequest := &ipc.StepRequest{
-		ParentStateHash: ctx.CandidateBlock().State,
+		ParentStateHash: stateHash,
 		BlockTime:       uint64(ctx.BlockTime().Unix()),
 		BlockHeight:     ctx.UBlockHeight(),
 		ProtocolVersion: ctx.CandidateBlock().ProtocolVersion,
