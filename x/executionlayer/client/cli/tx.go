@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -76,13 +77,20 @@ func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
+			var jsonData []map[string]interface{}
+			err = json.Unmarshal([]byte(args[2]), &jsonData)
+			if err != nil {
+				return err
+			}
+			prettyJson, err := json.Marshal(jsonData)
+
 			// build and sign the transaction, then broadcast to Tendermint
 			msg := types.NewMsgExecute(
 				contractAddress,
 				fromAddr,
 				sessionType,
 				sessionCode,
-				args[2],
+				string(prettyJson),
 				string(fee),
 			)
 
