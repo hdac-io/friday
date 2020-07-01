@@ -95,7 +95,7 @@ func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTr
 		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute, simulate, false)
+	result, log := execute(ctx, k, msgExecute, simulate)
 	if result == true {
 		k.SetAccountIfNotExists(ctx, msg.ToAddress)
 	}
@@ -104,7 +104,16 @@ func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTr
 
 // Handle MsgExecute
 func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simulate bool) sdk.Result {
-	deployArgs, err := util.JsonStringToDeployArgs(msg.SessionArgs)
+	replacedSessionArgs, addrList, err := ReplaceFromBech32ToHex(msg.SessionArgs)
+	if err != nil {
+		return getResult(false, err.Error())
+	}
+
+	for _, unitAddr := range addrList {
+		k.SetAccountIfNotExists(ctx, unitAddr)
+	}
+
+	deployArgs, err := util.JsonStringToDeployArgs(replacedSessionArgs)
 	if err != nil {
 		return getResult(false, err.Error())
 	}
@@ -116,7 +125,7 @@ func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExe
 
 	msg.SessionArgs = util.EncodeToHexString(deployAbi)
 
-	result, log := execute(ctx, k, msg, simulate, true)
+	result, log := execute(ctx, k, msg, simulate)
 	return getResult(result, log)
 }
 
@@ -161,7 +170,7 @@ func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg type
 			msg.Fee,
 		)
 
-		result, log := execute(ctx, k, msgExecute, simulate, false)
+		result, log := execute(ctx, k, msgExecute, simulate)
 
 		if parseError != nil {
 			return getResult(false, parseError.Error())
@@ -199,7 +208,7 @@ func handlerMsgEditValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.
 		msg.Fee,
 	)
 
-	result, log := execute(ctx, k, msgExecute, simulate, false)
+	result, log := execute(ctx, k, msgExecute, simulate)
 
 	if !found {
 		return getResult(false, "validator does not exist for that address")
@@ -246,7 +255,7 @@ func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond, 
 		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute, simulate, false)
+	result, log := execute(ctx, k, msgExecute, simulate)
 	return getResult(result, log)
 }
 
@@ -285,7 +294,7 @@ func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBo
 		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute, simulate, false)
+	result, log := execute(ctx, k, msgExecute, simulate)
 
 	return getResult(result, log)
 }
@@ -326,7 +335,7 @@ func handlerMsgDelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgDe
 		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute, simulate, false)
+	result, log := execute(ctx, k, msgExecute, simulate)
 
 	return getResult(result, log)
 }
@@ -370,7 +379,7 @@ func handlerMsgUndelgate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgU
 		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute, simulate, false)
+	result, log := execute(ctx, k, msgExecute, simulate)
 
 	return getResult(result, log)
 }
@@ -420,7 +429,7 @@ func handlerMsgRedelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.Msg
 		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute, simulate, false)
+	result, log := execute(ctx, k, msgExecute, simulate)
 
 	return getResult(result, log)
 }
@@ -498,7 +507,7 @@ func handlerMsgVote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgVote, 
 		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute, simulate, false)
+	result, log := execute(ctx, k, msgExecute, simulate)
 
 	return getResult(result, log)
 }
@@ -582,7 +591,7 @@ func handlerMsgUnvote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnvo
 		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute, simulate, false)
+	result, log := execute(ctx, k, msgExecute, simulate)
 
 	return getResult(result, log)
 }
@@ -620,12 +629,12 @@ func handlerMsgClaim(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgClaim
 		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute, simulate, false)
+	result, log := execute(ctx, k, msgExecute, simulate)
 
 	return getResult(result, log)
 }
 
-func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simulate bool, isCustomContract bool) (bool, string) {
+func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simulate bool) (bool, string) {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	// Parameter preparation
 	var stateHash []byte
