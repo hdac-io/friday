@@ -77,12 +77,15 @@ func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
+			prettyJSON := []byte("")
 			var jsonData []map[string]interface{}
-			err = json.Unmarshal([]byte(args[2]), &jsonData)
-			if err != nil {
-				return err
+			if len(args[2]) > 0 {
+				err = json.Unmarshal([]byte(args[2]), &jsonData)
+				if err != nil {
+					return err
+				}
+				prettyJSON, err = json.Marshal(jsonData)
 			}
-			prettyJson, err := json.Marshal(jsonData)
 
 			// build and sign the transaction, then broadcast to Tendermint
 			msg := types.NewMsgExecute(
@@ -90,7 +93,7 @@ func GetCmdContractRun(cdc *codec.Codec) *cobra.Command {
 				fromAddr,
 				sessionType,
 				sessionCode,
-				string(prettyJson),
+				string(prettyJSON),
 				string(fee),
 			)
 
