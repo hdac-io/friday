@@ -668,13 +668,6 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simu
 		return false, err.Error()
 	}
 
-	executeAddress := []byte{}
-	if len(msg.ExecAddress) == sdk.AddrLen {
-		executeAddress = msg.ExecAddress
-	} else {
-		executeAddress = msg.ExecAddress
-	}
-
 	sessionAbi, err := hex.DecodeString(msg.SessionArgs)
 	if err != nil {
 		return false, err.Error()
@@ -683,10 +676,10 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simu
 	// Execute
 	deploys := []*ipc.DeployItem{
 		&ipc.DeployItem{
-			Address:           executeAddress,
+			Address:           msg.ExecAddress,
 			Session:           util.MakeDeployPayload(msg.SessionType, msg.SessionCode, sessionAbi),
 			Payment:           util.MakeDeployPayload(util.HASH, proxyContractHash, paymentAbi),
-			AuthorizationKeys: [][]byte{executeAddress},
+			AuthorizationKeys: [][]byte{msg.ExecAddress},
 			DeployHash:        make([]byte, 32),
 			GasPrice:          types.BASIC_GAS,
 		},
