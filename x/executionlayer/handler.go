@@ -673,6 +673,8 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simu
 		return false, err.Error()
 	}
 
+	msgHash := util.Blake2b256(msg.GetSignBytes())
+
 	// Execute
 	deploys := []*ipc.DeployItem{
 		&ipc.DeployItem{
@@ -680,7 +682,7 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simu
 			Session:           util.MakeDeployPayload(msg.SessionType, msg.SessionCode, sessionAbi),
 			Payment:           util.MakeDeployPayload(util.HASH, proxyContractHash, paymentAbi),
 			AuthorizationKeys: [][]byte{msg.ExecAddress},
-			DeployHash:        make([]byte, 32),
+			DeployHash:        msgHash,
 			GasPrice:          types.BASIC_GAS,
 		},
 	}
