@@ -15,7 +15,7 @@ func TestReplaceFromBech32ToHex(t *testing.T) {
 		`{"name":"address","value":{"cl_type":{"list_type":{"inner":{"simple_type":"U8"}}},"value":{"bytes_value":"friday1k568qc388n6x5ks8hkwly2q9ruepns8rr9sgqyjxk9cy6a2qq8gs4v2kpm"}}},` +
 		`{"name":"address_as_string","value":{"cl_type":{"simple_type":"STRING"},"value":{"str_value":"friday1k568qc388n6x5ks8hkwly2q9ruepns8rr9sgqyjxk9cy6a2qq8gs4v2kpm"}}}]`
 
-	res, addrList, _ := ReplaceFromBech32ToHex(true, testInput)
+	res, addrList, _ := ReplaceFromBech32ToHex(testInput)
 	fmt.Println(res)
 
 	expectedRes := `[{"name":"method","value":{"cl_type":{"simple_type":"STRING"},"value":{"str_value":"set_swap_hash"}}},` +
