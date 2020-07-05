@@ -745,6 +745,7 @@ func executeStep(ctx sdk.Context, k ExecutionLayerKeeper) (bool, error) {
 	stepRequest := &ipc.StepRequest{
 		ParentStateHash: ctx.CandidateBlock().State,
 		BlockTime:       uint64(ctx.BlockTime().Unix()),
+		BlockHeight:     ctx.UBlockHeight(),
 		ProtocolVersion: ctx.CandidateBlock().ProtocolVersion,
 	}
 

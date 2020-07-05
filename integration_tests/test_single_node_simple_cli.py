@@ -31,7 +31,7 @@ class TestSingleNode():
     info_olaf = None
     info_hans = None
 
-    basic_coin = "1000000000000000000000000000"
+    basic_coin = "500000000000000000000000000"
     basic_stake = "10000000000000000000"
 
     multiplier = 10 ** 18

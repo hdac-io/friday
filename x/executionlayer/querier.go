@@ -418,14 +418,14 @@ func queryReward(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKe
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
-	ctx.WithBlockHeight(req.Height)
-	storedValue, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
-	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not find system account info", err.Error()))
+	eeState := keeper.GetUnitHashMap(ctx, req.GetHeight()).EEState
+	protocolVersion := keeper.GetProtocolVersion(ctx)
+	val, errMsg := grpc.QueryReward(keeper.client, eeState, param.Address, &protocolVersion)
+	if errMsg != "" {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", errMsg)
 	}
 
-	reward := storedValue.Contract.NamedKeys.GetUserReward(param.Address)
-	queryvalue := &state.Value{Value: &state.Value_StringValue{StringValue: reward}}
+	queryvalue := &state.Value{Value: &state.Value_StringValue{StringValue: val}}
 
 	jsonMarshaler := jsonpb.Marshaler{}
 	res := &bytes.Buffer{}
@@ -444,14 +444,14 @@ func queryCommission(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLay
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
-	ctx.WithBlockHeight(req.Height)
-	storedValue, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
-	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not find system account info", err.Error()))
+	eeState := keeper.GetUnitHashMap(ctx, req.GetHeight()).EEState
+	protocolVersion := keeper.GetProtocolVersion(ctx)
+	val, errMsg := grpc.QueryCommission(keeper.client, eeState, param.Address, &protocolVersion)
+	if errMsg != "" {
+		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", errMsg)
 	}
 
-	commission := storedValue.Contract.NamedKeys.GetValidatorCommission(param.Address)
-	queryvalue := &state.Value{Value: &state.Value_StringValue{StringValue: commission}}
+	queryvalue := &state.Value{Value: &state.Value_StringValue{StringValue: val}}
 
 	jsonMarshaler := jsonpb.Marshaler{}
 	res := &bytes.Buffer{}
