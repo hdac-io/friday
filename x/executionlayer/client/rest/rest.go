@@ -213,7 +213,7 @@ func getStakeHandler(cliCtx context.CLIContext, storeName string) http.HandlerFu
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querybalancedetail", storeName), bz)
+		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querystakedetail", storeName), bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
