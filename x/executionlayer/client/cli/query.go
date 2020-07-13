@@ -7,6 +7,7 @@ import (
 
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/storedvalue"
 	"github.com/hdac-io/friday/client"
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/codec"
@@ -231,17 +232,33 @@ func GetCmdQuery(cdc *codec.Codec) *cobra.Command {
 			bz := cdc.MustMarshalJSON(queryData)
 
 			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querydetail", types.ModuleName), bz)
-
+			if err != nil {
+				fmt.Printf("could not resolve data - %s %s %s\nerr : %s\n", dataType, data, path, err.Error())
+				return nil
+			}
+			var storedValue storedvalue.StoredValue
+			storedValue, err, _ = storedValue.FromBytes(res)
 			if err != nil {
 				fmt.Printf("could not resolve data - %s %s %s\nerr : %s\n", dataType, data, path, err.Error())
 				return nil
 			}
 
-			value := &state.Value{}
-			err = jsonpb.Unmarshal(bytes.NewReader(res), value)
-
 			marshaler := jsonpb.Marshaler{Indent: "  "}
-			valueStr, err := marshaler.MarshalToString(value)
+
+			valueStr := ""
+
+			switch storedValue.Type {
+			case storedvalue.TYPE_ACCOUNT:
+				value := &state.Value{Value: &state.Value_Account{Account: storedValue.Account.ToStateValue()}}
+				valueStr, err = marshaler.MarshalToString(value)
+			case storedvalue.TYPE_CONTRACT:
+				value := &state.Value{Value: &state.Value_Contract{Contract: storedValue.Contract.ToStateValue()}}
+				valueStr, err = marshaler.MarshalToString(value)
+			case storedvalue.TYPE_CL_VALUE:
+				value := storedValue.ClValue.ToCLInstanceValue()
+				valueStr, err = marshaler.MarshalToString(value)
+			}
+
 			if err != nil {
 				fmt.Printf("could not resolve data - %s %s %s\nerr : %s\n", dataType, data, path, err.Error())
 				return nil

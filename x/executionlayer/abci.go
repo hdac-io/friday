@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/storedvalue"
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/executionlayer/types"
 	abci "github.com/hdac-io/tendermint/abci/types"
@@ -48,7 +49,12 @@ func EndBlocker(ctx sdk.Context, req abci.RequestEndBlock, k ExecutionLayerKeepe
 	}
 
 	// Query to current validator information.
-	posInfos, err := getQueryResult(ctx, k, types.ADDRESS, types.SYSTEM, types.PosContractName)
+	resPosInfoBytes, err := getQueryResult(ctx, k, types.ADDRESS, types.SYSTEM, types.PosContractName)
+	var posInfos storedvalue.StoredValue
+	posInfos, err, _ = posInfos.FromBytes(resPosInfoBytes)
+	if err != nil {
+		panic(err)
+	}
 	if err != nil {
 		panic(err)
 	}

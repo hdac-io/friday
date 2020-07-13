@@ -43,7 +43,9 @@ func InitGenesis(
 	keeper.SetUnitHashMap(ctx, types.NewUnitHashMap(ctx.CandidateBlock().State))
 
 	// Query to current validator information.
-	posInfos, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
+	resPosInfoBytes, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
+	var posInfos storedvalue.StoredValue
+	posInfos, err, _ = posInfos.FromBytes(resPosInfoBytes)
 	if err != nil {
 		panic(err)
 	}
@@ -84,13 +86,15 @@ func InitGenesis(
 	candidateBlock.Bonds = bonds
 
 	// initial proxy contract
-	storedValueSystemAccount, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, "")
+	resSystemAccountBytes, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, "")
+	var systemAccount storedvalue.StoredValue
+	systemAccount, err, _ = systemAccount.FromBytes(resSystemAccountBytes)
 	if err != nil {
 		panic(err)
 	}
 
 	proxyContractHash := []byte{}
-	for _, namedKey := range storedValueSystemAccount.Account.NamedKeys {
+	for _, namedKey := range systemAccount.Account.NamedKeys {
 		if namedKey.Name == types.ProxyContractName {
 			proxyContractHash = namedKey.Key.Hash
 			break
@@ -141,12 +145,14 @@ func ExportGenesis(ctx sdk.Context, keeper ExecutionLayerKeeper) types.GenesisSt
 
 	stateInfos := []string{}
 	if len(stateHash) != 0 {
-		systeAccountInfo, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
+		resSystemAccountBytes, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
+		var systemAccount storedvalue.StoredValue
+		systemAccount, err, _ = systemAccount.FromBytes(resSystemAccountBytes)
 		if err != nil {
 			panic(err)
 		}
 
-		for _, namedKey := range systeAccountInfo.Contract.NamedKeys {
+		for _, namedKey := range systemAccount.Contract.NamedKeys {
 			switch namedKey.Name[:2] {
 			case storedvalue.DELEGATE_PREFIX + "_", storedvalue.VOTE_PREFIX + "_", storedvalue.REWARD_PREFIX + "_", storedvalue.COMMISSION_PREFIX + "_":
 				stateInfos = append(stateInfos, namedKey.Name)
