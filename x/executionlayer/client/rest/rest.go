@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 
@@ -9,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
-
+	"github.com/hdac-io/casperlabs-ee-grpc-go-util/storedvalue"
 	"github.com/hdac-io/friday/client/context"
 	"github.com/hdac-io/friday/types/rest"
 	"github.com/hdac-io/friday/x/auth/client/utils"
@@ -67,19 +66,30 @@ func contractQueryHandler(cliCtx context.CLIContext, storeName string) http.Hand
 		}
 
 		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querydetail", types.ModuleName), bz)
-
+		var storedValue storedvalue.StoredValue
+		storedValue, err, _ = storedValue.FromBytes(res)
 		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			fmt.Printf("could not resolve data - %s\nerr : %s\n", path, err.Error())
 			return
 		}
-
-		value := &state.Value{}
-		err = jsonpb.Unmarshal(bytes.NewReader(res), value)
-
 		marshaler := jsonpb.Marshaler{Indent: "  "}
-		valueStr, err := marshaler.MarshalToString(value)
+
+		valueStr := ""
+
+		switch storedValue.Type {
+		case storedvalue.TYPE_ACCOUNT:
+			value := &state.Value{Value: &state.Value_Account{Account: storedValue.Account.ToStateValue()}}
+			valueStr, err = marshaler.MarshalToString(value)
+		case storedvalue.TYPE_CONTRACT:
+			value := &state.Value{Value: &state.Value_Contract{Contract: storedValue.Contract.ToStateValue()}}
+			valueStr, err = marshaler.MarshalToString(value)
+		case storedvalue.TYPE_CL_VALUE:
+			value := storedValue.ClValue.ToCLInstanceValue()
+			valueStr, err = marshaler.MarshalToString(value)
+		}
+
 		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			fmt.Printf("could not resolve data - %s %s %s\nerr : %s\n", path, err.Error())
 			return
 		}
 
