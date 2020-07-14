@@ -1,7 +1,8 @@
 # Makefile for the "localnode" docker image.
 
 build-docker-image:
-	ln -s $(CURDIR)/../install_casperlabs_ee.sh casperlabs_linux_builder/build_casperlabs_ee_linux.sh
+	rm $(CURDIR)/casperlabs_linux_builder/build_casperlabs_ee_linux.sh
+	cp $(CURDIR)/../install_casperlabs_ee.sh $(CURDIR)/casperlabs_linux_builder/build_casperlabs_ee_linux.sh
 	docker build --tag friday/casperlabs_linux_builder casperlabs_linux_builder
 
 build-ee-linux:
