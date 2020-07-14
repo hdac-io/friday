@@ -113,8 +113,8 @@ github.com/hdac-io/bls-go-binary v0.0.0-20191223054157-fad152e9a679 h1:xdX2qinan
 github.com/hdac-io/bls-go-binary v0.0.0-20191223054157-fad152e9a679/go.mod h1:qG6qX5Hrs2noYc1lcWj3PEb64gc2VoGtmcghXK8trCw=
 github.com/hdac-io/btcutil v0.0.0-20191220081549-27e3c0391404 h1:9FvbWqlHq6n2ciDoBzfqZj4Nri+cs34of5D2SHQhfLs=
 github.com/hdac-io/btcutil v0.0.0-20191220081549-27e3c0391404/go.mod h1:PQwlReOMYFpmYFt9Mtnw06XeVTjkjFZLs8/v0gwoW+0=
-github.com/hdac-io/casperlabs-ee-grpc-go-util v0.10.1-0.20200710090610-0d5f940e8d2f h1:4le2Vz/XYVFtXPWaP29/dy+h2h2jXHXKaJdM3SyOX3w=
-github.com/hdac-io/casperlabs-ee-grpc-go-util v0.10.1-0.20200710090610-0d5f940e8d2f/go.mod h1:0T62kfiEVNVgdUJuCFQS7zkyHhf/gGgqXxCDoV9/XrQ=
+github.com/hdac-io/casperlabs-ee-grpc-go-util v0.11.0 h1:OFuOGh4iu2Qk/epqTF5bosQBO/TjvHnhMC4eH4EAaDA=
+github.com/hdac-io/casperlabs-ee-grpc-go-util v0.11.0/go.mod h1:0T62kfiEVNVgdUJuCFQS7zkyHhf/gGgqXxCDoV9/XrQ=
 github.com/hdac-io/iavl v0.12.5-0.20200512153323-0dddbbd97928 h1:kytVAqIMtcDsUK47IQcHD+rLlK5XmxaosQM0j0S7rAc=
 github.com/hdac-io/iavl v0.12.5-0.20200512153323-0dddbbd97928/go.mod h1:DVx1ezgtI4g32FUFjNqAT9jwMrcjZs3BdRFGWrFb7rw=
 github.com/hdac-io/tendermint v0.32.8-0.20200512152857-042fdf50704d h1:R3hFwgDjDkCBHPeb14ttFgn150vqUbMNQ5LrHFVueSY=
