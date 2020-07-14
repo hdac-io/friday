@@ -14,7 +14,6 @@ import (
 	"github.com/hdac-io/friday/types/module"
 	"github.com/hdac-io/friday/x/gov/client"
 	"github.com/hdac-io/friday/x/gov/client/cli"
-	"github.com/hdac-io/friday/x/gov/client/rest"
 	"github.com/hdac-io/friday/x/gov/types"
 )
 
@@ -64,12 +63,6 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 
 // register rest routes
 func (a AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
-	var proposalRESTHandlers []rest.ProposalRESTHandler
-	for _, proposalHandler := range a.proposalHandlers {
-		proposalRESTHandlers = append(proposalRESTHandlers, proposalHandler.RESTHandler(ctx))
-	}
-
-	rest.RegisterRoutes(ctx, rtr, proposalRESTHandlers)
 }
 
 // get the root tx command of this module
