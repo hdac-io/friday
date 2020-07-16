@@ -71,29 +71,12 @@ func queryEEDetail(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 	}
 
 	ctx.WithBlockHeight(req.Height)
-	storedValue, err := getQueryResult(ctx, keeper, param.KeyType, param.KeyData, param.Path)
+	res, err := getQueryResult(ctx, keeper, param.KeyType, param.KeyData, param.Path)
 	if err != nil {
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, err.Error())
 	}
 
-	var value *state.Value
-	switch storedValue.Type {
-	case storedvalue.TYPE_ACCOUNT:
-		value = &state.Value{Value: &state.Value_Account{Account: storedValue.Account.ToStateValue()}}
-	case storedvalue.TYPE_CONTRACT:
-		value = &state.Value{Value: &state.Value_Contract{Contract: storedValue.Contract.ToStateValue()}}
-	case storedvalue.TYPE_CL_VALUE:
-		value = storedValue.ClValue.ToStateValues()
-	}
-
-	jsonMarshaler := jsonpb.Marshaler{}
-	res := &bytes.Buffer{}
-	err = jsonMarshaler.Marshal(res, value)
-	if err != nil {
-		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
-	}
-
-	return res.Bytes(), nil
+	return res, nil
 }
 
 func queryBalanceDetail(ctx sdk.Context, path []string, req abci.RequestQuery, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
@@ -214,14 +197,16 @@ func queryValidator(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLaye
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, err.Error())
 	}
 
-	storedValue, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
+	res, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
+	var storedValue storedvalue.StoredValue
+	storedValue, err, _ = storedValue.FromBytes(res)
 	if err != nil {
-		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
+		return []byte{}, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
 	validator.Stake = storedValue.Contract.NamedKeys.GetValidatorStake(param.ValidatorAddr)
 
-	res, err := codec.MarshalJSONIndent(types.ModuleCdc, validator)
+	res, err = codec.MarshalJSONIndent(types.ModuleCdc, validator)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
@@ -232,9 +217,11 @@ func queryValidator(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLaye
 func queryAllValidator(ctx sdk.Context, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
 	validators := keeper.GetAllValidators(ctx)
 
-	storedValue, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
+	res, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
+	var storedValue storedvalue.StoredValue
+	storedValue, err, _ = storedValue.FromBytes(res)
 	if err != nil {
-		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
+		return []byte{}, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
 	eeValidators := storedValue.Contract.NamedKeys.GetAllValidators()
@@ -244,7 +231,7 @@ func queryAllValidator(ctx sdk.Context, keeper ExecutionLayerKeeper) ([]byte, sd
 		validator.Stake = eeValidators[valEEAddrStr]
 	}
 
-	res, err := codec.MarshalJSONIndent(types.ModuleCdc, validators)
+	res, err = codec.MarshalJSONIndent(types.ModuleCdc, validators)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
@@ -254,7 +241,7 @@ func queryAllValidator(ctx sdk.Context, keeper ExecutionLayerKeeper) ([]byte, sd
 
 // GetQueryResult queries with whole parameters
 func getQueryResult(ctx sdk.Context, k ExecutionLayerKeeper,
-	keyType string, keyData string, path string) (storedvalue.StoredValue, error) {
+	keyType string, keyData string, path string) ([]byte, error) {
 	arrPath := []string{}
 	if path != "" {
 		arrPath = strings.Split(path, "/")
@@ -267,20 +254,14 @@ func getQueryResult(ctx sdk.Context, k ExecutionLayerKeeper,
 	}
 	keyDataBytes, err := toBytes(keyType, keyData, k.NicknameKeeper, ctx)
 	if err != nil {
-		return storedvalue.StoredValue{}, err
+		return []byte{}, err
 	}
 	res, errstr := grpc.Query(k.client, stateHash, keyType, keyDataBytes, arrPath, &protocolVersion)
 	if errstr != "" {
-		return storedvalue.StoredValue{}, fmt.Errorf(errstr)
+		return []byte{}, fmt.Errorf(errstr)
 	}
 
-	var sValue storedvalue.StoredValue
-	sValue, err, _ = sValue.FromBytes(res)
-	if err != nil {
-		return storedvalue.StoredValue{}, err
-	}
-
-	return sValue, nil
+	return res, nil
 }
 
 func queryDelegator(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
@@ -290,7 +271,12 @@ func queryDelegator(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLaye
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
-	storedValue, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
+	res, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
+	var storedValue storedvalue.StoredValue
+	storedValue, err, _ = storedValue.FromBytes(res)
+	if err != nil {
+		return []byte{}, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
+	}
 
 	var resMap map[string]string
 	if !param.ValidatorAddr.Empty() {
@@ -323,7 +309,7 @@ func queryDelegator(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLaye
 		delegators = append(delegators, delegator)
 	}
 
-	res, err := codec.MarshalJSONIndent(types.ModuleCdc, delegators)
+	res, err = codec.MarshalJSONIndent(types.ModuleCdc, delegators)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
@@ -351,7 +337,12 @@ func queryVoter(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKee
 		contractKey = storedvalue.NewKeyFromURef(uref)
 	}
 
-	storedValue, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
+	res, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
+	var storedValue storedvalue.StoredValue
+	storedValue, err, _ = storedValue.FromBytes(res)
+	if err != nil {
+		return []byte{}, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
+	}
 	var resMap map[string]string
 	if !param.GetAddress().Empty() {
 		resMap = storedValue.Contract.NamedKeys.GetVotingDappFromUser(param.GetAddress())
@@ -403,7 +394,7 @@ func queryVoter(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKee
 		voters = append(voters, voter)
 	}
 
-	res, err := codec.MarshalJSONIndent(types.ModuleCdc, voters)
+	res, err = codec.MarshalJSONIndent(types.ModuleCdc, voters)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
