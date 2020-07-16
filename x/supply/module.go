@@ -13,7 +13,6 @@ import (
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/types/module"
 	"github.com/hdac-io/friday/x/supply/client/cli"
-	"github.com/hdac-io/friday/x/supply/client/rest"
 	"github.com/hdac-io/friday/x/supply/internal/types"
 )
 
@@ -52,7 +51,6 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 
 // register rest routes
 func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
-	rest.RegisterRoutes(ctx, rtr)
 }
 
 // get the root tx command of this module
