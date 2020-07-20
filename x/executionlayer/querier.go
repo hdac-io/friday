@@ -48,7 +48,7 @@ func NewQuerier(keeper ExecutionLayerKeeper) sdk.Querier {
 		case QueryValidator:
 			return queryValidator(ctx, req, keeper)
 		case QueryAllValidator:
-			return queryAllValidator(ctx, keeper)
+			return queryAllValidator(ctx, req, keeper)
 		case QueryDelegator:
 			return queryDelegator(ctx, req, keeper)
 		case QueryVoter:
@@ -70,7 +70,7 @@ func queryEEDetail(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
-	ctx.WithBlockHeight(req.Height)
+	ctx = ctx.WithBlockHeight(req.Height)
 	res, err := getQueryResult(ctx, keeper, param.KeyType, param.KeyData, param.Path)
 	if err != nil {
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, err.Error())
@@ -197,6 +197,7 @@ func queryValidator(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLaye
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, err.Error())
 	}
 
+	ctx = ctx.WithBlockHeight(req.Height)
 	res, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
 	var storedValue storedvalue.StoredValue
 	storedValue, err, _ = storedValue.FromBytes(res)
@@ -214,9 +215,10 @@ func queryValidator(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLaye
 	return res, nil
 }
 
-func queryAllValidator(ctx sdk.Context, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
+func queryAllValidator(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKeeper) ([]byte, sdk.Error) {
 	validators := keeper.GetAllValidators(ctx)
 
+	ctx = ctx.WithBlockHeight(req.Height)
 	res, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
 	var storedValue storedvalue.StoredValue
 	storedValue, err, _ = storedValue.FromBytes(res)
@@ -271,6 +273,7 @@ func queryDelegator(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLaye
 		return nil, sdk.NewError(sdk.CodespaceUndefined, sdk.CodeUnknownRequest, "Bad request: {}", err.Error())
 	}
 
+	ctx = ctx.WithBlockHeight(req.Height)
 	res, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
 	var storedValue storedvalue.StoredValue
 	storedValue, err, _ = storedValue.FromBytes(res)
@@ -337,6 +340,7 @@ func queryVoter(ctx sdk.Context, req abci.RequestQuery, keeper ExecutionLayerKee
 		contractKey = storedvalue.NewKeyFromURef(uref)
 	}
 
+	ctx = ctx.WithBlockHeight(req.Height)
 	res, err := getQueryResult(ctx, keeper, types.ADDRESS, types.SYSTEM, types.PosContractName)
 	var storedValue storedvalue.StoredValue
 	storedValue, err, _ = storedValue.FromBytes(res)
