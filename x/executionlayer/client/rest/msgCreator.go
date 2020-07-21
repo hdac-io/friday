@@ -572,9 +572,6 @@ func getStakeQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.
 		return nil, err
 	}
 
-	if err != nil {
-		return nil, err
-	}
 	queryData := types.QueryGetStakeDetail{
 		Address: addr,
 	}
