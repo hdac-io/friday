@@ -29,7 +29,7 @@ func (q QueryExecutionLayerDetail) String() string {
 
 // QueryGetBalanceDetail payload for balance query
 type QueryGetBalanceDetail struct {
-	Address sdk.AccAddress `json:"address"`
+	Address sdk.AccAddress `json:"address_holder"`
 }
 
 // implement fmt.Stringer
@@ -39,7 +39,7 @@ func (q QueryGetBalanceDetail) String() string {
 
 // QueryGetStakeDetail payload for stake query
 type QueryGetStakeDetail struct {
-	Address sdk.AccAddress `json:"address"`
+	Address sdk.AccAddress `json:"address_staker"`
 }
 
 // implement fmt.Stringer
