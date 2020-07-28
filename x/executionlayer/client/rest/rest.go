@@ -89,7 +89,7 @@ func contractQueryHandler(cliCtx context.CLIContext, storeName string) http.Hand
 		}
 
 		if err != nil {
-			fmt.Printf("could not resolve data - %s %s %s\nerr : %s\n", path, err.Error())
+			fmt.Printf("could not resolve data - %s\nerr : %s\n", path, err.Error())
 			return
 		}
 
