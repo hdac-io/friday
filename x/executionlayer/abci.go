@@ -4,7 +4,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strconv"
+	"sync"
 
+	"github.com/Workiva/go-datastructures/queue"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc/transforms"
@@ -21,18 +23,83 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, elk ExecutionLaye
 	candidateBlock := ctx.CandidateBlock()
 	candidateBlock.Hash = req.GetHash()
 	candidateBlock.State = unitHash.EEState
-	candidateBlock.Deploys = []*ipc.DeployItem{}
-	candidateBlock.Effects = []*transforms.TransformEntry{}
 	protocolVersion := elk.GetProtocolVersion(ctx)
 	candidateBlock.ProtocolVersion = &protocolVersion
+	candidateBlock.TxsCount = req.Header.GetNumTxs()
+	candidateBlock.DeployPQueue = queue.NewPriorityQueue(int(candidateBlock.TxsCount), false)
+
+	if candidateBlock.TxsCount > 0 {
+		candidateBlock.WaitGroup = sync.WaitGroup{}
+		candidateBlock.WaitGroup.Add(int(candidateBlock.TxsCount))
+		ctx = ctx.WithCandidateBlock(candidateBlock)
+	}
 }
 
 func EndBlocker(ctx sdk.Context, req abci.RequestEndBlock, k ExecutionLayerKeeper) []abci.ValidatorUpdate {
+	stateHash := ctx.CandidateBlock().State
 
-	// Commit
-	stateHash, _, errGrpc := grpc.Commit(k.client, ctx.CandidateBlock().State, ctx.CandidateBlock().Effects, ctx.CandidateBlock().ProtocolVersion)
-	if errGrpc != "" {
-		panic(errGrpc)
+	if ctx.CandidateBlock().TxsCount > 0 {
+		ctx.CandidateBlock().WaitGroup.Wait()
+
+		deploys := []*ipc.DeployItem{}
+
+		itemDeploysList, err := ctx.CandidateBlock().DeployPQueue.Get(ctx.CandidateBlock().DeployPQueue.Len())
+
+		for _, item := range itemDeploysList {
+			itemDeploy := item.(*sdk.ItemDeploy)
+			deploys = append(deploys, itemDeploy.Deploy)
+		}
+
+		// Execute
+		reqExecute := &ipc.ExecuteRequest{
+			ParentStateHash: stateHash,
+			BlockTime:       uint64(ctx.BlockTime().Unix()),
+			Deploys:         deploys,
+			ProtocolVersion: ctx.CandidateBlock().ProtocolVersion,
+		}
+
+		resExecute, err := k.client.Execute(ctx.Context(), reqExecute)
+		if err != nil {
+			panic(err)
+		}
+
+		effects := []*transforms.TransformEntry{}
+		switch resExecute.GetResult().(type) {
+		case *ipc.ExecuteResponse_Success:
+			for index, res := range resExecute.GetSuccess().GetDeployResults() {
+				switch res.GetExecutionResult().GetError().GetValue().(type) {
+				case *ipc.DeployError_GasError:
+					err = types.ErrGRpcExecuteDeployGasError(types.DefaultCodespace)
+				case *ipc.DeployError_ExecError:
+					err = types.ErrGRpcExecuteDeployExecError(types.DefaultCodespace, res.GetExecutionResult().GetError().GetExecError().GetMessage())
+				}
+
+				effects = append(effects, res.GetExecutionResult().GetEffects().GetTransformMap()...)
+				if err != nil {
+					itemDeploysList[index].(*sdk.ItemDeploy).LogChannel <- err.Error()
+				} else {
+					itemDeploysList[index].(*sdk.ItemDeploy).LogChannel <- ""
+				}
+			}
+
+		case *ipc.ExecuteResponse_MissingParent:
+			err = types.ErrGRpcExecuteMissingParent(types.DefaultCodespace, hex.EncodeToString(resExecute.GetMissingParent().GetHash()))
+			for _, itemDeploy := range itemDeploysList {
+				itemDeploy.(sdk.ItemDeploy).LogChannel <- err.Error()
+			}
+		default:
+			err = fmt.Errorf("Unknown result : %s", resExecute.String())
+			for _, itemDeploy := range itemDeploysList {
+				itemDeploy.(sdk.ItemDeploy).LogChannel <- err.Error()
+			}
+		}
+
+		// Commit
+		errGrpc := ""
+		stateHash, _, errGrpc = grpc.Commit(k.client, ctx.CandidateBlock().State, effects, ctx.CandidateBlock().ProtocolVersion)
+		if errGrpc != "" {
+			panic(errGrpc)
+		}
 	}
 
 	var validatorUpdates []abci.ValidatorUpdate

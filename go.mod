@@ -3,6 +3,7 @@ module github.com/hdac-io/friday
 go 1.13
 
 require (
+	github.com/Workiva/go-datastructures v1.0.52
 	github.com/bartekn/go-bip39 v0.0.0-20171116152956-a05967ea095d
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.0.0-20190523000118-16327141da8c
@@ -14,7 +15,7 @@ require (
 	github.com/gorilla/mux v1.7.3
 	github.com/hdac-io/casperlabs-ee-grpc-go-util v0.11.0
 	github.com/hdac-io/iavl v0.12.5-0.20200512153323-0dddbbd97928
-	github.com/hdac-io/tendermint v0.32.8-0.20200605035539-d9bef0343593
+	github.com/hdac-io/tendermint v0.32.8-0.20200728010157-9e4e75efd382
 	github.com/mattn/go-isatty v0.0.8
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect

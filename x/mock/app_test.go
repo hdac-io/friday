@@ -43,7 +43,7 @@ func (tx testMsg) ValidateBasic() sdk.Error {
 func getMockApp(t *testing.T) *App {
 	mApp := NewApp()
 
-	mApp.Router().AddRoute(msgRoute, func(ctx sdk.Context, msg sdk.Msg, simulate bool) (res sdk.Result) { return })
+	mApp.Router().AddRoute(msgRoute, func(ctx sdk.Context, msg sdk.Msg, simulate bool, txIndex int, msgIndex int) (res sdk.Result) { return })
 	require.NoError(t, mApp.CompleteSetup())
 
 	return mApp

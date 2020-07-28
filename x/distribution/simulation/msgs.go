@@ -28,7 +28,7 @@ func SimulateMsgSetWithdrawAddress(m auth.AccountKeeper, k distribution.Keeper) 
 		}
 
 		ctx, write := ctx.CacheContext()
-		ok := handler(ctx, msg, false).IsOK()
+		ok := handler(ctx, msg, false, 0, 0).IsOK()
 		if ok {
 			write()
 		}
@@ -53,7 +53,7 @@ func SimulateMsgWithdrawDelegatorReward(m auth.AccountKeeper, k distribution.Kee
 		}
 
 		ctx, write := ctx.CacheContext()
-		ok := handler(ctx, msg, false).IsOK()
+		ok := handler(ctx, msg, false, 0, 0).IsOK()
 		if ok {
 			write()
 		}
@@ -77,7 +77,7 @@ func SimulateMsgWithdrawValidatorCommission(m auth.AccountKeeper, k distribution
 		}
 
 		ctx, write := ctx.CacheContext()
-		ok := handler(ctx, msg, false).IsOK()
+		ok := handler(ctx, msg, false, 0, 0).IsOK()
 		if ok {
 			write()
 		}

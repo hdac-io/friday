@@ -6,11 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/hdac-io/tendermint/crypto"
 	"github.com/hdac-io/tendermint/crypto/ed25519"
 	"github.com/hdac-io/tendermint/crypto/multisig"
 	"github.com/hdac-io/tendermint/crypto/secp256k1"
+	"github.com/stretchr/testify/require"
 
 	sdk "github.com/hdac-io/friday/types"
 	"github.com/hdac-io/friday/x/auth/types"
@@ -18,7 +18,7 @@ import (
 
 // run the tx through the anteHandler and ensure its valid
 func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, simulate bool) {
-	_, result, abort := anteHandler(ctx, tx, simulate)
+	_, result, abort := anteHandler(ctx, tx, simulate, 0)
 	require.Equal(t, "", result.Log)
 	require.False(t, abort)
 	require.Equal(t, sdk.CodeOK, result.Code)
@@ -27,7 +27,7 @@ func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx
 
 // run the tx through the anteHandler and ensure it fails with the given code
 func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, simulate bool, code sdk.CodeType) {
-	newCtx, result, abort := anteHandler(ctx, tx, simulate)
+	newCtx, result, abort := anteHandler(ctx, tx, simulate, 0)
 	require.True(t, abort)
 
 	require.Equal(t, code, result.Code, fmt.Sprintf("Expected %v, got %v", code, result))

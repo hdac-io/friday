@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hdac-io/casperlabs-ee-grpc-go-util/grpc"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/casper/consensus/state"
 	"github.com/hdac-io/casperlabs-ee-grpc-go-util/protobuf/io/casperlabs/ipc"
@@ -19,34 +18,34 @@ import (
 
 // NewHandler returns a handler for "executionlayer" type messages.
 func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg, simulate bool) sdk.Result {
+	return func(ctx sdk.Context, msg sdk.Msg, simulate bool, txIndex int, msgIndex int) sdk.Result {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
 		case types.MsgExecute:
-			return handlerMsgExecute(ctx, k, msg, simulate)
+			return handlerMsgExecute(ctx, k, msg, simulate, txIndex, msgIndex)
 		case types.MsgTransfer:
-			return handlerMsgTransfer(ctx, k, msg, simulate)
+			return handlerMsgTransfer(ctx, k, msg, simulate, txIndex, msgIndex)
 		case types.MsgCreateValidator:
-			return handlerMsgCreateValidator(ctx, k, msg, simulate)
+			return handlerMsgCreateValidator(ctx, k, msg, simulate, txIndex, msgIndex)
 		case types.MsgEditValidator:
-			return handlerMsgEditValidator(ctx, k, msg, simulate)
+			return handlerMsgEditValidator(ctx, k, msg, simulate, txIndex, msgIndex)
 		case types.MsgBond:
-			return handlerMsgBond(ctx, k, msg, simulate)
+			return handlerMsgBond(ctx, k, msg, simulate, txIndex, msgIndex)
 		case types.MsgUnBond:
-			return handlerMsgUnBond(ctx, k, msg, simulate)
+			return handlerMsgUnBond(ctx, k, msg, simulate, txIndex, msgIndex)
 		case types.MsgDelegate:
-			return handlerMsgDelegate(ctx, k, msg, simulate)
+			return handlerMsgDelegate(ctx, k, msg, simulate, txIndex, msgIndex)
 		case types.MsgUndelegate:
-			return handlerMsgUndelgate(ctx, k, msg, simulate)
+			return handlerMsgUndelgate(ctx, k, msg, simulate, txIndex, msgIndex)
 		case types.MsgRedelegate:
-			return handlerMsgRedelegate(ctx, k, msg, simulate)
+			return handlerMsgRedelegate(ctx, k, msg, simulate, txIndex, msgIndex)
 		case types.MsgVote:
-			return handlerMsgVote(ctx, k, msg, simulate)
+			return handlerMsgVote(ctx, k, msg, simulate, txIndex, msgIndex)
 		case types.MsgUnvote:
-			return handlerMsgUnvote(ctx, k, msg, simulate)
+			return handlerMsgUnvote(ctx, k, msg, simulate, txIndex, msgIndex)
 		case types.MsgClaim:
-			return handlerMsgClaim(ctx, k, msg, simulate)
+			return handlerMsgClaim(ctx, k, msg, simulate, txIndex, msgIndex)
 		default:
 			errMsg := fmt.Sprintf("unrecognized execution layer messgae type: %T", msg)
 			return sdk.ErrUnknownRequest(errMsg).Result()
@@ -59,7 +58,7 @@ func NewHandler(k ExecutionLayerKeeper) sdk.Handler {
 // Difference of general execution
 //   1) Raw account is needed for checking address existence
 //   2) Fixed transfer & payment WASMs are needed
-func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTransfer, simulate bool) sdk.Result {
+func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTransfer, simulate bool, txIndex int, msgIndex int) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
@@ -95,7 +94,7 @@ func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTr
 		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute, simulate)
+	result, log := execute(ctx, k, msgExecute, simulate, txIndex, msgIndex)
 	if result == true {
 		k.SetAccountIfNotExists(ctx, msg.ToAddress)
 	}
@@ -103,7 +102,7 @@ func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTr
 }
 
 // Handle MsgExecute
-func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simulate bool) sdk.Result {
+func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simulate bool, txIndex int, msgIndex int) sdk.Result {
 	replacedSessionArgs, addrList, err := ReplaceFromBech32ToHex(msg.SessionArgs)
 	if err != nil {
 		return getResult(false, err.Error())
@@ -125,11 +124,11 @@ func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExe
 
 	msg.SessionArgs = util.EncodeToHexString(deployAbi)
 
-	result, log := execute(ctx, k, msg, simulate)
+	result, log := execute(ctx, k, msg, simulate, txIndex, msgIndex)
 	return getResult(result, log)
 }
 
-func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgCreateValidator, simulate bool) sdk.Result {
+func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgCreateValidator, simulate bool, txIndex int, msgIndex int) sdk.Result {
 
 	if _, found := k.GetValidator(ctx, msg.ValidatorAddress); found {
 		return ErrValidatorOwnerExists(types.DefaultCodespace).Result()
@@ -170,7 +169,7 @@ func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg type
 			msg.Fee,
 		)
 
-		result, log := execute(ctx, k, msgExecute, simulate)
+		result, log := execute(ctx, k, msgExecute, simulate, txIndex, msgIndex)
 
 		if parseError != nil {
 			return getResult(false, parseError.Error())
@@ -184,7 +183,7 @@ func handlerMsgCreateValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg type
 	return getResult(true, "")
 }
 
-func handlerMsgEditValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgEditValidator, simulate bool) sdk.Result {
+func handlerMsgEditValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgEditValidator, simulate bool, txIndex int, msgIndex int) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	// validator must already be registered
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddress)
@@ -208,7 +207,7 @@ func handlerMsgEditValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.
 		msg.Fee,
 	)
 
-	result, log := execute(ctx, k, msgExecute, simulate)
+	result, log := execute(ctx, k, msgExecute, simulate, txIndex, msgIndex)
 
 	if !found {
 		return getResult(false, "validator does not exist for that address")
@@ -225,7 +224,7 @@ func handlerMsgEditValidator(ctx sdk.Context, k ExecutionLayerKeeper, msg types.
 	return getResult(true, "")
 }
 
-func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond, simulate bool) sdk.Result {
+func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond, simulate bool, txIndex int, msgIndex int) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
@@ -255,11 +254,11 @@ func handlerMsgBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgBond, 
 		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute, simulate)
+	result, log := execute(ctx, k, msgExecute, simulate, txIndex, msgIndex)
 	return getResult(result, log)
 }
 
-func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBond, simulate bool) sdk.Result {
+func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBond, simulate bool, txIndex int, msgIndex int) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
@@ -294,12 +293,12 @@ func handlerMsgUnBond(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnBo
 		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute, simulate)
+	result, log := execute(ctx, k, msgExecute, simulate, txIndex, msgIndex)
 
 	return getResult(result, log)
 }
 
-func handlerMsgDelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgDelegate, simulate bool) sdk.Result {
+func handlerMsgDelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgDelegate, simulate bool, txIndex int, msgIndex int) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
@@ -335,12 +334,12 @@ func handlerMsgDelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgDe
 		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute, simulate)
+	result, log := execute(ctx, k, msgExecute, simulate, txIndex, msgIndex)
 
 	return getResult(result, log)
 }
 
-func handlerMsgUndelgate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUndelegate, simulate bool) sdk.Result {
+func handlerMsgUndelgate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUndelegate, simulate bool, txIndex int, msgIndex int) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
@@ -379,12 +378,12 @@ func handlerMsgUndelgate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgU
 		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute, simulate)
+	result, log := execute(ctx, k, msgExecute, simulate, txIndex, msgIndex)
 
 	return getResult(result, log)
 }
 
-func handlerMsgRedelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgRedelegate, simulate bool) sdk.Result {
+func handlerMsgRedelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgRedelegate, simulate bool, txIndex int, msgIndex int) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	sessionArgs := []*consensus.Deploy_Arg{
 		&consensus.Deploy_Arg{
@@ -429,12 +428,12 @@ func handlerMsgRedelegate(ctx sdk.Context, k ExecutionLayerKeeper, msg types.Msg
 		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute, simulate)
+	result, log := execute(ctx, k, msgExecute, simulate, txIndex, msgIndex)
 
 	return getResult(result, log)
 }
 
-func handlerMsgVote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgVote, simulate bool) sdk.Result {
+func handlerMsgVote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgVote, simulate bool, txIndex int, msgIndex int) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	var sessionArgs []*consensus.Deploy_Arg
 
@@ -507,12 +506,12 @@ func handlerMsgVote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgVote, 
 		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute, simulate)
+	result, log := execute(ctx, k, msgExecute, simulate, txIndex, msgIndex)
 
 	return getResult(result, log)
 }
 
-func handlerMsgUnvote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnvote, simulate bool) sdk.Result {
+func handlerMsgUnvote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnvote, simulate bool, txIndex int, msgIndex int) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	var sessionArgs []*consensus.Deploy_Arg
 
@@ -591,12 +590,12 @@ func handlerMsgUnvote(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgUnvo
 		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute, simulate)
+	result, log := execute(ctx, k, msgExecute, simulate, txIndex, msgIndex)
 
 	return getResult(result, log)
 }
 
-func handlerMsgClaim(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgClaim, simulate bool) sdk.Result {
+func handlerMsgClaim(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgClaim, simulate bool, txIndex int, msgIndex int) sdk.Result {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	var methodName string
 	switch msg.RewardOrCommission {
@@ -629,12 +628,12 @@ func handlerMsgClaim(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgClaim
 		hex.EncodeToString(sessionAbi),
 		msg.Fee,
 	)
-	result, log := execute(ctx, k, msgExecute, simulate)
+	result, log := execute(ctx, k, msgExecute, simulate, txIndex, msgIndex)
 
 	return getResult(result, log)
 }
 
-func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simulate bool) (bool, string) {
+func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simulate bool, txIndex int, msgIndex int) (bool, string) {
 	proxyContractHash := k.GetProxyContractHash(ctx)
 	// Parameter preparation
 	var stateHash []byte
@@ -676,7 +675,7 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simu
 	msgHash := util.Blake2b256(msg.GetSignBytes())
 
 	// Execute
-	deploys := ctx.CandidateBlock().Deploys
+	deploys := []*ipc.DeployItem{}
 	deploy := &ipc.DeployItem{
 		Address:           msg.ExecAddress,
 		Session:           util.MakeDeployPayload(msg.SessionType, msg.SessionCode, sessionAbi),
@@ -686,86 +685,60 @@ func execute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExecute, simu
 		GasPrice:          types.BASIC_GAS,
 	}
 	deploys = append(deploys, deploy)
-	reqExecute := &ipc.ExecuteRequest{
-		ParentStateHash: stateHash,
-		BlockTime:       uint64(ctx.BlockTime().Unix()),
-		Deploys:         deploys,
-		ProtocolVersion: &protocolVersion,
-	}
-	resExecute, err := k.client.Execute(ctx.Context(), reqExecute)
-	if err != nil {
-		return false, err.Error()
-	}
 
-	effects := []*transforms.TransformEntry{}
-	switch resExecute.GetResult().(type) {
-	case *ipc.ExecuteResponse_Success:
-		res := resExecute.GetSuccess().GetDeployResults()
-		index := len(res) - 1
-		switch res[index].GetExecutionResult().GetError().GetValue().(type) {
-		case *ipc.DeployError_GasError:
-			err = types.ErrGRpcExecuteDeployGasError(types.DefaultCodespace)
-		case *ipc.DeployError_ExecError:
-			err = types.ErrGRpcExecuteDeployExecError(types.DefaultCodespace, res[index].GetExecutionResult().GetError().GetExecError().GetMessage())
+	if simulate {
+		reqExecute := &ipc.ExecuteRequest{
+			ParentStateHash: stateHash,
+			BlockTime:       uint64(ctx.BlockTime().Unix()),
+			Deploys:         deploys,
+			ProtocolVersion: &protocolVersion,
 		}
-
-		effects = append(effects, res[index].GetExecutionResult().GetEffects().GetTransformMap()...)
+		resExecute, err := k.client.Execute(ctx.Context(), reqExecute)
 		if err != nil {
-			log = fmt.Sprintf(log, err.Error())
+			return false, err.Error()
 		}
 
-	case *ipc.ExecuteResponse_MissingParent:
-		err = types.ErrGRpcExecuteMissingParent(types.DefaultCodespace, util.EncodeToHexString(resExecute.GetMissingParent().GetHash()))
-		log = err.Error()
-	default:
-		err = fmt.Errorf("Unknown result : %s", resExecute.String())
-		log = err.Error()
-	}
+		effects := []*transforms.TransformEntry{}
+		switch resExecute.GetResult().(type) {
+		case *ipc.ExecuteResponse_Success:
+			res := resExecute.GetSuccess().GetDeployResults()
+			switch res[0].GetExecutionResult().GetError().GetValue().(type) {
+			case *ipc.DeployError_GasError:
+				err = types.ErrGRpcExecuteDeployGasError(types.DefaultCodespace)
+			case *ipc.DeployError_ExecError:
+				err = types.ErrGRpcExecuteDeployExecError(types.DefaultCodespace, res[0].GetExecutionResult().GetError().GetExecError().GetMessage())
+			}
 
-	candidateBlock := ctx.CandidateBlock()
-	candidateBlock.Deploys = deploys
-	candidateBlock.Effects = effects
+			effects = append(effects, res[0].GetExecutionResult().GetEffects().GetTransformMap()...)
+			if err != nil {
+				log = fmt.Sprintf(log, err.Error())
+			}
+
+		case *ipc.ExecuteResponse_MissingParent:
+			err = types.ErrGRpcExecuteMissingParent(types.DefaultCodespace, util.EncodeToHexString(resExecute.GetMissingParent().GetHash()))
+			log = err.Error()
+		default:
+			err = fmt.Errorf("Unknown result : %s", resExecute.String())
+			log = err.Error()
+		}
+	} else {
+		ch := make(chan string, 1)
+
+		candidateBlock := ctx.CandidateBlock()
+		itemDeploy := &sdk.ItemDeploy{
+			TxIndex:    txIndex,
+			MsgIndex:   msgIndex,
+			Deploy:     deploy,
+			LogChannel: ch,
+		}
+		candidateBlock.DeployPQueue.Put(itemDeploy)
+
+		candidateBlock.WaitGroup.Done()
+		ctx = ctx.WithCandidateBlock(candidateBlock)
+		log = <-ch
+	}
 
 	return log == "", log
-}
-
-func executeStep(ctx sdk.Context, k ExecutionLayerKeeper) (bool, error) {
-	stepRequest := &ipc.StepRequest{
-		ParentStateHash: ctx.CandidateBlock().State,
-		BlockTime:       uint64(ctx.BlockTime().Unix()),
-		BlockHeight:     ctx.UBlockHeight(),
-		ProtocolVersion: ctx.CandidateBlock().ProtocolVersion,
-	}
-
-	res, err := k.client.Step(ctx.Context(), stepRequest)
-	if err != nil {
-		return false, err
-	}
-
-	var stateHash []byte
-	effects := []*transforms.TransformEntry{}
-	switch res.GetResult().(type) {
-	case *ipc.StepResponse_Success:
-		stateHash = res.GetSuccess().GetPostStateHash()
-		effects = res.GetSuccess().GetEffect().TransformMap
-	case *ipc.StepResponse_MissingParent:
-		return false, fmt.Errorf("Missing parent : %s", hex.EncodeToString(res.GetMissingParent().GetHash()))
-	case *ipc.StepResponse_Error:
-		return false, fmt.Errorf(res.GetError().GetMessage())
-	default:
-		return false, fmt.Errorf("Unknown result : %s", res.String())
-	}
-
-	postStateHash, bonds, errMsg := grpc.Commit(k.client, stateHash, effects, ctx.CandidateBlock().ProtocolVersion)
-	if errMsg != "" {
-		return false, fmt.Errorf(errMsg)
-	}
-
-	candidateBlock := ctx.CandidateBlock()
-	candidateBlock.State = postStateHash
-	candidateBlock.Bonds = bonds
-
-	return true, nil
 }
 
 func getResult(ok bool, log string) sdk.Result {

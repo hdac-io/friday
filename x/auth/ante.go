@@ -37,7 +37,7 @@ type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig []byte, pub
 // signer.
 func NewAnteHandler(ak AccountKeeper, supplyKeeper types.SupplyKeeper, sigGasConsumer SignatureVerificationGasConsumer) sdk.AnteHandler {
 	return func(
-		ctx sdk.Context, tx sdk.Tx, simulate bool,
+		ctx sdk.Context, tx sdk.Tx, simulate bool, txIndex int,
 	) (newCtx sdk.Context, res sdk.Result, abort bool) {
 
 		if addr := supplyKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {

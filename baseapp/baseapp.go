@@ -692,7 +692,7 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) (res abci.ResponseCheckTx) 
 	if err != nil {
 		result = err.Result()
 	} else {
-		result = app.runTx(runTxModeCheck, req.Tx, tx)
+		result = app.runTx(runTxModeCheck, req.Tx, tx, 0)
 	}
 
 	return abci.ResponseCheckTx{
@@ -713,7 +713,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 	if err != nil {
 		result = err.Result()
 	} else {
-		result = app.runTx(runTxModeDeliver, req.Tx, tx)
+		result = app.runTx(runTxModeDeliver, req.Tx, tx, int(req.Index))
 	}
 
 	return abci.ResponseDeliverTx{
@@ -724,6 +724,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 		GasWanted: int64(result.GasWanted), // TODO: Should type accept unsigned ints?
 		GasUsed:   int64(result.GasUsed),   // TODO: Should type accept unsigned ints?
 		Events:    result.Events.ToABCIEvents(),
+		Index:     req.Index,
 	}
 }
 
@@ -759,7 +760,7 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Con
 }
 
 // runMsgs iterates through all the messages and executes them.
-func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
+func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, txIndex int) (result sdk.Result) {
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 
 	data := make([]byte, 0, len(msgs))
@@ -771,7 +772,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 	events := sdk.EmptyEvents()
 
 	// NOTE: GasWanted is determined by ante handler and GasUsed by the GasMeter.
-	for i, msg := range msgs {
+	for msgIndex, msg := range msgs {
 		// match message route
 		msgRoute := msg.Route()
 		handler := app.router.Route(msgRoute)
@@ -782,7 +783,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		var msgResult sdk.Result
 
 		// skip actual execution for CheckTx mode
-		msgResult = handler(ctx, msg, mode == runTxModeCheck)
+		msgResult = handler(ctx, msg, mode == runTxModeCheck, txIndex, msgIndex)
 
 		// Each message result's Data must be length prefixed in order to separate
 		// each result.
@@ -799,14 +800,14 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 
 		// stop execution and return on first failed message
 		if !msgResult.IsOK() {
-			msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), false, msgResult.Log, msgEvents))
+			msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(msgIndex), false, msgResult.Log, msgEvents))
 
 			code = msgResult.Code
 			codespace = msgResult.Codespace
 			break
 		}
 
-		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), true, msgResult.Log, msgEvents))
+		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(msgIndex), true, msgResult.Log, msgEvents))
 	}
 
 	result = sdk.Result{
@@ -856,7 +857,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (
 // anteHandler. The provided txBytes may be nil in some cases, eg. in tests. For
 // further details on transaction execution, reference the BaseApp SDK
 // documentation.
-func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
+func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx, index int) (result sdk.Result) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter so we initialize upfront.
@@ -930,7 +931,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		// performance benefits, but it'll be more difficult to get right.
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
 
-		newCtx, result, abort := app.anteHandler(anteCtx, tx, mode == runTxModeSimulate)
+		newCtx, result, abort := app.anteHandler(anteCtx, tx, mode == runTxModeSimulate, index)
 		if !newCtx.IsZero() {
 			// At this point, newCtx.MultiStore() is cache-wrapped, or something else
 			// replaced by the ante handler. We want the original multistore, not one
@@ -954,7 +955,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// Create a new context based off of the existing context with a cache wrapped
 	// multi-store in case message processing fails.
 	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
-	result = app.runMsgs(runMsgCtx, msgs, mode)
+	result = app.runMsgs(runMsgCtx, msgs, mode, index)
 	result.GasWanted = gasWanted
 
 	// Safety check: don't write the cache state unless we're in DeliverTx.

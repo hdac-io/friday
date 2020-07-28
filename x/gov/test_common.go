@@ -236,7 +236,7 @@ func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context,
 			testDescription, testCommissionRates, sdk.OneInt(),
 		)
 
-		res := stakingHandler(ctx, valCreateMsg, false)
+		res := stakingHandler(ctx, valCreateMsg, false, 0, 0)
 		require.True(t, res.IsOK())
 	}
 }
