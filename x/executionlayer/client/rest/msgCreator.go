@@ -490,43 +490,43 @@ func claimMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r *http.R
 	return req.BaseReq, []sdk.Msg{msg}, nil
 }
 
-func getRewardQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error) {
+func getRewardQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error, context.CLIContext) {
 	vars := r.URL.Query()
 	straddr := vars.Get("address")
 
 	addr, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, straddr)
 	if err != nil {
-		return nil, err
+		return nil, err, cliCtx
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, err, cliCtx
 	}
 	queryData := types.NewQueryGetReward(addr)
 	bz := cliCtx.Codec.MustMarshalJSON(queryData)
 
-	return bz, nil
+	return bz, nil, cliCtx
 }
 
-func getCommissionQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error) {
+func getCommissionQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error, context.CLIContext) {
 	vars := r.URL.Query()
 	straddr := vars.Get("address")
 
 	addr, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, straddr)
 	if err != nil {
-		return nil, err
+		return nil, err, cliCtx
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, err, cliCtx
 	}
 	queryData := types.NewQueryGetCommission(addr)
 	bz := cliCtx.Codec.MustMarshalJSON(queryData)
 
-	return bz, nil
+	return bz, nil, cliCtx
 }
 
-func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error) {
+func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error, context.CLIContext) {
 	vars := r.URL.Query()
 	straddr := vars.Get("address")
 	heightStr := vars.Get("height")
@@ -535,16 +535,16 @@ func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 	}
 	height, err := strconv.ParseInt(heightStr, 10, 64)
 	if err != nil {
-		return nil, err
+		return nil, err, cliCtx
 	}
 
 	addr, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, straddr)
 	if err != nil {
-		return nil, err
+		return nil, err, cliCtx
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, err, cliCtx
 	}
 	queryData := types.QueryGetBalanceDetail{
 		Address: addr,
@@ -552,10 +552,10 @@ func getBalanceQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *htt
 	cliCtx = cliCtx.WithHeight(height)
 	bz := cliCtx.Codec.MustMarshalJSON(queryData)
 
-	return bz, nil
+	return bz, nil, cliCtx
 }
 
-func getStakeQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error) {
+func getStakeQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error, context.CLIContext) {
 	vars := r.URL.Query()
 	straddr := vars.Get("address")
 	heightStr := vars.Get("height")
@@ -564,12 +564,12 @@ func getStakeQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.
 	}
 	height, err := strconv.ParseInt(heightStr, 10, 64)
 	if err != nil {
-		return nil, err
+		return nil, err, cliCtx
 	}
 
 	addr, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, straddr)
 	if err != nil {
-		return nil, err
+		return nil, err, cliCtx
 	}
 
 	queryData := types.QueryGetStakeDetail{
@@ -578,10 +578,10 @@ func getStakeQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.
 	cliCtx = cliCtx.WithHeight(height)
 	bz := cliCtx.Codec.MustMarshalJSON(queryData)
 
-	return bz, nil
+	return bz, nil, cliCtx
 }
 
-func getVoteQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error) {
+func getVoteQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request, storeName string) ([]byte, error, context.CLIContext) {
 	vars := r.URL.Query()
 	straddr := vars.Get("address")
 	strdapp := vars.Get("dapp")
@@ -592,7 +592,7 @@ func getVoteQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.R
 
 	height, err := strconv.ParseInt(heightStr, 10, 64)
 	if err != nil {
-		return nil, err
+		return nil, err, cliCtx
 	}
 
 	var bz []byte
@@ -600,11 +600,11 @@ func getVoteQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.R
 	if straddr != "" {
 		addr, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, straddr)
 		if err != nil {
-			return nil, err
+			return nil, err, cliCtx
 		}
 
 		if err != nil {
-			return nil, err
+			return nil, err, cliCtx
 		}
 		queryData.Address = addr
 
@@ -617,7 +617,7 @@ func getVoteQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.R
 		bz = cliCtx.Codec.MustMarshalJSON(queryData)
 	}
 
-	return bz, nil
+	return bz, nil, cliCtx
 }
 
 type createValidatorReq struct {
@@ -713,17 +713,17 @@ func editValidatorMsgCreator(w http.ResponseWriter, cliCtx context.CLIContext, r
 	return req.BaseReq, []sdk.Msg{msg}, nil
 }
 
-func getValidatorQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) ([]byte, error) {
+func getValidatorQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) ([]byte, error, context.CLIContext) {
 	vars := r.URL.Query()
 	strAddr := vars.Get("address")
 
 	if strAddr == "" {
-		return []byte{}, nil
+		return []byte{}, nil, cliCtx
 	}
 
 	addr, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, strAddr)
 	if err != nil {
-		return nil, err
+		return nil, err, cliCtx
 	}
 
 	queryData := types.QueryValidatorParams{
@@ -732,25 +732,25 @@ func getValidatorQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *h
 
 	bz := cliCtx.Codec.MustMarshalJSON(queryData)
 
-	return bz, nil
+	return bz, nil, cliCtx
 }
 
-func getDelegatorQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) ([]byte, error) {
+func getDelegatorQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) ([]byte, error, context.CLIContext) {
 	vars := r.URL.Query()
 	validatorAddressStr := vars.Get("validator")
 	validatorAddress, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, validatorAddressStr)
 	if err != nil {
-		return nil, err
+		return nil, err, cliCtx
 	}
 
 	delegatorAddressStr := vars.Get("delegator")
 	delegatorAddress, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, delegatorAddressStr)
 	if err != nil {
-		return nil, err
+		return nil, err, cliCtx
 	}
 
 	if validatorAddress.Empty() && delegatorAddress.Empty() {
-		return nil, fmt.Errorf("requires validator or delegate address")
+		return nil, fmt.Errorf("requires validator or delegate address"), cliCtx
 	}
 
 	queryData := types.QueryDelegatorParams{
@@ -760,17 +760,17 @@ func getDelegatorQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *h
 
 	bz := cliCtx.Codec.MustMarshalJSON(queryData)
 
-	return bz, nil
+	return bz, nil, cliCtx
 }
 
-func getVoterQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) ([]byte, error) {
+func getVoterQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.Request) ([]byte, error, context.CLIContext) {
 	vars := r.URL.Query()
 
 	var err error
 	addressStr := vars.Get("address")
 	address, err := cliutil.GetAddress(cliCtx.Codec, cliCtx, addressStr)
 	if err != nil {
-		return nil, err
+		return nil, err, cliCtx
 	}
 
 	contractStr := vars.Get("contract")
@@ -803,14 +803,14 @@ func getVoterQuerying(w http.ResponseWriter, cliCtx context.CLIContext, r *http.
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, err, cliCtx
 	}
 
 	if address.Empty() && contractStr == "" {
-		return nil, fmt.Errorf("requires hash or voter address")
+		return nil, fmt.Errorf("requires hash or voter address"), cliCtx
 	}
 
 	bz := cliCtx.Codec.MustMarshalJSON(queryData)
 
-	return bz, nil
+	return bz, nil, cliCtx
 }

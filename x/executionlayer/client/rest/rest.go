@@ -200,7 +200,7 @@ func claimHandler(cliCtx context.CLIContext) http.HandlerFunc {
 
 func getBalanceHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		bz, err := getBalanceQuerying(w, cliCtx, r, storeName)
+		bz, err, cliCtx := getBalanceQuerying(w, cliCtx, r, storeName)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -217,7 +217,7 @@ func getBalanceHandler(cliCtx context.CLIContext, storeName string) http.Handler
 
 func getStakeHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		bz, err := getStakeQuerying(w, cliCtx, r, storeName)
+		bz, err, cliCtx := getStakeQuerying(w, cliCtx, r, storeName)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -234,7 +234,7 @@ func getStakeHandler(cliCtx context.CLIContext, storeName string) http.HandlerFu
 
 func getVoteHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		bz, err := getVoteQuerying(w, cliCtx, r, storeName)
+		bz, err, cliCtx := getVoteQuerying(w, cliCtx, r, storeName)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -273,7 +273,7 @@ func editValidatorHandler(cliCtx context.CLIContext) http.HandlerFunc {
 
 func getValidatorHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		bz, err := getValidatorQuerying(w, cliCtx, r)
+		bz, err, cliCtx := getValidatorQuerying(w, cliCtx, r)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -296,7 +296,7 @@ func getValidatorHandler(cliCtx context.CLIContext, storeName string) http.Handl
 
 func getDelegatorHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		bz, err := getDelegatorQuerying(w, cliCtx, r)
+		bz, err, cliCtx := getDelegatorQuerying(w, cliCtx, r)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -314,7 +314,7 @@ func getDelegatorHandler(cliCtx context.CLIContext, storeName string) http.Handl
 
 func getVoterHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		bz, err := getVoterQuerying(w, cliCtx, r)
+		bz, err, cliCtx := getVoterQuerying(w, cliCtx, r)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -332,7 +332,7 @@ func getVoterHandler(cliCtx context.CLIContext, storeName string) http.HandlerFu
 
 func getRewardHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		bz, err := getVoterQuerying(w, cliCtx, r)
+		bz, err, cliCtx := getRewardQuerying(w, cliCtx, r, storeName)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -350,7 +350,7 @@ func getRewardHandler(cliCtx context.CLIContext, storeName string) http.HandlerF
 
 func getCommissionHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		bz, err := getVoterQuerying(w, cliCtx, r)
+		bz, err, cliCtx := getCommissionQuerying(w, cliCtx, r, storeName)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
