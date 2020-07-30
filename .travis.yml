@@ -44,6 +44,7 @@ addons:
       - curl
       - python3-pip
 before_install:
+  - pyenv install 3.6.3 && pyenv global 3.6.3
   - bash scripts/travis_ci_prerequisites.sh
   - export PATH="$PATH:$HOME/.cargo/bin"
   - export PATH="$PATH:$HOME/protoc/bin"
