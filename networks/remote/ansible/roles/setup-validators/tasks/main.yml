@@ -138,7 +138,7 @@
   loop: "{{ list_key }}"
 
 - name: Create initial el genesis account
-  command: "/usr/bin/nodef add-el-genesis-account {{ item }} \"1000000000000000000000000000\" \"100000000000000000000\""
+  command: "/usr/bin/nodef add-el-genesis-account {{ item }} \"10000000000000000000000000\" \"1000000000000000000\""
   become: yes
   become_user: nodef
   args:
