@@ -16,6 +16,8 @@ type CandidateBlock struct {
 	TxsCount        int64                  `json:"txs_count"`
 	WaitGroup       sync.WaitGroup         `json:"wait_group"`
 	DeployPQueue    *queue.PriorityQueue   `json:"deploy_priority_queue"`
+	AnteCond        *sync.Cond             `json:"anti_condition"`
+	CurrentTxIndex  int                    `json:"current_tx_index"`
 }
 
 type ItemDeploy struct {

@@ -32,6 +32,11 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, elk ExecutionLaye
 		candidateBlock.WaitGroup = sync.WaitGroup{}
 		candidateBlock.WaitGroup.Add(int(candidateBlock.TxsCount))
 		ctx = ctx.WithCandidateBlock(candidateBlock)
+
+		ctx.CandidateBlock().CurrentTxIndex = 0
+
+		var mutex = new(sync.Mutex)
+		candidateBlock.AnteCond = sync.NewCond(mutex)
 	}
 }
 
@@ -130,9 +135,6 @@ func EndBlocker(ctx sdk.Context, req abci.RequestEndBlock, k ExecutionLayerKeepe
 	resPosInfoBytes, err := getQueryResult(ctx, k, types.ADDRESS, types.SYSTEM, types.PosContractName)
 	var posInfos storedvalue.StoredValue
 	posInfos, err, _ = posInfos.FromBytes(resPosInfoBytes)
-	if err != nil {
-		panic(err)
-	}
 	if err != nil {
 		panic(err)
 	}

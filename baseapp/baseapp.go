@@ -918,6 +918,12 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx, index int) 
 		return err.Result()
 	}
 
+	if ctx.UBlockHeight() != 0 && mode == runTxModeDeliver && ctx.CandidateBlock().TxsCount > 0 {
+		ctx.CandidateBlock().AnteCond.L.Lock()
+		for index != ctx.CandidateBlock().CurrentTxIndex {
+			ctx.CandidateBlock().AnteCond.Wait()
+		}
+	}
 	if app.anteHandler != nil {
 		var anteCtx sdk.Context
 		var msCache sdk.CacheMultiStore
@@ -932,6 +938,13 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx, index int) 
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
 
 		newCtx, result, abort := app.anteHandler(anteCtx, tx, mode == runTxModeSimulate, index)
+		if ctx.UBlockHeight() != 0 && mode == runTxModeDeliver && ctx.CandidateBlock().TxsCount > 0 {
+			candidateblock := ctx.CandidateBlock()
+			candidateblock.CurrentTxIndex = candidateblock.CurrentTxIndex + 1
+			ctx = ctx.WithCandidateBlock(candidateblock)
+			ctx.CandidateBlock().AnteCond.Broadcast()
+			ctx.CandidateBlock().AnteCond.L.Unlock()
+		}
 		if !newCtx.IsZero() {
 			// At this point, newCtx.MultiStore() is cache-wrapped, or something else
 			// replaced by the ante handler. We want the original multistore, not one
