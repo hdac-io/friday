@@ -90,12 +90,12 @@ func EndBlocker(ctx sdk.Context, req abci.RequestEndBlock, k ExecutionLayerKeepe
 		case *ipc.ExecuteResponse_MissingParent:
 			err = types.ErrGRpcExecuteMissingParent(types.DefaultCodespace, hex.EncodeToString(resExecute.GetMissingParent().GetHash()))
 			for _, itemDeploy := range itemDeploysList {
-				itemDeploy.(sdk.ItemDeploy).LogChannel <- err.Error()
+				itemDeploy.(*sdk.ItemDeploy).LogChannel <- err.Error()
 			}
 		default:
 			err = fmt.Errorf("Unknown result : %s", resExecute.String())
 			for _, itemDeploy := range itemDeploysList {
-				itemDeploy.(sdk.ItemDeploy).LogChannel <- err.Error()
+				itemDeploy.(*sdk.ItemDeploy).LogChannel <- err.Error()
 			}
 		}
 
