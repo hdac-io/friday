@@ -8,6 +8,7 @@ import (
 	"runtime/debug"
 	"sort"
 	"strings"
+	"sync"
 	"syscall"
 
 	"errors"
@@ -771,43 +772,80 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, txI
 
 	events := sdk.EmptyEvents()
 
+	var mutex = new(sync.Mutex)
+	msgCond := sync.NewCond(mutex)
+	currentMsgIndex := 0
+
+	waitRunMsgs := sync.WaitGroup{}
+	waitRunMsgs.Add(len(msgs))
+
+	count := 0
+	for _, msg := range msgs {
+		// match message route
+		if msg.Route() == "contract" {
+			count++
+		}
+	}
+
+	if mode != runTxModeCheck && count > 1 {
+		candidateBlock := ctx.CandidateBlock()
+		candidateBlock.WaitGroup.Add(count - 1)
+		ctx = ctx.WithCandidateBlock(candidateBlock)
+	}
+
+	msgResults := sync.Map{}
+
 	// NOTE: GasWanted is determined by ante handler and GasUsed by the GasMeter.
 	for msgIndex, msg := range msgs {
-		// match message route
-		msgRoute := msg.Route()
-		handler := app.router.Route(msgRoute)
-		if handler == nil {
-			return sdk.ErrUnknownRequest("unrecognized message type: " + msgRoute).Result()
-		}
+		go func(msgIndex int, msg sdk.Msg) {
+			msgCond.L.Lock()
+			for currentMsgIndex != msgIndex {
+				msgCond.Wait()
+			}
+			// match message route
+			msgRoute := msg.Route()
+			handler := app.router.Route(msgRoute)
+			if handler == nil {
+				msgResults.Store(msgIndex, sdk.ErrUnknownRequest("unrecognized message type: "+msgRoute).Result())
+			}
 
-		var msgResult sdk.Result
+			currentMsgIndex++
+			msgCond.L.Unlock()
+			msgCond.Broadcast()
 
-		// skip actual execution for CheckTx mode
-		msgResult = handler(ctx, msg, mode == runTxModeCheck, txIndex, msgIndex)
+			// skip actual execution for CheckTx mode
+			msgResults.Store(msgIndex, handler(ctx, msg, mode == runTxModeCheck, txIndex, msgIndex))
+			waitRunMsgs.Done()
+		}(msgIndex, msg)
+	}
 
-		// Each message result's Data must be length prefixed in order to separate
-		// each result.
-		data = append(data, msgResult.Data...)
+	waitRunMsgs.Wait()
 
-		msgEvents := msgResult.Events
+	// Each message result's Data must be length prefixed in order to separate
+	// each result.
+	for i := 0; i < len(msgs); i++ {
+		msgResult, _ := msgResults.Load(i)
+		data = append(data, msgResult.(sdk.Result).Data...)
+
+		msgEvents := msgResult.(sdk.Result).Events
 
 		// append events from the message's execution and a message action event
 		msgEvents = msgEvents.AppendEvent(
-			sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())),
+			sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msgs[i].Type())),
 		)
 
 		events = events.AppendEvents(msgEvents)
 
 		// stop execution and return on first failed message
-		if !msgResult.IsOK() {
-			msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(msgIndex), false, msgResult.Log, msgEvents))
+		if !msgResult.(sdk.Result).IsOK() {
+			msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), false, msgResult.(sdk.Result).Log, msgEvents))
 
-			code = msgResult.Code
-			codespace = msgResult.Codespace
+			code = msgResult.(sdk.Result).Code
+			codespace = msgResult.(sdk.Result).Codespace
 			break
 		}
 
-		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(msgIndex), true, msgResult.Log, msgEvents))
+		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), true, msgResult.(sdk.Result).Log, msgEvents))
 	}
 
 	result = sdk.Result{
