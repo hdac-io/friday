@@ -16,9 +16,9 @@ func NewHandler(k NicknameKeeper) sdk.Handler {
 
 		switch msg := msg.(type) {
 		case MsgSetAccount:
-			return handleMsgSetAccount(ctx, k, msg)
+			return handleMsgSetAccount(ctx, k, msg, simulate)
 		case MsgChangeKey:
-			return handleMsgChangeKey(ctx, k, msg)
+			return handleMsgChangeKey(ctx, k, msg, simulate)
 		default:
 			errMsg := fmt.Sprintf("Unrecognized nameserver Msg type: %v", msg.Type())
 			return sdk.ErrUnknownRequest(errMsg).Result()
@@ -50,13 +50,25 @@ func getResult(ok bool, msg sdk.Msg) sdk.Result {
 }
 
 // Handle a message to set name
-func handleMsgSetAccount(ctx sdk.Context, k NicknameKeeper, msg MsgSetAccount) sdk.Result {
+func handleMsgSetAccount(ctx sdk.Context, k NicknameKeeper, msg MsgSetAccount, simulate bool) sdk.Result {
 	res := k.SetNickname(ctx, msg.Nickname.MustToString(), msg.Address)
+	processDone(ctx, simulate)
+
 	return getResult(res, msg)
 }
 
 // Handle a message to change key
-func handleMsgChangeKey(ctx sdk.Context, k NicknameKeeper, msg MsgChangeKey) sdk.Result {
+func handleMsgChangeKey(ctx sdk.Context, k NicknameKeeper, msg MsgChangeKey, simulate bool) sdk.Result {
 	res := k.ChangeKey(ctx, msg.Nickname, msg.OldAddress, msg.NewAddress)
+	processDone(ctx, simulate)
+
 	return getResult(res, msg)
+}
+
+func processDone(ctx sdk.Context, simulate bool) {
+	if !simulate {
+		candidateBlock := ctx.CandidateBlock()
+		candidateBlock.WaitGroup.Done()
+		ctx = ctx.WithCandidateBlock(candidateBlock)
+	}
 }

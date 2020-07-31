@@ -779,17 +779,9 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, txI
 	waitRunMsgs := sync.WaitGroup{}
 	waitRunMsgs.Add(len(msgs))
 
-	count := 0
-	for _, msg := range msgs {
-		// match message route
-		if msg.Route() == "contract" {
-			count++
-		}
-	}
-
-	if mode != runTxModeCheck && count > 1 {
+	if mode != runTxModeCheck && len(msgs) > 1 {
 		candidateBlock := ctx.CandidateBlock()
-		candidateBlock.WaitGroup.Add(count - 1)
+		candidateBlock.WaitGroup.Add(len(msgs) - 1)
 		ctx = ctx.WithCandidateBlock(candidateBlock)
 	}
 
