@@ -121,8 +121,8 @@ github.com/hdac-io/iavl v0.12.5-0.20200512153323-0dddbbd97928 h1:kytVAqIMtcDsUK4
 github.com/hdac-io/iavl v0.12.5-0.20200512153323-0dddbbd97928/go.mod h1:DVx1ezgtI4g32FUFjNqAT9jwMrcjZs3BdRFGWrFb7rw=
 github.com/hdac-io/tendermint v0.32.8-0.20200512152857-042fdf50704d h1:R3hFwgDjDkCBHPeb14ttFgn150vqUbMNQ5LrHFVueSY=
 github.com/hdac-io/tendermint v0.32.8-0.20200512152857-042fdf50704d/go.mod h1:lQzldj9uvA4kkM+GH9Ty/bXNzAl9wWJEAa8iKt0+bMQ=
-github.com/hdac-io/tendermint v0.32.8-0.20200728010157-9e4e75efd382 h1:jDU9k8RzB2WOzWHgeFduc4mRx0Mq+qrZC88yleEmHUc=
-github.com/hdac-io/tendermint v0.32.8-0.20200728010157-9e4e75efd382/go.mod h1:lQzldj9uvA4kkM+GH9Ty/bXNzAl9wWJEAa8iKt0+bMQ=
+github.com/hdac-io/tendermint v0.32.8-0.20200803052307-acc0e26aa364 h1:XtA7kyS9WNN0hz+QNsCH2YO9ymlp3ZcY+SOUdhQ46c0=
+github.com/hdac-io/tendermint v0.32.8-0.20200803052307-acc0e26aa364/go.mod h1:lQzldj9uvA4kkM+GH9Ty/bXNzAl9wWJEAa8iKt0+bMQ=
 github.com/hpcloud/tail v1.0.0 h1:nfCOvKYfkgYP8hkirhJocXT2+zOD8yUNjXaWfTlyFKI=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
 github.com/inconshreveable/mousetrap v1.0.0 h1:Z8tu5sraLXCXIcARxBp/8cbvlwVa7Z1NHg9XEKhtSvM=

@@ -15,7 +15,7 @@ require (
 	github.com/gorilla/mux v1.7.3
 	github.com/hdac-io/casperlabs-ee-grpc-go-util v0.11.0
 	github.com/hdac-io/iavl v0.12.5-0.20200512153323-0dddbbd97928
-	github.com/hdac-io/tendermint v0.32.8-0.20200728010157-9e4e75efd382
+	github.com/hdac-io/tendermint v0.32.8-0.20200803052307-acc0e26aa364
 	github.com/mattn/go-isatty v0.0.8
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
