@@ -23,6 +23,7 @@ import (
 	"github.com/hdac-io/friday/codec"
 	"github.com/hdac-io/friday/store"
 	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/executionlayer"
 )
 
 // Key to store the consensus params in the main store.
@@ -787,31 +788,51 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, txI
 
 	msgResults := sync.Map{}
 
+	var errInterface interface{}
+
 	// NOTE: GasWanted is determined by ante handler and GasUsed by the GasMeter.
 	for msgIndex, msg := range msgs {
 		go func(msgIndex int, msg sdk.Msg) {
+			defer func() {
+				if r := recover(); r != nil {
+					errInterface = r
+				}
+				waitRunMsgs.Done()
+			}()
+
 			msgCond.L.Lock()
-			for currentMsgIndex != msgIndex {
+			for currentMsgIndex < msgIndex {
 				msgCond.Wait()
 			}
 			// match message route
 			msgRoute := msg.Route()
 			handler := app.router.Route(msgRoute)
-			if handler == nil {
-				msgResults.Store(msgIndex, sdk.ErrUnknownRequest("unrecognized message type: "+msgRoute).Result())
+
+			if msgRoute == executionlayer.ModuleName {
+				currentMsgIndex++
+				msgCond.L.Unlock()
+				msgCond.Broadcast()
 			}
 
-			currentMsgIndex++
-			msgCond.L.Unlock()
-			msgCond.Broadcast()
+			if handler == nil {
+				msgResults.Store(msgIndex, sdk.ErrUnknownRequest("unrecognized message type: "+msgRoute).Result())
+			} else {
+				msgResults.Store(msgIndex, handler(ctx, msg, mode == runTxModeCheck, txIndex, msgIndex))
+			}
 
-			// skip actual execution for CheckTx mode
-			msgResults.Store(msgIndex, handler(ctx, msg, mode == runTxModeCheck, txIndex, msgIndex))
-			waitRunMsgs.Done()
+			if msgRoute != executionlayer.ModuleName {
+				currentMsgIndex++
+				msgCond.L.Unlock()
+				msgCond.Broadcast()
+			}
 		}(msgIndex, msg)
 	}
 
 	waitRunMsgs.Wait()
+
+	if errInterface != nil {
+		panic(errInterface)
+	}
 
 	// Each message result's Data must be length prefixed in order to separate
 	// each result.

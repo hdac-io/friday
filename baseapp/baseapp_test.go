@@ -1139,7 +1139,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 
 	routerOpt := func(bapp *BaseApp) {
 		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg, simulate bool, txIndex int, msgIndex int) sdk.Result {
-			count := msg.(msgCounter).Counter
+			count := msg.(*msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
 			return sdk.Result{}
 		})
