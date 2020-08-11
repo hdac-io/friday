@@ -10,7 +10,7 @@ import (
 
 // NewHandler returns a handler for "bank" type messages.
 func NewHandler(k keeper.Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg, simulate bool) sdk.Result {
+	return func(ctx sdk.Context, msg sdk.Msg, simulate bool, txIndex int, msgIndex int) sdk.Result {
 		if simulate {
 			return sdk.Result{}
 		}

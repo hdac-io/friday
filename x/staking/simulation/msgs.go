@@ -51,7 +51,7 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulati
 		}
 
 		ctx, write := ctx.CacheContext()
-		ok := handler(ctx, msg, false).IsOK()
+		ok := handler(ctx, msg, false, 0, 0).IsOK()
 		if ok {
 			write()
 		}
@@ -87,7 +87,7 @@ func SimulateMsgEditValidator(k staking.Keeper) simulation.Operation {
 			return simulation.NoOpMsg(staking.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 		ctx, write := ctx.CacheContext()
-		ok := handler(ctx, msg, false).IsOK()
+		ok := handler(ctx, msg, false, 0, 0).IsOK()
 		if ok {
 			write()
 		}
@@ -125,7 +125,7 @@ func SimulateMsgDelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Oper
 			return simulation.NoOpMsg(staking.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 		ctx, write := ctx.CacheContext()
-		ok := handler(ctx, msg, false).IsOK()
+		ok := handler(ctx, msg, false, 0, 0).IsOK()
 		if ok {
 			write()
 		}
@@ -168,7 +168,7 @@ func SimulateMsgUndelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Op
 		}
 
 		ctx, write := ctx.CacheContext()
-		ok := handler(ctx, msg, false).IsOK()
+		ok := handler(ctx, msg, false, 0, 0).IsOK()
 		if ok {
 			write()
 		}
@@ -211,7 +211,7 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulati
 		}
 
 		ctx, write := ctx.CacheContext()
-		ok := handler(ctx, msg, false).IsOK()
+		ok := handler(ctx, msg, false, 0, 0).IsOK()
 		if ok {
 			write()
 		}

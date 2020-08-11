@@ -19,7 +19,7 @@ func TestBeginBlocker(t *testing.T) {
 	addr, pk := addrs[2], pks[2]
 
 	// bond the validator
-	got := staking.NewHandler(sk)(ctx, NewTestMsgCreateValidator(addr, pk, amt), false)
+	got := staking.NewHandler(sk)(ctx, NewTestMsgCreateValidator(addr, pk, amt), false, 0, 0)
 	require.True(t, got.IsOK())
 	staking.EndBlocker(ctx, sk)
 	require.Equal(

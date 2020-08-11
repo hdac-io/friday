@@ -18,7 +18,7 @@ def setup_multinode():
     info_olaf = None
     info_hans = None
 
-    basic_coin = "1000000000000000000000000000"
+    basic_coin = "100000000000000000000000000"
     basic_stake = "1000000000000000000"
 
     print("*********************Multinode environment preparation start*********************")

@@ -7,16 +7,15 @@ import (
 	"os"
 	"runtime/pprof"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/hdac-io/tendermint/abci/server"
 	tcmd "github.com/hdac-io/tendermint/cmd/tendermint/commands"
 	cmn "github.com/hdac-io/tendermint/libs/common"
 	"github.com/hdac-io/tendermint/node"
 	"github.com/hdac-io/tendermint/p2p"
 	pvm "github.com/hdac-io/tendermint/privval"
-	"github.com/hdac-io/tendermint/proxy"
 	"github.com/hdac-io/tendermint/types"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // Tendermint full-node start flags
@@ -161,7 +160,7 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 		cfg,
 		privVal,
 		nodeKey,
-		proxy.NewLocalClientCreator(app),
+		NewFridayLocalClientCreator(app),
 		node.DefaultGenesisDocProviderFunc(cfg),
 		node.DefaultDBProvider,
 		node.DefaultMetricsProvider(cfg.Instrumentation),

@@ -456,7 +456,7 @@ func testTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 }
 
 func anteHandlerTxTest(t *testing.T, capKey *sdk.KVStoreKey, storeKey []byte) sdk.AnteHandler {
-	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+	return func(ctx sdk.Context, tx sdk.Tx, simulate bool, txIndex int) (newCtx sdk.Context, res sdk.Result, abort bool) {
 		store := ctx.KVStore(capKey)
 		txTest := tx.(txTest)
 
@@ -470,7 +470,7 @@ func anteHandlerTxTest(t *testing.T, capKey *sdk.KVStoreKey, storeKey []byte) sd
 }
 
 func handlerMsgCounter(t *testing.T, capKey *sdk.KVStoreKey, deliverKey []byte) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg, simulate bool) sdk.Result {
+	return func(ctx sdk.Context, msg sdk.Msg, simulate bool, txIndex int, msgIndex int) sdk.Result {
 		if simulate {
 			return sdk.Result{}
 		}
@@ -540,7 +540,9 @@ func TestCheckTx(t *testing.T) {
 	anteOpt := func(bapp *BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, counterKey)) }
 	routerOpt := func(bapp *BaseApp) {
 		// TODO: can remove this once CheckTx doesnt process msgs.
-		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg, simulate bool) sdk.Result { return sdk.Result{} })
+		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg, simulate bool, txIndex int, msgIndex int) sdk.Result {
+			return sdk.Result{}
+		})
 	}
 
 	app := setupBaseApp(t, anteOpt, routerOpt)
@@ -705,14 +707,14 @@ func TestSimulateTx(t *testing.T) {
 	gasConsumed := uint64(5)
 
 	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool, txIndex int) (newCtx sdk.Context, res sdk.Result, abort bool) {
 			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasConsumed))
 			return
 		})
 	}
 
 	routerOpt := func(bapp *BaseApp) {
-		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg, simulate bool) sdk.Result {
+		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg, simulate bool, txIndex int, msgIndex int) sdk.Result {
 			ctx.GasMeter().ConsumeGas(gasConsumed, "test")
 			return sdk.Result{GasUsed: ctx.GasMeter().GasConsumed()}
 		})
@@ -766,12 +768,12 @@ func TestSimulateTx(t *testing.T) {
 
 func TestRunInvalidTransaction(t *testing.T) {
 	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool, txIndex int) (newCtx sdk.Context, res sdk.Result, abort bool) {
 			return
 		})
 	}
 	routerOpt := func(bapp *BaseApp) {
-		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg, simulate bool) (res sdk.Result) { return })
+		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg, simulate bool, txIndex int, msgIndex int) (res sdk.Result) { return })
 	}
 
 	app := setupBaseApp(t, anteOpt, routerOpt)
@@ -850,7 +852,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 func TestTxGasLimits(t *testing.T) {
 	gasGranted := uint64(10)
 	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool, txIndex int) (newCtx sdk.Context, res sdk.Result, abort bool) {
 			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
 
 			defer func() {
@@ -878,7 +880,7 @@ func TestTxGasLimits(t *testing.T) {
 	}
 
 	routerOpt := func(bapp *BaseApp) {
-		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg, simulate bool) sdk.Result {
+		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg, simulate bool, txIndex int, msgIndex int) sdk.Result {
 			count := msg.(msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
 			return sdk.Result{}
@@ -935,7 +937,7 @@ func TestTxGasLimits(t *testing.T) {
 func TestMaxBlockGasLimits(t *testing.T) {
 	gasGranted := uint64(10)
 	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool, txIndex int) (newCtx sdk.Context, res sdk.Result, abort bool) {
 			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
 
 			defer func() {
@@ -963,7 +965,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 	}
 
 	routerOpt := func(bapp *BaseApp) {
-		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg, simulate bool) sdk.Result {
+		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg, simulate bool, txIndex int, msgIndex int) sdk.Result {
 			count := msg.(msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
 			return sdk.Result{}
@@ -1105,7 +1107,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 func TestGasConsumptionBadTx(t *testing.T) {
 	gasWanted := uint64(5)
 	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool, txIndex int) (newCtx sdk.Context, res sdk.Result, abort bool) {
 			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasWanted))
 
 			defer func() {
@@ -1136,8 +1138,8 @@ func TestGasConsumptionBadTx(t *testing.T) {
 	}
 
 	routerOpt := func(bapp *BaseApp) {
-		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg, simulate bool) sdk.Result {
-			count := msg.(msgCounter).Counter
+		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg, simulate bool, txIndex int, msgIndex int) sdk.Result {
+			count := msg.(*msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
 			return sdk.Result{}
 		})
@@ -1181,7 +1183,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 func TestQuery(t *testing.T) {
 	key, value := []byte("hello"), []byte("goodbye")
 	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool, txIndex int) (newCtx sdk.Context, res sdk.Result, abort bool) {
 			store := ctx.KVStore(capKey1)
 			store.Set(key, value)
 			return
@@ -1189,7 +1191,7 @@ func TestQuery(t *testing.T) {
 	}
 
 	routerOpt := func(bapp *BaseApp) {
-		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg, simulate bool) sdk.Result {
+		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg, simulate bool, txIndex int, msgIndex int) sdk.Result {
 			store := ctx.KVStore(capKey1)
 			store.Set(key, value)
 			return sdk.Result{}

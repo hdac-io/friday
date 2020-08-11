@@ -31,7 +31,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 		input.addrs[0],
 	)
 
-	res := govHandler(ctx, newProposalMsg, false)
+	res := govHandler(ctx, newProposalMsg, false, 0, 0)
 	require.True(t, res.IsOK())
 
 	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
@@ -80,7 +80,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 		input.addrs[0],
 	)
 
-	res := govHandler(ctx, newProposalMsg, false)
+	res := govHandler(ctx, newProposalMsg, false, 0, 0)
 	require.True(t, res.IsOK())
 
 	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
@@ -101,7 +101,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 		input.addrs[0],
 	)
 
-	res = govHandler(ctx, newProposalMsg2, false)
+	res = govHandler(ctx, newProposalMsg2, false, 0, 0)
 	require.True(t, res.IsOK())
 
 	newHeader = ctx.BlockHeader()
@@ -151,7 +151,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 		input.addrs[0],
 	)
 
-	res := govHandler(ctx, newProposalMsg, false)
+	res := govHandler(ctx, newProposalMsg, false, 0, 0)
 	require.True(t, res.IsOK())
 	var proposalID uint64
 	input.keeper.cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID)
@@ -169,7 +169,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	inactiveQueue.Close()
 
 	newDepositMsg := NewMsgDeposit(input.addrs[1], proposalID, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)})
-	res = govHandler(ctx, newDepositMsg, false)
+	res = govHandler(ctx, newDepositMsg, false, 0, 0)
 	require.True(t, res.IsOK())
 
 	activeQueue = input.keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
@@ -197,7 +197,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(5))}
 	newProposalMsg := NewMsgSubmitProposal(testProposal(), proposalCoins, input.addrs[0])
 
-	res := govHandler(ctx, newProposalMsg, false)
+	res := govHandler(ctx, newProposalMsg, false, 0, 0)
 	require.True(t, res.IsOK())
 	var proposalID uint64
 	input.keeper.cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID)
@@ -207,7 +207,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	ctx = ctx.WithBlockHeader(newHeader)
 
 	newDepositMsg := NewMsgDeposit(input.addrs[1], proposalID, proposalCoins)
-	res = govHandler(ctx, newDepositMsg, false)
+	res = govHandler(ctx, newDepositMsg, false, 0, 0)
 	require.True(t, res.IsOK())
 
 	newHeader = ctx.BlockHeader()
@@ -264,7 +264,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10))}
 	newDepositMsg := NewMsgDeposit(input.addrs[0], proposal.ProposalID, proposalCoins)
-	res := handler(ctx, newDepositMsg, false)
+	res := handler(ctx, newDepositMsg, false, 0, 0)
 	require.True(t, res.IsOK())
 
 	macc = input.keeper.GetGovernanceAccount(ctx)
@@ -315,7 +315,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10)))
 	newDepositMsg := NewMsgDeposit(input.addrs[0], proposal.ProposalID, proposalCoins)
-	res := handler(ctx, newDepositMsg, false)
+	res := handler(ctx, newDepositMsg, false, 0, 0)
 	require.True(t, res.IsOK())
 
 	err = input.keeper.AddVote(ctx, proposal.ProposalID, input.addrs[0], OptionYes)

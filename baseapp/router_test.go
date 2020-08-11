@@ -8,7 +8,7 @@ import (
 	sdk "github.com/hdac-io/friday/types"
 )
 
-var testHandler = func(_ sdk.Context, _ sdk.Msg, _ bool) sdk.Result {
+var testHandler = func(_ sdk.Context, _ sdk.Msg, _ bool, _ int, _ int) sdk.Result {
 	return sdk.Result{}
 }
 

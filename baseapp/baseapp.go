@@ -8,6 +8,7 @@ import (
 	"runtime/debug"
 	"sort"
 	"strings"
+	"sync"
 	"syscall"
 
 	"errors"
@@ -22,6 +23,7 @@ import (
 	"github.com/hdac-io/friday/codec"
 	"github.com/hdac-io/friday/store"
 	sdk "github.com/hdac-io/friday/types"
+	"github.com/hdac-io/friday/x/executionlayer"
 )
 
 // Key to store the consensus params in the main store.
@@ -692,7 +694,7 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) (res abci.ResponseCheckTx) 
 	if err != nil {
 		result = err.Result()
 	} else {
-		result = app.runTx(runTxModeCheck, req.Tx, tx)
+		result = app.runTx(runTxModeCheck, req.Tx, tx, 0)
 	}
 
 	return abci.ResponseCheckTx{
@@ -713,7 +715,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 	if err != nil {
 		result = err.Result()
 	} else {
-		result = app.runTx(runTxModeDeliver, req.Tx, tx)
+		result = app.runTx(runTxModeDeliver, req.Tx, tx, int(req.Index))
 	}
 
 	return abci.ResponseDeliverTx{
@@ -724,6 +726,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 		GasWanted: int64(result.GasWanted), // TODO: Should type accept unsigned ints?
 		GasUsed:   int64(result.GasUsed),   // TODO: Should type accept unsigned ints?
 		Events:    result.Events.ToABCIEvents(),
+		Index:     req.Index,
 	}
 }
 
@@ -759,7 +762,7 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Con
 }
 
 // runMsgs iterates through all the messages and executes them.
-func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
+func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode, txIndex int) (result sdk.Result) {
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 
 	data := make([]byte, 0, len(msgs))
@@ -770,43 +773,92 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 
 	events := sdk.EmptyEvents()
 
+	var mutex = new(sync.Mutex)
+	msgCond := sync.NewCond(mutex)
+	currentMsgIndex := 0
+
+	waitRunMsgs := sync.WaitGroup{}
+	waitRunMsgs.Add(len(msgs))
+
+	if mode != runTxModeCheck && len(msgs) > 1 {
+		candidateBlock := ctx.CandidateBlock()
+		candidateBlock.WaitGroup.Add(len(msgs) - 1)
+		ctx = ctx.WithCandidateBlock(candidateBlock)
+	}
+
+	msgResults := sync.Map{}
+
+	var errInterface interface{}
+
 	// NOTE: GasWanted is determined by ante handler and GasUsed by the GasMeter.
-	for i, msg := range msgs {
-		// match message route
-		msgRoute := msg.Route()
-		handler := app.router.Route(msgRoute)
-		if handler == nil {
-			return sdk.ErrUnknownRequest("unrecognized message type: " + msgRoute).Result()
-		}
+	for msgIndex, msg := range msgs {
+		go func(msgIndex int, msg sdk.Msg) {
+			defer func() {
+				if r := recover(); r != nil {
+					errInterface = r
+				}
+				waitRunMsgs.Done()
+			}()
 
-		var msgResult sdk.Result
+			msgCond.L.Lock()
+			for currentMsgIndex < msgIndex {
+				msgCond.Wait()
+			}
+			// match message route
+			msgRoute := msg.Route()
+			handler := app.router.Route(msgRoute)
 
-		// skip actual execution for CheckTx mode
-		msgResult = handler(ctx, msg, mode == runTxModeCheck)
+			if msgRoute == executionlayer.ModuleName {
+				currentMsgIndex++
+				msgCond.L.Unlock()
+				msgCond.Broadcast()
+			}
 
-		// Each message result's Data must be length prefixed in order to separate
-		// each result.
-		data = append(data, msgResult.Data...)
+			if handler == nil {
+				msgResults.Store(msgIndex, sdk.ErrUnknownRequest("unrecognized message type: "+msgRoute).Result())
+			} else {
+				msgResults.Store(msgIndex, handler(ctx, msg, mode == runTxModeCheck, txIndex, msgIndex))
+			}
 
-		msgEvents := msgResult.Events
+			if msgRoute != executionlayer.ModuleName {
+				currentMsgIndex++
+				msgCond.L.Unlock()
+				msgCond.Broadcast()
+			}
+		}(msgIndex, msg)
+	}
+
+	waitRunMsgs.Wait()
+
+	if errInterface != nil {
+		panic(errInterface)
+	}
+
+	// Each message result's Data must be length prefixed in order to separate
+	// each result.
+	for i := 0; i < len(msgs); i++ {
+		msgResult, _ := msgResults.Load(i)
+		data = append(data, msgResult.(sdk.Result).Data...)
+
+		msgEvents := msgResult.(sdk.Result).Events
 
 		// append events from the message's execution and a message action event
 		msgEvents = msgEvents.AppendEvent(
-			sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())),
+			sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msgs[i].Type())),
 		)
 
 		events = events.AppendEvents(msgEvents)
 
 		// stop execution and return on first failed message
-		if !msgResult.IsOK() {
-			msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), false, msgResult.Log, msgEvents))
+		if !msgResult.(sdk.Result).IsOK() {
+			msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), false, msgResult.(sdk.Result).Log, msgEvents))
 
-			code = msgResult.Code
-			codespace = msgResult.Codespace
+			code = msgResult.(sdk.Result).Code
+			codespace = msgResult.(sdk.Result).Codespace
 			break
 		}
 
-		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), true, msgResult.Log, msgEvents))
+		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), true, msgResult.(sdk.Result).Log, msgEvents))
 	}
 
 	result = sdk.Result{
@@ -856,7 +908,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (
 // anteHandler. The provided txBytes may be nil in some cases, eg. in tests. For
 // further details on transaction execution, reference the BaseApp SDK
 // documentation.
-func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
+func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx, index int) (result sdk.Result) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter so we initialize upfront.
@@ -917,6 +969,12 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		return err.Result()
 	}
 
+	if ctx.UBlockHeight() != 0 && mode == runTxModeDeliver && ctx.CandidateBlock().TxsCount > 0 {
+		ctx.CandidateBlock().AnteCond.L.Lock()
+		for index != ctx.CandidateBlock().CurrentTxIndex {
+			ctx.CandidateBlock().AnteCond.Wait()
+		}
+	}
 	if app.anteHandler != nil {
 		var anteCtx sdk.Context
 		var msCache sdk.CacheMultiStore
@@ -930,7 +988,14 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		// performance benefits, but it'll be more difficult to get right.
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
 
-		newCtx, result, abort := app.anteHandler(anteCtx, tx, mode == runTxModeSimulate)
+		newCtx, result, abort := app.anteHandler(anteCtx, tx, mode == runTxModeSimulate, index)
+		if ctx.UBlockHeight() != 0 && mode == runTxModeDeliver && ctx.CandidateBlock().TxsCount > 0 {
+			candidateblock := ctx.CandidateBlock()
+			candidateblock.CurrentTxIndex = candidateblock.CurrentTxIndex + 1
+			ctx = ctx.WithCandidateBlock(candidateblock)
+			ctx.CandidateBlock().AnteCond.Broadcast()
+			ctx.CandidateBlock().AnteCond.L.Unlock()
+		}
 		if !newCtx.IsZero() {
 			// At this point, newCtx.MultiStore() is cache-wrapped, or something else
 			// replaced by the ante handler. We want the original multistore, not one
@@ -954,7 +1019,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// Create a new context based off of the existing context with a cache wrapped
 	// multi-store in case message processing fails.
 	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
-	result = app.runMsgs(runMsgCtx, msgs, mode)
+	result = app.runMsgs(runMsgCtx, msgs, mode, index)
 	result.GasWanted = gasWanted
 
 	// Safety check: don't write the cache state unless we're in DeliverTx.

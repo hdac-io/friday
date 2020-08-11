@@ -109,7 +109,7 @@ func replayTxs(rootDir string) error {
 	}
 	// tmsm.SaveState(tmDB, genState)
 
-	cc := proxy.NewLocalClientCreator(myapp)
+	cc := server.NewFridayLocalClientCreator(myapp)
 	proxyApp := proxy.NewAppConns(cc)
 	err = proxyApp.Start()
 	if err != nil {
