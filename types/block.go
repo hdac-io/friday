@@ -18,6 +18,7 @@ type CandidateBlock struct {
 	DeployPQueue    *queue.PriorityQueue   `json:"deploy_priority_queue"`
 	AnteCond        *sync.Cond             `json:"anti_condition"`
 	CurrentTxIndex  int                    `json:"current_tx_index"`
+	NewAccounts     *queue.PriorityQueue   `json:"new_accounts"`
 }
 
 type ItemDeploy struct {
