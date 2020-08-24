@@ -95,7 +95,7 @@ func handlerMsgTransfer(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgTr
 		msg.Fee,
 	)
 	result, log := execute(ctx, k, msgExecute, simulate, txIndex, msgIndex)
-	if result == true {
+	if !simulate && result == true {
 		k.SetAccountIfNotExists(ctx, msg.ToAddress)
 	}
 	return getResult(result, log)
@@ -125,6 +125,11 @@ func handlerMsgExecute(ctx sdk.Context, k ExecutionLayerKeeper, msg types.MsgExe
 	msg.SessionArgs = util.EncodeToHexString(deployAbi)
 
 	result, log := execute(ctx, k, msg, simulate, txIndex, msgIndex)
+	if !simulate && result == true {
+		for _, unitAddr := range addrList {
+			k.SetAccountIfNotExists(ctx, unitAddr)
+		}
+	}
 	return getResult(result, log)
 }
 

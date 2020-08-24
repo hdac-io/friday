@@ -128,8 +128,8 @@ func (k ExecutionLayerKeeper) SetAccountIfNotExists(ctx sdk.Context, addr sdk.Ac
 	// Recepient account existence check, if not, create one
 	toAddressAccountObject := k.AccountKeeper.GetAccount(ctx, addr)
 	if toAddressAccountObject == nil {
-		toAddressAccountObject = k.AccountKeeper.NewAccountWithAddress(ctx, addr)
-		k.AccountKeeper.SetAccount(ctx, toAddressAccountObject)
+		strAccAddress := sdk.StrAccAddress(addr.String())
+		ctx.CandidateBlock().NewAccounts.Put(&strAccAddress)
 	}
 }
 

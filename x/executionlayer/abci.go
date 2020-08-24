@@ -27,6 +27,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, elk ExecutionLaye
 	candidateBlock.ProtocolVersion = &protocolVersion
 	candidateBlock.TxsCount = req.Header.GetNumTxs()
 	candidateBlock.DeployPQueue = queue.NewPriorityQueue(int(candidateBlock.TxsCount), false)
+	candidateBlock.NewAccounts = queue.NewPriorityQueue(int(candidateBlock.TxsCount), false)
 
 	if candidateBlock.TxsCount > 0 {
 		candidateBlock.WaitGroup = sync.WaitGroup{}
@@ -105,6 +106,15 @@ func EndBlocker(ctx sdk.Context, req abci.RequestEndBlock, k ExecutionLayerKeepe
 		if errGrpc != "" {
 			panic(errGrpc)
 		}
+	}
+
+	// Add to new accounts
+	newAccounts, err := ctx.CandidateBlock().NewAccounts.Get(ctx.CandidateBlock().NewAccounts.Len())
+
+	for _, addr := range newAccounts {
+		acc, _ := sdk.AccAddressFromBech32(string(*addr.(*sdk.StrAccAddress)))
+		toAddressAccountObject := k.AccountKeeper.NewAccountWithAddress(ctx, acc)
+		k.AccountKeeper.SetAccount(ctx, toAddressAccountObject)
 	}
 
 	var validatorUpdates []abci.ValidatorUpdate

@@ -11,6 +11,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/Workiva/go-datastructures/queue"
 	"github.com/hdac-io/tendermint/crypto"
 	cryptoAmino "github.com/hdac-io/tendermint/crypto/encoding/amino"
 
@@ -287,6 +288,14 @@ func (aa AccAddress) Format(s fmt.State, verb rune) {
 	default:
 		s.Write([]byte(fmt.Sprintf("%X", []byte(aa))))
 	}
+}
+
+type StrAccAddress string
+
+func (aa StrAccAddress) Compare(src queue.Item) int {
+	srcDep := src.(*StrAccAddress)
+
+	return strings.Compare(string(aa), string(*srcDep))
 }
 
 // ----------------------------------------------------------------------------
