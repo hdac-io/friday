@@ -1,0 +1,16 @@
+[Unit]
+Description=Node for Friday Platform
+After=execution-engine.service
+BindTo=execution-engine.service
+
+[Service]
+User=ubuntu
+#ExecStartPre=/bin/sleep 3
+ExecStartPre=/usr/bin/test ! -f /home/ubuntu/.casperlabs/.casper-node.sock
+ExecStart=/home/ubuntu/go/bin/nodef start
+Restart=on-failure
+RestartSec=3
+LimitNOFILE=8192
+
+[Install]
+WantedBy=multi-user.target
