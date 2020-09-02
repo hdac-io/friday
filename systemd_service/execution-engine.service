@@ -1,0 +1,14 @@
+[Unit]
+Description=Execution Engine for Friday Platform
+After=network-online.target
+
+[Service]
+User=ubuntu
+ExecStart=/home/ubuntu/friday/CasperLabs/execution-engine/target/release/casperlabs-engine-grpc-server -t 8 /home/ubuntu/.casperlabs/.casper-node.sock -z
+KillSignal=SIGINT
+Restart=on-failure
+RestartSec=3
+LimitNOFILE=8192
+
+[Install]
+WantedBy=multi-user.target
