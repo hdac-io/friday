@@ -1,0 +1,9 @@
+---
+
+- name: systemctl
+  systemd: name=clif enabled=yes daemon_reload=yes
+
+- name: restart clif
+  service: name=clif state=restarted
+
+

@@ -88,7 +88,9 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		// the following parse config is needed to create directories
 		conf, _ = tcmd.ParseConfig() // NOTE: ParseConfig() creates dir/files as necessary.
-		conf.ProfListenAddress = "localhost:6060"
+		conf.RPC.ListenAddress = "tcp://0.0.0.0:26657"
+		conf.LogLevel = "main:info,state:info,consensus:info,mempool:info,*:error"
+		conf.ProfListenAddress = "0.0.0.0:6060"
 		conf.P2P.RecvRate = 5120000
 		conf.P2P.SendRate = 5120000
 		conf.TxIndex.IndexAllTags = true
